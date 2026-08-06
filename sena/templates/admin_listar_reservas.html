@@ -1,0 +1,115 @@
+{% extends "dashboard_base.html" %}
+{% block title %}Gestión de Reservas - TecnoCorte{% endblock %}
+{% block body_class %}font-body antialiased flex bg-surface{% endblock %}
+{% block content %}
+{% include "includes/admin_sidebar.html" with active="reservas" %}
+{% comment %}Admin sidebar rendered via includes/admin_sidebar.html{% endcomment %}
+<main class="ml-64 flex-1 min-h-screen p-12 bg-surface">
+<!-- Header Section -->
+<header class="flex justify-between items-end mb-16">
+<div>
+<h2 class="font-headline text-4xl text-on-background tracking-tight">Gestión de Reservas</h2>
+<p class="font-body text-body-lg text-on-surface-variant mt-2">14 de Noviembre, 2024</p>
+</div>
+<!-- Actions & Search -->
+<div class="flex items-center space-x-6">
+<!-- Search Input -->
+<div class="relative group">
+<input id="search-reserva" class="bg-transparent border-b border-outline-variant/20 focus:border-primary text-on-background font-body text-sm py-2 pl-8 pr-4 w-64 transition-colors focus:ring-0 placeholder:text-on-surface-variant/50" placeholder="Buscar por nombre o fecha..." type="text"/>
+<span class="material-symbols-outlined absolute left-0 top-2.5 text-on-surface-variant/50 text-sm group-focus-within:text-primary transition-colors">search</span>
+</div>
+</div>
+</header>
+<!-- Status Overview Chips -->
+<div class="flex space-x-4 mb-12">
+<button class="chip-reserva bg-primary text-on-primary px-6 py-2 rounded-full font-label text-xs uppercase tracking-widest font-bold" data-filtro="todas">
+                Todas ({{ datos|length }})
+            </button>
+<button class="chip-reserva bg-surface-container-highest text-on-surface-variant px-6 py-2 rounded-full font-label text-xs uppercase tracking-widest hover:bg-surface-container-high transition-colors" data-filtro="pendiente">
+                Pendientes ({% regroup datos by estado as estado_list %}{% for status in estado_list %}{% if status.grouper == 'Pendiente' %}{{ status.list|length }}{% endif %}{% endfor %})
+            </button>
+<button class="chip-reserva bg-surface-container-highest text-on-surface-variant px-6 py-2 rounded-full font-label text-xs uppercase tracking-widest hover:bg-surface-container-high transition-colors" data-filtro="confirmada">
+                Confirmadas ({% for status in estado_list %}{% if status.grouper == 'Confirmada' %}{{ status.list|length }}{% endif %}{% endfor %})
+            </button>
+</div>
+<!-- Data Table / List -->
+<div class="bg-surface-container-low rounded-lg ambient-shadow overflow-hidden">
+<!-- Table Header -->
+<div class="grid grid-cols-6 gap-6 px-8 py-6 border-b border-surface-container-highest bg-surface-container-high/50">
+<div class="font-label text-xs uppercase tracking-widest text-on-surface-variant">Hora</div>
+<div class="font-label text-xs uppercase tracking-widest text-on-surface-variant col-span-2">Cliente</div>
+<div class="font-label text-xs uppercase tracking-widest text-on-surface-variant">Servicio</div>
+<div class="font-label text-xs uppercase tracking-widest text-on-surface-variant">Estado</div>
+<div class="font-label text-xs uppercase tracking-widest text-on-surface-variant text-right">Acciones</div>
+</div>
+<!-- List Items -->
+<div class="divide-y divide-surface-container-highest">
+{% for reserva in datos %}
+<div class="grid grid-cols-6 gap-6 px-8 py-6 items-center hover:bg-surface-container-highest/30 transition-colors fila-reserva" data-estado="{{ reserva.estado }}">
+<div class="font-headline text-xl text-primary">{{ reserva.hora }}</div>
+<div class="col-span-2">
+<p class="font-body text-base text-on-background font-medium">{{ reserva.cliente.nombre }}</p>
+<p class="font-body text-sm text-on-surface-variant">Barbero: {{ reserva.peluquero.nombre }}</p>
+</div>
+<div class="font-body text-sm text-on-surface-variant">Corte & Arreglo</div>
+<div>
+<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-label uppercase tracking-widest {% if reserva.estado == 'Confirmada' %}bg-primary/10 text-primary border border-primary/20{% else %}bg-secondary-container/20 text-secondary border border-secondary-container/30{% endif %}">
+{{ reserva.estado }}
+</span>
+</div>
+<div class="flex justify-end space-x-3">
+<a class="text-primary hover:text-primary-container transition-colors p-2" href="{% url 'sena:admin_editar_reserva' reserva.id %}" title="Reasignar">
+<span class="material-symbols-outlined">edit_calendar</span>
+</a>
+<a class="text-error hover:text-error-container transition-colors p-2" href="{% url 'sena:admin_eliminar_reserva' reserva.id %}" onclick="return confirm('¿Cancelar esta reserva?')" title="Cancelar">
+<span class="material-symbols-outlined">cancel</span>
+</a>
+</div>
+</div>
+{% empty %}
+<div class="px-8 py-12 text-center text-on-surface-variant">
+<p class="font-body">No hay reservas disponibles</p>
+</div>
+{% endfor %}
+</div>
+</div>
+<div class="signature-divider mt-12"></div>
+</main>
+<script>
+(function () {
+var filtroActivo = 'todas';
+var filas = document.querySelectorAll('.fila-reserva');
+var chips = document.querySelectorAll('.chip-reserva');
+var search = document.getElementById('search-reserva');
+
+function aplicarFiltro() {
+var q = (search ? search.value : '').toLowerCase();
+var visibles = 0;
+filas.forEach(function (fila) {
+var estado = (fila.getAttribute('data-estado') || '').toLowerCase();
+var coincideEstado = filtroActivo === 'todas' || estado.indexOf(filtroActivo) === 0;
+var coincideTexto = fila.textContent.toLowerCase().indexOf(q) !== -1;
+var mostrar = coincideEstado && coincideTexto;
+fila.style.display = mostrar ? '' : 'none';
+if (mostrar) visibles++;
+});
+}
+
+chips.forEach(function (chip) {
+chip.addEventListener('click', function () {
+filtroActivo = chip.getAttribute('data-filtro');
+chips.forEach(function (c) {
+c.classList.remove('bg-primary', 'text-on-primary', 'font-bold');
+c.classList.add('bg-surface-container-highest', 'text-on-surface-variant');
+});
+chip.classList.add('bg-primary', 'text-on-primary', 'font-bold');
+chip.classList.remove('bg-surface-container-highest', 'text-on-surface-variant');
+aplicarFiltro();
+});
+});
+
+if (search) search.addEventListener('input', aplicarFiltro);
+aplicarFiltro();
+})();
+</script>
+{% endblock %}

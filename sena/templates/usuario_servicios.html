@@ -1,0 +1,111 @@
+<!DOCTYPE html><html class="dark" lang="es"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><title>TecnoCorte - Servicios</title><!-- Material Symbols --><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><!-- Google Fonts: Noto Serif (Headline/Display) & Manrope (Body/Label) --><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&amp;family=Noto+Serif:ital,wght@0,400;0,700;0,900;1,400&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><!-- Tailwind CSS --><script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script><!-- Tailwind Config --><script id="tailwind-config">
+tailwind.config = {
+darkMode: "class",
+theme: {
+extend: {
+"colors": {
+"surface-variant": "#353535",
+"on-secondary-fixed": "#241a00",
+"on-primary-container": "#554300",
+"tertiary": "#bfcdff",
+"secondary-fixed": "#ffe08b",
+"on-tertiary": "#082b72",
+"surface-container-low": "#1b1b1b",
+"surface-dim": "#131313",
+"surface-container-highest": "#353535",
+"surface": "#131313",
+"secondary-container": "#b08c10",
+"primary": "#f2ca50",
+"on-tertiary-container": "#254188",
+"on-secondary-container": "#352800",
+"on-primary-fixed": "#241a00",
+"primary-container": "#d4af37",
+"tertiary-fixed": "#dbe1ff",
+"secondary-fixed-dim": "#eac249",
+"surface-container": "#1f1f1f",
+"inverse-on-surface": "#303030",
+"on-error-container": "#ffdad6",
+"on-surface": "#e2e2e2",
+"on-secondary-fixed-variant": "#584400",
+"on-tertiary-fixed-variant": "#27438a",
+"on-primary": "#3c2f00",
+"tertiary-container": "#97b0ff",
+"inverse-primary": "#735c00",
+"surface-container-high": "#2a2a2a",
+"tertiary-fixed-dim": "#b4c5ff",
+"on-background": "#e2e2e2",
+"background": "#131313",
+"outline-variant": "#4d4635",
+"on-secondary": "#3d2f00",
+"on-error": "#690005",
+"primary-fixed": "#ffe088",
+"inverse-surface": "#e2e2e2",
+"surface-tint": "#e9c349",
+"primary-fixed-dim": "#e9c349",
+"outline": "#99907c",
+"secondary": "#eac249",
+"error-container": "#93000a",
+"error": "#ffb4ab",
+"on-surface-variant": "#d0c5af",
+"on-primary-fixed-variant": "#574500",
+"surface-bright": "#393939",
+"surface-container-lowest": "#0e0e0e",
+"on-tertiary-fixed": "#00174b"
+},
+"borderRadius": {
+"DEFAULT": "0.125rem",
+"lg": "0.25rem",
+"xl": "0.5rem",
+"full": "0.75rem"
+},
+"fontFamily": {
+"headline": ["Noto Serif", "serif"],
+"display": ["Noto Serif", "serif"],
+"body": ["Manrope", "sans-serif"],
+"label": ["Manrope", "sans-serif"]
+}
+}
+}
+}
+</script><style>
+/* Custom Utilities */
+.ambient-glow {
+box-shadow: 0 20px 40px rgba(242, 202, 80, 0.06);
+}
+.text-gradient-gold {
+background: linear-gradient(135deg, #f2ca50 0%, #d4af37 100%);
+-webkit-background-clip: text;
+-webkit-text-fill-color: transparent;
+}
+.bg-gradient-gold {
+background: linear-gradient(135deg, #f2ca50 0%, #d4af37 100%);
+}
+</style></head><body class="bg-surface text-on-surface font-body antialiased selection:bg-primary/30 selection:text-primary"><!-- TopNavBar Shared Component --><header class="bg-surface/70 backdrop-blur-xl fixed top-0 w-full shadow-[0_20px_40px_rgba(242,202,80,0.06)] z-50"><div class="flex justify-between items-center w-full px-8 py-4 max-w-full mx-auto z-50"><!-- Brand --><a class="font-headline text-2xl font-bold text-primary-container tracking-tight" href="{% url 'sena:inicio' %}">TecnoCorte</a><!-- Navigation Links (Web Desktop) --><nav class="hidden md:flex items-center gap-8 font-display text-on-surface uppercase tracking-widest text-sm"><a class="text-on-surface-variant hover:text-primary transition-colors hover:text-primary-container transition-all duration-300" href="{% url 'sena:inicio' %}">Inicio</a><a class="text-primary border-b-2 border-primary pb-1 hover:text-primary-container transition-all duration-300" href="{% url 'sena:usuario_servicios' %}">Servicios</a><a class="text-on-surface-variant hover:text-primary transition-colors hover:text-primary-container transition-all duration-300" href="{% url 'sena:usuario_tienda' %}">Tienda</a><a class="text-on-surface-variant hover:text-primary transition-colors hover:text-primary-container transition-all duration-300" href="{% url 'sena:usuario_peluquerias' %}">Peluquerías</a><a class="text-on-surface-variant hover:text-primary transition-colors hover:text-primary-container transition-all duration-300" href="{% url 'sena:ayuda' %}">Contactos</a></nav><!-- Trailing Actions --><div class="flex items-center gap-6 text-primary">
+{% if request.session.logueado %}
+<a href="{% url 'sena:usuario_perfil' %}" class="text-sm font-bold uppercase tracking-widest hover:text-primary-container transition-colors">Perfil</a><a href="{% url 'sena:logout' %}" class="text-sm font-bold uppercase tracking-widest hover:text-primary-container transition-colors">Salir</a>
+{% else %}
+<a href="{% url 'sena:login' %}" class="text-sm font-bold uppercase tracking-widest hover:text-primary-container transition-colors">Ingresar</a>
+{% endif %}
+<a href="{% url 'sena:carrito' %}" class="relative text-primary hover:text-primary-container transition-all duration-300 active:scale-90" title="Carrito"><span class="material-symbols-outlined">shopping_bag</span>{% if cantidad %}<span class="absolute -top-2 -right-2 min-w-5 h-5 px-1 rounded-full bg-primary text-on-primary text-[10px] font-bold flex items-center justify-center">{{ cantidad }}</span>{% endif %}</a>
+</div></div></header><!-- Main Content Canvas --><main class="pt-32 pb-24 px-6 md:px-12 max-w-7xl mx-auto flex flex-col gap-24"><!-- Hero Section --><section class="flex flex-col md:flex-row items-center gap-12 mt-12"><div class="w-full md:w-1/2 flex flex-col gap-6"><h1 class="font-display text-5xl md:text-7xl font-bold tracking-tight text-on-surface leading-none">
+Nuestros <br/><span class="text-gradient-gold italic">Servicios</span></h1><p class="font-body text-lg text-on-surface-variant max-w-md mt-4">
+Cortes de cabello y arreglo de barba profesionales para que siempre te veas bien.
+</p></div><div class="w-full md:w-1/2 h-[500px] rounded-lg overflow-hidden relative ambient-glow"><img class="w-full h-full object-cover grayscale-[20%] contrast-125" data-alt="Barbería profesional" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD5Ob-Y1ARJ8xHQLBDiM68dbyi6Ozz_RMhsMqktV142FkZ99OyShEUNQrLr17fhYlVY_AQFxtp_l1St-ha7QhaJDFmQ9UdLuuKISsLIyBFBkgtrlIS387oB27zXXKjkqE8dce8U3QKSECj2fSv1ZJZSlo3p4RB9hHNGnFKXij5_OW3TCqZfDxnoLsFFNeRQQ04xiCwxrNPt9ruSkor8lGS9k2O1mvobCirBwrKVg9WJ7H3DWrYTC3BJGgliEjJ280CAcbYNDoh9_K0X"/><div class="absolute inset-0 bg-gradient-to-t from-surface via-transparent to-transparent"></div></div></section><!-- Signature Divider --><div class="w-full h-12 flex justify-center items-center opacity-70"><div class="w-1.5 h-1.5 rounded-full bg-primary-container"></div></div><!-- Services List (Editorial Asymmetric Layout) --><section class="flex flex-col gap-16 md:gap-32"><!-- Service 1: Corte --><article class="bg-surface-container-low rounded-xl p-6 md:p-0 flex flex-col md:flex-row items-stretch gap-0 overflow-hidden group ambient-glow transition-all duration-500 hover:bg-surface-container-high"><div class="w-full md:w-5/12 h-64 md:h-auto overflow-hidden relative rounded-lg md:rounded-none md:rounded-l-xl"><img class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" data-alt="Corte de cabello profesional" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAkHe-cOKDVlYQ8IV04xNLE7Hk4J1gJITF1Yxgu2DJrjKfh7KpxKxbfWUSwusBMJsxxGe6MoMTuhZT2ZzDFLDR1XMbQvFybn5oRDbGxEDLq7MKXNHIQiZrB-nqV25yo_PubSSAU_m3Phh0w6PLZCtVf87sTpWwTZPqChfI3JinWfabDPTNAnyU3Z_ICNxGhm2sVUcGFhJHa4zIlGD_EKBV-PyurGcW7yrLkT-Vbq94VjR-nCthtHPBi5TmdVOevevPPbHSvS84Nn1cW"/></div><div class="w-full md:w-7/12 p-8 md:p-16 flex flex-col justify-center"><div class="flex items-center gap-4 mb-4"><span class="font-label text-xs uppercase tracking-[0.05em] text-on-surface-variant bg-surface-container-highest px-3 py-1 rounded-md">Cabello</span><div class="flex items-center gap-1 text-on-surface-variant font-label text-sm"><span class="material-symbols-outlined text-sm">schedule</span>
+45 Min
+</div></div><div class="flex justify-between items-end border-b border-outline-variant/15 pb-6 mb-6"><h2 class="font-display text-4xl text-on-surface font-semibold tracking-tight">Corte de Cabello</h2><span class="font-headline text-2xl text-primary-container">$45.000 <span class="text-sm text-on-surface-variant ml-1">COP</span></span></div><p class="font-body text-base text-on-surface-variant mb-10 leading-relaxed max-w-xl">
+Corte moderno con lavado incluido. Te asesoramos para encontrar el estilo que más te favorece.
+</p><div>{% if request.session.logueado %}<a href="{% url 'sena:usuario_reservar_cita' %}" class="inline-flex bg-gradient-gold text-on-primary font-label font-bold text-sm uppercase tracking-wider py-4 px-10 rounded-md transition-all duration-300 hover:scale-[1.02] active:scale-95 shadow-[0_10px_20px_rgba(242,202,80,0.15)] items-center gap-3"><span>Agendar Cita</span><span class="material-symbols-outlined text-lg">arrow_forward</span></a>{% else %}<a href="{% url 'sena:login' %}" class="inline-flex bg-gradient-gold text-on-primary font-label font-bold text-sm uppercase tracking-wider py-4 px-10 rounded-md transition-all duration-300 hover:scale-[1.02] active:scale-95 shadow-[0_10px_20px_rgba(242,202,80,0.15)] items-center gap-3"><span>Agendar Cita</span><span class="material-symbols-outlined text-lg">arrow_forward</span></a>{% endif %}</div></div></article><!-- Service 2: Perfilado de Barba Real (Reversed Layout) --><article class="bg-surface-container-low rounded-xl p-6 md:p-0 flex flex-col md:flex-row-reverse items-stretch gap-0 overflow-hidden group ambient-glow transition-all duration-500 hover:bg-surface-container-high"><div class="w-full md:w-5/12 h-64 md:h-auto overflow-hidden relative rounded-lg md:rounded-none md:rounded-r-xl"><img class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" data-alt="Arreglo de barba profesional" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBd7i-0ioDlq8ZFnTEn9mcFTBc-0NoXiA8fJ6JY3t6AnRc5n54WX-oArY06KoGgYN-xRiVhAjlcQXyBzAtBg81N_Fo-1Mq_D0xzaB-dWdsnGFcv69spKqbyVrse5dpuRgmsBJk8aa5CQ2l_v6qUfbcR640g65OwBkTWuo6qv44luGdSWrWRR6KIHjW4xl6TeetWBQAXiHRP2fgndXyGu1gEn76fmmDqxX1RzGwx5Fj3WRsIgbSyxm3Ji40UGLywDyugW8TT2_LlZieb"/></div><div class="w-full md:w-7/12 p-8 md:p-16 flex flex-col justify-center"><div class="flex items-center gap-4 mb-4"><span class="font-label text-xs uppercase tracking-[0.05em] text-on-surface-variant bg-surface-container-highest px-3 py-1 rounded-md">Barba</span><div class="flex items-center gap-1 text-on-surface-variant font-label text-sm"><span class="material-symbols-outlined text-sm">schedule</span>
+30 Min
+</div></div><div class="flex justify-between items-end border-b border-outline-variant/15 pb-6 mb-6"><h2 class="font-display text-4xl text-on-surface font-semibold tracking-tight">Arreglo de Barba</h2><span class="font-headline text-2xl text-primary-container">$35.000 <span class="text-sm text-on-surface-variant ml-1">COP</span></span></div><p class="font-body text-base text-on-surface-variant mb-10 leading-relaxed max-w-xl">
+Perfilado y afeitado con toalla caliente, aceites hidratantes y bálsamo para una barba bien cuidada.
+</p><div>{% if request.session.logueado %}<a href="{% url 'sena:usuario_reservar_cita' %}" class="inline-flex bg-gradient-gold text-on-primary font-label font-bold text-sm uppercase tracking-wider py-4 px-10 rounded-md transition-all duration-300 hover:scale-[1.02] active:scale-95 shadow-[0_10px_20px_rgba(242,202,80,0.15)] items-center gap-3"><span>Agendar Cita</span><span class="material-symbols-outlined text-lg">arrow_forward</span></a>{% else %}<a href="{% url 'sena:login' %}" class="inline-flex bg-gradient-gold text-on-primary font-label font-bold text-sm uppercase tracking-wider py-4 px-10 rounded-md transition-all duration-300 hover:scale-[1.02] active:scale-95 shadow-[0_10px_20px_rgba(242,202,80,0.15)] items-center gap-3"><span>Agendar Cita</span><span class="material-symbols-outlined text-lg">arrow_forward</span></a>{% endif %}</div></div></article><!-- Service 3: Combo Completo --><article class="bg-surface-container-high rounded-xl overflow-hidden relative group ambient-glow border border-primary/20"><!-- Background Image layer for featured effect --><div class="absolute inset-0 z-0"><img class="w-full h-full object-cover opacity-20 transition-transform duration-1000 group-hover:scale-105 mix-blend-luminosity" data-alt="Combo de corte y barba" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAQIRJTvTXIvR4kY591KHnhErMvWynGnW8nlDbN5l8dMSy5JEjC4U2di8elfaStYpQcZESqTd1iTSBtJZy4-lzT-AaHEHzCgvjsDnBLSrwB4KftFjedctfLOCi33YLHBwZbjC1v3hd63e7u-3YRTdmxGvahkIbjXYA26FemjWl1-cYSQMFqXt6Mi4xWrjApSfX0a4ot0yb9-F1fQYvJaspeqbdQesZuQRhQ9MEeFV0vbrjrPopieJ1BE_3HLlQE1ZhsT8GuOQYNSPL0"/><div class="absolute inset-0 bg-gradient-to-t from-surface-container-high via-surface-container-high/90 to-surface-container-high/40"></div></div><div class="relative z-10 p-8 md:p-20 flex flex-col items-center text-center"><div class="flex justify-center items-center gap-4 mb-8"><span class="font-label text-xs uppercase tracking-[0.05em] text-primary bg-primary/10 border border-primary/30 px-4 py-1.5 rounded-md">Combo</span></div><h2 class="font-display text-5xl md:text-6xl text-gradient-gold font-bold tracking-tight mb-4">Combo Completo</h2><div class="flex items-center justify-center gap-3 text-on-surface font-label text-lg mb-8"><span class="material-symbols-outlined text-primary">schedule</span><span>1 Hora 15 Min</span><span class="mx-2 text-outline-variant">•</span><span class="font-headline text-3xl text-on-surface">$75.000 <span class="text-sm text-on-surface-variant ml-1">COP</span></span></div><p class="font-body text-lg text-on-surface-variant max-w-2xl mx-auto mb-12 leading-relaxed">
+Corte de cabello + arreglo de barba + limpieza facial. Todo en una sola sesión para que salgas renovado.
+</p>
+{% if request.session.logueado %}
+<a href="{% url 'sena:usuario_reservar_cita' %}" class="bg-gradient-gold text-on-primary font-label font-bold text-base uppercase tracking-widest py-5 px-16 rounded-md transition-all duration-300 hover:scale-[1.03] active:scale-95 shadow-[0_15px_30px_rgba(242,202,80,0.2)] flex items-center gap-4 inline-flex justify-center"><span>Reservar Cita</span><span class="material-symbols-outlined text-xl">workspace_premium</span></a>
+{% else %}
+<a href="{% url 'sena:login' %}" class="bg-gradient-gold text-on-primary font-label font-bold text-base uppercase tracking-widest py-5 px-16 rounded-md transition-all duration-300 hover:scale-[1.03] active:scale-95 shadow-[0_15px_30px_rgba(242,202,80,0.2)] flex items-center gap-4 inline-flex justify-center"><span>Reservar Cita</span><span class="material-symbols-outlined text-xl">workspace_premium</span></a>
+{% endif %}
+</div></article></section></main><!-- Footer Shared Component --><footer class="bg-surface-container-lowest w-full pt-16 pb-8 flex flex-col items-center gap-8 px-8 border-t border-outline-variant/10"><div class="flex flex-col items-center gap-6"><span class="font-headline text-xl text-primary font-bold tracking-widest uppercase">TecnoCorte</span><nav class="flex flex-wrap justify-center gap-8 font-body text-on-surface-variant text-sm"><a class="hover:text-primary transition-colors opacity-80 hover:opacity-100" href="{% url 'sena:ayuda' %}">Privacidad</a><a class="hover:text-primary transition-colors opacity-80 hover:opacity-100" href="{% url 'sena:ayuda' %}">Términos</a><a class="hover:text-primary transition-colors opacity-80 hover:opacity-100" href="{% url 'sena:ayuda' %}">Soporte</a><a class="hover:text-primary transition-colors opacity-80 hover:opacity-100" href="{% url 'sena:ayuda' %}">Franquicias</a></nav></div><div class="text-center"><p class="font-body text-on-surface-variant text-sm opacity-60">
+© 2026 TecnoCorte. Precios en COP. Todos los derechos reservados.
+</p></div></footer></body></html>

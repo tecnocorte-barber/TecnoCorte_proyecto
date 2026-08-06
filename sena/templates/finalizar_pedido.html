@@ -1,0 +1,84 @@
+<!DOCTYPE html><html class="dark" lang="es"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><title>Finalizar Compra - TecnoCorte</title><script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&amp;family=Noto+Serif:ital,wght@0,400;0,700;1,400&amp;display=swap" rel="stylesheet"/><script id="tailwind-config">
+tailwind.config = {
+darkMode: "class",
+theme: {
+extend: {
+"colors": {
+"surface-variant": "#353535",
+"on-secondary-fixed": "#241a00",
+"on-primary-container": "#554300",
+"tertiary": "#bfcdff",
+"secondary-fixed": "#ffe08b",
+"on-tertiary": "#082b72",
+"surface-container-low": "#1b1b1b",
+"surface-dim": "#131313",
+"surface-container-highest": "#353535",
+"surface": "#131313",
+"secondary-container": "#b08c10",
+"primary": "#f2ca50",
+"on-tertiary-container": "#254188",
+"on-secondary-container": "#352800",
+"on-primary-fixed": "#241a00",
+"primary-container": "#d4af37",
+"tertiary-fixed": "#dbe1ff",
+"secondary-fixed-dim": "#eac249",
+"surface-container": "#1f1f1f",
+"inverse-on-surface": "#303030",
+"on-error-container": "#ffdad6",
+"on-surface": "#e2e2e2",
+"on-secondary-fixed-variant": "#584400",
+"on-tertiary-fixed-variant": "#27438a",
+"on-primary": "#3c2f00",
+"tertiary-container": "#97b0ff",
+"inverse-primary": "#735c00",
+"surface-container-high": "#2a2a2a",
+"tertiary-fixed-dim": "#b4c5ff",
+"on-background": "#e2e2e2",
+"background": "#131313",
+"outline-variant": "#4d4635",
+"on-secondary": "#3d2f00",
+"on-error": "#690005",
+"primary-fixed": "#ffe088",
+"inverse-surface": "#e2e2e2",
+"surface-tint": "#e9c349",
+"primary-fixed-dim": "#e9c349",
+"outline": "#99907c",
+"secondary": "#eac249",
+"error-container": "#93000a",
+"error": "#ffb4ab",
+"on-surface-variant": "#d0c5af",
+"on-primary-fixed-variant": "#574500",
+"surface-bright": "#393939",
+"surface-container-lowest": "#0e0e0e",
+"on-tertiary-fixed": "#00174b"
+},
+"borderRadius": {
+"DEFAULT": "0.125rem",
+"lg": "0.25rem",
+"xl": "0.5rem",
+"full": "0.75rem"
+},
+"fontFamily": {
+"headline": ["Noto Serif", "serif"],
+"display": ["Noto Serif", "serif"],
+"body": ["Manrope", "sans-serif"],
+"label": ["Manrope", "sans-serif"]
+}
+}
+}
+}</script><style>
+.glass-nav {
+background: rgba(19, 19, 19, 0.7);
+backdrop-filter: blur(20px);
+-webkit-backdrop-filter: blur(20px);
+}
+.gold-gradient-bg {
+background: linear-gradient(135deg, #f2ca50, #d4af37);
+}
+.ambient-glow {
+box-shadow: 0 20px 40px rgba(242, 202, 80, 0.06);
+}
+.ghost-border {
+border: 1px solid rgba(77, 70, 53, 0.15);
+}
+</style></head><body class="bg-surface text-on-surface font-body antialiased selection:bg-primary/30 selection:text-primary"><!-- TopNavBar --><nav class="fixed top-0 w-full bg-surface/70 backdrop-blur-xl shadow-[0_20px_40px_rgba(242,202,80,0.06)] z-50"><div class="flex justify-between items-center w-full px-8 py-4 max-w-full mx-auto"><div class="font-headline text-2xl font-bold text-primary-container"><a href="{% url 'sena:usuario_tienda' %}">TecnoCorte</a></div><div class="hidden md:flex space-x-8 items-center font-display text-on-surface uppercase tracking-widest text-sm"><a class="text-on-surface-variant hover:text-primary transition-all duration-300" href="{% url 'sena:usuario_servicios' %}">Servicios</a><a class="text-primary border-b-2 border-primary pb-1" href="{% url 'sena:usuario_tienda' %}">Tienda</a><a class="text-on-surface-variant hover:text-primary transition-all duration-300" href="{% url 'sena:usuario_peluquerias' %}">Peluquerías</a><a class="text-on-surface-variant hover:text-primary transition-all duration-300" href="{% url 'sena:ayuda' %}">Contactos</a></div><div class="flex items-center space-x-6">{% if request.session.logueado %}<a href="{% url 'sena:usuario_perfil' %}" class="text-on-surface-variant hover:text-primary transition-colors font-bold uppercase tracking-widest">Perfil</a><a href="{% url 'sena:logout' %}" class="text-on-surface-variant hover:text-primary transition-colors font-bold uppercase tracking-widest">Salir</a>{% endif %}<a href="{% url 'sena:carrito' %}" class="relative text-primary hover:text-primary-container transition-all duration-300 active:scale-90" title="Carrito"><span class="material-symbols-outlined">shopping_bag</span>{% if cantidad %}<span class="absolute -top-2 -right-2 min-w-5 h-5 px-1 rounded-full bg-primary text-on-primary text-[10px] font-bold flex items-center justify-center">{{ cantidad }}</span>{% endif %}</a></div></div></nav><!-- Main --><main class="pt-32 pb-24 px-4 md:px-12 max-w-5xl mx-auto min-h-screen"><header class="mb-12"><h1 class="font-headline text-5xl md:text-6xl font-black tracking-tight text-on-surface mb-4">Finalizar <span class="gold-gradient-bg bg-clip-text text-transparent">Compra</span></h1><p class="font-body text-on-surface-variant max-w-lg">Confirma los productos de tu pedido. El pago se realiza en el local.</p></header><div class="flex flex-col lg:flex-row gap-10"><div class="flex-1 space-y-4">{% for item in items %}<div class="bg-surface-container-low rounded-xl p-5 flex items-center justify-between gap-4 ghost-border"><div><h3 class="font-headline text-lg text-on-surface">{{ item.producto.nombre }}</h3><p class="text-on-surface-variant text-sm">Cantidad: {{ item.cantidad }}</p></div><div class="text-right"><p class="text-on-surface-variant text-xs">${{ item.producto.precio|floatformat:"0g" }} c/u</p><p class="font-headline text-primary">${{ item.subtotal|floatformat:"0g" }}</p></div></div>{% endfor %}</div><aside class="lg:w-80 shrink-0"><div class="bg-surface-container-low rounded-xl p-8 ambient-glow sticky top-32 ghost-border"><h3 class="font-headline text-2xl text-primary-container mb-6 border-b border-outline-variant/20 pb-4">Total a pagar</h3><div class="flex justify-between items-end mb-8"><span class="text-on-surface-variant text-sm">Total</span><span class="font-headline text-3xl text-primary">${{ total|floatformat:"0g" }}</span></div><form method="post">{% csrf_token %}<button type="submit" class="w-full inline-flex justify-center py-4 rounded-md gold-gradient-bg text-on-primary font-bold text-sm uppercase tracking-widest hover:opacity-90 transition-all active:scale-95">Confirmar Pedido</button></form><p class="text-xs text-on-surface-variant mt-4 text-center">Cliente: {{ request.session.logueado.nombre }}</p><a href="{% url 'sena:carrito' %}" class="mt-4 w-full inline-flex justify-center py-3 rounded-md border border-outline-variant/30 text-primary hover:border-primary transition-colors text-sm font-semibold uppercase tracking-widest active:scale-95">Volver al carrito</a></div></aside></div></main></body></html>

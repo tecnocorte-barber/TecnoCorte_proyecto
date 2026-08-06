@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}TecnoCorte{% endblock %}</title>
+    
+    {% block styles %}{% endblock %}
+
+</head>
+<body>
+    <div class="page">
+        <header>
+            <div class="brand">
+                <h1>TecnoCorte</h1>
+                <p>Solo login disponible, con diseño moderno y página de inicio limpia.</p>
+            </div>
+            <nav>
+                <a href="{% url 'sena:inicio' %}">Inicio</a>
+                <a href="{% url 'sena:login' %}">Login</a>
+            </nav>
+        </header>
+        <section class="card">
+            {% block content %}{% endblock %}
+        </section>
+        <footer>
+            <p>TecnoCorte - Sistema de reserva para peluquería.</p>
+        </footer>
+    </div>
+</body>
+</html>

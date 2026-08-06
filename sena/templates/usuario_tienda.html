@@ -1,0 +1,294 @@
+<!DOCTYPE html><html class="dark" lang="es"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><title>TecnoCorte - Tienda Productos</title><script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&amp;family=Noto+Serif:wght@400;700;900&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><script id="tailwind-config">
+tailwind.config = {
+darkMode: "class",
+theme: {
+extend: {
+"colors": {
+"surface-variant": "#353535",
+"on-secondary-fixed": "#241a00",
+"on-primary-container": "#554300",
+"tertiary": "#bfcdff",
+"secondary-fixed": "#ffe08b",
+"on-tertiary": "#082b72",
+"surface-container-low": "#1b1b1b",
+"surface-dim": "#131313",
+"surface-container-highest": "#353535",
+"surface": "#131313",
+"secondary-container": "#b08c10",
+"primary": "#f2ca50",
+"on-tertiary-container": "#254188",
+"on-secondary-container": "#352800",
+"on-primary-fixed": "#241a00",
+"primary-container": "#d4af37",
+"tertiary-fixed": "#dbe1ff",
+"secondary-fixed-dim": "#eac249",
+"surface-container": "#1f1f1f",
+"inverse-on-surface": "#303030",
+"on-error-container": "#ffdad6",
+"on-surface": "#e2e2e2",
+"on-secondary-fixed-variant": "#584400",
+"on-tertiary-fixed-variant": "#27438a",
+"on-primary": "#3c2f00",
+"tertiary-container": "#97b0ff",
+"inverse-primary": "#735c00",
+"surface-container-high": "#2a2a2a",
+"tertiary-fixed-dim": "#b4c5ff",
+"on-background": "#e2e2e2",
+"background": "#131313",
+"outline-variant": "#4d4635",
+"on-secondary": "#3d2f00",
+"on-error": "#690005",
+"primary-fixed": "#ffe088",
+"inverse-surface": "#e2e2e2",
+"surface-tint": "#e9c349",
+"primary-fixed-dim": "#e9c349",
+"outline": "#99907c",
+"secondary": "#eac249",
+"error-container": "#93000a",
+"error": "#ffb4ab",
+"on-surface-variant": "#d0c5af",
+"on-primary-fixed-variant": "#574500",
+"surface-bright": "#393939",
+"surface-container-lowest": "#0e0e0e",
+"on-tertiary-fixed": "#00174b"
+},
+"borderRadius": {
+"DEFAULT": "0.125rem",
+"lg": "0.25rem",
+"xl": "0.5rem",
+"full": "0.75rem"
+},
+"spacing": {},
+"fontFamily": {
+"headline": [
+"Noto Serif"
+],
+"display": [
+"Noto Serif"
+],
+"body": [
+"Manrope"
+],
+"label": [
+"Manrope"
+]
+},
+"fontSize": {}
+},
+},
+}
+</script><style>
+/* Custom Utilities */
+.glass-nav {
+background: rgba(19, 19, 19, 0.7);
+backdrop-filter: blur(20px);
+-webkit-backdrop-filter: blur(20px);
+}
+.gold-gradient-text {
+background: linear-gradient(135deg, #f2ca50, #d4af37);
+-webkit-background-clip: text;
+-webkit-text-fill-color: transparent;
+background-clip: text;
+}
+.gold-gradient-bg {
+background: linear-gradient(135deg, #f2ca50, #d4af37);
+}
+.ambient-glow {
+box-shadow: 0 20px 40px rgba(242, 202, 80, 0.06);
+}
+.hover-ambient-glow:hover {
+box-shadow: 0 20px 40px rgba(242, 202, 80, 0.12);
+}
+.ghost-border {
+border: 1px solid rgba(77, 70, 53, 0.15);
+}
+/* Hide scrollbar for clean look */
+::-webkit-scrollbar {
+width: 8px;
+}
+::-webkit-scrollbar-track {
+background: #0e0e0e;
+}
+::-webkit-scrollbar-thumb {
+background: #2a2a2a;
+border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+background: #d4af37;
+}
+</style></head><body class="bg-surface text-on-surface font-body antialiased selection:bg-primary/30 selection:text-primary"><!-- TopNavBar Component --><nav class="fixed top-0 w-full bg-surface/70 backdrop-blur-xl shadow-[0_20px_40px_rgba(242,202,80,0.06)] z-50"><div class="flex justify-between items-center w-full px-8 py-4 max-w-full mx-auto"><!-- Brand --><div class="font-headline text-2xl font-bold text-primary-container"><a href="{% url 'sena:inicio' %}">TecnoCorte</a></div><!-- Navigation Links (Web) --><div class="hidden md:flex space-x-8 items-center font-display text-on-surface uppercase tracking-widest text-sm"><a class="text-on-surface-variant hover:text-primary transition-colors hover:text-primary-container transition-all duration-300 scale-95 active:opacity-80" href="{% url 'sena:inicio' %}">Inicio</a><a class="text-on-surface-variant hover:text-primary transition-colors hover:text-primary-container transition-all duration-300 scale-95 active:opacity-80" href="{% url 'sena:usuario_servicios' %}">Servicios</a><a class="text-primary border-b-2 border-primary pb-1 hover:text-primary-container transition-all duration-300 scale-95 active:opacity-80" href="{% url 'sena:usuario_tienda' %}">Tienda</a><a class="text-on-surface-variant hover:text-primary transition-colors hover:text-primary-container transition-all duration-300 scale-95 active:opacity-80" href="{% url 'sena:usuario_peluquerias' %}">Peluquerías</a><a class="text-on-surface-variant hover:text-primary transition-colors hover:text-primary-container transition-all duration-300 scale-95 active:opacity-80" href="{% url 'sena:ayuda' %}">Contactos</a></div><!-- Actions --><div class="flex items-center space-x-6">
+{% if request.session.logueado %}
+<a href="{% url 'sena:usuario_perfil' %}" class="text-on-surface-variant hover:text-primary transition-colors font-bold uppercase tracking-widest">Perfil</a><a href="{% url 'sena:logout' %}" class="text-on-surface-variant hover:text-primary transition-colors font-bold uppercase tracking-widest">Salir</a>
+{% else %}
+<a href="{% url 'sena:login' %}" class="text-on-surface-variant hover:text-primary transition-colors font-bold uppercase tracking-widest">Ingresar</a>
+{% endif %}
+<a href="{% url 'sena:carrito' %}" class="relative text-primary hover:text-primary-container transition-all duration-300 active:scale-90" title="Carrito"><span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">shopping_bag</span><span id="cart-count" class="absolute -top-2 -right-2 min-w-5 h-5 px-1 rounded-full bg-primary text-on-primary text-[10px] font-bold flex items-center justify-center {% if not cantidad %}hidden{% endif %}">{{ cantidad|default:0 }}</span></a>
+<!-- Mobile Menu Toggle --><button id="btn-menu-movil" class="md:hidden text-on-surface-variant" title="Menú"><span class="material-symbols-outlined">menu</span></button></div></div></nav><div id="menu-movil" class="md:hidden hidden fixed top-[76px] left-0 right-0 z-40 bg-surface/95 backdrop-blur-xl border-b border-outline-variant/15 px-8 py-6 flex flex-col gap-4"><a class="text-on-surface-variant hover:text-primary uppercase tracking-widest text-sm font-semibold" href="{% url 'sena:inicio' %}">Inicio</a><a class="text-on-surface-variant hover:text-primary uppercase tracking-widest text-sm font-semibold" href="{% url 'sena:usuario_servicios' %}">Servicios</a><a class="text-primary uppercase tracking-widest text-sm font-semibold" href="{% url 'sena:usuario_tienda' %}">Tienda</a><a class="text-on-surface-variant hover:text-primary uppercase tracking-widest text-sm font-semibold" href="{% url 'sena:usuario_peluquerias' %}">Peluquerías</a><a class="text-on-surface-variant hover:text-primary uppercase tracking-widest text-sm font-semibold" href="{% url 'sena:ayuda' %}">Contactos</a>{% if request.session.logueado %}<a class="text-on-surface-variant hover:text-primary uppercase tracking-widest text-sm font-bold" href="{% url 'sena:usuario_perfil' %}">Perfil</a><a class="text-on-surface-variant hover:text-primary uppercase tracking-widest text-sm font-bold" href="{% url 'sena:logout' %}">Salir</a>{% else %}<a class="text-on-surface-variant hover:text-primary uppercase tracking-widest text-sm font-bold" href="{% url 'sena:login' %}">Ingresar</a>{% endif %}</div><!-- Main Content Canvas --><main class="pt-32 pb-24 px-4 md:px-12 max-w-[1600px] mx-auto min-h-screen"><!-- Hero Header --><header class="mb-16 flex flex-col md:flex-row justify-between items-end gap-8"><div class="max-w-2xl"><h1 class="font-headline text-5xl md:text-6xl font-black tracking-tight text-on-surface mb-4 leading-tight">
+Nuestros <br/><span class="gold-gradient-text">Productos</span>.
+</h1><p class="font-body text-body-lg text-on-surface-variant max-w-lg">
+Todo lo que necesitas para tu cuidado personal: herramientas, pomadas, y más.
+</p></div><!-- Contextual Search/Filter Shortcut --><div class="w-full md:w-auto flex items-center gap-4 bg-surface-container-low p-2 rounded-xl ghost-border"><div class="relative w-full md:w-64"><span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-sm">search</span><input id="tienda-buscar" class="w-full bg-transparent border-none text-on-surface placeholder:text-on-surface-variant/50 focus:ring-0 text-sm pl-10 py-2 font-body" placeholder="Buscar productos..." type="text"/><!-- Custom Input Underline --><div class="absolute bottom-0 left-0 w-full h-[1px] bg-outline-variant/20 transition-all duration-300 focus-within:bg-primary focus-within:h-[2px] focus-within:shadow-[0_0_8px_rgba(242,202,80,0.4)]"></div></div><button id="btn-filtros" class="bg-surface-container-highest p-2 rounded-lg text-on-surface-variant hover:text-primary transition-colors" title="Mostrar filtros"><span class="material-symbols-outlined text-sm">tune</span></button></div></header><!-- Signature Divider --><div class="w-full h-12 flex justify-center items-center mb-16"><div class="w-1 h-1 rounded-full bg-primary-container shadow-[0_0_10px_rgba(212,175,55,0.8)]"></div></div><!-- Layout grid: Sidebar Filters + Main Product Grid --><div class="flex flex-col lg:flex-row gap-12"><!-- Filtering Sidebar (Editorial Style) --><aside class="w-full lg:w-64 flex-shrink-0 space-y-12"><!-- Category Filter --><div><h3 class="font-headline text-lg text-primary mb-6 tracking-wide">Categorías</h3><ul class="space-y-4 font-body text-sm text-on-surface-variant"><li><button class="categoria-link flex items-center justify-between w-full group" data-cat=""><span class="group-hover:text-primary transition-colors">Todos</span><span class="opacity-0 group-hover:opacity-100 text-primary transition-opacity text-xs">—</span></button></li><li><button class="categoria-link flex items-center justify-between w-full group" data-cat="Herramientas"><span class="group-hover:text-primary transition-colors">Herramientas</span><span class="opacity-0 group-hover:opacity-100 text-primary transition-opacity text-xs">—</span></button></li><li><button class="categoria-link flex items-center justify-between w-full group" data-cat="Fijacion"><span class="group-hover:text-primary transition-colors">Fijación &amp; Textura</span><span class="opacity-0 group-hover:opacity-100 text-primary transition-opacity text-xs">—</span></button></li><li><button class="categoria-link flex items-center justify-between w-full group" data-cat="Cuidado"><span class="group-hover:text-primary transition-colors">Cuidado Capilar</span><span class="opacity-0 group-hover:opacity-100 text-primary transition-opacity text-xs">—</span></button></li><li><button class="categoria-link flex items-center justify-between w-full group" data-cat="Barba"><span class="group-hover:text-primary transition-colors">Barba &amp; Afeitado</span><span class="opacity-0 group-hover:opacity-100 text-primary transition-opacity text-xs">—</span></button></li></ul></div><!-- Clear Filters --><div><button id="btn-limpiar-filtros" class="w-full px-4 py-3 bg-surface-container-highest text-on-surface-variant rounded-lg font-label text-xs uppercase tracking-wider hover:text-primary hover:bg-surface-container-high transition-colors flex items-center justify-center gap-2"><span class="material-symbols-outlined text-sm">restart_alt</span>Limpiar Filtros</button></div><!-- Price Range (Minimalist Input) --><div><h3 class="font-headline text-lg text-primary mb-6 tracking-wide">Inversión</h3><div class="flex items-center gap-4"><div class="relative w-full"><label class="text-[10px] text-primary uppercase tracking-wider absolute -top-4 left-0">Min</label><input id="precio-min" class="w-full bg-transparent border-none text-on-surface text-sm py-1 px-0 font-body focus:ring-0" type="number" min="0" placeholder="0"/><div class="absolute bottom-0 left-0 w-full h-[1px] bg-outline-variant/20"></div></div><span class="text-outline-variant">—</span><div class="relative w-full"><label class="text-[10px] text-primary uppercase tracking-wider absolute -top-4 left-0">Max</label><input id="precio-max" class="w-full bg-transparent border-none text-on-surface text-sm py-1 px-0 font-body focus:ring-0" type="number" min="0" placeholder="1000000"/><div class="absolute bottom-0 left-0 w-full h-[1px] bg-outline-variant/20"></div></div></div></div></aside><!-- Product Canvas --><div class="flex-1"><!-- Active Filters & Sorting Row --><div class="flex flex-wrap justify-between items-center mb-8 gap-4"><div class="flex items-center gap-2"><span class="text-xs text-on-surface-variant font-label uppercase tracking-wider">Filtros Activos:</span><span id="chip-filtro-activo" class="hidden px-2 py-1 bg-surface-container-low text-primary border border-outline-variant/20 rounded text-xs flex items-center gap-1"><span id="texto-filtro-activo">Todos</span><button id="btn-quitar-filtro" class="hover:text-on-surface" title="Quitar filtro"><span class="material-symbols-outlined text-[12px]">close</span></button></span></div><div class="flex items-center gap-2"><span class="text-xs text-on-surface-variant font-label uppercase tracking-wider">Ordenar por:</span><select id="ordenar" class="bg-transparent border-none text-on-surface text-sm focus:ring-0 cursor-pointer font-body"><option class="bg-surface-container-high" value="relevancia">Relevancia</option><option class="bg-surface-container-high" value="menor">Menor precio</option><option class="bg-surface-container-high" value="mayor">Mayor precio</option><option class="bg-surface-container-high" value="nuevos">Nuevos</option></select></div></div><!-- Products Grid --><div id="productos-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">{% for producto in productos %}<article class="{% if forloop.first %}col-span-1 md:col-span-2 lg:col-span-2 {% endif %}bg-surface-container-low p-6 rounded-xl relative group hover-ambient-glow transition-all duration-500 flex flex-col {% if not producto.disponible %}opacity-70 grayscale-[30%]{% endif %}" data-categoria="{{ producto.categoria }}" data-precio="{{ producto.precio }}" data-nombre="{{ producto.nombre|lower }}" data-disponible="{{ producto.disponible|yesno:'1,0' }}"><div class="w-full h-48 mb-6 relative overflow-hidden rounded-lg bg-surface-container-highest flex items-center justify-center">{% if not producto.disponible %}<div class="absolute inset-0 bg-surface/40 backdrop-blur-[2px] flex items-center justify-center"><span class="bg-surface px-3 py-1 text-xs font-label uppercase tracking-widest text-on-surface-variant rounded ghost-border">Agotado</span></div>{% endif %}</div><div class="flex flex-col flex-1 justify-between"><div><span class="text-[10px] text-on-surface-variant uppercase tracking-widest font-label block mb-1">{{ producto.get_categoria_display }}</span><h2 class="font-headline text-lg text-on-surface mb-2">{{ producto.nombre }}</h2>{% if producto.descripcion %}<p class="text-on-surface-variant text-sm mb-4">{{ producto.descripcion|truncatewords:15 }}</p>{% endif %}</div><div class="flex items-center justify-between mt-4 pt-4 border-t border-outline-variant/10"><span class="font-body text-md font-bold text-on-surface">${{ producto.precio|floatformat:"0g" }} <span class="text-[10px] text-on-surface-variant font-normal">COP</span></span>{% if producto.disponible %}<form method="post" action="{% url 'sena:agregar_carrito' producto.id %}" class="inline-flex add-to-cart-form" data-nombre="{{ producto.nombre }}">{% csrf_token %}<button type="submit" class="text-primary hover:text-primary-container transition-colors active:scale-95 flex items-center gap-1 text-sm font-medium cursor-pointer">Añadir <span class="material-symbols-outlined text-[16px]">add</span></button></form>{% else %}<button class="text-on-surface-variant cursor-not-allowed text-sm font-medium">No Disponible</button>{% endif %}</div></div></article>{% empty %}<div class="col-span-full text-center py-24"><p class="text-on-surface-variant text-lg">No hay productos disponibles en este momento.</p></div>{% endfor %}<div id="sin-resultados" class="hidden col-span-full text-center py-24"><p class="text-on-surface-variant text-lg">No se encontraron productos con los filtros seleccionados.</p></div></div></div></div></main><!-- Footer Component --><footer class="bg-surface-container-lowest w-full pt-16 pb-8 border-t border-outline-variant/10 flex flex-col items-center gap-8 px-8"><div class="font-headline text-xl text-primary">
+TecnoCorte
+</div><div class="flex gap-6 font-body text-on-surface-variant text-sm"><a class="hover:text-primary transition-colors opacity-80 hover:opacity-100" href="{% url 'sena:ayuda' %}">Privacidad</a><a class="hover:text-primary transition-colors opacity-80 hover:opacity-100" href="{% url 'sena:ayuda' %}">Términos</a><a class="hover:text-primary transition-colors opacity-80 hover:opacity-100" href="{% url 'sena:ayuda' %}">Soporte</a><a class="hover:text-primary transition-colors opacity-80 hover:opacity-100" href="{% url 'sena:ayuda' %}">Franquicias</a></div><div class="font-body text-on-surface-variant text-sm opacity-60 text-center mt-4">
+© 2026 TecnoCorte. Todos los derechos reservados.
+</div></footer><script>
+document.addEventListener("submit", function (e) {
+  var form = e.target;
+  if (!form.classList.contains("add-to-cart-form")) return;
+  e.preventDefault();
+  var button = form.querySelector('button[type="submit"]');
+  var badge = document.getElementById("cart-count");
+  button.disabled = true;
+  fetch(form.action, {
+    method: "POST",
+    headers: {
+      "X-CSRFToken": form.querySelector('input[name="csrfmiddlewaretoken"]').value,
+      "X-Requested-With": "XMLHttpRequest"
+    }
+  }).then(function (res) {
+    if (!res.ok) throw new Error("error");
+    return res.json();
+  }).then(function (data) {
+    if (badge) {
+      badge.textContent = data.cantidad;
+      badge.classList.remove("hidden");
+    }
+    var original = button.innerHTML;
+    button.innerHTML = '<span class="material-symbols-outlined text-[16px]">check</span>';
+    setTimeout(function () {
+      button.innerHTML = original;
+      button.disabled = false;
+    }, 900);
+  }).catch(function () {
+    button.disabled = false;
+    form.submit();
+  });
+});
+</script>
+<script>
+(function () {
+  var grid = document.getElementById('productos-grid');
+  if (!grid) return;
+  var cards = Array.prototype.slice.call(grid.querySelectorAll('article'));
+  cards.forEach(function (c, i) { c.setAttribute('data-orden', i); });
+
+  var search = document.getElementById('tienda-buscar');
+  var ordenar = document.getElementById('ordenar');
+  var chip = document.getElementById('chip-filtro-activo');
+  var textoChip = document.getElementById('texto-filtro-activo');
+  var btnQuitar = document.getElementById('btn-quitar-filtro');
+  var btnLimpiar = document.getElementById('btn-limpiar-filtros');
+  var precioMin = document.getElementById('precio-min');
+  var precioMax = document.getElementById('precio-max');
+  var sinResultados = document.getElementById('sin-resultados');
+  var catActiva = '';
+
+  var nombresCat = { Herramientas: 'Herramientas', Fijacion: 'Fijación & Textura', Cuidado: 'Cuidado Capilar', Barba: 'Barba & Afeitado' };
+
+  function aplicarFiltros() {
+    var q = search ? search.value.toLowerCase().trim() : '';
+    var min = precioMin && precioMin.value !== '' ? parseInt(precioMin.value, 10) : 0;
+    var max = precioMax && precioMax.value !== '' ? parseInt(precioMax.value, 10) : Infinity;
+    var visibles = 0;
+    cards.forEach(function (c) {
+      var cat = c.getAttribute('data-categoria') || '';
+      var precio = parseInt(c.getAttribute('data-precio'), 10) || 0;
+      var nombre = c.getAttribute('data-nombre') || '';
+      var okCat = catActiva === '' || cat === catActiva;
+      var okTexto = !q || nombre.indexOf(q) !== -1 || c.textContent.toLowerCase().indexOf(q) !== -1;
+      var okPrecio = precio >= min && precio <= max;
+      var mostrar = okCat && okTexto && okPrecio;
+      c.style.display = mostrar ? '' : 'none';
+      if (mostrar) visibles++;
+    });
+    if (sinResultados) sinResultados.style.display = (cards.length > 0 && visibles === 0) ? '' : 'none';
+
+    var activo = catActiva !== '' || q !== '' || (precioMin && precioMin.value !== '') || (precioMax && precioMax.value !== '');
+    if (chip) {
+      if (activo) {
+        chip.classList.remove('hidden');
+        var partes = [];
+        if (catActiva !== '') partes.push(nombresCat[catActiva] || catActiva);
+        if (q !== '') partes.push('"' + q + '"');
+        textoChip.textContent = partes.join(' · ');
+      } else {
+        chip.classList.add('hidden');
+      }
+    }
+    document.querySelectorAll('.categoria-link').forEach(function (l) {
+      var activoLink = l.getAttribute('data-cat') === catActiva;
+      l.classList.toggle('text-primary', activoLink);
+      l.classList.toggle('font-medium', activoLink);
+    });
+  }
+
+  document.querySelectorAll('.categoria-link').forEach(function (l) {
+    l.addEventListener('click', function () {
+      catActiva = l.getAttribute('data-cat') || '';
+      aplicarFiltros();
+    });
+  });
+  if (search) search.addEventListener('input', aplicarFiltros);
+  if (precioMin) precioMin.addEventListener('input', aplicarFiltros);
+  if (precioMax) precioMax.addEventListener('input', aplicarFiltros);
+
+  if (btnQuitar) btnQuitar.addEventListener('click', function () {
+    catActiva = '';
+    if (search) search.value = '';
+    if (precioMin) precioMin.value = '';
+    if (precioMax) precioMax.value = '';
+    aplicarFiltros();
+  });
+  if (btnLimpiar) btnLimpiar.addEventListener('click', function () {
+    catActiva = '';
+    if (search) search.value = '';
+    if (precioMin) precioMin.value = '';
+    if (precioMax) precioMax.value = '';
+    if (ordenar) ordenar.value = 'relevancia';
+    ordenarRelevancia();
+    aplicarFiltros();
+  });
+
+  function ordenarRelevancia() {
+    cards.sort(function (a, b) { return parseInt(a.getAttribute('data-orden'), 10) - parseInt(b.getAttribute('data-orden'), 10); });
+    cards.forEach(function (c) { grid.appendChild(c); });
+  }
+  if (ordenar) ordenar.addEventListener('change', function () {
+    var v = ordenar.value;
+    if (v === 'relevancia') {
+      ordenarRelevancia();
+    } else {
+      cards.sort(function (a, b) {
+        var pa = parseInt(a.getAttribute('data-precio'), 10);
+        var pb = parseInt(b.getAttribute('data-precio'), 10);
+        if (v === 'menor') return pa - pb;
+        if (v === 'mayor') return pb - pa;
+        if (v === 'nuevos') return a.getAttribute('data-nombre').localeCompare(b.getAttribute('data-nombre'));
+        return 0;
+      });
+      cards.forEach(function (c) { grid.appendChild(c); });
+    }
+    aplicarFiltros();
+  });
+
+  var btnFiltros = document.getElementById('btn-filtros');
+  var aside = document.querySelector('aside');
+  if (btnFiltros && aside) {
+    btnFiltros.addEventListener('click', function () {
+      if (window.innerWidth < 1024) {
+        aside.style.display = aside.style.display === 'none' ? '' : 'none';
+      }
+    });
+  }
+
+  var btnMenu = document.getElementById('btn-menu-movil');
+  var menu = document.getElementById('menu-movil');
+  if (btnMenu && menu) {
+    btnMenu.addEventListener('click', function () {
+      menu.classList.toggle('hidden');
+    });
+  }
+
+  aplicarFiltros();
+})();
+</script></body></html>
