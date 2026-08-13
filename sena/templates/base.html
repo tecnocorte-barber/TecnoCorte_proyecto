@@ -4,7 +4,52 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}TecnoCorte{% endblock %}</title>
-    
+    <style>
+        :root {
+            color-scheme: dark;
+            --bg: #131313;
+            --bg-soft: #1b1b1b;
+            --panel: #1f1f1f;
+            --panel-strong: #2a2a2a;
+            --gold: #f2ca50;
+            --gold-strong: #d4af37;
+            --text: #e2e2e2;
+            --muted: #d0c5af;
+        }
+        * { box-sizing: border-box; }
+        html, body { margin: 0; min-height: 100%; }
+        body {
+            background: radial-gradient(circle at top left, rgba(242, 202, 80, 0.15), transparent 30%),
+                        linear-gradient(180deg, #131313 0%, #171717 100%);
+            color: var(--text);
+            font-family: Arial, sans-serif;
+        }
+        .page { max-width: 1080px; margin: 0 auto; padding: 28px 20px 36px; }
+        header {
+            display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center;
+            gap: 16px; margin-bottom: 28px; padding: 18px 20px; border-radius: 18px;
+            background: rgba(31, 31, 31, 0.9); border: 1px solid rgba(242, 202, 80, 0.2);
+            box-shadow: 0 20px 40px rgba(242, 202, 80, 0.06);
+        }
+        .brand { display: flex; flex-direction: column; gap: 6px; }
+        .brand h1 { margin: 0; font-size: 2rem; letter-spacing: -0.04em; color: var(--gold); }
+        .brand p { margin: 0; color: var(--muted); }
+        nav { display: flex; gap: 18px; align-items: center; }
+        a { color: var(--gold); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        .card {
+            background: linear-gradient(180deg, rgba(31,31,31,0.96), rgba(21,21,21,0.96));
+            border: 1px solid rgba(242, 202, 80, 0.22);
+            border-radius: 24px; box-shadow: 0 30px 80px rgba(242, 202, 80, 0.08);
+            padding: 32px; color: var(--text);
+        }
+        footer { margin-top: 34px; text-align: center; color: var(--muted); font-size: 0.95rem; }
+        @media (max-width: 720px) {
+            .page { padding: 18px 14px 28px; }
+            header { flex-direction: column; align-items: stretch; }
+            nav { justify-content: flex-start; }
+        }
+    </style>
     {% block styles %}{% endblock %}
 
 </head>
@@ -13,7 +58,7 @@
         <header>
             <div class="brand">
                 <h1>TecnoCorte</h1>
-                <p>Solo login disponible, con diseño moderno y página de inicio limpia.</p>
+                <p>Reservas de citas y productos para tu barbería.</p>
             </div>
             <nav>
                 <a href="{% url 'sena:inicio' %}">Inicio</a>

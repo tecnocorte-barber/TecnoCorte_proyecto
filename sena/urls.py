@@ -48,6 +48,7 @@ urlpatterns = [
     path('admin/crear_reserva/', views.admin_crear_reserva, name="admin_crear_reserva"),
     path('admin/editar_reserva/<int:id>/', views.admin_editar_reserva, name="admin_editar_reserva"),
     path('admin/eliminar_reserva/<int:id>/', views.admin_eliminar_reserva, name="admin_eliminar_reserva"),
+    path('admin/ingresos/', views.admin_ingresos, name="admin_ingresos"),
     path('admin/perfil/', views.admin_perfil, name="admin_perfil"),
 
     path('api/', include(router.urls)),

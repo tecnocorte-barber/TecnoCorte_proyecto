@@ -1,82 +1,15 @@
 <!DOCTYPE html>
 <html class="dark" lang="es">
-<head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Perfil - TecnoCorte</title>
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&amp;family=Noto+Serif:ital,wght@0,400;0,700;1,400&amp;display=swap" rel="stylesheet"/>
-<script id="tailwind-config">
-tailwind.config = {
-darkMode: "class",
-theme: {
-extend: {
-"colors": {
-"surface-variant": "#353535",
-"on-secondary-fixed": "#241a00",
-"on-primary-container": "#554300",
-"tertiary": "#bfcdff",
-"secondary-fixed": "#ffe08b",
-"on-tertiary": "#082b72",
-"surface-container-low": "#1b1b1b",
-"surface-dim": "#131313",
-"surface-container-highest": "#353535",
-"surface": "#131313",
-"secondary-container": "#b08c10",
-"primary": "#f2ca50",
-"on-tertiary-container": "#254188",
-"on-secondary-container": "#352800",
-"on-primary-fixed": "#241a00",
-"primary-container": "#d4af37",
-"tertiary-fixed": "#dbe1ff",
-"secondary-fixed-dim": "#eac249",
-"surface-container": "#1f1f1f",
-"inverse-on-surface": "#303030",
-"on-error-container": "#ffdad6",
-"on-surface": "#e2e2e2",
-"on-secondary-fixed-variant": "#584400",
-"on-tertiary-fixed-variant": "#27438a",
-"on-primary": "#3c2f00",
-"tertiary-container": "#97b0ff",
-"inverse-primary": "#735c00",
-"surface-container-high": "#2a2a2a",
-"tertiary-fixed-dim": "#b4c5ff",
-"on-background": "#e2e2e2",
-"background": "#131313",
-"outline-variant": "#4d4635",
-"on-secondary": "#3d2f00",
-"on-error": "#690005",
-"primary-fixed": "#ffe088",
-"inverse-surface": "#e2e2e2",
-"surface-tint": "#e9c349",
-"primary-fixed-dim": "#e9c349",
-"outline": "#99907c",
-"secondary": "#eac249",
-"error-container": "#93000a",
-"error": "#ffb4ab",
-"on-surface-variant": "#d0c5af",
-"on-primary-fixed-variant": "#574500",
-"surface-bright": "#393939",
-"surface-container-lowest": "#0e0e0e",
-"on-tertiary-fixed": "#00174b"
-},
-"borderRadius": {
-"DEFAULT": "0.125rem",
-"lg": "0.25rem",
-"xl": "0.5rem",
-"full": "0.75rem"
-},
-"fontFamily": {
-"headline": ["Noto Serif", "serif"],
-"display": ["Noto Serif", "serif"],
-"body": ["Manrope", "sans-serif"],
-"label": ["Manrope", "sans-serif"]
-}
-}
-}
-}</script>
-<style>
+  <head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Perfil - TecnoCorte
+    </title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&amp;family=Noto+Serif:ital,wght@0,400;0,700;1,400&amp;display=swap" rel="stylesheet"/>
+    {% include "includes/tema.html" %}
+    <style>
 body { background-color: #131313; color: #e2e2e2; font-family: 'Manrope', sans-serif; }
 h1, h2, h3, h4, h5, h6, .font-headline { font-family: 'Noto Serif', serif; }
 .glass-nav { background: rgba(19, 19, 19, 0.7); backdrop-filter: blur(20px); }
@@ -84,84 +17,161 @@ h1, h2, h3, h4, h5, h6, .font-headline { font-family: 'Noto Serif', serif; }
 .ambient-glow { box-shadow: 0 20px 40px rgba(242, 202, 80, 0.06); }
 .ghost-border { border: 1px solid rgba(77, 70, 53, 0.15); }
 </style>
-</head>
-<body class="min-h-screen flex flex-col pt-24 bg-background text-on-background">
-<!-- TopNavBar -->
-<nav class="fixed top-0 w-full z-50 glass-nav shadow-[0_20px_40px_rgba(242,202,80,0.06)]"><div class="flex justify-between items-center px-8 py-4 w-full max-w-7xl mx-auto"><a class="font-headline text-2xl font-bold text-primary-container" href="{% url 'sena:usuario_dashboard' %}">TecnoCorte</a><div class="hidden md:flex gap-8 items-center font-display uppercase tracking-widest text-sm"><a class="text-on-surface-variant hover:text-primary transition-all duration-300 active:opacity-80" href="{% url 'sena:usuario_dashboard' %}">Inicio</a><a class="text-on-surface-variant hover:text-primary transition-all duration-300 active:opacity-80" href="{% url 'sena:usuario_servicios' %}">Servicios</a><a class="text-on-surface-variant hover:text-primary transition-all duration-300 active:opacity-80" href="{% url 'sena:usuario_tienda' %}">Tienda</a><a class="text-on-surface-variant hover:text-primary transition-all duration-300 active:opacity-80" href="{% url 'sena:usuario_peluquerias' %}">Peluquerías</a><a class="text-on-surface-variant hover:text-primary transition-all duration-300 active:opacity-80" href="{% url 'sena:ayuda' %}">Contactos</a></div><div class="flex items-center gap-5"><a href="{% url 'sena:carrito' %}" class="relative text-primary hover:text-primary-container transition-all duration-300 active:scale-90" title="Carrito"><span class="material-symbols-outlined">shopping_bag</span>{% if cantidad %}<span class="absolute -top-2 -right-2 min-w-5 h-5 px-1 rounded-full bg-primary text-on-primary text-[10px] font-bold flex items-center justify-center">{{ cantidad }}</span>{% endif %}</a><a href="{% url 'sena:usuario_perfil' %}" class="text-primary hover:text-primary-container transition-colors" title="Perfil"><span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">account_circle</span></a><a href="{% url 'sena:logout' %}" class="text-on-surface-variant hover:text-error transition-colors text-xs font-bold uppercase tracking-widest">Salir</a></div></div></nav>
+  </head>
+  <body class="min-h-screen flex flex-col pt-24 bg-background text-on-background">
+    <!-- TopNavBar -->
+    <nav class="fixed top-0 w-full z-50 glass-nav shadow-[0_20px_40px_rgba(242,202,80,0.06)]">
+      <div class="flex justify-between items-center px-8 py-4 w-full max-w-7xl mx-auto"><a class="font-headline text-2xl font-bold text-primary-container" href="{% url 'sena:usuario_dashboard' %}">TecnoCorte</a>
+      <div class="hidden md:flex gap-8 items-center font-display uppercase tracking-widest text-sm"><a class="text-on-surface-variant hover:text-primary transition-all duration-300 active:opacity-80" href="{% url 'sena:usuario_dashboard' %}">Inicio</a><a class="text-on-surface-variant hover:text-primary transition-all duration-300 active:opacity-80" href="{% url 'sena:usuario_servicios' %}">Servicios</a><a class="text-on-surface-variant hover:text-primary transition-all duration-300 active:opacity-80" href="{% url 'sena:usuario_tienda' %}">Tienda</a><a class="text-on-surface-variant hover:text-primary transition-all duration-300 active:opacity-80" href="{% url 'sena:usuario_peluquerias' %}">Peluquerías</a><a class="text-on-surface-variant hover:text-primary transition-all duration-300 active:opacity-80" href="{% url 'sena:ayuda' %}">Contactos</a>
+</div>
+<div class="flex items-center gap-5"><a href="{% url 'sena:carrito' %}" class="relative text-primary hover:text-primary-container transition-all duration-300 active:scale-90" title="Carrito"><span class="material-symbols-outlined">shopping_bag</span>{% if cantidad %}<span class="absolute -top-2 -right-2 min-w-5 h-5 px-1 rounded-full bg-primary text-on-primary text-[10px] font-bold flex items-center justify-center">{{ cantidad }}
+</span>{% endif %}
+</a><a href="{% url 'sena:usuario_perfil' %}" class="text-primary hover:text-primary-container transition-colors" title="Perfil"><span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">account_circle</span>
+</a><a href="{% url 'sena:logout' %}" class="text-on-surface-variant hover:text-error transition-colors text-xs font-bold uppercase tracking-widest">Salir</a>
+</div>
+</div>
+</nav>
 <!-- Main Content -->
 <main class="flex-grow w-full max-w-7xl mx-auto px-6 py-12 md:py-16 grid grid-cols-1 lg:grid-cols-12 gap-12">
-<!-- Left Column -->
-<div class="lg:col-span-4 flex flex-col gap-8">
-  <div class="bg-surface-container-low rounded-xl p-8 flex flex-col items-center text-center ambient-glow relative overflow-hidden">
-    <div class="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
-    <div class="w-28 h-28 rounded-full mb-6 bg-surface-container-highest border border-outline-variant/30 flex items-center justify-center"><span class="material-symbols-outlined text-primary text-6xl">person</span></div>
-    <h1 class="font-headline text-3xl font-bold tracking-tight mb-1">{{ usuario.nombre }} {{ usuario.apellido }}</h1>
-    <p class="text-primary text-xs uppercase tracking-widest font-bold mb-1">{{ usuario.rol }}</p>
-    <p class="text-on-surface-variant text-sm mb-6">Miembro desde {{ usuario.fecha_creacion|date:"F Y" }}</p>
-    <div class="w-full space-y-3 text-left text-sm">
-      <p class="flex items-center gap-3 text-on-surface-variant"><span class="material-symbols-outlined text-primary text-base">mail</span>{{ usuario.email }}</p>
-      <p class="flex items-center gap-3 text-on-surface-variant"><span class="material-symbols-outlined text-primary text-base">call</span>{{ usuario.telefono|default:"Sin registrar" }}</p>
+  <!-- Left Column -->
+  <div class="lg:col-span-4 flex flex-col gap-8">
+    <div class="bg-surface-container-low rounded-xl p-8 flex flex-col items-center text-center ambient-glow relative overflow-hidden">
+      <div class="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none">
+      </div>
+      <div class="w-28 h-28 rounded-full mb-6 bg-surface-container-highest border border-outline-variant/30 flex items-center justify-center"><span class="material-symbols-outlined text-primary text-6xl">person</span>
     </div>
-    <div class="flex gap-3 w-full mt-6"><a href="#editar" class="flex-1 gold-gradient text-on-primary font-bold py-3 rounded-md hover:opacity-90 transition-opacity active:scale-95 text-sm tracking-wide">EDITAR PERFIL</a></div>
+    <h1 class="font-headline text-3xl font-bold tracking-tight mb-1">{{ usuario.nombre }} 
+      {{ usuario.apellido }}
+    </h1>
+    <p class="text-primary text-xs uppercase tracking-widest font-bold mb-1">{{ usuario.rol }}
+    </p>
+    <p class="text-on-surface-variant text-sm mb-6">Miembro desde 
+      {{ usuario.fecha_creacion|date:"F Y" }}
+    </p>
+    <div class="w-full space-y-3 text-left text-sm">
+      <p class="flex items-center gap-3 text-on-surface-variant"><span class="material-symbols-outlined text-primary text-base">mail</span>{{ usuario.email }}
+    </p>
+    <p class="flex items-center gap-3 text-on-surface-variant"><span class="material-symbols-outlined text-primary text-base">call</span>{{ usuario.telefono|default:"Sin registrar" }}
+  </p>
+</div>
+<div class="flex gap-3 w-full mt-6"><a href="#editar" class="flex-1 gold-gradient text-on-primary font-bold py-3 rounded-md hover:opacity-90 transition-opacity active:scale-95 text-sm tracking-wide">EDITAR PERFIL</a>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-4">
+  <div class="bg-surface-container-low p-6 rounded-xl flex flex-col items-center justify-center"><span class="font-headline text-3xl text-primary mb-1">{{ citas|length }}
+  </span><span class="text-xs text-on-surface-variant uppercase tracking-widest">Citas Totales</span>
+</div>
+<div class="bg-surface-container-low p-6 rounded-xl flex flex-col items-center justify-center"><span class="font-headline text-3xl text-primary mb-1">{{ pedidos|length }}
+</span><span class="text-xs text-on-surface-variant uppercase tracking-widest">Pedidos</span>
+</div>
+</div>
+<!-- Edit form -->
+<div id="editar" class="bg-surface-container-low rounded-xl p-8 ambient-glow scroll-mt-28">
+  <h3 class="font-headline text-xl text-primary-container mb-6">Editar mis datos
+  </h3>
+  <form method="post" class="space-y-5">
+    {% csrf_token %}
+    <div><label class="text-[10px] uppercase tracking-[0.2em] text-primary font-bold block mb-1">Nombre</label>
+    <input class="w-full bg-transparent border-b border-outline-variant/30 py-2 focus:outline-none focus:border-primary text-on-surface text-sm" name="nombre" value="{{ usuario.nombre }}" required/>
   </div>
-  <div class="grid grid-cols-2 gap-4">
-    <div class="bg-surface-container-low p-6 rounded-xl flex flex-col items-center justify-center"><span class="font-headline text-3xl text-primary mb-1">{{ citas|length }}</span><span class="text-xs text-on-surface-variant uppercase tracking-widest">Citas Totales</span></div>
-    <div class="bg-surface-container-low p-6 rounded-xl flex flex-col items-center justify-center"><span class="font-headline text-3xl text-primary mb-1">{{ pedidos|length }}</span><span class="text-xs text-on-surface-variant uppercase tracking-widest">Pedidos</span></div>
-  </div>
-  <!-- Edit form -->
-  <div id="editar" class="bg-surface-container-low rounded-xl p-8 ambient-glow scroll-mt-28">
-    <h3 class="font-headline text-xl text-primary-container mb-6">Editar mis datos</h3>
-    <form method="post" class="space-y-5">
-      {% csrf_token %}
-      <div><label class="text-[10px] uppercase tracking-[0.2em] text-primary font-bold block mb-1">Nombre</label><input class="w-full bg-transparent border-b border-outline-variant/30 py-2 focus:outline-none focus:border-primary text-on-surface text-sm" name="nombre" value="{{ usuario.nombre }}" required/></div>
-      <div><label class="text-[10px] uppercase tracking-[0.2em] text-primary font-bold block mb-1">Apellido</label><input class="w-full bg-transparent border-b border-outline-variant/30 py-2 focus:outline-none focus:border-primary text-on-surface text-sm" name="apellido" value="{{ usuario.apellido }}" required/></div>
-      <div><label class="text-[10px] uppercase tracking-[0.2em] text-primary font-bold block mb-1">Teléfono</label><input class="w-full bg-transparent border-b border-outline-variant/30 py-2 focus:outline-none focus:border-primary text-on-surface text-sm" name="telefono" value="{{ usuario.telefono }}"/></div>
-      <button type="submit" class="w-full py-3 rounded-md border border-primary/40 text-primary hover:bg-primary/5 transition-colors text-sm font-semibold uppercase tracking-widest active:scale-95">Guardar cambios</button>
-    </form>
-  </div>
-  <a href="{% url 'sena:logout' %}" class="flex items-center justify-center gap-2 w-full py-4 text-error hover:text-error/80 transition-colors group"><span class="material-symbols-outlined transition-transform group-hover:-translate-x-1">logout</span><span class="text-sm uppercase tracking-widest font-semibold">Cerrar Sesión</span></a>
+  <div><label class="text-[10px] uppercase tracking-[0.2em] text-primary font-bold block mb-1">Apellido</label>
+  <input class="w-full bg-transparent border-b border-outline-variant/30 py-2 focus:outline-none focus:border-primary text-on-surface text-sm" name="apellido" value="{{ usuario.apellido }}" required/>
+</div>
+<div><label class="text-[10px] uppercase tracking-[0.2em] text-primary font-bold block mb-1">Teléfono</label>
+<input class="w-full bg-transparent border-b border-outline-variant/30 py-2 focus:outline-none focus:border-primary text-on-surface text-sm" name="telefono" value="{{ usuario.telefono }}"/>
+</div>
+<button type="submit" class="w-full py-3 rounded-md border border-primary/40 text-primary hover:bg-primary/5 transition-colors text-sm font-semibold uppercase tracking-widest active:scale-95">Guardar cambios
+</button>
+</form>
+</div>
+<a href="{% url 'sena:logout' %}" class="flex items-center justify-center gap-2 w-full py-4 text-error hover:text-error/80 transition-colors group"><span class="material-symbols-outlined transition-transform group-hover:-translate-x-1">logout</span><span class="text-sm uppercase tracking-widest font-semibold">Cerrar Sesión</span>
+</a>
 </div>
 <!-- Right Column -->
 <div class="lg:col-span-8 flex flex-col gap-12">
   <!-- Mis Citas -->
   <section>
-    <div class="flex justify-between items-end mb-8 border-b border-outline-variant/10 pb-4"><h2 class="font-headline text-3xl tracking-tight">Mis Citas</h2><a class="text-primary text-sm uppercase tracking-widest hover:text-primary-container transition-colors active:scale-95 flex items-center gap-1 group" href="{% url 'sena:usuario_reservar_cita' %}">Agendar Nueva <span class="material-symbols-outlined text-sm transition-transform group-hover:translate-x-1">arrow_forward</span></a></div>
-    <div class="flex flex-col gap-6">
-      {% for cita in citas %}
-      <div class="bg-surface-container-low rounded-xl p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 ambient-glow">
-        <div class="flex items-start gap-6">
-          <div class="flex flex-col items-center justify-center bg-surface-container-highest p-4 rounded-lg min-w-[80px]"><span class="text-primary-container text-sm font-bold uppercase">{{ cita.fecha|date:"M" }}</span><span class="font-headline text-3xl text-on-surface">{{ cita.fecha|date:"d" }}</span></div>
-          <div>
-            <h3 class="font-headline text-xl mb-1">{{ cita.servicio }}</h3>
-            <p class="text-on-surface-variant text-sm mb-1 flex items-center gap-2"><span class="material-symbols-outlined text-[16px]">schedule</span>{{ cita.hora|time:"H:i" }} - {{ cita.peluqueria.nombre }}</p>
-            <p class="text-on-surface-variant text-sm">Con: <span class="text-on-surface">{{ cita.peluquero.nombre }} {{ cita.peluquero.apellido }}</span></p>
-          </div>
-        </div>
-        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest {% if cita.estado == 'Confirmada' %}bg-primary/10 text-primary border border-primary/20{% elif cita.estado == 'Cancelada' %}bg-error/10 text-error border border-error/20{% else %}bg-secondary-container/20 text-secondary border border-secondary-container/30{% endif %}">{{ cita.estado }}</span>
-      </div>
-      {% empty %}
-      <div class="text-center py-16 bg-surface-container-low rounded-xl ghost-border"><span class="material-symbols-outlined text-primary/40 text-5xl mb-4 block">event_available</span><p class="text-on-surface-variant mb-6">Aún no tienes citas reservadas.</p><a href="{% url 'sena:usuario_reservar_cita' %}" class="inline-flex justify-center py-3 px-8 rounded-md gold-gradient text-on-primary font-bold text-sm uppercase tracking-widest hover:opacity-90 transition-all active:scale-95">Reservar ahora</a></div>
-      {% endfor %}
+    <div class="flex justify-between items-end mb-8 border-b border-outline-variant/10 pb-4">
+      <h2 class="font-headline text-3xl tracking-tight">Mis Citas
+      </h2>
+      <a class="text-primary text-sm uppercase tracking-widest hover:text-primary-container transition-colors active:scale-95 flex items-center gap-1 group" href="{% url 'sena:usuario_reservar_cita' %}">Agendar Nueva 
+      <span class="material-symbols-outlined text-sm transition-transform group-hover:translate-x-1">arrow_forward</span>
+  </a>
+</div>
+<div class="flex flex-col gap-6">
+  {% for cita in citas %}
+  <div class="bg-surface-container-low rounded-xl p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 ambient-glow">
+    <div class="flex items-start gap-6">
+      <div class="flex flex-col items-center justify-center bg-surface-container-highest p-4 rounded-lg min-w-[80px]"><span class="text-primary-container text-sm font-bold uppercase">{{ cita.fecha|date:"M" }}
+      </span><span class="font-headline text-3xl text-on-surface">{{ cita.fecha|date:"d" }}
+    </span>
+  </div>
+  <div>
+    <h3 class="font-headline text-xl mb-1">{{ cita.servicio }}
+    </h3>
+    <p class="text-on-surface-variant text-sm mb-1 flex items-center gap-2"><span class="material-symbols-outlined text-[16px]">schedule</span>{{ cita.hora|time:"H:i" }} - 
+    {{ cita.peluqueria.nombre }}
+  </p>
+  <p class="text-on-surface-variant text-sm">Con: 
+    <span class="text-on-surface">{{ cita.peluquero.nombre }} 
+    {{ cita.peluquero.apellido }}
+  </span>
+</p>
+</div>
+</div>
+<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest {% if cita.estado == 'Confirmada' %}bg-primary/10 text-primary border border-primary/20{% elif cita.estado == 'Cancelada' %}bg-error/10 text-error border border-error/20{% else %}bg-secondary-container/20 text-secondary border border-secondary-container/30{% endif %}">{{ cita.estado }}
+</span>
+</div>
+{% empty %}
+<div class="text-center py-16 bg-surface-container-low rounded-xl ghost-border"><span class="material-symbols-outlined text-primary/40 text-5xl mb-4 block">event_available</span>
+<p class="text-on-surface-variant mb-6">Aún no tienes citas reservadas.
+</p>
+<a href="{% url 'sena:usuario_reservar_cita' %}" class="inline-flex justify-center py-3 px-8 rounded-md gold-gradient text-on-primary font-bold text-sm uppercase tracking-widest hover:opacity-90 transition-all active:scale-95">Reservar ahora</a>
+</div>
+{% endfor %}
+</div>
+</section>
+<!-- Mis Pedidos -->
+<section>
+  <div class="flex justify-between items-end mb-8 border-b border-outline-variant/10 pb-4">
+    <h2 class="font-headline text-3xl tracking-tight">Mis Pedidos
+    </h2>
+    <a class="text-on-surface-variant text-sm uppercase tracking-widest hover:text-primary transition-colors active:scale-95 flex items-center gap-1 group" href="{% url 'sena:usuario_tienda' %}">Ver Tienda 
+    <span class="material-symbols-outlined text-sm transition-transform group-hover:translate-x-1">storefront</span>
+</a>
+</div>
+<div class="flex flex-col gap-6">
+  {% for pedido in pedidos %}
+  <div class="bg-surface-container-low rounded-xl p-6">
+    <div class="flex flex-wrap justify-between items-center gap-3 mb-4 pb-4 border-b border-outline-variant/10">
+      <div><span class="text-[10px] uppercase tracking-widest text-primary block mb-1">Pedido #{{ pedido.id }} • 
+        {{ pedido.fecha|date:"d M Y" }}
+      </span>
+      <h4 class="font-headline text-lg">{{ pedido.estado }}
+      </h4>
     </div>
-  </section>
-  <!-- Mis Pedidos -->
-  <section>
-    <div class="flex justify-between items-end mb-8 border-b border-outline-variant/10 pb-4"><h2 class="font-headline text-3xl tracking-tight">Mis Pedidos</h2><a class="text-on-surface-variant text-sm uppercase tracking-widest hover:text-primary transition-colors active:scale-95 flex items-center gap-1 group" href="{% url 'sena:usuario_tienda' %}">Ver Tienda <span class="material-symbols-outlined text-sm transition-transform group-hover:translate-x-1">storefront</span></a></div>
-    <div class="flex flex-col gap-6">
-      {% for pedido in pedidos %}
-      <div class="bg-surface-container-low rounded-xl p-6">
-        <div class="flex flex-wrap justify-between items-center gap-3 mb-4 pb-4 border-b border-outline-variant/10">
-          <div><span class="text-[10px] uppercase tracking-widest text-primary block mb-1">Pedido #{{ pedido.id }} • {{ pedido.fecha|date:"d M Y" }}</span><h4 class="font-headline text-lg">{{ pedido.estado }}</h4></div>
-          <span class="font-headline text-xl text-primary">${{ pedido.total|floatformat:"0g" }} COP</span>
-        </div>
-        <div class="space-y-2">{% for item in pedido.productos.all %}<div class="flex justify-between text-sm"><span class="text-on-surface-variant">{{ item.producto.nombre }} <span class="text-on-surface-variant/60">x{{ item.cantidad }}</span></span><span class="text-on-surface">${{ item.precio|floatformat:"0g" }}</span></div>{% endfor %}</div>
-        <a href="{% url 'sena:usuario_tienda' %}" class="mt-4 inline-flex items-center gap-1 text-primary text-xs uppercase tracking-widest hover:underline">Comprar de nuevo</a>
-      </div>
-      {% empty %}
-      <div class="text-center py-16 bg-surface-container-low rounded-xl ghost-border"><span class="material-symbols-outlined text-primary/40 text-5xl mb-4 block">receipt_long</span><p class="text-on-surface-variant mb-6">Aún no tienes pedidos.</p><a href="{% url 'sena:usuario_tienda' %}" class="inline-flex justify-center py-3 px-8 rounded-md gold-gradient text-on-primary font-bold text-sm uppercase tracking-widest hover:opacity-90 transition-all active:scale-95">Ir a la tienda</a></div>
-      {% endfor %}
-    </div>
-  </section>
+    <span class="font-headline text-xl text-primary">${{ pedido.total|floatformat:"0g" }} COP</span>
+</div>
+<div class="space-y-2">{% for item in pedido.productos.all %}
+  <div class="flex justify-between text-sm"><span class="text-on-surface-variant">{{ item.producto.nombre }} 
+    <span class="text-on-surface-variant/60">x{{ item.cantidad }}
+  </span>
+</span><span class="text-on-surface">${{ item.precio|floatformat:"0g" }}
+</span>
+</div>
+{% endfor %}
+</div>
+<a href="{% url 'sena:usuario_tienda' %}" class="mt-4 inline-flex items-center gap-1 text-primary text-xs uppercase tracking-widest hover:underline">Comprar de nuevo</a>
+</div>
+{% empty %}
+<div class="text-center py-16 bg-surface-container-low rounded-xl ghost-border"><span class="material-symbols-outlined text-primary/40 text-5xl mb-4 block">receipt_long</span>
+<p class="text-on-surface-variant mb-6">Aún no tienes pedidos.
+</p>
+<a href="{% url 'sena:usuario_tienda' %}" class="inline-flex justify-center py-3 px-8 rounded-md gold-gradient text-on-primary font-bold text-sm uppercase tracking-widest hover:opacity-90 transition-all active:scale-95">Ir a la tienda</a>
+</div>
+{% endfor %}
+</div>
+</section>
 </div>
 </main>
 </body>

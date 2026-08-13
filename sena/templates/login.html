@@ -1,73 +1,12 @@
-<!DOCTYPE html><html class="dark" lang="es"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script><link href="https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,300;0,700;1,300;1,700&family=Manrope:wght@200;400;600;800&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@100..900&family=Noto+Serif:wght@100..900&display=swap" rel="stylesheet"/><script id="tailwind-config">
-tailwind.config = {
-darkMode: "class",
-theme: {
-extend: {
-"colors": {
-"on-error-container": "#ffdad6",
-"on-tertiary-fixed-variant": "#27438a",
-"inverse-on-surface": "#303030",
-"secondary": "#eac249",
-"primary-fixed-dim": "#e9c349",
-"on-tertiary-container": "#254188",
-"on-background": "#e2e2e2",
-"tertiary-container": "#97b0ff",
-"surface-container-low": "#1b1b1b",
-"on-tertiary-fixed": "#00174b",
-"surface-container-lowest": "#0e0e0e",
-"surface-container-high": "#2a2a2a",
-"background": "#131313",
-"on-secondary-fixed": "#241a00",
-"surface-tint": "#e9c349",
-"on-secondary-container": "#352800",
-"on-primary": "#3c2f00",
-"surface-variant": "#353535",
-"secondary-fixed-dim": "#eac249",
-"on-tertiary": "#082b72",
-"inverse-surface": "#e2e2e2",
-"primary-container": "#d4af37",
-"on-secondary": "#3d2f00",
-"on-error": "#690005",
-"error-container": "#93000a",
-"on-primary-fixed": "#241a00",
-"error": "#ffb4ab",
-"on-surface": "#e2e2e2",
-"on-secondary-fixed-variant": "#584400",
-"secondary-fixed": "#ffe08b",
-"surface-bright": "#393939",
-"tertiary-fixed-dim": "#b4c5ff",
-"on-surface-variant": "#d0c5af",
-"tertiary": "#bfcdff",
-"surface": "#131313",
-"tertiary-fixed": "#dbe1ff",
-"outline": "#99907c",
-"secondary-container": "#b08c10",
-"on-primary-container": "#554300",
-"surface-container": "#1f1f1f",
-"primary": "#f2ca50",
-"inverse-primary": "#735c00",
-"surface-container-highest": "#353535",
-"surface-dim": "#131313",
-"primary-fixed": "#ffe088",
-"outline-variant": "#4d4635",
-"on-primary-fixed-variant": "#574500"
-},
-"borderRadius": {
-"DEFAULT": "0.125rem",
-"lg": "0.25rem",
-"xl": "0.5rem",
-"full": "0.75rem"
-},
-"fontFamily": {
-"headline": ["Noto Serif"],
-"display": ["Noto Serif"],
-"body": ["Manrope"],
-"label": ["Manrope"]
-}
-},
-},
-}
-</script><style>
+<!DOCTYPE html>
+<html class="dark" lang="es">
+  <head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,300;0,700;1,300;1,700&family=Manrope:wght@200;400;600;800&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@100..900&family=Noto+Serif:wght@100..900&display=swap" rel="stylesheet"/>
+    {% include "includes/tema.html" %}<style>
 body {
 background-color: #131313;
 font-family: 'Manrope', sans-serif;
@@ -103,13 +42,89 @@ height: 4px;
 background-color: #f2ca50;
 border-radius: 50%;
 }
-</style></head><body class="min-h-screen flex flex-col items-center justify-center selection:bg-primary selection:text-on-primary"><!-- TopNavBar --><nav class="fixed top-0 w-full z-50 glass-nav shadow-[0_20px_40px_rgba(242,202,80,0.06)] border-none"><div class="flex justify-between items-center px-8 py-6 w-full max-w-7xl mx-auto"><div class="flex-1"><a class="font-headline text-2xl font-bold text-primary tracking-tighter italic" href="{% url 'sena:inicio' %}">TecnoCorte</a></div><div class="hidden md:flex items-center gap-12 flex-1 justify-center"><a class="text-on-surface hover:text-primary transition-colors duration-300 text-sm tracking-widest uppercase font-semibold" href="{% url 'sena:inicio' %}">Inicio</a><a class="text-on-surface hover:text-primary transition-colors duration-300 text-sm tracking-widest uppercase font-semibold" href="{% url 'sena:ayuda' %}">Contactos</a></div><div class="flex-1 flex justify-end gap-6"><a class="text-on-surface hover:text-primary transition-all duration-300 text-sm font-bold uppercase tracking-wider active:scale-95" href="{% url 'sena:inicio' %}">Inicio</a><a class="text-primary border border-primary/30 px-4 py-1.5 rounded-lg hover:bg-primary/10 transition-all duration-300 text-sm font-bold uppercase tracking-wider active:scale-95" href="{% url 'sena:ayuda' %}">Contactos</a></div></div></nav><!-- Background Decoration --><div class="fixed inset-0 pointer-events-none z-0"><div class="absolute top-[-10%] right-[-5%] w-[40vw] h-[40vw] bg-primary/5 blur-[120px] rounded-full"></div><div class="absolute bottom-[-10%] left-[-5%] w-[30vw] h-[30vw] bg-primary-container/5 blur-[100px] rounded-full"></div></div><!-- Login Container --><main class="relative z-10 w-full max-w-md px-6 py-24"><div class="bg-surface-container-low rounded-xl p-10 ambient-glow border border-outline-variant/10"><header class="text-center mb-10"><h1 class="font-headline text-4xl mb-2 text-on-surface font-light tracking-tight">Bienvenido</h1><p class="text-on-surface-variant font-body text-sm tracking-wide">Accede a tu experiencia de barbería premium</p></header><!-- Role Selector --><div class="flex justify-between items-center border-b border-outline-variant/20 pb-4 mb-10 px-2"><button class="role-tab text-xs font-bold uppercase tracking-widest transition-all duration-300 role-tab-active" data-role="Cliente" onclick="selectRole(this)">Cliente</button><button class="role-tab text-xs font-bold uppercase tracking-widest text-on-surface-variant hover:text-primary transition-all duration-300" data-role="Peluquero" onclick="selectRole(this)">Peluquero</button><button class="role-tab text-xs font-bold uppercase tracking-widest text-on-surface-variant hover:text-primary transition-all duration-300" data-role="Admin" onclick="selectRole(this)">Administrador</button></div><!-- Login Form --><form class="space-y-8" method="post">{% if proximo %}<input type="hidden" name="next" value="{{ proximo }}">{% endif %}<input type="hidden" name="rol" id="selected-role" value="Cliente">{% if error %}<div class="mb-8 p-4 rounded-lg bg-error-container/20 border border-error/40 flex items-start gap-3"><span class="material-symbols-outlined text-error text-lg">error</span><p class="text-error text-sm font-semibold tracking-wide">{{ error }}</p></div>{% endif %}
-{% csrf_token %}
-<div class="group relative"><label class="absolute -top-6 left-0 text-[10px] uppercase tracking-[0.2em] text-primary font-bold">Correo Electrónico</label><input class="w-full bg-transparent border-b border-outline-variant/30 py-3 focus:outline-none focus:border-primary text-on-surface transition-all duration-500 placeholder:text-on-surface-variant/30 text-sm tracking-wide text-glow" name="user" placeholder="ejemplo@tecnocorte.com" type="email"/></div><div class="group relative"><label class="absolute -top-6 left-0 text-[10px] uppercase tracking-[0.2em] text-primary font-bold">Contraseña</label><input class="w-full bg-transparent border-b border-outline-variant/30 py-3 focus:outline-none focus:border-primary text-on-surface transition-all duration-500 placeholder:text-on-surface-variant/30 text-sm tracking-wide text-glow" name="password" id="password-field" placeholder="••••••••" type="password"/><button class="absolute right-0 top-3 text-on-surface-variant/50 hover:text-primary transition-colors" type="button" id="toggle-password" onclick="togglePassword()" title="Mostrar contraseña"><span class="material-symbols-outlined text-lg">visibility</span></button></div><div class="pt-4"><button class="w-full molten-gold text-on-primary font-bold py-4 rounded-lg tracking-[0.15em] uppercase text-xs shadow-xl hover:shadow-primary/20 active:scale-[0.98] transition-all duration-300">
+</style>
+  </head>
+  <body class="min-h-screen flex flex-col items-center justify-center selection:bg-primary selection:text-on-primary"><!-- TopNavBar -->
+    <nav class="fixed top-0 w-full z-50 glass-nav shadow-[0_20px_40px_rgba(242,202,80,0.06)] border-none">
+      <div class="flex justify-between items-center px-8 py-6 w-full max-w-7xl mx-auto">
+        <div class="flex-1"><a class="font-headline text-2xl font-bold text-primary tracking-tighter italic" href="{% url 'sena:inicio' %}">TecnoCorte</a>
+      </div>
+      <div class="hidden md:flex items-center gap-12 flex-1 justify-center"><a class="text-on-surface hover:text-primary transition-colors duration-300 text-sm tracking-widest uppercase font-semibold" href="{% url 'sena:inicio' %}">Inicio</a><a class="text-on-surface hover:text-primary transition-colors duration-300 text-sm tracking-widest uppercase font-semibold" href="{% url 'sena:ayuda' %}">Contactos</a>
+  </div>
+  <div class="flex-1 flex justify-end gap-6"><a class="text-on-surface hover:text-primary transition-all duration-300 text-sm font-bold uppercase tracking-wider active:scale-95" href="{% url 'sena:inicio' %}">Inicio</a><a class="text-primary border border-primary/30 px-4 py-1.5 rounded-lg hover:bg-primary/10 transition-all duration-300 text-sm font-bold uppercase tracking-wider active:scale-95" href="{% url 'sena:ayuda' %}">Contactos</a>
+</div>
+</div>
+</nav>
+<!-- Background Decoration -->
+<div class="fixed inset-0 pointer-events-none z-0">
+  <div class="absolute top-[-10%] right-[-5%] w-[40vw] h-[40vw] bg-primary/5 blur-[120px] rounded-full">
+  </div>
+  <div class="absolute bottom-[-10%] left-[-5%] w-[30vw] h-[30vw] bg-primary-container/5 blur-[100px] rounded-full">
+  </div>
+</div>
+<!-- Login Container -->
+<main class="relative z-10 w-full max-w-md px-6 py-24">
+  <div class="bg-surface-container-low rounded-xl p-10 ambient-glow border border-outline-variant/10">
+    <header class="text-center mb-10">
+      <h1 class="font-headline text-4xl mb-2 text-on-surface font-light tracking-tight">Bienvenido
+      </h1>
+      <p class="text-on-surface-variant font-body text-sm tracking-wide">Accede a tu experiencia de barbería premium
+      </p>
+    </header>
+    <!-- Role Selector -->
+    <div class="flex justify-between items-center border-b border-outline-variant/20 pb-4 mb-10 px-2">
+      <button class="role-tab text-xs font-bold uppercase tracking-widest transition-all duration-300 role-tab-active" data-role="Cliente" onclick="selectRole(this)">Cliente
+      </button>
+      <button class="role-tab text-xs font-bold uppercase tracking-widest text-on-surface-variant hover:text-primary transition-all duration-300" data-role="Peluquero" onclick="selectRole(this)">Peluquero
+      </button>
+      <button class="role-tab text-xs font-bold uppercase tracking-widest text-on-surface-variant hover:text-primary transition-all duration-300" data-role="Admin" onclick="selectRole(this)">Administrador
+      </button>
+    </div>
+    <!-- Login Form -->
+    <form class="space-y-8" method="post">{% if proximo %}
+      <input type="hidden" name="next" value="{{ proximo }}">{% endif %}
+      <input type="hidden" name="rol" id="selected-role" value="Cliente">{% if error %}
+      <div class="mb-8 p-4 rounded-lg bg-error-container/20 border border-error/40 flex items-start gap-3"><span class="material-symbols-outlined text-error text-lg">error</span>
+      <p class="text-error text-sm font-semibold tracking-wide">{{ error }}
+      </p>
+    </div>
+    {% endif %}
+    {% csrf_token %}
+    <div class="group relative"><label class="absolute -top-6 left-0 text-[10px] uppercase tracking-[0.2em] text-primary font-bold">Correo Electrónico</label>
+    <input class="w-full bg-transparent border-b border-outline-variant/30 py-3 focus:outline-none focus:border-primary text-on-surface transition-all duration-500 placeholder:text-on-surface-variant/30 text-sm tracking-wide text-glow" name="user" placeholder="ejemplo@tecnocorte.com" type="email"/>
+  </div>
+  <div class="group relative"><label class="absolute -top-6 left-0 text-[10px] uppercase tracking-[0.2em] text-primary font-bold">Contraseña</label>
+  <input class="w-full bg-transparent border-b border-outline-variant/30 py-3 focus:outline-none focus:border-primary text-on-surface transition-all duration-500 placeholder:text-on-surface-variant/30 text-sm tracking-wide text-glow" name="password" id="password-field" placeholder="••••••••" type="password"/>
+  <button class="absolute right-0 top-3 text-on-surface-variant/50 hover:text-primary transition-colors" type="button" id="toggle-password" onclick="togglePassword()" title="Mostrar contraseña"><span class="material-symbols-outlined text-lg">visibility</span>
+</button>
+</div>
+<div class="pt-4">
+  <button class="w-full molten-gold text-on-primary font-bold py-4 rounded-lg tracking-[0.15em] uppercase text-xs shadow-xl hover:shadow-primary/20 active:scale-[0.98] transition-all duration-300">
 Ingresar
-</button></div></form><!-- Footer Links --><footer class="mt-10 text-center space-y-5"><a class="block text-sm text-on-surface-variant hover:text-primary transition-colors duration-300 tracking-wide font-semibold" href="{% url 'sena:registro' %}">¿No tienes cuenta? <span class="text-primary underline underline-offset-4">Regístrate</span></a><div class="w-8 h-px bg-outline-variant/30 mx-auto"></div><a class="block text-xs text-on-surface-variant hover:text-primary transition-colors duration-300 tracking-wide font-medium" href="{% url 'sena:ayuda' %}">¿Olvidaste tu contraseña?</a></footer></div><!-- Signature Divider --><div class="flex justify-center items-center h-12 mt-8"><div class="w-1 h-1 bg-primary-container rounded-full opacity-50"></div></div><p class="text-center text-[10px] text-on-surface-variant/40 uppercase tracking-[0.3em] font-light">
+
+  </button>
+</div>
+</form>
+<!-- Footer Links -->
+<footer class="mt-10 text-center space-y-5"><a class="block text-sm text-on-surface-variant hover:text-primary transition-colors duration-300 tracking-wide font-semibold" href="{% url 'sena:registro' %}">¿No tienes cuenta? 
+  <span class="text-primary underline underline-offset-4">Regístrate</span>
+</a>
+<div class="w-8 h-px bg-outline-variant/30 mx-auto">
+</div>
+<a class="block text-xs text-on-surface-variant hover:text-primary transition-colors duration-300 tracking-wide font-medium" href="{% url 'sena:ayuda' %}">¿Olvidaste tu contraseña?</a>
+</footer>
+</div>
+<!-- Signature Divider -->
+<div class="flex justify-center items-center h-12 mt-8">
+  <div class="w-1 h-1 bg-primary-container rounded-full opacity-50">
+  </div>
+</div>
+<p class="text-center text-[10px] text-on-surface-variant/40 uppercase tracking-[0.3em] font-light">
 © 2026 TecnoCorte • Todos los derechos reservados
-</p></main><script>
+
+</p>
+</main>
+<script>
 function togglePassword() {
 var field = document.getElementById('password-field');
 var btn = document.getElementById('toggle-password');
@@ -140,4 +155,6 @@ const speed = (idx + 1) * 20;
 glow.style.transform = `translate(${x * speed}px, ${y * speed}px)`;
 });
 });
-</script></body></html>
+</script>
+</body>
+</html>

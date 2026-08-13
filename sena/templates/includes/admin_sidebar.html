@@ -1,7 +1,7 @@
 <nav class="h-screen w-64 fixed left-0 top-0 bg-surface-container-low flex flex-col p-6 space-y-4 z-40">
   <div class="mb-12">
-    <h1 class="font-headline text-xl text-primary font-bold tracking-tight">Panel Maestro</h1>
-    <p class="font-label uppercase text-xs text-on-surface-variant mt-1 tracking-widest">The Modern Alchemist</p>
+    <h1 class="font-headline text-xl text-primary font-bold tracking-tight">Panel de TecnoCorte</h1>
+    <p class="font-label uppercase text-xs text-on-surface-variant mt-1 tracking-widest">Administración</p>
   </div>
   <div class="space-y-2 flex-grow">
     <a class="flex items-center space-x-4 px-4 py-3 rounded-lg transition-all group {% if active == 'dashboard' %}bg-primary-container text-on-primary-container font-bold{% else %}text-on-surface-variant hover:bg-surface-container-high hover:bg-surface-container-highest{% endif %}" href="{% url 'sena:admin_dashboard' %}">
@@ -16,9 +16,9 @@
       <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">content_cut</span>
       <span class="font-label uppercase text-xs tracking-widest">Barberos</span>
     </a>
-    <a class="flex items-center space-x-4 px-4 py-3 rounded-lg transition-all group {% if active == 'clientes' %}bg-primary-container text-on-primary-container font-bold{% else %}text-on-surface-variant hover:bg-surface-container-high hover:bg-surface-container-highest{% endif %}" href="#">
-      <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">group</span>
-      <span class="font-label uppercase text-xs tracking-widest">Clientes</span>
+    <a class="flex items-center space-x-4 px-4 py-3 rounded-lg transition-all group {% if active == 'ingresos' %}bg-primary-container text-on-primary-container font-bold{% else %}text-on-surface-variant hover:bg-surface-container-high hover:bg-surface-container-highest{% endif %}" href="{% url 'sena:admin_ingresos' %}">
+      <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">login</span>
+      <span class="font-label uppercase text-xs tracking-widest">Ingresos</span>
     </a>
     <a class="flex items-center space-x-4 px-4 py-3 rounded-lg transition-all group {% if active == 'ajustes' %}bg-primary-container text-on-primary-container font-bold{% else %}text-on-surface-variant hover:bg-surface-container-high hover:bg-surface-container-highest{% endif %}" href="#">
       <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">settings</span>

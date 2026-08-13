@@ -87,3 +87,22 @@ class PedidoProducto(models.Model):
 
     def __str__(self):
         return f"{self.producto.nombre} x{self.cantidad}"
+
+class RegistroIngreso(models.Model):
+    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name="ingresos")
+    rol = models.CharField(max_length=15)
+    fecha = models.DateTimeField(auto_now_add=True)
+    ip = models.CharField(max_length=45, blank=True)
+
+    def __str__(self):
+        return f"{self.usuario.nombre} ({self.rol}) - {self.fecha}"
+
+class Notificacion(models.Model):
+    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name="notificaciones")
+    reserva = models.ForeignKey(Reserva, on_delete=models.CASCADE, null=True, blank=True, related_name="notificaciones")
+    mensaje = models.CharField(max_length=255)
+    leida = models.BooleanField(default=False)
+    fecha = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Notificacion {self.id} - {self.usuario.nombre}"

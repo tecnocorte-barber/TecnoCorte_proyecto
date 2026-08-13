@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
-from .models import Usuario, Peluqueria, Producto, Reserva, Pedido, PedidoProducto
+from .models import Usuario, Peluqueria, Producto, Reserva, Pedido, PedidoProducto, RegistroIngreso, Notificacion
 from .utilidades import autorizacion
 
 SERVICIOS = [
@@ -28,6 +28,10 @@ def contexto_carrito(request):
             "subtotal": subtotal,
         })
     return {"items": items, "total": total, "cantidad": cantidad, "carrito": carrito}
+
+def registrar_ingreso(request, usuario):
+    ip = request.META.get("REMOTE_ADDR", "")
+    RegistroIngreso.objects.create(usuario=usuario, rol=usuario.rol, ip=ip)
 
 # INICIO - Sin login
 def inicio(request):
@@ -63,6 +67,8 @@ def login(request):
                 "nombre": usuario.nombre,
                 "rol": usuario.rol
             }
+
+            registrar_ingreso(request, usuario)
 
             if proximo == "carrito":
                 return redirect("sena:carrito")
@@ -113,6 +119,7 @@ def registro(request):
             "nombre": usuario.nombre,
             "rol": usuario.rol
         }
+        registrar_ingreso(request, usuario)
         if proximo == "carrito":
             return redirect("sena:carrito")
         return redirect("sena:usuario_dashboard")
@@ -297,7 +304,32 @@ def usuario_perfil(request):
     contexto["usuario"] = usuario
     contexto["citas"] = citas
     contexto["pedidos"] = pedidos
+    contexto["notificaciones"] = Notificacion.objects.filter(usuario=usuario).order_by("-fecha")
     return render(request, "usuario_perfil.html", contexto)
+
+@autorizacion(["Cliente"])
+def usuario_notificaciones(request):
+    contexto = contexto_carrito(request)
+    contexto["notificaciones"] = Notificacion.objects.filter(
+        usuario_id=request.session["logueado"]["id"]
+    ).order_by("-fecha")
+    return render(request, "usuario_notificaciones.html", contexto)
+
+@autorizacion(["Cliente"])
+def usuario_confirmar_cita_peluquero(request, reserva_id):
+    if request.method != "POST":
+        return redirect("sena:usuario_notificaciones")
+    reserva = Reserva.objects.filter(
+        id=reserva_id, cliente_id=request.session["logueado"]["id"]
+    ).first()
+    if reserva is None:
+        return redirect("sena:usuario_notificaciones")
+    reserva.estado = "Confirmada"
+    reserva.save()
+    Notificacion.objects.filter(
+        usuario_id=request.session["logueado"]["id"], reserva=reserva
+    ).update(leida=True)
+    return redirect("sena:usuario_notificaciones")
 
 # ═══════════════════════════════════════════════════════════════════════════
 # PELUQUERO
@@ -314,9 +346,11 @@ def peluquero_perfil(request):
     if request.method == "POST":
         usuario.nombre = request.POST.get("nombre", usuario.nombre)
         usuario.apellido = request.POST.get("apellido", usuario.apellido)
+        usuario.telefono = request.POST.get("telefono", usuario.telefono)
         usuario.save()
-        return redirect("sena:peluquero_dashboard")
-    return render(request, "usuario_perfil.html", {"usuario": usuario})
+        return redirect("sena:peluquero_perfil")
+    citas = Reserva.objects.filter(peluquero=usuario).order_by("-fecha", "-hora")
+    return render(request, "peluquero_perfil.html", {"usuario": usuario, "citas": citas})
 
 @autorizacion(["Peluquero"])
 def peluquero_crear_cita(request):
@@ -325,14 +359,19 @@ def peluquero_crear_cita(request):
         peluqueria = Peluqueria.objects.filter(id=request.POST.get("peluqueria")).first()
         if cliente is None or peluqueria is None:
             return redirect("sena:peluquero_crear_cita")
-        Reserva.objects.create(
+        reserva = Reserva.objects.create(
             cliente=cliente,
             peluquero_id=request.session["logueado"]["id"],
             peluqueria=peluqueria,
             fecha=request.POST.get("fecha"),
             hora=request.POST.get("hora"),
             servicio=request.POST.get("servicio", "Corte de Cabello"),
-            estado=request.POST.get("estado", "Pendiente"),
+            estado="Pendiente",
+        )
+        Notificacion.objects.create(
+            usuario=cliente,
+            reserva=reserva,
+            mensaje=f"El peluquero {request.session['logueado']['nombre']} agendó una cita de {reserva.servicio} para el {reserva.fecha} a las {reserva.hora}. Confírmala desde tu cuenta.",
         )
         return redirect("sena:peluquero_dashboard")
     contexto = {
@@ -463,3 +502,15 @@ def admin_perfil(request):
         usuario.save()
         return redirect("sena:admin_dashboard")
     return render(request, "usuario_perfil.html", {"usuario": usuario})
+
+@autorizacion(["Admin"])
+def admin_ingresos(request):
+    rol = request.GET.get("rol", "")
+    ingresos = RegistroIngreso.objects.select_related("usuario").order_by("-fecha")
+    if rol:
+        ingresos = ingresos.filter(rol=rol)
+    contexto = {
+        "ingresos": ingresos,
+        "rol_filtro": rol,
+    }
+    return render(request, "admin_listar_ingresos.html", contexto)

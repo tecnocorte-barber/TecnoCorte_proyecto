@@ -1,107 +1,97 @@
 <!DOCTYPE html>
 <html class="dark" lang="es">
-<head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Contactos / Ayuda - TecnoCorte</title>
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&amp;family=Noto+Serif:ital,wght@0,400;0,700;1,400&amp;display=swap" rel="stylesheet"/>
-<script id="tailwind-config">
-tailwind.config = {
-darkMode: "class",
-theme: {
-extend: {
-"colors": {
-"surface-variant": "#353535",
-"on-secondary-fixed": "#241a00",
-"on-primary-container": "#554300",
-"tertiary": "#bfcdff",
-"secondary-fixed": "#ffe08b",
-"on-tertiary": "#082b72",
-"surface-container-low": "#1b1b1b",
-"surface-dim": "#131313",
-"surface-container-highest": "#353535",
-"surface": "#131313",
-"secondary-container": "#b08c10",
-"primary": "#f2ca50",
-"on-tertiary-container": "#254188",
-"on-secondary-container": "#352800",
-"on-primary-fixed": "#241a00",
-"primary-container": "#d4af37",
-"tertiary-fixed": "#dbe1ff",
-"secondary-fixed-dim": "#eac249",
-"surface-container": "#1f1f1f",
-"inverse-on-surface": "#303030",
-"on-error-container": "#ffdad6",
-"on-surface": "#e2e2e2",
-"on-secondary-fixed-variant": "#584400",
-"on-tertiary-fixed-variant": "#27438a",
-"on-primary": "#3c2f00",
-"tertiary-container": "#97b0ff",
-"inverse-primary": "#735c00",
-"surface-container-high": "#2a2a2a",
-"tertiary-fixed-dim": "#b4c5ff",
-"on-background": "#e2e2e2",
-"background": "#131313",
-"outline-variant": "#4d4635",
-"on-secondary": "#3d2f00",
-"on-error": "#690005",
-"primary-fixed": "#ffe088",
-"inverse-surface": "#e2e2e2",
-"surface-tint": "#e9c349",
-"primary-fixed-dim": "#e9c349",
-"outline": "#99907c",
-"secondary": "#eac249",
-"error-container": "#93000a",
-"error": "#ffb4ab",
-"on-surface-variant": "#d0c5af",
-"on-primary-fixed-variant": "#574500",
-"surface-bright": "#393939",
-"surface-container-lowest": "#0e0e0e",
-"on-tertiary-fixed": "#00174b"
-},
-"borderRadius": {
-"DEFAULT": "0.125rem",
-"lg": "0.25rem",
-"xl": "0.5rem",
-"full": "0.75rem"
-},
-"fontFamily": {
-"headline": ["Noto Serif", "serif"],
-"display": ["Noto Serif", "serif"],
-"body": ["Manrope", "sans-serif"],
-"label": ["Manrope", "sans-serif"]
-}
-}
-}
-}</script>
-<style>
+  <head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Contactos / Ayuda - TecnoCorte
+    </title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&amp;family=Noto+Serif:ital,wght@0,400;0,700;1,400&amp;display=swap" rel="stylesheet"/>
+    {% include "includes/tema.html" %}
+    <style>
 .glass-nav { background: rgba(19, 19, 19, 0.7); backdrop-filter: blur(20px); }
 .gold-gradient { background: linear-gradient(135deg, #f2ca50 0%, #d4af37 100%); }
 .ambient-glow { box-shadow: 0 20px 40px rgba(242, 202, 80, 0.06); }
 .ghost-border { border: 1px solid rgba(77, 70, 53, 0.15); }
 </style>
-</head>
-<body class="bg-surface text-on-surface font-body antialiased min-h-screen flex flex-col">
-<nav class="fixed top-0 w-full z-50 glass-nav shadow-[0_20px_40px_rgba(242,202,80,0.06)]"><div class="flex justify-between items-center w-full px-8 py-4 max-w-full mx-auto"><div class="font-headline text-2xl font-bold text-primary-container"><a href="{% url 'sena:inicio' %}">TecnoCorte</a></div><nav class="hidden md:flex items-center gap-8 font-display text-on-surface uppercase tracking-widest text-sm"><a class="text-on-surface-variant hover:text-primary transition-all duration-300 active:scale-95" href="{% url 'sena:inicio' %}">Inicio</a><a class="text-on-surface-variant hover:text-primary transition-all duration-300 active:scale-95" href="{% url 'sena:usuario_servicios' %}">Servicios</a><a class="text-on-surface-variant hover:text-primary transition-all duration-300 active:scale-95" href="{% url 'sena:usuario_tienda' %}">Tienda</a><a class="text-on-surface-variant hover:text-primary transition-all duration-300 active:scale-95" href="{% url 'sena:usuario_peluquerias' %}">Peluquerías</a><a class="text-primary border-b-2 border-primary pb-1" href="{% url 'sena:ayuda' %}">Contactos</a></nav><div class="flex items-center gap-5"><a href="{% url 'sena:carrito' %}" class="relative text-primary hover:text-primary-container transition-all duration-300 active:scale-90" title="Carrito"><span class="material-symbols-outlined">shopping_bag</span>{% if cantidad %}<span class="absolute -top-2 -right-2 min-w-5 h-5 px-1 rounded-full bg-primary text-on-primary text-[10px] font-bold flex items-center justify-center">{{ cantidad }}</span>{% endif %}</a>{% if request.session.logueado %}<a href="{% url 'sena:usuario_perfil' %}" class="text-sm font-bold uppercase tracking-widest text-on-surface-variant hover:text-primary transition-colors">Perfil</a>{% else %}<a href="{% url 'sena:login' %}" class="text-sm font-bold uppercase tracking-widest text-on-surface-variant hover:text-primary transition-colors">Ingresar</a>{% endif %}</div></div></nav>
+  </head>
+  <body class="bg-surface text-on-surface font-body antialiased min-h-screen flex flex-col">
+    <nav class="fixed top-0 w-full z-50 glass-nav shadow-[0_20px_40px_rgba(242,202,80,0.06)]">
+      <div class="flex justify-between items-center w-full px-8 py-4 max-w-full mx-auto">
+        <div class="font-headline text-2xl font-bold text-primary-container"><a href="{% url 'sena:inicio' %}">TecnoCorte</a>
+      </div>
+      <nav class="hidden md:flex items-center gap-8 font-display text-on-surface uppercase tracking-widest text-sm"><a class="text-on-surface-variant hover:text-primary transition-all duration-300 active:scale-95" href="{% url 'sena:inicio' %}">Inicio</a><a class="text-on-surface-variant hover:text-primary transition-all duration-300 active:scale-95" href="{% url 'sena:usuario_servicios' %}">Servicios</a><a class="text-on-surface-variant hover:text-primary transition-all duration-300 active:scale-95" href="{% url 'sena:usuario_tienda' %}">Tienda</a><a class="text-on-surface-variant hover:text-primary transition-all duration-300 active:scale-95" href="{% url 'sena:usuario_peluquerias' %}">Peluquerías</a><a class="text-primary border-b-2 border-primary pb-1" href="{% url 'sena:ayuda' %}">Contactos</a>
+</nav>
+<div class="flex items-center gap-5"><a href="{% url 'sena:carrito' %}" class="relative text-primary hover:text-primary-container transition-all duration-300 active:scale-90" title="Carrito"><span class="material-symbols-outlined">shopping_bag</span>{% if cantidad %}<span class="absolute -top-2 -right-2 min-w-5 h-5 px-1 rounded-full bg-primary text-on-primary text-[10px] font-bold flex items-center justify-center">{{ cantidad }}
+</span>{% endif %}
+</a>{% if request.session.logueado %}<a href="{% url 'sena:usuario_perfil' %}" class="text-sm font-bold uppercase tracking-widest text-on-surface-variant hover:text-primary transition-colors">Perfil</a>{% else %}<a href="{% url 'sena:login' %}" class="text-sm font-bold uppercase tracking-widest text-on-surface-variant hover:text-primary transition-colors">Ingresar</a>{% endif %}
+</div>
+</div>
+</nav>
 <main class="flex-grow pt-36 pb-24 px-6 md:px-12 max-w-4xl mx-auto w-full">
-<header class="mb-16 text-center"><h1 class="font-headline text-5xl md:text-6xl text-primary-container tracking-tight mb-4">Contactos</h1><p class="text-on-surface-variant text-lg">¿Necesitas ayuda? Escríbenos y con gusto te atendemos.</p><div class="h-12 flex justify-center items-center mt-4"><div class="w-1 h-1 rounded-full bg-primary-container"></div></div></header>
-<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-  <div class="bg-surface-container-low rounded-xl p-8 text-center ambient-glow ghost-border hover:bg-surface-container transition-colors"><span class="material-symbols-outlined text-primary text-4xl mb-4" style="font-variation-settings: 'FILL' 1;">call</span><h3 class="font-headline text-xl mb-2">Teléfono</h3><p class="text-on-surface-variant">+57 300 123 4567</p></div>
-  <div class="bg-surface-container-low rounded-xl p-8 text-center ambient-glow ghost-border hover:bg-surface-container transition-colors"><span class="material-symbols-outlined text-primary text-4xl mb-4" style="font-variation-settings: 'FILL' 1;">mail</span><h3 class="font-headline text-xl mb-2">Correo</h3><p class="text-on-surface-variant">contacto@tecnocorte.com</p></div>
-  <div class="bg-surface-container-low rounded-xl p-8 text-center ambient-glow ghost-border hover:bg-surface-container transition-colors"><span class="material-symbols-outlined text-primary text-4xl mb-4" style="font-variation-settings: 'FILL' 1;">location_on</span><h3 class="font-headline text-xl mb-2">Dirección</h3><p class="text-on-surface-variant">Zona SENA, Itagüí</p></div>
+  <header class="mb-16 text-center">
+    <h1 class="font-headline text-5xl md:text-6xl text-primary-container tracking-tight mb-4">Contactos
+    </h1>
+    <p class="text-on-surface-variant text-lg">¿Necesitas ayuda? Escríbenos y con gusto te atendemos.
+    </p>
+    <div class="h-12 flex justify-center items-center mt-4">
+      <div class="w-1 h-1 rounded-full bg-primary-container">
+      </div>
+    </div>
+  </header>
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+    <div class="bg-surface-container-low rounded-xl p-8 text-center ambient-glow ghost-border hover:bg-surface-container transition-colors"><span class="material-symbols-outlined text-primary text-4xl mb-4" style="font-variation-settings: 'FILL' 1;">call</span>
+    <h3 class="font-headline text-xl mb-2">Teléfono
+    </h3>
+    <p class="text-on-surface-variant">+57 300 123 4567
+    </p>
+  </div>
+  <div class="bg-surface-container-low rounded-xl p-8 text-center ambient-glow ghost-border hover:bg-surface-container transition-colors"><span class="material-symbols-outlined text-primary text-4xl mb-4" style="font-variation-settings: 'FILL' 1;">mail</span>
+  <h3 class="font-headline text-xl mb-2">Correo
+  </h3>
+  <p class="text-on-surface-variant">contacto@tecnocorte.com
+  </p>
+</div>
+<div class="bg-surface-container-low rounded-xl p-8 text-center ambient-glow ghost-border hover:bg-surface-container transition-colors"><span class="material-symbols-outlined text-primary text-4xl mb-4" style="font-variation-settings: 'FILL' 1;">location_on</span>
+<h3 class="font-headline text-xl mb-2">Dirección
+</h3>
+<p class="text-on-surface-variant">Zona SENA, Itagüí
+</p>
+</div>
 </div>
 <div class="bg-surface-container-low rounded-xl p-8 md:p-12 ambient-glow ghost-border">
-  <h2 class="font-headline text-2xl text-primary-container mb-6">Preguntas frecuentes</h2>
+  <h2 class="font-headline text-2xl text-primary-container mb-6">Preguntas frecuentes
+  </h2>
   <div class="space-y-4">
-    <div class="border border-outline-variant/15 rounded-lg p-5"><h3 class="font-semibold text-on-surface mb-1">¿Cómo reservo una cita?</h3><p class="text-sm text-on-surface-variant">Inicia sesión como Cliente, entra a "Reservar", elige servicio, barbero, peluquería, fecha y hora, y confirma.</p></div>
-    <div class="border border-outline-variant/15 rounded-lg p-5"><h3 class="font-semibold text-on-surface mb-1">¿Puedo comprar sin registrarme?</h3><p class="text-sm text-on-surface-variant">Sí. Agrega productos al carrito sin estar registrado; al finalizar la compra te pediremos iniciar sesión o registrarte y tu carrito se conserva.</p></div>
-    <div class="border border-outline-variant/15 rounded-lg p-5"><h3 class="font-semibold text-on-surface mb-1">¿Dónde puedo ver mis citas y pedidos?</h3><p class="text-sm text-on-surface-variant">En tu perfil. Allí aparecen tus citas reservadas y tus pedidos realizados.</p></div>
+    <div class="border border-outline-variant/15 rounded-lg p-5">
+      <h3 class="font-semibold text-on-surface mb-1">¿Cómo reservo una cita?
+      </h3>
+      <p class="text-sm text-on-surface-variant">Inicia sesión como Cliente, entra a "Reservar", elige servicio, barbero, peluquería, fecha y hora, y confirma.
+      </p>
+    </div>
+    <div class="border border-outline-variant/15 rounded-lg p-5">
+      <h3 class="font-semibold text-on-surface mb-1">¿Puedo comprar sin registrarme?
+      </h3>
+      <p class="text-sm text-on-surface-variant">Sí. Agrega productos al carrito sin estar registrado; al finalizar la compra te pediremos iniciar sesión o registrarte y tu carrito se conserva.
+      </p>
+    </div>
+    <div class="border border-outline-variant/15 rounded-lg p-5">
+      <h3 class="font-semibold text-on-surface mb-1">¿Dónde puedo ver mis citas y pedidos?
+      </h3>
+      <p class="text-sm text-on-surface-variant">En tu perfil. Allí aparecen tus citas reservadas y tus pedidos realizados.
+      </p>
+    </div>
   </div>
-  <div class="mt-10 text-center"><a href="{% url 'sena:inicio' %}" class="inline-flex justify-center py-3 px-8 rounded-md gold-gradient text-on-primary font-bold text-sm uppercase tracking-widest hover:opacity-90 transition-all active:scale-95">Volver al inicio</a></div>
+  <div class="mt-10 text-center"><a href="{% url 'sena:inicio' %}" class="inline-flex justify-center py-3 px-8 rounded-md gold-gradient text-on-primary font-bold text-sm uppercase tracking-widest hover:opacity-90 transition-all active:scale-95">Volver al inicio</a>
+</div>
 </div>
 </main>
-<footer class="w-full pt-16 pb-8 bg-surface-container-lowest flex flex-col items-center gap-8 px-8 border-t border-outline-variant/10"><div class="font-headline text-xl text-primary">TecnoCorte</div><p class="font-body text-sm text-on-surface-variant opacity-70">© 2026 TecnoCorte. Todos los derechos reservados.</p></footer>
+<footer class="w-full pt-16 pb-8 bg-surface-container-lowest flex flex-col items-center gap-8 px-8 border-t border-outline-variant/10">
+  <div class="font-headline text-xl text-primary">TecnoCorte
+  </div>
+  <p class="font-body text-sm text-on-surface-variant opacity-70">© 2026 TecnoCorte. Todos los derechos reservados.
+  </p>
+</footer>
 </body>
 </html>
