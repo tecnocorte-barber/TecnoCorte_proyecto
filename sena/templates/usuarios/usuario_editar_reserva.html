@@ -1,1 +1,23 @@
-{% extends "usuarios/dashboard_base.html" %}{% block body_class %}font-body antialiased bg-surface{% endblock %}{% block content %}<main class="max-w-2xl mx-auto p-8 md:p-12"><a class="text-primary" href="{% url 'sena:usuario_perfil' %}">← Volver a mi perfil</a><div class="bg-surface-container-low rounded-xl p-8 mt-6"><h1 class="font-headline text-3xl mb-6">Modificar cita</h1>{% if error %}<p class="text-error mb-4">{{ error }}</p>{% endif %}<form method="post" class="space-y-5">{% csrf_token %}<select name="servicio" class="w-full bg-surface-container-high p-3 rounded">{% for servicio in servicios %}<option value="{{ servicio.nombre }}" {% if reserva.servicio == servicio.nombre %}selected{% endif %}>{{ servicio.nombre }} · {{ servicio.duracion }}</option>{% endfor %}</select><select name="peluquero" class="w-full bg-surface-container-high p-3 rounded">{% for barbero in peluqueros %}<option value="{{ barbero.id }}" {% if reserva.peluquero_id == barbero.id %}selected{% endif %}>{{ barbero.nombre }} {{ barbero.apellido }}</option>{% endfor %}</select><select name="peluqueria" class="w-full bg-surface-container-high p-3 rounded">{% for peluqueria in peluquerias %}<option value="{{ peluqueria.id }}" {% if reserva.peluqueria_id == peluqueria.id %}selected{% endif %}>{{ peluqueria.nombre }}</option>{% endfor %}</select><div class="grid grid-cols-2 gap-4"><input required type="date" name="fecha" value="{{ reserva.fecha|date:'Y-m-d' }}" class="bg-surface-container-high p-3 rounded"><input required type="time" name="hora" value="{{ reserva.hora|time:'H:i' }}" class="bg-surface-container-high p-3 rounded"></div><button class="btn-gold-gradient px-5 py-3 rounded font-bold">Guardar cambios</button></form></div></main>{% endblock %}
+{% extends "usuarios/dashboard_base.html" %}{% block body_class %}font-body antialiased bg-surface{% endblock %}{% block
+content %}<main class="max-w-2xl mx-auto p-8 md:p-12"><a class="text-primary" href="{% url 'sena:usuario_perfil' %}">←
+        Volver a mi perfil</a>
+    <div class="bg-surface-container-low rounded-xl p-8 mt-6">
+        <h1 class="font-headline text-3xl mb-6">Modificar cita</h1>{% if error %}<p class="text-error mb-4">{{ error }}
+        </p>{% endif %}<form method="post" class="space-y-5">{% csrf_token %}<select name="servicio"
+                class="w-full bg-surface-container-high p-3 rounded">{% for servicio in servicios %}<option
+                    value="{{ servicio.nombre }}" {% if reserva.servicio==servicio.nombre %}selected{% endif %}>{{
+                    servicio.nombre }} · {{ servicio.duracion }}</option>{% endfor %}</select><select name="peluquero"
+                class="w-full bg-surface-container-high p-3 rounded">{% for barbero in peluqueros %}<option
+                    value="{{ barbero.id }}" {% if reserva.peluquero_id==barbero.id %}selected{% endif %}>{{
+                    barbero.nombre }} {{ barbero.apellido }}</option>{% endfor %}</select><select name="peluqueria"
+                class="w-full bg-surface-container-high p-3 rounded">{% for peluqueria in peluquerias %}<option
+                    value="{{ peluqueria.id }}" {% if reserva.peluqueria_id==peluqueria.id %}selected{% endif %}>{{
+                    peluqueria.nombre }}</option>{% endfor %}</select>
+            <div class="grid grid-cols-2 gap-4"><input required type="date" name="fecha"
+                    value="{{ reserva.fecha|date:'Y-m-d' }}" class="bg-surface-container-high p-3 rounded"><input
+                    required type="time" name="hora" value="{{ reserva.hora|time:'H:i' }}"
+                    class="bg-surface-container-high p-3 rounded"></div><button
+                class="btn-gold-gradient px-5 py-3 rounded font-bold">Guardar cambios</button>
+        </form>
+    </div>
+</main>{% endblock %}

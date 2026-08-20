@@ -38,6 +38,7 @@ class Producto(models.Model):
     nombre = models.CharField(max_length=100)
     descripcion = models.TextField(blank=True)
     precio = models.IntegerField()
+    imagen = models.URLField(blank=True, default="")
     categoria = models.CharField(max_length=20, choices=CATEGORIAS, default="Herramientas")
     stock = models.IntegerField(default=0)
     disponible = models.BooleanField(default=True)

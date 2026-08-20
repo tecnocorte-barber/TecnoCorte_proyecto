@@ -83,21 +83,29 @@ Producto.objects.get_or_create(nombre="Máquina de Cortar", defaults={
     "descripcion": "Máquina profesional para corte de cabello.",
     "precio": 320000, "categoria": "Herramientas",
     "stock": 5, "disponible": True,
+    "imagen": "maquina_motilar.jpg",
 })
 Producto.objects.get_or_create(nombre="Pomada para Cabello", defaults={
     "descripcion": "Pomada con fijación fuerte y acabado mate.",
     "precio": 62000, "categoria": "Fijacion",
     "stock": 10, "disponible": True,
+    "imagen": "pomada_barba.jpeg",
 })
 Producto.objects.get_or_create(nombre="Cepillo para Cabello", defaults={
     "descripcion": "Cepillo de cerdas naturales para peinar.",
     "precio": 45000, "categoria": "Herramientas",
     "stock": 8, "disponible": True,
+    "imagen": "cepillo.jpeg",
 })
 Producto.objects.get_or_create(nombre='Tijeras Profesionales', defaults={
     "descripcion": "Tijeras de acero para corte de precisión.",
     "precio": 180000, "categoria": "Herramientas",
+<<<<<<< Updated upstream
     "stock": 1, "disponible": True,
+=======
+    "stock": 0, "disponible": False,
+    "imagen": "Tijeras.jpeg",
+>>>>>>> Stashed changes
 })
 print(" Productos creados")
 

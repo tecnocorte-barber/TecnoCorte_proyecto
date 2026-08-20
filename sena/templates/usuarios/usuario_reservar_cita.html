@@ -1,154 +1,273 @@
 <!DOCTYPE html>
 <html class="dark" lang="es">
-  <head>
-    <meta charset="utf-8"/>
-    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title>Reserva - TecnoCorte
-    </title>
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&amp;family=Noto+Serif:ital,wght@0,400;0,700;1,400&amp;display=swap" rel="stylesheet"/>
-    {% include "includes/tema.html" %}
-    <style>
-.glass-nav { background: rgba(19, 19, 19, 0.7); backdrop-filter: blur(20px); }
-.hide-scrollbar::-webkit-scrollbar { display: none; }
-.hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-.opt { cursor: pointer; transition: all .3s; }
-.opt-selected { background: linear-gradient(135deg, #f2ca50, #d4af37); color: #3c2f00; border-color: transparent; box-shadow: 0 0 20px rgba(242,202,80,.2); }
-.opt-selected .icon-muted { color: #3c2f00 !important; }
-</style>
-  </head>
-  <body class="bg-surface text-on-surface font-body antialiased min-h-screen flex flex-col">
-    <!-- TopNavBar -->
-    <nav class="fixed top-0 w-full z-50 glass-nav shadow-[0_20px_40px_rgba(242,202,80,0.06)]">
-      <div class="flex justify-between items-center w-full px-8 py-4 max-w-full mx-auto">
-        <div class="font-headline text-2xl font-bold text-primary-container"><a href="{% url 'sena:usuario_dashboard' %}">TecnoCorte</a>
+
+<head>
+  <meta charset="utf-8" />
+  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <title>Reserva - TecnoCorte
+  </title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+    rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&amp;family=Noto+Serif:ital,wght@0,400;0,700;1,400&amp;display=swap"
+    rel="stylesheet" />
+  {% include "includes/tema.html" %}
+  <style>
+    .glass-nav {
+      background: rgba(19, 19, 19, 0.7);
+      backdrop-filter: blur(20px);
+    }
+
+    .hide-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+
+    .hide-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    .opt {
+      cursor: pointer;
+      transition: all .3s;
+    }
+
+    .opt-selected {
+      background: linear-gradient(135deg, #f2ca50, #d4af37);
+      color: #3c2f00;
+      border-color: transparent;
+      box-shadow: 0 0 20px rgba(242, 202, 80, .2);
+    }
+
+    .opt-selected .icon-muted {
+      color: #3c2f00 !important;
+    }
+  </style>
+</head>
+
+<body class="bg-surface text-on-surface font-body antialiased min-h-screen flex flex-col">
+  <!-- TopNavBar -->
+  <nav class="fixed top-0 w-full z-50 glass-nav shadow-[0_20px_40px_rgba(242,202,80,0.06)]">
+    <div class="flex justify-between items-center w-full px-8 py-4 max-w-full mx-auto">
+      <div class="font-headline text-2xl font-bold text-primary-container"><a
+          href="{% url 'sena:usuario_dashboard' %}">TecnoCorte</a>
       </div>
       <ul class="hidden md:flex items-center gap-8 font-display text-on-surface uppercase tracking-widest text-sm">
-        <li><a class="text-on-surface-variant hover:text-primary transition-colors duration-300 active:scale-95" href="{% url 'sena:usuario_dashboard' %}">Inicio</a>
-      </li>
-      <li><a class="text-primary border-b-2 border-primary pb-1 hover:text-primary-container transition-all duration-300" href="{% url 'sena:usuario_reservar_cita' %}">Reservar</a>
-    </li>
-    <li><a class="text-on-surface-variant hover:text-primary transition-colors duration-300 active:scale-95" href="{% url 'sena:usuario_tienda' %}">Tienda</a>
-  </li>
-  <li><a class="text-on-surface-variant hover:text-primary transition-colors duration-300 active:scale-95" href="{% url 'sena:usuario_peluquerias' %}">Peluquerías</a>
-</li>
-<li><a class="text-on-surface-variant hover:text-primary transition-colors duration-300 active:scale-95" href="{% url 'sena:ayuda' %}">Contactos</a>
-</li>
-</ul>
-<div class="flex items-center gap-4 text-primary"><a href="{% url 'sena:carrito' %}" class="relative hover:text-primary-container transition-all duration-300 active:scale-90" title="Carrito"><span class="material-symbols-outlined">shopping_bag</span>{% if cantidad %}<span class="absolute -top-2 -right-2 min-w-5 h-5 px-1 rounded-full bg-primary text-on-primary text-[10px] font-bold flex items-center justify-center">{{ cantidad }}
-</span>{% endif %}
-</a><a href="{% url 'sena:usuario_perfil' %}" class="hover:text-primary-container transition-all duration-300 active:scale-90" title="Perfil"><span class="material-symbols-outlined">account_circle</span>
-</a><a href="{% url 'sena:logout' %}" class="hidden md:inline text-xs font-bold uppercase tracking-widest text-on-surface-variant hover:text-primary transition-colors">Salir</a>
-</div>
-</div>
-</nav>
-<!-- Main Content -->
-<main class="flex-grow pt-32 pb-24 px-8 max-w-[1400px] mx-auto w-full">
-  <header class="mb-16 text-center md:text-left">
-    <h1 class="font-headline text-5xl md:text-6xl text-primary-container tracking-tight mb-4">Reserva tu Cita
-    </h1>
-    <p class="text-on-surface-variant text-lg font-body max-w-2xl">Elige el servicio, el barbero, la peluquería, la fecha y la hora que prefieras.
-    </p>
-    {% if error %}<p class="mt-4 rounded-md border border-error/50 bg-error-container/20 px-4 py-3 text-error">{{ error }}</p>{% endif %}
-    <div class="h-12 w-full flex justify-center md:justify-start items-center mt-4">
-      <div class="w-1 h-1 rounded-full bg-primary-container">
+        <li><a class="text-on-surface-variant hover:text-primary transition-colors duration-300 active:scale-95"
+            href="{% url 'sena:usuario_dashboard' %}">Inicio</a>
+        </li>
+        <li><a
+            class="text-primary border-b-2 border-primary pb-1 hover:text-primary-container transition-all duration-300"
+            href="{% url 'sena:usuario_reservar_cita' %}">Reservar</a>
+        </li>
+        <li><a class="text-on-surface-variant hover:text-primary transition-colors duration-300 active:scale-95"
+            href="{% url 'sena:usuario_tienda' %}">Tienda</a>
+        </li>
+        <li><a class="text-on-surface-variant hover:text-primary transition-colors duration-300 active:scale-95"
+            href="{% url 'sena:usuario_peluquerias' %}">Peluquerías</a>
+        </li>
+        <li><a class="text-on-surface-variant hover:text-primary transition-colors duration-300 active:scale-95"
+            href="{% url 'sena:ayuda' %}">Contactos</a>
+        </li>
+      </ul>
+      <div class="flex items-center gap-4 text-primary"><a href="{% url 'sena:carrito' %}"
+          class="relative hover:text-primary-container transition-all duration-300 active:scale-90"
+          title="Carrito"><span class="material-symbols-outlined">shopping_bag</span>{% if cantidad %}<span
+            class="absolute -top-2 -right-2 min-w-5 h-5 px-1 rounded-full bg-primary text-on-primary text-[10px] font-bold flex items-center justify-center">{{
+            cantidad }}
+          </span>{% endif %}
+        </a><a href="{% url 'sena:usuario_perfil' %}"
+          class="hover:text-primary-container transition-all duration-300 active:scale-90" title="Perfil"><span
+            class="material-symbols-outlined">account_circle</span>
+        </a><a href="{% url 'sena:logout' %}"
+          class="hidden md:inline text-xs font-bold uppercase tracking-widest text-on-surface-variant hover:text-primary transition-colors">Salir</a>
       </div>
     </div>
-  </header>
-  <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 relative">
-    <div class="lg:col-span-8 flex flex-col gap-12">
-      <!-- Step 1: Services -->
-      <section class="flex flex-col gap-6">
-        <div class="flex items-baseline gap-4"><span class="font-headline text-3xl text-primary-container">01</span>
-        <h2 class="font-headline text-2xl text-on-surface">Seleccionar Servicio
-        </h2>
+  </nav>
+  <!-- Main Content -->
+  <main class="flex-grow pt-32 pb-24 px-8 max-w-[1400px] mx-auto w-full">
+    <header class="mb-16 text-center md:text-left">
+      <h1 class="font-headline text-5xl md:text-6xl text-primary-container tracking-tight mb-4">Reserva tu Cita
+      </h1>
+      <p class="text-on-surface-variant text-lg font-body max-w-2xl">Elige el servicio, el barbero, la peluquería, la
+        fecha y la hora que prefieras.
+      </p>
+      {% if error %}<p class="mt-4 rounded-md border border-error/50 bg-error-container/20 px-4 py-3 text-error">{{
+        error }}</p>{% endif %}
+      <div class="h-12 w-full flex justify-center md:justify-start items-center mt-4">
+        <div class="w-1 h-1 rounded-full bg-primary-container">
+        </div>
       </div>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">{% for servicio in servicios %}
-        <div class="opt bg-surface-container-low rounded-md p-6 border border-outline-variant/15 hover:bg-surface-container relative" data-servicio="{{ servicio.nombre }}" data-precio="{{ servicio.precio }}" data-duracion="{{ servicio.duracion }}" onclick="seleccionarServicio(this)">
-          <div class="flex justify-between items-start">
-            <div>
-              <h3 class="font-body text-xl font-semibold mb-2">{{ servicio.nombre }}
-              </h3>
-              <p class="text-on-surface-variant text-sm mb-4">{{ servicio.descripcion }}
-              </p>
-              <span class="font-label text-xs tracking-widest uppercase text-on-surface-variant">{{ servicio.duracion }}
-            </span>
+    </header>
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 relative">
+      <div class="lg:col-span-8 flex flex-col gap-12">
+        <!-- Step 1: Services -->
+        <section class="flex flex-col gap-6">
+          <div class="flex items-baseline gap-4"><span class="font-headline text-3xl text-primary-container">01</span>
+            <h2 class="font-headline text-2xl text-on-surface">Seleccionar Servicio
+            </h2>
           </div>
-          <span class="material-symbols-outlined icon-muted text-outline-variant">circle</span>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">{% for servicio in servicios %}
+            <div
+              class="opt bg-surface-container-low rounded-md p-6 border border-outline-variant/15 hover:bg-surface-container relative"
+              data-servicio="{{ servicio.nombre }}" data-precio="{{ servicio.precio }}"
+              data-duracion="{{ servicio.duracion }}" onclick="seleccionarServicio(this)">
+              <div class="flex justify-between items-start">
+                <div>
+                  <h3 class="font-body text-xl font-semibold mb-2">{{ servicio.nombre }}
+                  </h3>
+                  <p class="text-on-surface-variant text-sm mb-4">{{ servicio.descripcion }}
+                  </p>
+                  <span class="font-label text-xs tracking-widest uppercase text-on-surface-variant">{{
+                    servicio.duracion }}
+                  </span>
+                </div>
+                <span class="material-symbols-outlined icon-muted text-outline-variant">circle</span>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </section>
+        <!-- Step 2: Barbers -->
+        <section class="flex flex-col gap-6">
+          <div class="flex items-baseline gap-4"><span class="font-headline text-3xl text-primary-container">02</span>
+            <h2 class="font-headline text-2xl text-on-surface">Seleccionar Barbero
+            </h2>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">{% for peluquero in peluqueros %}
+            <div
+              class="opt bg-surface-container-low rounded-md p-6 border border-outline-variant/15 hover:bg-surface-container relative"
+              data-peluquero="{{ peluquero.id }}" onclick="seleccionarPeluquero(this)">
+              <div class="flex flex-col items-center text-center gap-3">
+                <div class="w-16 h-16 rounded-full bg-surface-container-highest flex items-center justify-center"><span
+                    class="material-symbols-outlined text-3xl text-primary">content_cut</span>
+                </div>
+                <span class="font-body text-sm font-semibold">{{ peluquero.nombre }}
+                  {{ peluquero.apellido }}
+                </span>
+              </div>
+            </div>
+            {% empty %}
+            <p class="text-on-surface-variant">No hay barberos disponibles.
+            </p>
+            {% endfor %}
+          </div>
+        </section>
+        <!-- Step 3: Peluquerías -->
+        <section class="flex flex-col gap-6">
+          <div class="flex items-baseline gap-4"><span class="font-headline text-3xl text-primary-container">03</span>
+            <h2 class="font-headline text-2xl text-on-surface">Seleccionar Peluquería
+            </h2>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">{% for peluqueria in peluquerias %}
+            <div
+              class="opt bg-surface-container-low rounded-md p-6 border border-outline-variant/15 hover:bg-surface-container relative"
+              data-peluqueria="{{ peluqueria.id }}" onclick="seleccionarPeluqueria(this)">
+              <div class="flex flex-col items-center text-center gap-2"><span
+                  class="material-symbols-outlined text-primary text-3xl">storefront</span><span
+                  class="font-body text-sm font-semibold">{{ peluqueria.nombre }}
+                </span><span class="text-xs text-on-surface-variant flex items-center gap-1"><span
+                    class="material-symbols-outlined text-[14px]">location_on</span>{{ peluqueria.ubicacion }}
+                </span>
+              </div>
+            </div>
+            {% empty %}
+            <p class="text-on-surface-variant">No hay peluquerías disponibles.
+            </p>
+            {% endfor %}
+          </div>
+        </section>
+        <!-- Step 4: Calendar -->
+        <section class="flex flex-col gap-6">
+          <div class="flex items-baseline gap-4"><span class="font-headline text-3xl text-primary-container">04</span>
+            <h2 class="font-headline text-2xl text-on-surface">Fecha y Hora
+            </h2>
+          </div>
+          <div class="bg-surface-container-low rounded-md p-8">
+            <div class="flex justify-between items-center mb-8">
+              <h3 class="font-headline text-xl text-primary" id="mes-visible">
+              </h3>
+            </div>
+            <div class="flex gap-4 overflow-x-auto hide-scrollbar mb-8 pb-2" id="fechas">
+            </div>
+            <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4" id="horas">
+            </div>
+          </div>
+        </section>
+      </div>
+      <!-- Summary Sticky Sidebar -->
+      <div class="lg:col-span-4">
+        <div
+          class="sticky top-32 bg-surface-container-low rounded-xl p-8 shadow-[0_20px_40px_rgba(0,0,0,0.5)] border border-outline-variant/10">
+          <h3 class="font-headline text-2xl text-primary-container mb-8 border-b border-outline-variant/20 pb-4">Resumen
+          </h3>
+          <div class="flex flex-col gap-6 mb-8">
+            <div class="flex justify-between items-start">
+              <div><span
+                  class="font-label text-xs uppercase text-on-surface-variant tracking-widest block mb-1">Servicio</span><span
+                  class="font-body text-lg text-on-surface" id="res-servicio">Por elegir</span>
+              </div>
+              <span class="font-body text-primary font-semibold" id="res-precio">-</span>
+            </div>
+            <div class="flex justify-between items-start">
+              <div><span
+                  class="font-label text-xs uppercase text-on-surface-variant tracking-widest block mb-1">Barbero</span><span
+                  class="font-body text-lg text-on-surface" id="res-peluquero">Por elegir</span>
+              </div>
+            </div>
+            <div class="flex justify-between items-start">
+              <div><span
+                  class="font-label text-xs uppercase text-on-surface-variant tracking-widest block mb-1">Peluquería</span><span
+                  class="font-body text-lg text-on-surface" id="res-peluqueria">Por elegir</span>
+              </div>
+            </div>
+            <div class="flex justify-between items-start">
+              <div><span class="font-label text-xs uppercase text-on-surface-variant tracking-widest block mb-1">Fecha y
+                  Hora</span><span class="font-body text-lg text-on-surface" id="res-fecha">Por confirmar</span>
+              </div>
+            </div>
+          </div>
+          <form method="post" action="{% url 'sena:usuario_pre_confirmar' %}" class="space-y-6" id="form-reserva">
+            {% csrf_token %}
+            <input type="hidden" name="servicio" id="h-servicio" value="" />
+            <input type="hidden" name="peluquero" id="h-peluquero" value="" />
+            <input type="hidden" name="peluqueria" id="h-peluqueria" value="" />
+            <input type="hidden" name="fecha" id="h-fecha" value="" />
+            <input type="hidden" name="hora" id="h-hora" value="" />
+            <p id="error-reserva"
+              class="hidden rounded-md border border-error/50 bg-error-container/20 p-3 text-sm text-error"></p>
+            <div class="border-t border-outline-variant/20 pt-6 mb-8">
+              <div class="flex justify-between items-end"><span
+                  class="font-label text-sm uppercase text-on-surface-variant tracking-widest">Total</span><span
+                  class="font-headline text-3xl text-primary-container" id="res-total">$ -</span>
+              </div>
+              <p class="text-xs text-on-surface-variant mt-2 opacity-70">El pago se realiza en el local.
+              </p>
+            </div>
+            <button type="submit"
+              class="w-full inline-flex justify-center py-4 rounded-md bg-gradient-to-br from-primary to-primary-container text-on-primary font-body font-bold text-lg hover:shadow-[0_0_30px_rgba(242,202,80,0.3)] transition-all duration-300 active:scale-[0.98]">
+              Continuar
+
+            </button>
+          </form>
+          <div class="mt-6 text-center"><a
+              class="font-body text-sm text-primary hover:text-primary-container transition-colors relative after:content-[''] after:absolute after:w-full after:h-[1px] after:bg-primary after:left-0 after:-bottom-1 after:opacity-0 hover:after:opacity-100 after:transition-opacity"
+              href="{% url 'sena:ayuda' %}">¿Necesitas ayuda?</a>
+          </div>
+        </div>
       </div>
     </div>
-    {% endfor %}
-  </div>
-</section>
-<!-- Step 2: Barbers -->
-<section class="flex flex-col gap-6">
-  <div class="flex items-baseline gap-4"><span class="font-headline text-3xl text-primary-container">02</span>
-  <h2 class="font-headline text-2xl text-on-surface">Seleccionar Barbero
-  </h2>
-</div>
-<div class="grid grid-cols-1 md:grid-cols-3 gap-4">{% for peluquero in peluqueros %}
-  <div class="opt bg-surface-container-low rounded-md p-6 border border-outline-variant/15 hover:bg-surface-container relative" data-peluquero="{{ peluquero.id }}" onclick="seleccionarPeluquero(this)">
-    <div class="flex flex-col items-center text-center gap-3">
-      <div class="w-16 h-16 rounded-full bg-surface-container-highest flex items-center justify-center"><span class="material-symbols-outlined text-3xl text-primary">content_cut</span>
+  </main>
+  <footer
+    class="w-full pt-16 pb-8 bg-surface-container-lowest flex flex-col items-center gap-8 px-8 border-t border-outline-variant/10">
+    <div class="font-headline text-xl text-primary">TecnoCorte
     </div>
-    <span class="font-body text-sm font-semibold">{{ peluquero.nombre }} 
-    {{ peluquero.apellido }}
-  </span>
-</div>
-</div>
-{% empty %}
-<p class="text-on-surface-variant">No hay barberos disponibles.
-</p>
-{% endfor %}
-</div>
-</section>
-<!-- Step 3: Peluquerías -->
-<section class="flex flex-col gap-6">
-  <div class="flex items-baseline gap-4"><span class="font-headline text-3xl text-primary-container">03</span>
-  <h2 class="font-headline text-2xl text-on-surface">Seleccionar Peluquería
-  </h2>
-</div>
-<div class="grid grid-cols-1 md:grid-cols-3 gap-4">{% for peluqueria in peluquerias %}
-  <div class="opt bg-surface-container-low rounded-md p-6 border border-outline-variant/15 hover:bg-surface-container relative" data-peluqueria="{{ peluqueria.id }}" onclick="seleccionarPeluqueria(this)">
-    <div class="flex flex-col items-center text-center gap-2"><span class="material-symbols-outlined text-primary text-3xl">storefront</span><span class="font-body text-sm font-semibold">{{ peluqueria.nombre }}
-  </span><span class="text-xs text-on-surface-variant flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">location_on</span>{{ peluqueria.ubicacion }}
-</span>
-</div>
-</div>
-{% empty %}
-<p class="text-on-surface-variant">No hay peluquerías disponibles.
-</p>
-{% endfor %}
-</div>
-</section>
-<!-- Step 4: Calendar -->
-<section class="flex flex-col gap-6">
-  <div class="flex items-baseline gap-4"><span class="font-headline text-3xl text-primary-container">04</span>
-  <h2 class="font-headline text-2xl text-on-surface">Fecha y Hora
-  </h2>
-</div>
-<div class="bg-surface-container-low rounded-md p-8">
-  <div class="flex justify-between items-center mb-8">
-    <h3 class="font-headline text-xl text-primary" id="mes-visible">
-    </h3>
-  </div>
-  <div class="flex gap-4 overflow-x-auto hide-scrollbar mb-8 pb-2" id="fechas">
-  </div>
-  <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4" id="horas">
-  </div>
-</div>
-</section>
-</div>
-<!-- Summary Sticky Sidebar -->
-<div class="lg:col-span-4">
-  <div class="sticky top-32 bg-surface-container-low rounded-xl p-8 shadow-[0_20px_40px_rgba(0,0,0,0.5)] border border-outline-variant/10">
-    <h3 class="font-headline text-2xl text-primary-container mb-8 border-b border-outline-variant/20 pb-4">Resumen
-    </h3>
-    <div class="flex flex-col gap-6 mb-8">
-      <div class="flex justify-between items-start">
-        <div><span class="font-label text-xs uppercase text-on-surface-variant tracking-widest block mb-1">Servicio</span><span class="font-body text-lg text-on-surface" id="res-servicio">Por elegir</span>
+    <div class="font-body text-on-surface-variant text-sm text-center">© 2026 TecnoCorte. Precios en COP. Todos los
+      derechos reservados.
     </div>
+<<<<<<< Updated upstream
     <span class="font-body text-primary font-semibold" id="res-precio">-</span>
 </div>
 <div class="flex justify-between items-start">
@@ -342,5 +461,100 @@ document.getElementById("form-reserva").addEventListener("submit", function (e) 
   }
 });
 </script>
+=======
+  </footer>
+  <script>
+    const HORAS = ["09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "12:00", "12:30", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30", "17:00"];
+    let seleccion = { servicio: "", precio: 0, duracion: "", peluquero: "", peluqueria: "", fecha: "", hora: "" };
+    function refrescar() {
+      document.getElementById("res-servicio").textContent = seleccion.servicio || "Por elegir";
+      document.getElementById("res-precio").textContent = seleccion.precio ? "$ " + seleccion.precio.toLocaleString("es-CO") : "-";
+      document.getElementById("res-total").textContent = seleccion.precio ? "$ " + seleccion.precio.toLocaleString("es-CO") : "$ -";
+      document.getElementById("res-peluquero").textContent = seleccion.peluqueroNombre || "Por elegir";
+      document.getElementById("res-peluqueria").textContent = seleccion.peluqueriaNombre || "Por elegir";
+      document.getElementById("res-fecha").textContent = seleccion.fecha && seleccion.hora ? seleccion.fecha.split("-").reverse().join("/") + " - " + seleccion.hora : "Por confirmar";
+      document.getElementById("h-servicio").value = seleccion.servicio;
+      document.getElementById("h-peluquero").value = seleccion.peluquero;
+      document.getElementById("h-peluqueria").value = seleccion.peluqueria;
+      document.getElementById("h-fecha").value = seleccion.fecha;
+      document.getElementById("h-hora").value = seleccion.hora;
+    }
+    function seleccionarServicio(el) {
+      document.querySelectorAll(".opt[data-servicio]").forEach(o => { o.classList.remove("opt-selected"); o.querySelector(".icon-muted").textContent = "circle"; });
+      el.classList.add("opt-selected");
+      el.querySelector(".icon-muted").textContent = "check_circle";
+      seleccion.servicio = el.dataset.servicio;
+      seleccion.precio = parseInt(el.dataset.precio);
+      seleccion.duracion = el.dataset.duracion;
+      refrescar();
+    }
+    function seleccionarPeluquero(el) {
+      document.querySelectorAll(".opt[data-peluquero]").forEach(o => o.classList.remove("opt-selected"));
+      el.classList.add("opt-selected");
+      seleccion.peluquero = el.dataset.peluquero;
+      seleccion.peluqueroNombre = el.querySelector("span:last-child").textContent.trim();
+      refrescar();
+    }
+    function seleccionarPeluqueria(el) {
+      document.querySelectorAll(".opt[data-peluqueria]").forEach(o => o.classList.remove("opt-selected"));
+      el.classList.add("opt-selected");
+      seleccion.peluqueria = el.dataset.peluqueria;
+      seleccion.peluqueriaNombre = el.querySelector("span:last-child").textContent.trim();
+      refrescar();
+    }
+    function buildFechas() {
+      const cont = document.getElementById("fechas");
+      const MESES = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+      const DIAS = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+      const hoy = new Date();
+      document.getElementById("mes-visible").textContent = MESES[hoy.getMonth()] + " " + hoy.getFullYear();
+      for (let i = 0; i < 7; i++) {
+        const d = new Date();
+        d.setDate(hoy.getDate() + i);
+        const iso = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+        const div = document.createElement("div");
+        div.className = "opt flex flex-col items-center justify-center w-16 h-20 rounded-md bg-surface-container-highest text-on-surface-variant hover:bg-surface-bright";
+        div.innerHTML = "<span class='font-label text-xs uppercase mb-1'>" + DIAS[d.getDay()] + "</span><span class='font-body text-xl font-semibold'>" + d.getDate() + "</span>";
+        div.dataset.fecha = iso;
+        div.onclick = function () {
+          document.querySelectorAll("#fechas .opt").forEach(o => o.classList.remove("opt-selected"));
+          this.classList.add("opt-selected");
+          seleccion.fecha = this.dataset.fecha;
+          buildHoras();
+          refrescar();
+        };
+        cont.appendChild(div);
+      }
+    }
+    function buildHoras() {
+      const cont = document.getElementById("horas");
+      cont.innerHTML = "";
+      HORAS.forEach(h => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "py-3 rounded-md border border-outline-variant/20 text-on-surface-variant font-body text-sm hover:border-primary hover:text-primary transition-colors active:scale-95";
+        b.textContent = h;
+        b.onclick = function () {
+          document.querySelectorAll("#horas button").forEach(x => x.classList.remove("bg-primary", "text-on-primary", "border-primary", "bg-primary/5"));
+          this.classList.add("bg-primary", "text-on-primary", "border-primary", "bg-primary/5");
+          seleccion.hora = h;
+          refrescar();
+        };
+        cont.appendChild(b);
+      });
+    }
+    buildFechas();
+    buildHoras();
+    document.getElementById("form-reserva").addEventListener("submit", function (e) {
+      if (!seleccion.servicio || !seleccion.peluquero || !seleccion.peluqueria || !seleccion.fecha || !seleccion.hora) {
+        e.preventDefault();
+        var error = document.getElementById("error-reserva");
+        error.textContent = "Datos inválidos. Completa todos los datos e inténtalo de nuevo.";
+        error.classList.remove("hidden");
+      }
+    });
+  </script>
+>>>>>>> Stashed changes
 </body>
+
 </html>

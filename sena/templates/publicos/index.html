@@ -1,204 +1,249 @@
 {% load static %}
 <!DOCTYPE html>
 <html class="dark" lang="es">
-  <head>
-    <meta charset="utf-8"/>
-    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title>TecnoCorte</title>
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Noto+Serif:wght@400;700;900&display=swap" rel="stylesheet"/>
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
-    {% include "includes/tema.html" %}
-    <style>
-      body {
-        background-color: #131313;
-        color: #e2e2e2;
-      }
-      .text-gradient-primary {
-        background: linear-gradient(135deg, #f2ca50 0%, #d4af37 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-      }
-      .btn-primary {
-        background: linear-gradient(135deg, #f2ca50 0%, #d4af37 100%);
-        color: #3c2f00;
-      }
-      .shadow-ambient {
-        box-shadow: 0 20px 40px rgba(242, 202, 80, 0.06);
-      }
-      .divider-dot {
-        width: 4px;
-        height: 4px;
-        background-color: #d4af37;
-        border-radius: 50%;
-        margin: 0 auto;
-      }
-    </style>
-  </head>
-  <body class="font-body antialiased bg-surface text-on-surface">
-    <header class="fixed top-0 z-50 w-full bg-surface/70 shadow-[0_20px_40px_rgba(242,202,80,0.06)] backdrop-blur-xl">
-      <div class="mx-auto flex w-full max-w-full items-center justify-between px-6 py-4 md:px-8">
-        <div class="font-headline text-2xl font-bold text-primary-container">TecnoCorte</div>
-        <nav class="hidden items-center gap-8 text-sm font-display uppercase tracking-widest text-on-surface md:flex">
-          <a class="border-b-2 border-primary pb-1 text-primary" href="{% url 'sena:inicio' %}">Inicio</a>
-          <a class="text-on-surface-variant transition-colors duration-300 hover:text-primary" href="{% url 'sena:usuario_servicios' %}">Servicios</a>
-          <a class="text-on-surface-variant transition-colors duration-300 hover:text-primary" href="{% url 'sena:usuario_tienda' %}">Tienda</a>
-          <a class="text-on-surface-variant transition-colors duration-300 hover:text-primary" href="{% url 'sena:usuario_peluquerias' %}">Barberías</a>
-          <a class="text-on-surface-variant transition-colors duration-300 hover:text-primary" href="{% url 'sena:ayuda' %}">Contactos</a>
-        </nav>
-        <div class="flex items-center gap-4 text-primary">
-          {% if request.session.logueado %}
-            <a href="{% url 'sena:usuario_perfil' %}" class="text-sm font-bold uppercase tracking-widest transition-colors hover:text-primary-container">Perfil</a>
-            <a href="{% url 'sena:logout' %}" class="text-sm font-bold uppercase tracking-widest transition-colors hover:text-primary-container">Salir</a>
-          {% else %}
-            <a href="{% url 'sena:login' %}" class="text-sm font-bold uppercase tracking-widest transition-colors hover:text-primary-container">Ingresar</a>
-          {% endif %}
-          <a href="{% url 'sena:carrito' %}" class="relative text-primary transition-all duration-300 hover:text-primary-container active:scale-90" title="Carrito">
-            <span class="material-symbols-outlined">shopping_bag</span>
-            {% if cantidad %}
-              <span class="absolute -right-2 -top-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-on-primary">{{ cantidad }}</span>
-            {% endif %}
-          </a>
-        </div>
-      </div>
-    </header>
 
-    <main class="pt-24">
-      <section class="relative flex min-h-[820px] items-center justify-center overflow-hidden bg-surface-container-low">
-        <div class="absolute inset-0 z-0">
-          <img src="{% static 'sena/images/corte_masculino.jpg' %}" alt="Barbería masculina profesional" class="h-full w-full object-cover opacity-35"/>
-          <div class="absolute inset-0 bg-gradient-to-t from-surface via-surface/80 to-transparent"></div>
-        </div>
+<head>
+  <meta charset="utf-8" />
+  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <title>TecnoCorte</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Noto+Serif:wght@400;700;900&display=swap"
+    rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+    rel="stylesheet" />
+  {% include "includes/tema.html" %}
+  <style>
+    body {
+      background-color: #131313;
+      color: #e2e2e2;
+    }
 
-        <div class="relative z-10 mx-auto flex max-w-5xl flex-col items-center px-6 text-center">
-          <span class="mb-6 block text-sm font-medium uppercase tracking-[0.2em] text-primary">TecnoCorte</span>
-          <h1 class="mb-8 font-headline text-5xl font-black leading-tight tracking-tight text-on-surface md:text-7xl">
-            Tu <span class="text-gradient-primary italic">Estilo</span>
-          </h1>
-          <p class="mx-auto mb-12 max-w-2xl text-lg font-light leading-relaxed text-on-surface-variant md:text-xl">
-            Barbería de confianza para cortes modernos, arreglo de barba y cuidado personal premium.
-          </p>
+    .text-gradient-primary {
+      background: linear-gradient(135deg, #f2ca50 0%, #d4af37 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
 
-          {% if request.session.logueado %}
-            <a href="{% url 'sena:usuario_reservar_cita' %}" class="btn-primary inline-flex items-center justify-center gap-3 rounded-md px-10 py-4 text-sm font-bold uppercase tracking-[0.1em] transition-all duration-300 hover:shadow-ambient active:scale-95">
-              Reservar Cita
-              <span class="material-symbols-outlined text-lg" style="font-variation-settings: 'FILL' 1;">arrow_right_alt</span>
-            </a>
-          {% else %}
-            <a href="{% url 'sena:login' %}" class="btn-primary inline-flex items-center justify-center gap-3 rounded-md px-10 py-4 text-sm font-bold uppercase tracking-[0.1em] transition-all duration-300 hover:shadow-ambient active:scale-95">
-              Reservar Cita
-              <span class="material-symbols-outlined text-lg" style="font-variation-settings: 'FILL' 1;">arrow_right_alt</span>
-            </a>
-          {% endif %}
-        </div>
-      </section>
+    .btn-primary {
+      background: linear-gradient(135deg, #f2ca50 0%, #d4af37 100%);
+      color: #3c2f00;
+    }
 
-      <div class="flex h-32 items-center justify-center">
-        <div class="divider-dot"></div>
-      </div>
+    .shadow-ambient {
+      box-shadow: 0 20px 40px rgba(242, 202, 80, 0.06);
+    }
 
-      <section class="relative px-6 py-16 md:py-24">
-        <div class="mx-auto max-w-7xl">
-          <div class="mb-14 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-            <div class="max-w-2xl">
-              <h2 class="font-headline text-4xl font-bold text-on-surface md:text-5xl">
-                Nuestros <span class="text-primary-container">Servicios</span>
-              </h2>
-            </div>
-            <p class="text-lg text-on-surface-variant">Cortes, arreglo de barba y más para que siempre luzcas bien.</p>
-          </div>
+    .divider-dot {
+      width: 4px;
+      height: 4px;
+      background-color: #d4af37;
+      border-radius: 50%;
+      margin: 0 auto;
+    }
+  </style>
+</head>
 
-          <div class="grid gap-8 md:grid-cols-2">
-            <article class="group overflow-hidden rounded-[28px] border border-outline-variant/20 bg-surface-container-low shadow-[0_20px_40px_rgba(0,0,0,0.08)] transition-transform duration-300 hover:-translate-y-1">
-              <div class="overflow-hidden">
-                <img src="{% static 'sena/images/corte_masculino.jpg' %}" alt="Corte de cabello masculino" class="h-72 w-full object-cover transition-transform duration-700 group-hover:scale-105 md:h-80"/>
-              </div>
-              <div class="p-7 md:p-8">
-                <div class="mb-4 flex items-center justify-between gap-4">
-                  <h3 class="font-headline text-2xl font-bold text-on-surface">Corte Técnico</h3>
-                  <span class="text-sm font-semibold tracking-wider text-primary-container">45 MIN</span>
-                </div>
-                <p class="mb-6 text-base leading-relaxed text-on-surface-variant">Estilo personalizado con precisión, lavado y asesoría para realzar tus facciones.</p>
-                <a href="{% url 'sena:usuario_servicios' %}" class="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-[0.12em] text-primary transition-all group-hover:gap-3">
-                  Ver más
-                  <span class="material-symbols-outlined text-sm">east</span>
-                </a>
-              </div>
-            </article>
-
-            <article class="group overflow-hidden rounded-[28px] border border-outline-variant/20 bg-surface-container-low shadow-[0_20px_40px_rgba(0,0,0,0.08)] transition-transform duration-300 hover:-translate-y-1 md:mt-16">
-              <div class="overflow-hidden">
-                <img src="{% static 'sena/images/barba_masculina.jpg' %}" alt="Arreglo de barba masculina" class="h-72 w-full object-cover transition-transform duration-700 group-hover:scale-105 md:h-80"/>
-              </div>
-              <div class="p-7 md:p-8">
-                <div class="mb-4 flex items-center justify-between gap-4">
-                  <h3 class="font-headline text-2xl font-bold text-on-surface">Arreglo de Barba</h3>
-                  <span class="text-sm font-semibold tracking-wider text-primary-container">30 MIN</span>
-                </div>
-                <p class="mb-6 text-base leading-relaxed text-on-surface-variant">Perfilado fino con toalla caliente, cuidado hidratante y forma impecable.</p>
-                <a href="{% url 'sena:usuario_servicios' %}" class="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-[0.12em] text-primary transition-all group-hover:gap-3">
-                  Descubrir
-                  <span class="material-symbols-outlined text-sm">east</span>
-                </a>
-              </div>
-            </article>
-          </div>
-        </div>
-      </section>
-
-      <section class="bg-surface-container-lowest px-6 py-16 md:py-24">
-        <div class="mx-auto max-w-7xl">
-          <div class="mb-12 text-center">
-            <h2 class="font-headline text-4xl font-bold text-on-surface md:text-5xl">
-              Nuestra <span class="text-primary-container">Tienda</span>
-            </h2>
-            <p class="mx-auto mt-4 max-w-2xl text-lg text-on-surface-variant">Productos y herramientas para tu cuidado personal.</p>
-          </div>
-
-          <div class="grid gap-6 md:grid-cols-3">
-            <div class="md:col-span-2 overflow-hidden rounded-[28px] bg-surface-container-low shadow-[0_20px_40px_rgba(0,0,0,0.08)]">
-              <div class="relative h-full min-h-[360px] bg-surface-container-low">
-                <img src="{% static 'sena/images/productos_barber.jpg' %}" alt="Productos para barbería" class="h-full w-full object-cover opacity-80"/>
-                <div class="absolute inset-0 bg-gradient-to-t from-surface-dim via-surface/35 to-transparent"></div>
-                <div class="absolute bottom-0 left-0 right-0 flex items-end justify-between gap-4 p-8">
-                  <div>
-                    <span class="mb-3 inline-block rounded-full bg-surface-container-highest px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-on-surface-variant">Styling</span>
-                    <h3 class="font-headline text-3xl font-bold text-on-surface">Pomada para Cabello</h3>
-                  </div>
-                  <span class="text-xl font-bold text-primary">$85.000</span>
-                </div>
-              </div>
-            </div>
-
-            <div class="overflow-hidden rounded-[28px] bg-surface-container-low shadow-[0_20px_40px_rgba(0,0,0,0.08)]">
-              <div class="relative h-full min-h-[360px]">
-                <img src="{% static 'sena/images/aceite_barba.jpg' %}" alt="Aceite para barba" class="h-full w-full object-cover opacity-80"/>
-                <div class="absolute inset-0 bg-gradient-to-t from-surface-dim to-transparent"></div>
-                <div class="absolute bottom-0 left-0 right-0 p-6">
-                  <span class="mb-2 inline-block rounded-full bg-surface-container-highest px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-on-surface-variant">Cuidado</span>
-                  <h3 class="font-headline text-2xl font-bold text-on-surface">Aceite de Barba</h3>
-                  <div class="mt-4 flex items-center justify-between">
-                    <span class="text-lg font-bold text-primary">$120.000</span>
-                    <span class="material-symbols-outlined text-primary">add_shopping_cart</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-    </main>
-
-    <footer class="flex w-full flex-col items-center gap-8 border-t border-outline-variant/10 bg-surface-container-lowest px-8 pb-8 pt-16">
-      <div class="font-headline text-xl font-bold text-primary">TecnoCorte</div>
-      <nav class="flex flex-wrap justify-center gap-6 text-sm text-on-surface-variant">
-        <a class="opacity-80 transition-colors duration-300 hover:text-primary hover:opacity-100" href="{% url 'sena:ayuda' %}">Privacidad</a>
-        <a class="opacity-80 transition-colors duration-300 hover:text-primary hover:opacity-100" href="{% url 'sena:ayuda' %}">Términos</a>
-        <a class="opacity-80 transition-colors duration-300 hover:text-primary hover:opacity-100" href="{% url 'sena:ayuda' %}">Soporte</a>
-        <a class="opacity-80 transition-colors duration-300 hover:text-primary hover:opacity-100" href="{% url 'sena:ayuda' %}">Franquicias</a>
+<body class="font-body antialiased bg-surface text-on-surface">
+  <header class="fixed top-0 z-50 w-full bg-surface/70 shadow-[0_20px_40px_rgba(242,202,80,0.06)] backdrop-blur-xl">
+    <div class="mx-auto flex w-full max-w-full items-center justify-between px-6 py-4 md:px-8">
+      <div class="font-headline text-2xl font-bold text-primary-container">TecnoCorte</div>
+      <nav class="hidden items-center gap-8 text-sm font-display uppercase tracking-widest text-on-surface md:flex">
+        <a class="border-b-2 border-primary pb-1 text-primary" href="{% url 'sena:inicio' %}">Inicio</a>
+        <a class="text-on-surface-variant transition-colors duration-300 hover:text-primary"
+          href="{% url 'sena:usuario_servicios' %}">Servicios</a>
+        <a class="text-on-surface-variant transition-colors duration-300 hover:text-primary"
+          href="{% url 'sena:usuario_tienda' %}">Tienda</a>
+        <a class="text-on-surface-variant transition-colors duration-300 hover:text-primary"
+          href="{% url 'sena:usuario_peluquerias' %}">Barberías</a>
+        <a class="text-on-surface-variant transition-colors duration-300 hover:text-primary"
+          href="{% url 'sena:ayuda' %}">Contactos</a>
       </nav>
-      <div class="mt-4 text-center text-sm text-on-surface-variant opacity-60">© 2026 TecnoCorte. Todos los derechos reservados.</div>
-    </footer>
-  </body>
+      <div class="flex items-center gap-4 text-primary">
+        {% if request.session.logueado %}
+        <a href="{% url 'sena:usuario_perfil' %}"
+          class="text-sm font-bold uppercase tracking-widest transition-colors hover:text-primary-container">Perfil</a>
+        <a href="{% url 'sena:logout' %}"
+          class="text-sm font-bold uppercase tracking-widest transition-colors hover:text-primary-container">Salir</a>
+        {% else %}
+        <a href="{% url 'sena:login' %}"
+          class="text-sm font-bold uppercase tracking-widest transition-colors hover:text-primary-container">Ingresar</a>
+        {% endif %}
+        <a href="{% url 'sena:carrito' %}"
+          class="relative text-primary transition-all duration-300 hover:text-primary-container active:scale-90"
+          title="Carrito">
+          <span class="material-symbols-outlined">shopping_bag</span>
+          {% if cantidad %}
+          <span
+            class="absolute -right-2 -top-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-on-primary">{{
+            cantidad }}</span>
+          {% endif %}
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="pt-24">
+    <section class="relative flex min-h-[820px] items-center justify-center overflow-hidden bg-surface-container-low">
+      <div class="absolute inset-0 z-0">
+        <img src="{% static 'sena/images/corte_masculino.jpg' %}" alt="Barbería masculina profesional"
+          class="h-full w-full object-cover opacity-35" />
+        <div class="absolute inset-0 bg-gradient-to-t from-surface via-surface/80 to-transparent"></div>
+      </div>
+
+      <div class="relative z-10 mx-auto flex max-w-5xl flex-col items-center px-6 text-center">
+        <span class="mb-6 block text-sm font-medium uppercase tracking-[0.2em] text-primary">TecnoCorte</span>
+        <h1 class="mb-8 font-headline text-5xl font-black leading-tight tracking-tight text-on-surface md:text-7xl">
+          Tu <span class="text-gradient-primary italic">Estilo</span>
+        </h1>
+        <p class="mx-auto mb-12 max-w-2xl text-lg font-light leading-relaxed text-on-surface-variant md:text-xl">
+          Barbería de confianza para cortes modernos, arreglo de barba y cuidado personal premium.
+        </p>
+
+        {% if request.session.logueado %}
+        <a href="{% url 'sena:usuario_reservar_cita' %}"
+          class="btn-primary inline-flex items-center justify-center gap-3 rounded-md px-10 py-4 text-sm font-bold uppercase tracking-[0.1em] transition-all duration-300 hover:shadow-ambient active:scale-95">
+          Reservar Cita
+          <span class="material-symbols-outlined text-lg"
+            style="font-variation-settings: 'FILL' 1;">arrow_right_alt</span>
+        </a>
+        {% else %}
+        <a href="{% url 'sena:login' %}"
+          class="btn-primary inline-flex items-center justify-center gap-3 rounded-md px-10 py-4 text-sm font-bold uppercase tracking-[0.1em] transition-all duration-300 hover:shadow-ambient active:scale-95">
+          Reservar Cita
+          <span class="material-symbols-outlined text-lg"
+            style="font-variation-settings: 'FILL' 1;">arrow_right_alt</span>
+        </a>
+        {% endif %}
+      </div>
+    </section>
+
+    <div class="flex h-32 items-center justify-center">
+      <div class="divider-dot"></div>
+    </div>
+
+    <section class="relative px-6 py-16 md:py-24">
+      <div class="mx-auto max-w-7xl">
+        <div class="mb-14 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+          <div class="max-w-2xl">
+            <h2 class="font-headline text-4xl font-bold text-on-surface md:text-5xl">
+              Nuestros <span class="text-primary-container">Servicios</span>
+            </h2>
+          </div>
+        </div>
+
+        <div class="grid gap-8 md:grid-cols-2">
+          <article
+            class="group overflow-hidden rounded-[28px] border border-outline-variant/20 bg-surface-container-low shadow-[0_20px_40px_rgba(0,0,0,0.08)] transition-transform duration-300 hover:-translate-y-1">
+            <div class="overflow-hidden">
+              <img src="{% static 'sena/images/corte_cabello.jpeg' %}" alt="Corte de cabello masculino"
+                class="h-72 w-full object-cover transition-transform duration-700 group-hover:scale-105 md:h-80" />
+            </div>
+            <div class="p-7 md:p-8">
+              <div class="mb-4 flex items-center justify-between gap-4">
+                <h3 class="font-headline text-2xl font-bold text-on-surface">Corte Técnico</h3>
+                <span class="text-sm font-semibold tracking-wider text-primary-container">45 MIN</span>
+              </div>
+              <p class="mb-6 text-base leading-relaxed text-on-surface-variant">Estilo personalizado con precisión,
+                lavado y asesoría para realzar tus facciones.</p>
+              <a href="{% url 'sena:usuario_servicios' %}"
+                class="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-[0.12em] text-primary transition-all group-hover:gap-3">
+                Ver más
+                <span class="material-symbols-outlined text-sm">east</span>
+              </a>
+            </div>
+          </article>
+
+          <article
+            class="group overflow-hidden rounded-[28px] border border-outline-variant/20 bg-surface-container-low shadow-[0_20px_40px_rgba(0,0,0,0.08)] transition-transform duration-300 hover:-translate-y-1 md:mt-16">
+            <div class="overflow-hidden">
+              <img src="{% static 'sena/images/arreglo_barba.jpeg' %}" alt="Arreglo de barba masculina"
+                class="h-72 w-full object-cover transition-transform duration-700 group-hover:scale-105 md:h-80" />
+            </div>
+            <div class="p-7 md:p-8">
+              <div class="mb-4 flex items-center justify-between gap-4">
+                <h3 class="font-headline text-2xl font-bold text-on-surface">Arreglo de Barba</h3>
+                <span class="text-sm font-semibold tracking-wider text-primary-container">30 MIN</span>
+              </div>
+              <p class="mb-6 text-base leading-relaxed text-on-surface-variant">Perfilado fino con toalla caliente,
+                cuidado hidratante y forma impecable.</p>
+              <a href="{% url 'sena:usuario_servicios' %}"
+                class="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-[0.12em] text-primary transition-all group-hover:gap-3">
+                Descubrir
+                <span class="material-symbols-outlined text-sm">east</span>
+              </a>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="bg-surface-container-lowest px-6 py-16 md:py-24">
+      <div class="mx-auto max-w-7xl">
+        <div class="mb-12 text-center">
+          <h2 class="font-headline text-4xl font-bold text-on-surface md:text-5xl">
+            Nuestra <span class="text-primary-container">Tienda</span>
+          </h2>
+          <p class="mx-auto mt-4 max-w-2xl text-lg text-on-surface-variant">Productos y herramientas para tu cuidado
+            personal.</p>
+        </div>
+
+        <div class="grid gap-6 md:grid-cols-3">
+          <div
+            class="md:col-span-2 overflow-hidden rounded-[28px] bg-surface-container-low shadow-[0_20px_40px_rgba(0,0,0,0.08)]">
+            <div class="relative h-full min-h-[360px] bg-surface-container-low">
+              <img src="{% static 'sena/images/pomada_barba.jpeg' %}" alt="Productos para barbería"
+                class="h-full w-full object-cover opacity-80" />
+              <div class="absolute inset-0 bg-gradient-to-t from-surface-dim via-surface/35 to-transparent"></div>
+              <div class="absolute bottom-0 left-0 right-0 flex items-end justify-between gap-4 p-8">
+                <div>
+                  <span
+                    class="mb-3 inline-block rounded-full bg-surface-container-highest px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-on-surface-variant">Styling</span>
+                  <h3 class="font-headline text-3xl font-bold text-on-surface">Pomada para Cabello</h3>
+                </div>
+                <span class="text-xl font-bold text-primary">$85.000</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="overflow-hidden rounded-[28px] bg-surface-container-low shadow-[0_20px_40px_rgba(0,0,0,0.08)]">
+            <div class="relative h-full min-h-[360px]">
+              <img src="{% static 'sena/images/aceite_barba.jpeg' %}" alt="Aceite para barba"
+                class="h-full w-full object-cover opacity-80" />
+              <div class="absolute inset-0 bg-gradient-to-t from-surface-dim to-transparent"></div>
+              <div class="absolute bottom-0 left-0 right-0 p-6">
+                <span
+                  class="mb-2 inline-block rounded-full bg-surface-container-highest px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-on-surface-variant">Cuidado</span>
+                <h3 class="font-headline text-2xl font-bold text-on-surface">Aceite de Barba</h3>
+                <div class="mt-4 flex items-center justify-between">
+                  <span class="text-lg font-bold text-primary">$120.000</span>
+                  <span class="material-symbols-outlined text-primary">add_shopping_cart</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer
+    class="flex w-full flex-col items-center gap-8 border-t border-outline-variant/10 bg-surface-container-lowest px-8 pb-8 pt-16">
+    <div class="font-headline text-xl font-bold text-primary">TecnoCorte</div>
+    <nav class="flex flex-wrap justify-center gap-6 text-sm text-on-surface-variant">
+      <a class="opacity-80 transition-colors duration-300 hover:text-primary hover:opacity-100"
+        href="{% url 'sena:ayuda' %}">Privacidad</a>
+      <a class="opacity-80 transition-colors duration-300 hover:text-primary hover:opacity-100"
+        href="{% url 'sena:ayuda' %}">Términos</a>
+      <a class="opacity-80 transition-colors duration-300 hover:text-primary hover:opacity-100"
+        href="{% url 'sena:ayuda' %}">Soporte</a>
+      <a class="opacity-80 transition-colors duration-300 hover:text-primary hover:opacity-100"
+        href="{% url 'sena:ayuda' %}">Franquicias</a>
+    </nav>
+    <div class="mt-4 text-center text-sm text-on-surface-variant opacity-60">© 2026 TecnoCorte. Todos los derechos
+      reservados.</div>
+  </footer>
+</body>
+
 </html>

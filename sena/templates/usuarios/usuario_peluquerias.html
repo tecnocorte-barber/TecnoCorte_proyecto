@@ -1,158 +1,224 @@
 {% load static %}
 <!DOCTYPE html>
 <html class="dark" lang="es">
-  <head>
-    <meta charset="utf-8"/>
-    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title>TecnoCorte - Barberías</title>
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Noto+Serif:wght@400;700;900&display=swap" rel="stylesheet"/>
-    {% include "includes/tema.html" %}
-    <style>
-      body {
-        background-color: #131313;
-        color: #e2e2e2;
-        font-family: 'Manrope', sans-serif;
-      }
-      h1, h2, h3, h4, h5, h6, .font-headline {
-        font-family: 'Noto Serif', serif;
-      }
-      .gold-gradient {
-        background: linear-gradient(135deg, #f2ca50 0%, #d4af37 100%);
-      }
-      .ambient-glow {
-        box-shadow: 0 20px 40px rgba(242, 202, 80, 0.06);
-      }
-      .signature-divider {
-        height: 48px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-      .signature-divider::after {
-        content: '';
-        width: 4px;
-        height: 4px;
-        background-color: #d4af37;
-        border-radius: 50%;
-      }
-    </style>
-  </head>
-  <body class="relative min-h-screen flex flex-col overflow-x-hidden antialiased">
-    <div class="pointer-events-none fixed left-0 top-0 -z-10 h-[512px] w-full bg-gradient-to-b from-primary/5 to-transparent"></div>
 
-    <header class="fixed top-0 z-50 w-full bg-surface/70 backdrop-blur-xl">
-      <div class="mx-auto flex w-full max-w-full items-center justify-between bg-surface-container-low px-6 py-4 shadow-[0_20px_40px_rgba(242,202,80,0.06)] md:px-8">
-        <div class="font-headline text-2xl font-bold text-primary-container"><a href="{% url 'sena:inicio' %}">TecnoCorte</a></div>
-        <nav class="hidden items-center space-x-8 text-sm font-display uppercase tracking-widest text-on-surface md:flex">
-          <a class="text-on-surface-variant transition-all duration-300 hover:text-primary" href="{% url 'sena:inicio' %}">Inicio</a>
-          <a class="text-on-surface-variant transition-all duration-300 hover:text-primary" href="{% url 'sena:usuario_servicios' %}">Servicios</a>
-          <a class="text-on-surface-variant transition-all duration-300 hover:text-primary" href="{% url 'sena:usuario_tienda' %}">Tienda</a>
-          <a class="border-b-2 border-primary pb-1 text-primary" href="{% url 'sena:usuario_peluquerias' %}">Barberías</a>
-          <a class="text-on-surface-variant transition-all duration-300 hover:text-primary" href="{% url 'sena:ayuda' %}">Contactos</a>
-        </nav>
-        <div class="flex items-center gap-5">
-          {% if request.session.logueado %}
-            <a href="{% url 'sena:usuario_perfil' %}" class="text-sm font-bold uppercase tracking-widest transition-colors hover:text-primary-container">Perfil</a>
-            <a href="{% url 'sena:logout' %}" class="text-sm font-bold uppercase tracking-widest transition-colors hover:text-primary-container">Salir</a>
-          {% else %}
-            <a href="{% url 'sena:login' %}" class="text-sm font-bold uppercase tracking-widest transition-colors hover:text-primary-container">Ingresar</a>
-          {% endif %}
-          <a href="{% url 'sena:carrito' %}" class="relative text-primary transition-all duration-300 hover:text-primary-container active:scale-90" title="Carrito">
-            <span class="material-symbols-outlined">shopping_bag</span>
-            {% if cantidad %}
-              <span class="absolute -right-2 -top-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-on-primary">{{ cantidad }}</span>
-            {% endif %}
-          </a>
-        </div>
-      </div>
-    </header>
+<head>
+  <meta charset="utf-8" />
+  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <title>TecnoCorte - Barberías</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+    rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Noto+Serif:wght@400;700;900&display=swap"
+    rel="stylesheet" />
+  {% include "includes/tema.html" %}
+  <style>
+    body {
+      background-color: #131313;
+      color: #e2e2e2;
+      font-family: 'Manrope', sans-serif;
+    }
 
-    <main class="relative z-10 mx-auto grid w-full max-w-screen-2xl flex-grow grid-cols-1 gap-8 px-4 pb-24 pt-32 md:px-8 lg:grid-cols-12">
-      <div class="col-span-1 mb-8 lg:col-span-12">
-        <h1 class="mb-6 max-w-4xl font-headline text-5xl font-bold leading-tight tracking-tight text-on-surface md:text-7xl">
-          Nuestras <br/><span class="font-light italic text-primary-container">Barberías</span>
-        </h1>
-        <p class="max-w-2xl text-lg leading-relaxed text-on-surface-variant">Encuentra la barbería ideal para ti. Cortes, barba y cuidado personal con atención profesional.</p>
-        <div class="signature-divider mt-8 w-full max-w-md"></div>
-      </div>
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6,
+    .font-headline {
+      font-family: 'Noto Serif', serif;
+    }
 
-      <aside class="col-span-1 h-fit gap-8 lg:sticky lg:top-32 lg:col-span-4">
-        <div class="rounded-[28px] bg-surface-container-low p-8 ambient-glow">
-          <h3 class="mb-6 font-headline text-xl text-primary-container">Filtros de búsqueda</h3>
-          <div class="relative">
-            <input class="w-full border-b border-outline-variant/20 bg-transparent py-3 pr-10 text-on-surface placeholder:text-on-surface-variant/50 transition-colors focus:border-primary focus:ring-0" placeholder="Buscar por nombre o zona..." type="text"/>
-            <span class="material-symbols-outlined pointer-events-none absolute right-2 top-3 text-on-surface-variant/50">search</span>
-          </div>
-        </div>
+    .gold-gradient {
+      background: linear-gradient(135deg, #f2ca50 0%, #d4af37 100%);
+    }
 
-        <div class="mt-8 overflow-hidden rounded-[28px] border border-outline-variant/10 bg-surface-container-low ambient-glow">
-          <div class="relative h-[380px]">
-            <img src="{% static 'sena/images/corte_masculino.jpg' %}" alt="Mapa de barbería masculina" class="h-full w-full object-cover opacity-35"/>
-            <div class="absolute inset-0 bg-gradient-to-t from-surface-container-high to-surface-container-low/30"></div>
-            <div class="absolute left-4 top-4 flex items-center gap-2 rounded-sm border border-outline-variant/20 bg-surface/80 px-3 py-2 backdrop-blur-md">
-              <span class="material-symbols-outlined text-[18px] text-primary">location_on</span>
-              <span class="text-xs text-on-surface">Zona SENA, Itagüí</span>
-            </div>
-            {% if peluquerias %}
-              <div class="absolute bottom-4 left-4 right-4 rounded-lg border border-outline-variant/20 bg-surface-container-highest/90 p-4 backdrop-blur-md">
-                <h4 class="mb-1 font-headline text-lg text-primary-container">{{ peluquerias.0.nombre }}</h4>
-                <p class="flex items-center gap-1 text-sm text-on-surface-variant"><span class="material-symbols-outlined text-[14px]">directions_walk</span> {{ peluquerias.0.ubicacion }}</p>
-              </div>
-            {% endif %}
-          </div>
-        </div>
-      </aside>
+    .ambient-glow {
+      box-shadow: 0 20px 40px rgba(242, 202, 80, 0.06);
+    }
 
-      <section class="col-span-1 flex flex-col gap-8 lg:col-span-8">
-        <div class="flex items-end justify-between border-b border-outline-variant/20 pb-4">
-          <h2 class="font-headline text-2xl text-on-surface">Directorio</h2>
-          <span class="text-sm uppercase tracking-widest text-on-surface-variant">{{ peluquerias|length }} locales disponibles</span>
-        </div>
+    .signature-divider {
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
 
-        <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-          {% for peluqueria in peluquerias %}
-            <article class="group flex flex-col overflow-hidden rounded-[28px] border border-transparent bg-surface-container-low transition-all duration-500 hover:-translate-y-1 hover:border-outline-variant/20 ambient-glow">
-              <div class="relative h-56 overflow-hidden bg-surface-container-highest">
-                <img src="{% static 'sena/images/corte_masculino.jpg' %}" alt="{{ peluqueria.nombre }}" class="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"/>
-                <div class="absolute left-4 top-4 z-10 rounded-sm bg-surface-container-highest/80 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-primary backdrop-blur-sm">Barbería</div>
-              </div>
+    .signature-divider::after {
+      content: '';
+      width: 4px;
+      height: 4px;
+      background-color: #d4af37;
+      border-radius: 50%;
+    }
+  </style>
+</head>
 
-              <div class="flex flex-grow flex-col p-6">
-                <h3 class="mb-3 font-headline text-2xl text-primary-container transition-colors group-hover:text-primary">{{ peluqueria.nombre }}</h3>
-                <div class="mt-auto mb-6 flex items-start gap-3">
-                  <span class="material-symbols-outlined mt-0.5 text-primary-container/70">location_on</span>
-                  <div>
-                    <p class="text-sm text-on-surface">{{ peluqueria.ubicacion }}</p>
-                    <p class="mt-1 flex items-center gap-1 text-xs text-on-surface-variant"><span class="material-symbols-outlined text-[14px]">call</span> {{ peluqueria.telefono }}</p>
-                  </div>
-                </div>
+<body class="relative min-h-screen flex flex-col overflow-x-hidden antialiased">
+  <div
+    class="pointer-events-none fixed left-0 top-0 -z-10 h-[512px] w-full bg-gradient-to-b from-primary/5 to-transparent">
+  </div>
 
-                <div class="flex gap-3">
-                  <a href="{% url 'sena:usuario_reservar_cita' %}" class="gold-gradient w-full rounded-md px-6 py-3 text-center text-sm font-bold uppercase tracking-wider text-on-primary transition-all hover:brightness-110 active:scale-95">Reservar</a>
-                  {% if not request.session.logueado %}
-                    <a href="{% url 'sena:login' %}" class="w-full rounded-md border border-outline-variant bg-transparent px-6 py-3 text-center text-sm font-bold uppercase tracking-wider text-primary transition-all hover:border-primary active:scale-95">Ingresar</a>
-                  {% endif %}
-                </div>
-              </div>
-            </article>
-          {% empty %}
-            <p class="col-span-full py-16 text-center text-on-surface-variant">No hay barberías registradas.</p>
-          {% endfor %}
-        </div>
-      </section>
-    </main>
-
-    <footer class="relative z-10 flex w-full flex-col items-center gap-8 border-t border-outline-variant/10 bg-surface-container-lowest px-8 pb-8 pt-16">
-      <div class="font-headline text-xl text-primary">TecnoCorte</div>
-      <nav class="flex flex-wrap justify-center gap-6 text-sm text-on-surface-variant">
-        <a class="opacity-80 transition-colors hover:text-primary hover:opacity-100" href="{% url 'sena:ayuda' %}">Privacidad</a>
-        <a class="opacity-80 transition-colors hover:text-primary hover:opacity-100" href="{% url 'sena:ayuda' %}">Términos</a>
-        <a class="opacity-80 transition-colors hover:text-primary hover:opacity-100" href="{% url 'sena:ayuda' %}">Soporte</a>
-        <a class="opacity-80 transition-colors hover:text-primary hover:opacity-100" href="{% url 'sena:ayuda' %}">Franquicias</a>
+  <header class="fixed top-0 z-50 w-full bg-surface/70 backdrop-blur-xl">
+    <div
+      class="mx-auto flex w-full max-w-full items-center justify-between bg-surface-container-low px-6 py-4 shadow-[0_20px_40px_rgba(242,202,80,0.06)] md:px-8">
+      <div class="font-headline text-2xl font-bold text-primary-container"><a
+          href="{% url 'sena:inicio' %}">TecnoCorte</a></div>
+      <nav class="hidden items-center space-x-8 text-sm font-display uppercase tracking-widest text-on-surface md:flex">
+        <a class="text-on-surface-variant transition-all duration-300 hover:text-primary"
+          href="{% url 'sena:inicio' %}">Inicio</a>
+        <a class="text-on-surface-variant transition-all duration-300 hover:text-primary"
+          href="{% url 'sena:usuario_servicios' %}">Servicios</a>
+        <a class="text-on-surface-variant transition-all duration-300 hover:text-primary"
+          href="{% url 'sena:usuario_tienda' %}">Tienda</a>
+        <a class="border-b-2 border-primary pb-1 text-primary" href="{% url 'sena:usuario_peluquerias' %}">Barberías</a>
+        <a class="text-on-surface-variant transition-all duration-300 hover:text-primary"
+          href="{% url 'sena:ayuda' %}">Contactos</a>
       </nav>
-      <p class="text-center text-sm text-on-surface-variant opacity-70">© 2026 TecnoCorte. Precios en COP. Todos los derechos reservados.</p>
-    </footer>
-  </body>
+      <div class="flex items-center gap-5">
+        {% if request.session.logueado %}
+        <a href="{% url 'sena:usuario_perfil' %}"
+          class="text-sm font-bold uppercase tracking-widest transition-colors hover:text-primary-container">Perfil</a>
+        <a href="{% url 'sena:logout' %}"
+          class="text-sm font-bold uppercase tracking-widest transition-colors hover:text-primary-container">Salir</a>
+        {% else %}
+        <a href="{% url 'sena:login' %}"
+          class="text-sm font-bold uppercase tracking-widest transition-colors hover:text-primary-container">Ingresar</a>
+        {% endif %}
+        <a href="{% url 'sena:carrito' %}"
+          class="relative text-primary transition-all duration-300 hover:text-primary-container active:scale-90"
+          title="Carrito">
+          <span class="material-symbols-outlined">shopping_bag</span>
+          {% if cantidad %}
+          <span
+            class="absolute -right-2 -top-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-on-primary">{{
+            cantidad }}</span>
+          {% endif %}
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main
+    class="relative z-10 mx-auto grid w-full max-w-screen-2xl flex-grow grid-cols-1 gap-8 px-4 pb-24 pt-32 md:px-8 lg:grid-cols-12">
+    <div class="col-span-1 mb-8 lg:col-span-12">
+      <h1
+        class="mb-6 max-w-4xl font-headline text-5xl font-bold leading-tight tracking-tight text-on-surface md:text-7xl">
+        Nuestras <br /><span class="font-light italic text-primary-container">Barberías</span>
+      </h1>
+      <p class="max-w-2xl text-lg leading-relaxed text-on-surface-variant">Encuentra la barbería ideal para ti. Cortes,
+        barba y cuidado personal con atención profesional.</p>
+      <div class="signature-divider mt-8 w-full max-w-md"></div>
+    </div>
+
+    <aside class="col-span-1 h-fit gap-8 lg:sticky lg:top-32 lg:col-span-4">
+      <div class="rounded-[28px] bg-surface-container-low p-8 ambient-glow">
+        <h3 class="mb-6 font-headline text-xl text-primary-container">Filtros de búsqueda</h3>
+        <div class="relative">
+          <input
+            class="w-full border-b border-outline-variant/20 bg-transparent py-3 pr-10 text-on-surface placeholder:text-on-surface-variant/50 transition-colors focus:border-primary focus:ring-0"
+            placeholder="Buscar por nombre o zona..." type="text" />
+          <span
+            class="material-symbols-outlined pointer-events-none absolute right-2 top-3 text-on-surface-variant/50">search</span>
+        </div>
+      </div>
+
+      <div
+        class="mt-8 overflow-hidden rounded-[28px] border border-outline-variant/10 bg-surface-container-low ambient-glow">
+        <div class="relative h-[380px]">
+          <img src="{% static 'sena/images/barberia_itagui.jpeg' %}" alt="Mapa de barbería masculina"
+            class="h-full w-full object-cover opacity-35" />
+          <div class="absolute inset-0 bg-gradient-to-t from-surface-container-high to-surface-container-low/30"></div>
+          <div
+            class="absolute left-4 top-4 flex items-center gap-2 rounded-sm border border-outline-variant/20 bg-surface/80 px-3 py-2 backdrop-blur-md">
+            <span class="material-symbols-outlined text-[18px] text-primary">location_on</span>
+            <span class="text-xs text-on-surface">Zona SENA, Itagüí</span>
+          </div>
+          {% if peluquerias %}
+          <div
+            class="absolute bottom-4 left-4 right-4 rounded-lg border border-outline-variant/20 bg-surface-container-highest/90 p-4 backdrop-blur-md">
+            <h4 class="mb-1 font-headline text-lg text-primary-container">{{ peluquerias.0.nombre }}</h4>
+            <p class="flex items-center gap-1 text-sm text-on-surface-variant"><span
+                class="material-symbols-outlined text-[14px]">directions_walk</span> {{ peluquerias.0.ubicacion }}</p>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </aside>
+
+    <section class="col-span-1 flex flex-col gap-8 lg:col-span-8">
+      <div class="flex items-end justify-between border-b border-outline-variant/20 pb-4">
+        <h2 class="font-headline text-2xl text-on-surface">Directorio</h2>
+        <span class="text-sm uppercase tracking-widest text-on-surface-variant">{{ peluquerias|length }} locales
+          disponibles</span>
+      </div>
+
+      <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+        {% for peluqueria in peluquerias %}
+        <article
+          class="group flex flex-col overflow-hidden rounded-[28px] border border-transparent bg-surface-container-low transition-all duration-500 hover:-translate-y-1 hover:border-outline-variant/20 ambient-glow">
+          <div class="relative h-56 overflow-hidden bg-surface-container-highest">
+            {% if 'Itagüí' in peluqueria.nombre or 'itagui' in peluqueria.nombre|lower %}
+            <img src="{% static 'sena/images/barberia_itagui.jpeg' %}" alt="{{ peluqueria.nombre }}"
+              class="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
+            {% elif 'Centro' in peluqueria.nombre or 'centro' in peluqueria.nombre|lower %}
+            <img src="{% static 'sena/images/barberia_centro.jpg' %}" alt="{{ peluqueria.nombre }}"
+              class="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
+            {% else %}
+            <img src="{% static 'sena/images/corte_cabello.jpeg' %}" alt="{{ peluqueria.nombre }}"
+              class="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
+            {% endif %}
+            <div
+              class="absolute left-4 top-4 z-10 rounded-sm bg-surface-container-highest/80 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-primary backdrop-blur-sm">
+              Barbería</div>
+          </div>
+
+          <div class="flex flex-grow flex-col p-6">
+            <h3 class="mb-3 font-headline text-2xl text-primary-container transition-colors group-hover:text-primary">{{
+              peluqueria.nombre }}</h3>
+            <div class="mt-auto mb-6 flex items-start gap-3">
+              <span class="material-symbols-outlined mt-0.5 text-primary-container/70">location_on</span>
+              <div>
+                <p class="text-sm text-on-surface">{{ peluqueria.ubicacion }}</p>
+                <p class="mt-1 flex items-center gap-1 text-xs text-on-surface-variant"><span
+                    class="material-symbols-outlined text-[14px]">call</span> {{ peluqueria.telefono }}</p>
+              </div>
+            </div>
+
+            <div class="flex gap-3">
+              <a href="{% url 'sena:usuario_reservar_cita' %}"
+                class="gold-gradient w-full rounded-md px-6 py-3 text-center text-sm font-bold uppercase tracking-wider text-on-primary transition-all hover:brightness-110 active:scale-95">Reservar</a>
+              {% if not request.session.logueado %}
+              <a href="{% url 'sena:login' %}"
+                class="w-full rounded-md border border-outline-variant bg-transparent px-6 py-3 text-center text-sm font-bold uppercase tracking-wider text-primary transition-all hover:border-primary active:scale-95">Ingresar</a>
+              {% endif %}
+            </div>
+          </div>
+        </article>
+        {% empty %}
+        <p class="col-span-full py-16 text-center text-on-surface-variant">No hay barberías registradas.</p>
+        {% endfor %}
+      </div>
+    </section>
+  </main>
+
+  <footer
+    class="relative z-10 flex w-full flex-col items-center gap-8 border-t border-outline-variant/10 bg-surface-container-lowest px-8 pb-8 pt-16">
+    <div class="font-headline text-xl text-primary">TecnoCorte</div>
+    <nav class="flex flex-wrap justify-center gap-6 text-sm text-on-surface-variant">
+      <a class="opacity-80 transition-colors hover:text-primary hover:opacity-100"
+        href="{% url 'sena:ayuda' %}">Privacidad</a>
+      <a class="opacity-80 transition-colors hover:text-primary hover:opacity-100"
+        href="{% url 'sena:ayuda' %}">Términos</a>
+      <a class="opacity-80 transition-colors hover:text-primary hover:opacity-100"
+        href="{% url 'sena:ayuda' %}">Soporte</a>
+      <a class="opacity-80 transition-colors hover:text-primary hover:opacity-100"
+        href="{% url 'sena:ayuda' %}">Franquicias</a>
+    </nav>
+    <p class="text-center text-sm text-on-surface-variant opacity-70">© 2026 TecnoCorte. Precios en COP. Todos los
+      derechos reservados.</p>
+  </footer>
+</body>
+
 </html>

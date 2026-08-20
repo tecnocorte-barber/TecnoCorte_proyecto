@@ -1,39 +1,55 @@
-<nav class="h-screen w-64 fixed left-0 top-0 bg-surface-container-low flex flex-col p-6 space-y-4 z-40 border-r border-primary/10 shadow-2xl">
+<nav
+  class="h-screen w-64 fixed left-0 top-0 bg-surface-container-low flex flex-col p-6 space-y-4 z-40 border-r border-primary/10 shadow-2xl">
   <div class="mb-12 rounded-xl bg-surface-container-high/60 p-4 border border-primary/10">
     <h1 class="font-headline text-xl text-primary font-bold tracking-tight">TecnoCorte</h1>
     <p class="font-label uppercase text-xs text-on-surface-variant mt-1 tracking-widest">Administración</p>
   </div>
   <div class="space-y-2 flex-grow">
-    <a class="flex items-center space-x-4 px-4 py-3 rounded-lg transition-all group {% if active == 'dashboard' %}bg-primary-container text-on-primary-container font-bold{% else %}text-on-surface-variant hover:bg-surface-container-high hover:bg-surface-container-highest{% endif %}" href="{% url 'sena:admin_dashboard' %}">
+    <a class="flex items-center space-x-4 px-4 py-3 rounded-lg transition-all group {% if active == 'dashboard' %}bg-primary-container text-on-primary-container font-bold{% else %}text-on-surface-variant hover:bg-surface-container-high hover:bg-surface-container-highest{% endif %}"
+      href="{% url 'sena:admin_dashboard' %}">
       <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">dashboard</span>
       <span class="font-label uppercase text-xs tracking-widest">Dashboard</span>
     </a>
-    <a class="flex items-center space-x-4 px-4 py-3 rounded-lg transition-all group {% if active == 'reservas' %}bg-primary-container text-on-primary-container font-bold{% else %}text-on-surface-variant hover:bg-surface-container-high hover:bg-surface-container-highest{% endif %}" href="{% url 'sena:admin_reservas' %}">
+    <a class="flex items-center space-x-4 px-4 py-3 rounded-lg transition-all group {% if active == 'reservas' %}bg-primary-container text-on-primary-container font-bold{% else %}text-on-surface-variant hover:bg-surface-container-high hover:bg-surface-container-highest{% endif %}"
+      href="{% url 'sena:admin_reservas' %}">
       <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">calendar_month</span>
       <span class="font-label uppercase text-xs tracking-widest">Citas</span>
     </a>
-    <a class="flex items-center space-x-4 px-4 py-3 rounded-lg transition-all group {% if active == 'peluqueros' %}bg-primary-container text-on-primary-container font-bold{% else %}text-on-surface-variant hover:bg-surface-container-high hover:bg-surface-container-highest{% endif %}" href="{% url 'sena:admin_peluqueros' %}">
+    <a class="flex items-center space-x-4 px-4 py-3 rounded-lg transition-all group {% if active == 'peluqueros' %}bg-primary-container text-on-primary-container font-bold{% else %}text-on-surface-variant hover:bg-surface-container-high hover:bg-surface-container-highest{% endif %}"
+      href="{% url 'sena:admin_peluqueros' %}">
       <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">content_cut</span>
       <span class="font-label uppercase text-xs tracking-widest">Barberos</span>
     </a>
-    <a class="flex items-center space-x-4 px-4 py-3 rounded-lg transition-all group {% if active == 'usuarios' %}bg-primary-container text-on-primary-container font-bold{% else %}text-on-surface-variant hover:bg-surface-container-high hover:bg-surface-container-highest{% endif %}" href="{% url 'sena:admin_usuarios' %}">
+    <a class="flex items-center space-x-4 px-4 py-3 rounded-lg transition-all group {% if active == 'usuarios' %}bg-primary-container text-on-primary-container font-bold{% else %}text-on-surface-variant hover:bg-surface-container-high hover:bg-surface-container-highest{% endif %}"
+      href="{% url 'sena:admin_usuarios' %}">
       <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">group</span>
       <span class="font-label uppercase text-xs tracking-widest">Usuarios</span>
     </a>
-    <a class="flex items-center space-x-4 px-4 py-3 rounded-lg transition-all {% if active == 'peluquerias' %}bg-primary-container text-on-primary-container font-bold{% else %}text-on-surface-variant hover:bg-surface-container-high{% endif %}" href="{% url 'sena:admin_peluquerias' %}"><span class="material-symbols-outlined">storefront</span><span class="font-label uppercase text-xs tracking-widest">Barberías</span></a>
-    <a class="flex items-center space-x-4 px-4 py-3 rounded-lg transition-all {% if active == 'productos' %}bg-primary-container text-on-primary-container font-bold{% else %}text-on-surface-variant hover:bg-surface-container-high{% endif %}" href="{% url 'sena:admin_productos' %}"><span class="material-symbols-outlined">inventory_2</span><span class="font-label uppercase text-xs tracking-widest">Productos</span></a>
-    <a class="flex items-center space-x-4 px-4 py-3 rounded-lg transition-all {% if active == 'mensajes' %}bg-primary-container text-on-primary-container font-bold{% else %}text-on-surface-variant hover:bg-surface-container-high{% endif %}" href="{% url 'sena:admin_mensajes' %}"><span class="material-symbols-outlined">mail</span><span class="font-label uppercase text-xs tracking-widest">Mensajes</span></a>
-    <a class="flex items-center space-x-4 px-4 py-3 rounded-lg transition-all group {% if active == 'ingresos' %}bg-primary-container text-on-primary-container font-bold{% else %}text-on-surface-variant hover:bg-surface-container-high hover:bg-surface-container-highest{% endif %}" href="{% url 'sena:admin_ingresos' %}">
+    <a class="flex items-center space-x-4 px-4 py-3 rounded-lg transition-all {% if active == 'peluquerias' %}bg-primary-container text-on-primary-container font-bold{% else %}text-on-surface-variant hover:bg-surface-container-high{% endif %}"
+      href="{% url 'sena:admin_peluquerias' %}"><span class="material-symbols-outlined">storefront</span><span
+        class="font-label uppercase text-xs tracking-widest">Barberías</span></a>
+    <a class="flex items-center space-x-4 px-4 py-3 rounded-lg transition-all {% if active == 'productos' %}bg-primary-container text-on-primary-container font-bold{% else %}text-on-surface-variant hover:bg-surface-container-high{% endif %}"
+      href="{% url 'sena:admin_productos' %}"><span class="material-symbols-outlined">inventory_2</span><span
+        class="font-label uppercase text-xs tracking-widest">Productos</span></a>
+    <a class="flex items-center space-x-4 px-4 py-3 rounded-lg transition-all {% if active == 'mensajes' %}bg-primary-container text-on-primary-container font-bold{% else %}text-on-surface-variant hover:bg-surface-container-high{% endif %}"
+      href="{% url 'sena:admin_mensajes' %}"><span class="material-symbols-outlined">mail</span><span
+        class="font-label uppercase text-xs tracking-widest">Mensajes</span></a>
+    <a class="flex items-center space-x-4 px-4 py-3 rounded-lg transition-all group {% if active == 'ingresos' %}bg-primary-container text-on-primary-container font-bold{% else %}text-on-surface-variant hover:bg-surface-container-high hover:bg-surface-container-highest{% endif %}"
+      href="{% url 'sena:admin_ingresos' %}">
       <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">login</span>
       <span class="font-label uppercase text-xs tracking-widest">Ingresos</span>
     </a>
-    <a class="flex items-center space-x-4 px-4 py-3 rounded-lg transition-all group {% if active == 'horarios' %}bg-primary-container text-on-primary-container font-bold{% else %}text-on-surface-variant hover:bg-surface-container-high hover:bg-surface-container-highest{% endif %}" href="{% url 'sena:admin_horarios' %}">
+    <a class="flex items-center space-x-4 px-4 py-3 rounded-lg transition-all group {% if active == 'horarios' %}bg-primary-container text-on-primary-container font-bold{% else %}text-on-surface-variant hover:bg-surface-container-high hover:bg-surface-container-highest{% endif %}"
+      href="{% url 'sena:admin_horarios' %}">
       <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">settings</span>
       <span class="font-label uppercase text-xs tracking-widest">Horarios</span>
     </a>
   </div>
-  <a href="{% url 'sena:admin_crear_reserva' %}" class="bg-gradient-gold text-on-primary font-label uppercase text-xs tracking-widest py-3 px-4 rounded-md hover:opacity-90 transition-opacity w-full mt-auto text-center active:scale-95 block">
+  <a href="{% url 'sena:admin_crear_reserva' %}"
+    class="bg-gradient-gold text-on-primary font-label uppercase text-xs tracking-widest py-3 px-4 rounded-md hover:opacity-90 transition-opacity w-full mt-auto text-center active:scale-95 block">
     Nueva Cita
   </a>
-  <a href="{% url 'sena:logout' %}" class="text-on-surface-variant hover:text-error text-center font-label uppercase text-xs tracking-widest py-3">Cerrar sesión</a>
+  <a href="{% url 'sena:logout' %}"
+    class="text-on-surface-variant hover:text-error text-center font-label uppercase text-xs tracking-widest py-3">Cerrar
+    sesión</a>
 </nav>

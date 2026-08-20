@@ -1,39 +1,55 @@
 <!DOCTYPE html>
 <html class="dark" lang="es">
-  <head>
-    <meta charset="utf-8"/>
-    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title>Pedido Confirmado - TecnoCorte
-    </title>
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&amp;family=Noto+Serif:ital,wght@0,400;0,700;1,400&amp;display=swap" rel="stylesheet"/>
-    {% include "includes/tema.html" %}<style>
-.gold-gradient-bg {
-background: linear-gradient(135deg, #f2ca50, #d4af37);
-}
-.ambient-glow {
-box-shadow: 0 20px 40px rgba(242, 202, 80, 0.06);
-}
-.ghost-border {
-border: 1px solid rgba(77, 70, 53, 0.15);
-}
-</style>
-  </head>
-  <body class="bg-surface text-on-surface font-body antialiased min-h-screen flex items-center justify-center selection:bg-primary/30 selection:text-primary">
-    <main class="w-full max-w-md px-6">
-      <div class="bg-surface-container-low rounded-xl p-10 text-center ambient-glow ghost-border">
-        <div class="w-20 h-20 mx-auto rounded-full gold-gradient-bg flex items-center justify-center mb-8"><span class="material-symbols-outlined text-on-primary text-4xl" style="font-variation-settings: 'FILL' 1;">check</span>
+
+<head>
+  <meta charset="utf-8" />
+  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <title>Pedido Confirmado - TecnoCorte
+  </title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+    rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&amp;family=Noto+Serif:ital,wght@0,400;0,700;1,400&amp;display=swap"
+    rel="stylesheet" />
+  {% include "includes/tema.html" %}<style>
+    .gold-gradient-bg {
+      background: linear-gradient(135deg, #f2ca50, #d4af37);
+    }
+
+    .ambient-glow {
+      box-shadow: 0 20px 40px rgba(242, 202, 80, 0.06);
+    }
+
+    .ghost-border {
+      border: 1px solid rgba(77, 70, 53, 0.15);
+    }
+  </style>
+</head>
+
+<body
+  class="bg-surface text-on-surface font-body antialiased min-h-screen flex items-center justify-center selection:bg-primary/30 selection:text-primary">
+  <main class="w-full max-w-md px-6">
+    <div class="bg-surface-container-low rounded-xl p-10 text-center ambient-glow ghost-border">
+      <div class="w-20 h-20 mx-auto rounded-full gold-gradient-bg flex items-center justify-center mb-8"><span
+          class="material-symbols-outlined text-on-primary text-4xl"
+          style="font-variation-settings: 'FILL' 1;">check</span>
       </div>
       <h1 class="font-headline text-4xl text-on-surface mb-3">¡Pedido confirmado!
       </h1>
-      <p class="text-on-surface-variant mb-8">Gracias por tu compra. El pedido 
+      <p class="text-on-surface-variant mb-8">Gracias por tu compra. El pedido
         <span class="text-primary font-semibold">#{{ pedido.id }}
-      </span> fue registrado por un total de 
-      <span class="text-primary font-semibold">${{ pedido.total|floatformat:"0g" }} COP</span>.
-  </p>
-  <a href="{% url 'sena:usuario_perfil' %}" class="w-full inline-flex justify-center py-4 rounded-md gold-gradient-bg text-on-primary font-bold text-sm uppercase tracking-widest hover:opacity-90 transition-all active:scale-95">Ver mis pedidos</a><a href="{% url 'sena:usuario_tienda' %}" class="mt-4 w-full inline-flex justify-center py-3 rounded-md border border-outline-variant/30 text-primary hover:border-primary transition-colors text-sm font-semibold uppercase tracking-widest active:scale-95">Seguir comprando</a>
-</div>
-</main>
+        </span> fue registrado por un total de
+        <span class="text-primary font-semibold">${{ pedido.total|floatformat:"0g" }} COP</span>.
+      </p>
+      <a href="{% url 'sena:usuario_perfil' %}"
+        class="w-full inline-flex justify-center py-4 rounded-md gold-gradient-bg text-on-primary font-bold text-sm uppercase tracking-widest hover:opacity-90 transition-all active:scale-95">Ver
+        mis pedidos</a><a href="{% url 'sena:usuario_tienda' %}"
+        class="mt-4 w-full inline-flex justify-center py-3 rounded-md border border-outline-variant/30 text-primary hover:border-primary transition-colors text-sm font-semibold uppercase tracking-widest active:scale-95">Seguir
+        comprando</a>
+    </div>
+  </main>
 </body>
+
 </html>

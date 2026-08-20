@@ -1,5 +1,7 @@
-<nav class="hidden md:flex flex-col fixed left-0 top-0 h-screen w-72 bg-surface p-6 shadow-[0_0_40px_rgba(242,202,80,0.06)] z-50 border-r border-surface-container-low">
+<nav
+  class="hidden md:flex flex-col fixed left-0 top-0 h-screen w-72 bg-surface p-6 shadow-[0_0_40px_rgba(242,202,80,0.06)] z-50 border-r border-surface-container-low">
   <div class="mb-12 flex items-center gap-4">
+<<<<<<< Updated upstream
     <div class="w-12 h-12 rounded-full overflow-hidden border-2 border-primary-container bg-surface-container-high flex items-center justify-center">
       <span class="material-symbols-outlined text-primary">person</span>
     </div>
@@ -35,3 +37,42 @@
     </a>
   </div>
 </nav>
+=======
+    <div
+      class="w-12 h-12 rounded-full overflow-hidden border-2 border-primary-container bg-surface-container-high flex items-center justify-center">
+      <span class="material-symbols-outlined text-primary">person</span>
+    </div>
+  </div>
+  <div>
+    <h2 class="font-headline text-2xl font-bold text-primary-container">{{ request.session.logueado.nombre }}
+    </h2>
+    <p class="font-label uppercase tracking-widest text-[0.65rem] text-on-surface-variant mt-1">Barbero
+    </p>
+  </div>
+  </div>
+  <div class="flex-1 space-y-2"><a
+      class="flex items-center gap-4 p-3 rounded-lg {% if active == 'inicio' %}text-primary font-bold bg-surface-container-high{% else %}text-on-surface-variant font-medium hover:bg-surface-container-highest{% endif %} transition-colors duration-300 active:scale-95"
+      href="{% url 'sena:peluquero_dashboard' %}"><span class="material-symbols-outlined"
+        style="font-variation-settings: 'FILL' 1;">dashboard</span><span
+        class="font-label uppercase tracking-widest text-sm">Inicio</span>
+    </a>
+    <a class="flex items-center gap-4 p-3 rounded-lg {% if active == 'perfil' %}text-primary font-bold bg-surface-container-high{% else %}text-on-surface-variant font-medium hover:bg-surface-container-highest{% endif %} transition-colors duration-300 active:scale-95"
+      href="{% url 'sena:peluquero_perfil' %}"><span class="material-symbols-outlined"
+        style="font-variation-settings: 'FILL' 1;">settings</span><span
+        class="font-label uppercase tracking-widest text-sm">Configuración</span>
+    </a>
+    <a class="flex items-center gap-4 p-3 rounded-lg {% if active == 'notificaciones' %}text-primary font-bold bg-surface-container-high{% else %}text-on-surface-variant font-medium hover:bg-surface-container-highest{% endif %} transition-colors"
+      href="{% url 'sena:peluquero_notificaciones' %}"><span class="material-symbols-outlined">notifications</span><span
+        class="font-label uppercase tracking-widest text-sm">Notificaciones</span></a>
+  </div>
+  <a href="{% url 'sena:peluquero_crear_cita' %}"
+    class="w-full gold-gradient-bg text-on-primary font-label uppercase tracking-widest text-sm font-bold py-4 rounded-md mb-8 hover:opacity-90 transition-opacity flex items-center justify-center gap-2"><span
+      class="material-symbols-outlined text-base">add</span>Nueva Cita</a>
+  <div class="mt-auto space-y-2 pt-6 border-t border-surface-container-low"><a
+      class="flex items-center gap-4 p-3 rounded-lg text-on-surface-variant font-medium hover:bg-surface-container-highest transition-colors duration-300 active:scale-95"
+      href="{% url 'sena:logout' %}"><span class="material-symbols-outlined" data-icon="logout">logout</span><span
+        class="font-label uppercase tracking-widest text-sm">Cerrar Sesión</span>
+    </a>
+  </div>
+</nav>
+>>>>>>> Stashed changes

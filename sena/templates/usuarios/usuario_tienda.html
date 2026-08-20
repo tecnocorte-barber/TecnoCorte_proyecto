@@ -1,211 +1,314 @@
 {% load static %}
 <!DOCTYPE html>
 <html class="dark" lang="es">
-  <head>
-    <meta charset="utf-8"/>
-    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title>TecnoCorte - Tienda</title>
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Noto+Serif:wght@400;700;900&display=swap" rel="stylesheet"/>
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
-    {% include "includes/tema.html" %}
-    <style>
-      .gold-gradient-text {
-        background: linear-gradient(135deg, #f2ca50, #d4af37);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-      }
-      .ambient-glow {
-        box-shadow: 0 20px 40px rgba(242, 202, 80, 0.06);
-      }
-      .ghost-border {
-        border: 1px solid rgba(77, 70, 53, 0.15);
-      }
-      .hover-ambient-glow:hover {
-        box-shadow: 0 20px 40px rgba(242, 202, 80, 0.12);
-      }
-      ::-webkit-scrollbar {
-        width: 8px;
-      }
-      ::-webkit-scrollbar-track {
-        background: #0e0e0e;
-      }
-      ::-webkit-scrollbar-thumb {
-        background: #2a2a2a;
-        border-radius: 4px;
-      }
-      ::-webkit-scrollbar-thumb:hover {
-        background: #d4af37;
-      }
-    </style>
-  </head>
-  <body class="bg-surface font-body text-on-surface antialiased selection:bg-primary/30 selection:text-primary">
-    <nav class="fixed top-0 z-50 w-full bg-surface/70 shadow-[0_20px_40px_rgba(242,202,80,0.06)] backdrop-blur-xl">
-      <div class="mx-auto flex w-full max-w-full items-center justify-between px-6 py-4 md:px-8">
-        <div class="font-headline text-2xl font-bold text-primary-container"><a href="{% url 'sena:inicio' %}">TecnoCorte</a></div>
-        <div class="hidden items-center space-x-8 text-sm font-display uppercase tracking-widest text-on-surface md:flex">
-          <a class="text-on-surface-variant transition-all duration-300 hover:text-primary" href="{% url 'sena:inicio' %}">Inicio</a>
-          <a class="text-on-surface-variant transition-all duration-300 hover:text-primary" href="{% url 'sena:usuario_servicios' %}">Servicios</a>
-          <a class="border-b-2 border-primary pb-1 text-primary" href="{% url 'sena:usuario_tienda' %}">Tienda</a>
-          <a class="text-on-surface-variant transition-all duration-300 hover:text-primary" href="{% url 'sena:usuario_peluquerias' %}">Barberías</a>
-          <a class="text-on-surface-variant transition-all duration-300 hover:text-primary" href="{% url 'sena:ayuda' %}">Contactos</a>
-        </div>
-        <div class="flex items-center space-x-6">
-          {% if request.session.logueado %}
-            <a href="{% url 'sena:usuario_perfil' %}" class="font-bold uppercase tracking-widest text-on-surface-variant transition-colors hover:text-primary">Perfil</a>
-            <a href="{% url 'sena:logout' %}" class="font-bold uppercase tracking-widest text-on-surface-variant transition-colors hover:text-primary">Salir</a>
-          {% else %}
-            <a href="{% url 'sena:login' %}" class="font-bold uppercase tracking-widest text-on-surface-variant transition-colors hover:text-primary">Ingresar</a>
-          {% endif %}
-          <a href="{% url 'sena:carrito' %}" class="relative text-primary transition-all duration-300 hover:text-primary-container active:scale-90" title="Carrito">
-            <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">shopping_bag</span>
-            <span id="cart-count" class="absolute -right-2 -top-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-on-primary {% if not cantidad %}hidden{% endif %}">{{ cantidad|default:0 }}</span>
-          </a>
-          <button id="btn-menu-movil" class="text-on-surface-variant md:hidden" title="Menú"><span class="material-symbols-outlined">menu</span></button>
-        </div>
-      </div>
-    </nav>
 
-    <div id="menu-movil" class="fixed left-0 right-0 top-[76px] z-40 hidden flex-col gap-4 border-b border-outline-variant/15 bg-surface/95 px-8 py-6 backdrop-blur-xl md:hidden">
-      <a class="text-sm font-semibold uppercase tracking-widest text-on-surface-variant hover:text-primary" href="{% url 'sena:inicio' %}">Inicio</a>
-      <a class="text-sm font-semibold uppercase tracking-widest text-on-surface-variant hover:text-primary" href="{% url 'sena:usuario_servicios' %}">Servicios</a>
-      <a class="text-sm font-semibold uppercase tracking-widest text-primary" href="{% url 'sena:usuario_tienda' %}">Tienda</a>
-      <a class="text-sm font-semibold uppercase tracking-widest text-on-surface-variant hover:text-primary" href="{% url 'sena:usuario_peluquerias' %}">Barberías</a>
-      <a class="text-sm font-semibold uppercase tracking-widest text-on-surface-variant hover:text-primary" href="{% url 'sena:ayuda' %}">Contactos</a>
-      {% if request.session.logueado %}
-        <a class="text-sm font-bold uppercase tracking-widest text-on-surface-variant hover:text-primary" href="{% url 'sena:usuario_perfil' %}">Perfil</a>
-        <a class="text-sm font-bold uppercase tracking-widest text-on-surface-variant hover:text-primary" href="{% url 'sena:logout' %}">Salir</a>
-      {% else %}
-        <a class="text-sm font-bold uppercase tracking-widest text-on-surface-variant hover:text-primary" href="{% url 'sena:login' %}">Ingresar</a>
-      {% endif %}
+<head>
+  <meta charset="utf-8" />
+  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <title>TecnoCorte - Tienda</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Noto+Serif:wght@400;700;900&display=swap"
+    rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+    rel="stylesheet" />
+  {% include "includes/tema.html" %}
+  <style>
+    .gold-gradient-text {
+      background: linear-gradient(135deg, #f2ca50, #d4af37);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .ambient-glow {
+      box-shadow: 0 20px 40px rgba(242, 202, 80, 0.06);
+    }
+
+    .ghost-border {
+      border: 1px solid rgba(77, 70, 53, 0.15);
+    }
+
+    .hover-ambient-glow:hover {
+      box-shadow: 0 20px 40px rgba(242, 202, 80, 0.12);
+    }
+
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #0e0e0e;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #2a2a2a;
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #d4af37;
+    }
+  </style>
+</head>
+
+<body class="bg-surface font-body text-on-surface antialiased selection:bg-primary/30 selection:text-primary">
+  <nav class="fixed top-0 z-50 w-full bg-surface/70 shadow-[0_20px_40px_rgba(242,202,80,0.06)] backdrop-blur-xl">
+    <div class="mx-auto flex w-full max-w-full items-center justify-between px-6 py-4 md:px-8">
+      <div class="font-headline text-2xl font-bold text-primary-container"><a
+          href="{% url 'sena:inicio' %}">TecnoCorte</a></div>
+      <div class="hidden items-center space-x-8 text-sm font-display uppercase tracking-widest text-on-surface md:flex">
+        <a class="text-on-surface-variant transition-all duration-300 hover:text-primary"
+          href="{% url 'sena:inicio' %}">Inicio</a>
+        <a class="text-on-surface-variant transition-all duration-300 hover:text-primary"
+          href="{% url 'sena:usuario_servicios' %}">Servicios</a>
+        <a class="border-b-2 border-primary pb-1 text-primary" href="{% url 'sena:usuario_tienda' %}">Tienda</a>
+        <a class="text-on-surface-variant transition-all duration-300 hover:text-primary"
+          href="{% url 'sena:usuario_peluquerias' %}">Barberías</a>
+        <a class="text-on-surface-variant transition-all duration-300 hover:text-primary"
+          href="{% url 'sena:ayuda' %}">Contactos</a>
+      </div>
+      <div class="flex items-center space-x-6">
+        {% if request.session.logueado %}
+        <a href="{% url 'sena:usuario_perfil' %}"
+          class="font-bold uppercase tracking-widest text-on-surface-variant transition-colors hover:text-primary">Perfil</a>
+        <a href="{% url 'sena:logout' %}"
+          class="font-bold uppercase tracking-widest text-on-surface-variant transition-colors hover:text-primary">Salir</a>
+        {% else %}
+        <a href="{% url 'sena:login' %}"
+          class="font-bold uppercase tracking-widest text-on-surface-variant transition-colors hover:text-primary">Ingresar</a>
+        {% endif %}
+        <a href="{% url 'sena:carrito' %}"
+          class="relative text-primary transition-all duration-300 hover:text-primary-container active:scale-90"
+          title="Carrito">
+          <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">shopping_bag</span>
+          <span id="cart-count"
+            class="absolute -right-2 -top-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-on-primary {% if not cantidad %}hidden{% endif %}">{{
+            cantidad|default:0 }}</span>
+        </a>
+        <button id="btn-menu-movil" class="text-on-surface-variant md:hidden" title="Menú"><span
+            class="material-symbols-outlined">menu</span></button>
+      </div>
+    </div>
+  </nav>
+
+  <div id="menu-movil"
+    class="fixed left-0 right-0 top-[76px] z-40 hidden flex-col gap-4 border-b border-outline-variant/15 bg-surface/95 px-8 py-6 backdrop-blur-xl md:hidden">
+    <a class="text-sm font-semibold uppercase tracking-widest text-on-surface-variant hover:text-primary"
+      href="{% url 'sena:inicio' %}">Inicio</a>
+    <a class="text-sm font-semibold uppercase tracking-widest text-on-surface-variant hover:text-primary"
+      href="{% url 'sena:usuario_servicios' %}">Servicios</a>
+    <a class="text-sm font-semibold uppercase tracking-widest text-primary"
+      href="{% url 'sena:usuario_tienda' %}">Tienda</a>
+    <a class="text-sm font-semibold uppercase tracking-widest text-on-surface-variant hover:text-primary"
+      href="{% url 'sena:usuario_peluquerias' %}">Barberías</a>
+    <a class="text-sm font-semibold uppercase tracking-widest text-on-surface-variant hover:text-primary"
+      href="{% url 'sena:ayuda' %}">Contactos</a>
+    {% if request.session.logueado %}
+    <a class="text-sm font-bold uppercase tracking-widest text-on-surface-variant hover:text-primary"
+      href="{% url 'sena:usuario_perfil' %}">Perfil</a>
+    <a class="text-sm font-bold uppercase tracking-widest text-on-surface-variant hover:text-primary"
+      href="{% url 'sena:logout' %}">Salir</a>
+    {% else %}
+    <a class="text-sm font-bold uppercase tracking-widest text-on-surface-variant hover:text-primary"
+      href="{% url 'sena:login' %}">Ingresar</a>
+    {% endif %}
+  </div>
+
+  <main class="mx-auto min-h-screen max-w-[1600px] px-4 pb-24 pt-32 md:px-12">
+    <header class="mb-12 flex flex-col items-end justify-between gap-8 md:flex-row">
+      <div class="max-w-2xl">
+        <h1 class="mb-4 font-headline text-5xl font-black leading-tight tracking-tight text-on-surface md:text-6xl">
+          Nuestros <span class="gold-gradient-text">Productos</span>
+        </h1>
+        <p class="max-w-lg text-lg text-on-surface-variant">Todo lo que necesitas para tu cuidado personal:
+          herramientas, productos de estilo y cuidado premium.</p>
+      </div>
+
+      <div class="flex w-full items-center gap-4 rounded-xl bg-surface-container-low p-2 ghost-border md:w-auto">
+        <div class="relative w-full md:w-64">
+          <span
+            class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-sm text-on-surface-variant">search</span>
+          <input id="tienda-buscar"
+            class="w-full border-none bg-transparent py-2 pl-10 pr-2 text-sm text-on-surface placeholder:text-on-surface-variant/50 focus:ring-0"
+            placeholder="Buscar productos..." type="text" />
+        </div>
+        <button id="btn-filtros"
+          class="rounded-lg bg-surface-container-highest p-2 text-on-surface-variant transition-colors hover:text-primary"
+          title="Mostrar filtros"><span class="material-symbols-outlined text-sm">tune</span></button>
+      </div>
+    </header>
+
+    <div class="mb-16 flex h-12 w-full items-center justify-center">
+      <div class="h-1 w-1 rounded-full bg-primary-container shadow-[0_0_10px_rgba(212,175,55,0.8)]"></div>
     </div>
 
-    <main class="mx-auto min-h-screen max-w-[1600px] px-4 pb-24 pt-32 md:px-12">
-      <header class="mb-12 flex flex-col items-end justify-between gap-8 md:flex-row">
-        <div class="max-w-2xl">
-          <h1 class="mb-4 font-headline text-5xl font-black leading-tight tracking-tight text-on-surface md:text-6xl">
-            Nuestros <span class="gold-gradient-text">Productos</span>
-          </h1>
-          <p class="max-w-lg text-lg text-on-surface-variant">Todo lo que necesitas para tu cuidado personal: herramientas, productos de estilo y cuidado premium.</p>
+    <div class="flex flex-col gap-12 lg:flex-row">
+      <aside class="w-full flex-shrink-0 space-y-12 lg:w-64">
+        <div>
+          <h3 class="mb-6 font-headline text-lg tracking-wide text-primary">Categorías</h3>
+          <ul class="space-y-4 text-sm text-on-surface-variant">
+            <li><button class="categoria-link flex w-full items-center justify-between group" data-cat=""><span
+                  class="transition-colors group-hover:text-primary">Todos</span><span
+                  class="text-xs text-primary opacity-0 transition-opacity group-hover:opacity-100">—</span></button>
+            </li>
+            <li><button class="categoria-link flex w-full items-center justify-between group"
+                data-cat="Herramientas"><span
+                  class="transition-colors group-hover:text-primary">Herramientas</span><span
+                  class="text-xs text-primary opacity-0 transition-opacity group-hover:opacity-100">—</span></button>
+            </li>
+            <li><button class="categoria-link flex w-full items-center justify-between group" data-cat="Fijacion"><span
+                  class="transition-colors group-hover:text-primary">Fijación &amp; Textura</span><span
+                  class="text-xs text-primary opacity-0 transition-opacity group-hover:opacity-100">—</span></button>
+            </li>
+            <li><button class="categoria-link flex w-full items-center justify-between group" data-cat="Cuidado"><span
+                  class="transition-colors group-hover:text-primary">Cuidado Capilar</span><span
+                  class="text-xs text-primary opacity-0 transition-opacity group-hover:opacity-100">—</span></button>
+            </li>
+            <li><button class="categoria-link flex w-full items-center justify-between group" data-cat="Barba"><span
+                  class="transition-colors group-hover:text-primary">Barba &amp; Afeitado</span><span
+                  class="text-xs text-primary opacity-0 transition-opacity group-hover:opacity-100">—</span></button>
+            </li>
+          </ul>
         </div>
 
-        <div class="flex w-full items-center gap-4 rounded-xl bg-surface-container-low p-2 ghost-border md:w-auto">
-          <div class="relative w-full md:w-64">
-            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-sm text-on-surface-variant">search</span>
-            <input id="tienda-buscar" class="w-full border-none bg-transparent py-2 pl-10 pr-2 text-sm text-on-surface placeholder:text-on-surface-variant/50 focus:ring-0" placeholder="Buscar productos..." type="text"/>
-          </div>
-          <button id="btn-filtros" class="rounded-lg bg-surface-container-highest p-2 text-on-surface-variant transition-colors hover:text-primary" title="Mostrar filtros"><span class="material-symbols-outlined text-sm">tune</span></button>
+        <div>
+          <button id="btn-limpiar-filtros"
+            class="flex w-full items-center justify-center gap-2 rounded-lg bg-surface-container-highest px-4 py-3 text-xs font-bold uppercase tracking-wider text-on-surface-variant transition-colors hover:bg-surface-container-high hover:text-primary"><span
+              class="material-symbols-outlined text-sm">restart_alt</span> Limpiar filtros</button>
         </div>
-      </header>
 
-      <div class="mb-16 flex h-12 w-full items-center justify-center">
-        <div class="h-1 w-1 rounded-full bg-primary-container shadow-[0_0_10px_rgba(212,175,55,0.8)]"></div>
-      </div>
-
-      <div class="flex flex-col gap-12 lg:flex-row">
-        <aside class="w-full flex-shrink-0 space-y-12 lg:w-64">
-          <div>
-            <h3 class="mb-6 font-headline text-lg tracking-wide text-primary">Categorías</h3>
-            <ul class="space-y-4 text-sm text-on-surface-variant">
-              <li><button class="categoria-link flex w-full items-center justify-between group" data-cat=""><span class="transition-colors group-hover:text-primary">Todos</span><span class="text-xs text-primary opacity-0 transition-opacity group-hover:opacity-100">—</span></button></li>
-              <li><button class="categoria-link flex w-full items-center justify-between group" data-cat="Herramientas"><span class="transition-colors group-hover:text-primary">Herramientas</span><span class="text-xs text-primary opacity-0 transition-opacity group-hover:opacity-100">—</span></button></li>
-              <li><button class="categoria-link flex w-full items-center justify-between group" data-cat="Fijacion"><span class="transition-colors group-hover:text-primary">Fijación &amp; Textura</span><span class="text-xs text-primary opacity-0 transition-opacity group-hover:opacity-100">—</span></button></li>
-              <li><button class="categoria-link flex w-full items-center justify-between group" data-cat="Cuidado"><span class="transition-colors group-hover:text-primary">Cuidado Capilar</span><span class="text-xs text-primary opacity-0 transition-opacity group-hover:opacity-100">—</span></button></li>
-              <li><button class="categoria-link flex w-full items-center justify-between group" data-cat="Barba"><span class="transition-colors group-hover:text-primary">Barba &amp; Afeitado</span><span class="text-xs text-primary opacity-0 transition-opacity group-hover:opacity-100">—</span></button></li>
-            </ul>
+        <div>
+          <h3 class="mb-6 font-headline text-lg tracking-wide text-primary">Inversión</h3>
+          <div class="flex items-center gap-4">
+            <div class="relative w-full">
+              <label
+                class="absolute -top-4 left-0 text-[10px] font-bold uppercase tracking-wider text-primary">Min</label>
+              <input id="precio-min"
+                class="w-full border-none bg-transparent px-0 py-1 text-sm text-on-surface focus:ring-0" type="number"
+                min="0" placeholder="0" />
+              <div class="absolute bottom-0 left-0 h-[1px] w-full bg-outline-variant/20"></div>
+            </div>
+            <span class="text-outline-variant">—</span>
+            <div class="relative w-full">
+              <label
+                class="absolute -top-4 left-0 text-[10px] font-bold uppercase tracking-wider text-primary">Max</label>
+              <input id="precio-max"
+                class="w-full border-none bg-transparent px-0 py-1 text-sm text-on-surface focus:ring-0" type="number"
+                min="0" placeholder="1000000" />
+              <div class="absolute bottom-0 left-0 h-[1px] w-full bg-outline-variant/20"></div>
+            </div>
           </div>
+        </div>
+      </aside>
 
-          <div>
-            <button id="btn-limpiar-filtros" class="flex w-full items-center justify-center gap-2 rounded-lg bg-surface-container-highest px-4 py-3 text-xs font-bold uppercase tracking-wider text-on-surface-variant transition-colors hover:bg-surface-container-high hover:text-primary"><span class="material-symbols-outlined text-sm">restart_alt</span> Limpiar filtros</button>
+      <div class="flex-1">
+        <div class="mb-8 flex flex-wrap items-center justify-between gap-4">
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-label uppercase tracking-wider text-on-surface-variant">Filtros activos:</span>
+            <span id="chip-filtro-activo"
+              class="hidden items-center gap-1 rounded border border-outline-variant/20 bg-surface-container-low px-2 py-1 text-xs text-primary"><span
+                id="texto-filtro-activo">Todos</span><button id="btn-quitar-filtro" class="hover:text-on-surface"
+                title="Quitar filtro"><span class="material-symbols-outlined text-[12px]">close</span></button></span>
           </div>
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-label uppercase tracking-wider text-on-surface-variant">Ordenar por:</span>
+            <select id="ordenar" class="cursor-pointer border-none bg-transparent text-sm text-on-surface focus:ring-0">
+              <option class="bg-surface-container-high" value="relevancia">Relevancia</option>
+              <option class="bg-surface-container-high" value="menor">Menor precio</option>
+              <option class="bg-surface-container-high" value="mayor">Mayor precio</option>
+              <option class="bg-surface-container-high" value="nuevos">Nuevos</option>
+            </select>
+          </div>
+        </div>
 
-          <div>
-            <h3 class="mb-6 font-headline text-lg tracking-wide text-primary">Inversión</h3>
-            <div class="flex items-center gap-4">
-              <div class="relative w-full">
-                <label class="absolute -top-4 left-0 text-[10px] font-bold uppercase tracking-wider text-primary">Min</label>
-                <input id="precio-min" class="w-full border-none bg-transparent px-0 py-1 text-sm text-on-surface focus:ring-0" type="number" min="0" placeholder="0"/>
-                <div class="absolute bottom-0 left-0 h-[1px] w-full bg-outline-variant/20"></div>
+        <div id="productos-grid" class="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+          {% for producto in productos %}
+          <article
+            class="{% if forloop.first %}md:col-span-2 lg:col-span-2{% endif %} flex flex-col rounded-[28px] bg-surface-container-low p-6 transition-all duration-500 hover-ambient-glow {% if not producto.disponible %}opacity-70 grayscale-[30%]{% endif %}"
+            data-categoria="{{ producto.categoria }}" data-precio="{{ producto.precio }}"
+            data-nombre="{{ producto.nombre|lower }}" data-disponible="{{ producto.disponible|yesno:'1,0' }}">
+            <div class="relative mb-6 h-52 overflow-hidden rounded-xl bg-surface-container-highest">
+              {% if not producto.disponible %}
+              <div class="absolute inset-0 flex items-center justify-center bg-surface/40 backdrop-blur-[2px]"><span
+                  class="rounded bg-surface px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-on-surface-variant">Agotado</span>
               </div>
-              <span class="text-outline-variant">—</span>
-              <div class="relative w-full">
-                <label class="absolute -top-4 left-0 text-[10px] font-bold uppercase tracking-wider text-primary">Max</label>
-                <input id="precio-max" class="w-full border-none bg-transparent px-0 py-1 text-sm text-on-surface focus:ring-0" type="number" min="0" placeholder="1000000"/>
-                <div class="absolute bottom-0 left-0 h-[1px] w-full bg-outline-variant/20"></div>
+              {% endif %}
+              {% if 'Máquina' in producto.nombre or 'máquina' in producto.nombre %}
+              <img src="{% static 'sena/images/maquina_motilar.jpg' %}" alt="{{ producto.nombre }}"
+                class="h-full w-full object-cover" />
+              {% elif 'Pomada' in producto.nombre or 'pomada' in producto.nombre %}
+              <img src="{% static 'sena/images/pomada_barba.jpeg' %}" alt="{{ producto.nombre }}"
+                class="h-full w-full object-cover" />
+              {% elif 'Cepillo' in producto.nombre or 'cepillo' in producto.nombre %}
+              <img src="{% static 'sena/images/cepillo.jpeg' %}" alt="{{ producto.nombre }}"
+                class="h-full w-full object-cover" />
+              {% elif 'Tijera' in producto.nombre or 'tijera' in producto.nombre %}
+              <img src="{% static 'sena/images/Tijeras.jpeg' %}" alt="{{ producto.nombre }}"
+                class="h-full w-full object-cover" />
+              {% else %}
+              <img src="{% static 'sena/images/corte_cabello.jpeg' %}" alt="{{ producto.nombre }}"
+                class="h-full w-full object-cover" />
+              {% endif %}
+            </div>
+
+            <div class="flex flex-1 flex-col justify-between">
+              <div>
+                <span class="mb-1 block text-[10px] font-bold uppercase tracking-[0.18em] text-on-surface-variant">{{
+                  producto.get_categoria_display }}</span>
+                <h2 class="mb-2 font-headline text-xl text-on-surface">{{ producto.nombre }}</h2>
+                {% if producto.descripcion %}
+                <p class="mb-4 text-sm text-on-surface-variant">{{ producto.descripcion|truncatewords:15 }}</p>
+                {% endif %}
+              </div>
+
+              <div class="mt-4 flex items-center justify-between border-t border-outline-variant/10 pt-4">
+                <span class="font-body text-base font-bold text-on-surface">${{ producto.precio|floatformat:"0g" }}
+                  <span class="text-[10px] font-normal text-on-surface-variant">COP</span></span>
+                {% if producto.disponible %}
+                <form method="post" action="{% url 'sena:agregar_carrito' producto.id %}"
+                  class="add-to-cart-form inline-flex" data-nombre="{{ producto.nombre }}">{% csrf_token %}
+                  <button type="submit"
+                    class="flex cursor-pointer items-center gap-1 text-sm font-medium text-primary transition-colors hover:text-primary-container">Añadir
+                    <span class="material-symbols-outlined text-[16px]">add</span></button>
+                </form>
+                {% else %}
+                <button class="cursor-not-allowed text-sm font-medium text-on-surface-variant">No Disponible</button>
+                {% endif %}
               </div>
             </div>
+          </article>
+          {% empty %}
+          <div class="col-span-full py-24 text-center">
+            <p class="text-lg text-on-surface-variant">No hay productos disponibles en este momento.</p>
           </div>
-        </aside>
-
-        <div class="flex-1">
-          <div class="mb-8 flex flex-wrap items-center justify-between gap-4">
-            <div class="flex items-center gap-2">
-              <span class="text-xs font-label uppercase tracking-wider text-on-surface-variant">Filtros activos:</span>
-              <span id="chip-filtro-activo" class="hidden items-center gap-1 rounded border border-outline-variant/20 bg-surface-container-low px-2 py-1 text-xs text-primary"><span id="texto-filtro-activo">Todos</span><button id="btn-quitar-filtro" class="hover:text-on-surface" title="Quitar filtro"><span class="material-symbols-outlined text-[12px]">close</span></button></span>
-            </div>
-            <div class="flex items-center gap-2">
-              <span class="text-xs font-label uppercase tracking-wider text-on-surface-variant">Ordenar por:</span>
-              <select id="ordenar" class="cursor-pointer border-none bg-transparent text-sm text-on-surface focus:ring-0">
-                <option class="bg-surface-container-high" value="relevancia">Relevancia</option>
-                <option class="bg-surface-container-high" value="menor">Menor precio</option>
-                <option class="bg-surface-container-high" value="mayor">Mayor precio</option>
-                <option class="bg-surface-container-high" value="nuevos">Nuevos</option>
-              </select>
-            </div>
-          </div>
-
-          <div id="productos-grid" class="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
-            {% for producto in productos %}
-              <article class="{% if forloop.first %}md:col-span-2 lg:col-span-2{% endif %} flex flex-col rounded-[28px] bg-surface-container-low p-6 transition-all duration-500 hover-ambient-glow {% if not producto.disponible %}opacity-70 grayscale-[30%]{% endif %}" data-categoria="{{ producto.categoria }}" data-precio="{{ producto.precio }}" data-nombre="{{ producto.nombre|lower }}" data-disponible="{{ producto.disponible|yesno:'1,0' }}">
-                <div class="relative mb-6 h-52 overflow-hidden rounded-xl bg-surface-container-highest">
-                  {% if not producto.disponible %}
-                    <div class="absolute inset-0 flex items-center justify-center bg-surface/40 backdrop-blur-[2px]"><span class="rounded bg-surface px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-on-surface-variant">Agotado</span></div>
-                  {% endif %}
-                  <img src="{% static 'sena/images/productos_barber.jpg' %}" alt="{{ producto.nombre }}" class="h-full w-full object-cover"/>
-                </div>
-
-                <div class="flex flex-1 flex-col justify-between">
-                  <div>
-                    <span class="mb-1 block text-[10px] font-bold uppercase tracking-[0.18em] text-on-surface-variant">{{ producto.get_categoria_display }}</span>
-                    <h2 class="mb-2 font-headline text-xl text-on-surface">{{ producto.nombre }}</h2>
-                    {% if producto.descripcion %}
-                      <p class="mb-4 text-sm text-on-surface-variant">{{ producto.descripcion|truncatewords:15 }}</p>
-                    {% endif %}
-                  </div>
-
-                  <div class="mt-4 flex items-center justify-between border-t border-outline-variant/10 pt-4">
-                    <span class="font-body text-base font-bold text-on-surface">${{ producto.precio|floatformat:"0g" }} <span class="text-[10px] font-normal text-on-surface-variant">COP</span></span>
-                    {% if producto.disponible %}
-                      <form method="post" action="{% url 'sena:agregar_carrito' producto.id %}" class="add-to-cart-form inline-flex" data-nombre="{{ producto.nombre }}">{% csrf_token %}
-                        <button type="submit" class="flex cursor-pointer items-center gap-1 text-sm font-medium text-primary transition-colors hover:text-primary-container">Añadir <span class="material-symbols-outlined text-[16px]">add</span></button>
-                      </form>
-                    {% else %}
-                      <button class="cursor-not-allowed text-sm font-medium text-on-surface-variant">No Disponible</button>
-                    {% endif %}
-                  </div>
-                </div>
-              </article>
-            {% empty %}
-              <div class="col-span-full py-24 text-center"><p class="text-lg text-on-surface-variant">No hay productos disponibles en este momento.</p></div>
-            {% endfor %}
-            <div id="sin-resultados" class="hidden col-span-full py-24 text-center"><p class="text-lg text-on-surface-variant">No se encontraron productos con los filtros seleccionados.</p></div>
+          {% endfor %}
+          <div id="sin-resultados" class="hidden col-span-full py-24 text-center">
+            <p class="text-lg text-on-surface-variant">No se encontraron productos con los filtros seleccionados.</p>
           </div>
         </div>
       </div>
-    </main>
+    </div>
+  </main>
 
-    <footer class="flex w-full flex-col items-center gap-8 border-t border-outline-variant/10 bg-surface-container-lowest px-8 pb-8 pt-16">
-      <div class="font-headline text-xl text-primary">TecnoCorte</div>
-      <div class="flex flex-wrap justify-center gap-6 text-sm text-on-surface-variant">
-        <a class="opacity-80 transition-colors hover:text-primary hover:opacity-100" href="{% url 'sena:ayuda' %}">Privacidad</a>
-        <a class="opacity-80 transition-colors hover:text-primary hover:opacity-100" href="{% url 'sena:ayuda' %}">Términos</a>
-        <a class="opacity-80 transition-colors hover:text-primary hover:opacity-100" href="{% url 'sena:ayuda' %}">Soporte</a>
-        <a class="opacity-80 transition-colors hover:text-primary hover:opacity-100" href="{% url 'sena:ayuda' %}">Franquicias</a>
-      </div>
-      <div class="mt-4 text-center text-sm text-on-surface-variant opacity-60">© 2026 TecnoCorte. Todos los derechos reservados.</div>
-    </footer>
+  <footer
+    class="flex w-full flex-col items-center gap-8 border-t border-outline-variant/10 bg-surface-container-lowest px-8 pb-8 pt-16">
+    <div class="font-headline text-xl text-primary">TecnoCorte</div>
+    <div class="flex flex-wrap justify-center gap-6 text-sm text-on-surface-variant">
+      <a class="opacity-80 transition-colors hover:text-primary hover:opacity-100"
+        href="{% url 'sena:ayuda' %}">Privacidad</a>
+      <a class="opacity-80 transition-colors hover:text-primary hover:opacity-100"
+        href="{% url 'sena:ayuda' %}">Términos</a>
+      <a class="opacity-80 transition-colors hover:text-primary hover:opacity-100"
+        href="{% url 'sena:ayuda' %}">Soporte</a>
+      <a class="opacity-80 transition-colors hover:text-primary hover:opacity-100"
+        href="{% url 'sena:ayuda' %}">Franquicias</a>
+    </div>
+    <div class="mt-4 text-center text-sm text-on-surface-variant opacity-60">© 2026 TecnoCorte. Todos los derechos
+      reservados.</div>
+  </footer>
 
+<<<<<<< Updated upstream
     <script>
       var filtroActual = "";
       function aplicarFiltros() {
@@ -285,7 +388,43 @@
         }).catch(function () {
           button.disabled = false;
         });
+=======
+  <script>
+    document.addEventListener("submit", function (e) {
+      var form = e.target;
+      if (!form.classList.contains("add-to-cart-form")) return;
+      e.preventDefault();
+      var button = form.querySelector('button[type="submit"]');
+      var badge = document.getElementById("cart-count");
+      button.disabled = true;
+      fetch(form.action, {
+        method: "POST",
+        headers: {
+          "X-CSRFToken": form.querySelector('input[name="csrfmiddlewaretoken"]').value,
+          "X-Requested-With": "XMLHttpRequest"
+        }
+      }).then(function (res) {
+        if (!res.ok) throw new Error("error");
+        return res.json();
+      }).then(function (data) {
+        if (data && data.total) {
+          badge.textContent = data.total;
+          badge.classList.remove("hidden");
+        }
+        button.disabled = false;
+      }).catch(function () {
+        button.disabled = false;
+>>>>>>> Stashed changes
       });
-    </script>
-  </body>
+    });
+  </script>
+</body>
+
 </html>
+<<<<<<< Updated upstream
+=======
+</script>
+</body>
+
+</html>
+>>>>>>> Stashed changes
