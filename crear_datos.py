@@ -52,7 +52,7 @@ for user_data in barber_users:
             "rol": "Barbero"
         }
     )
-    status = "✨ Creado" if created else "📌 Existente"
+    status = " Creado" if created else " Existente"
     print(f"  {status}: {user_data['email']} / {user_data['password']}")
 
 # CLIENTES
@@ -97,7 +97,7 @@ Producto.objects.get_or_create(nombre="Cepillo para Cabello", defaults={
 Producto.objects.get_or_create(nombre='Tijeras Profesionales', defaults={
     "descripcion": "Tijeras de acero para corte de precisión.",
     "precio": 180000, "categoria": "Herramientas",
-    "stock": 0, "disponible": False,
+    "stock": 1, "disponible": True,
 })
 print(" Productos creados")
 

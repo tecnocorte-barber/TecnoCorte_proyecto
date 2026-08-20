@@ -121,6 +121,28 @@ h1, h2, h3, h4, h5, h6, .font-headline { font-family: 'Noto Serif', serif; }
 </div>
 <div class="flex flex-col gap-3 items-end"><span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest {% if cita.estado == 'Confirmada' or cita.estado == 'Completada' %}bg-primary/10 text-primary border border-primary/20{% elif cita.estado == 'Cancelada' %}bg-error/10 text-error border border-error/20{% else %}bg-secondary-container/20 text-secondary border border-secondary-container/30{% endif %}">{{ cita.estado }}</span>
 {% if cita.estado != 'Cancelada' and cita.estado != 'Completada' %}<div class="flex gap-3 text-sm"><a href="{% url 'sena:usuario_editar_reserva' cita.id %}" class="text-primary">Modificar</a><form method="post" action="{% url 'sena:usuario_cancelar_reserva' cita.id %}">{% csrf_token %}<button class="text-error" onclick="return confirm('¿Cancelar esta cita? Si faltan menos de 2 horas, verás el contacto del barbero.')">Cancelar</button></form></div>{% endif %}
+{% if cita.estado == 'Completada' and cita.id not in calificaciones_reservas %}
+<div class="mt-3 w-full border-t border-outline-variant/10 pt-3">
+  <p class="text-xs text-primary uppercase tracking-widest font-bold mb-2">Califica esta cita</p>
+  <form method="post" action="{% url 'sena:usuario_calificar' cita.id %}" class="space-y-3">
+    {% csrf_token %}
+    <div class="flex gap-1" id="estrellas-{{ cita.id }}">
+      {% for i in "12345" %}
+      <button type="button" class="estrella" data-valor="{{ forloop.counter }}" onclick="seleccionarEstrella({{ cita.id }}, {{ forloop.counter }})">
+        <span class="material-symbols-outlined text-xl text-primary/30 hover:text-primary transition-colors" id="star-{{ cita.id }}-{{ forloop.counter }}">star</span>
+      </button>
+      {% endfor %}
+    </div>
+    <input type="hidden" name="puntuacion" id="puntuacion-{{ cita.id }}" value="0">
+    <textarea name="comentario" rows="2" placeholder="Deja un comentario (opcional)" class="w-full bg-surface-container-high border border-outline-variant/20 rounded-lg px-3 py-2 text-sm text-on-surface focus:outline-none focus:border-primary resize-none"></textarea>
+    <button type="submit" class="gold-gradient text-on-primary font-bold py-2 px-6 rounded-md text-xs uppercase tracking-widest hover:opacity-90 transition-opacity active:scale-95">Enviar Calificación</button>
+  </form>
+</div>
+{% elif cita.estado == 'Completada' %}
+<div class="mt-2 text-xs text-primary/60 flex items-center gap-1">
+  <span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">star</span> Ya calificada
+</div>
+{% endif %}
 </div>
 </div>
 {% empty %}
@@ -175,5 +197,22 @@ h1, h2, h3, h4, h5, h6, .font-headline { font-family: 'Noto Serif', serif; }
 </section>
 </div>
 </main>
+<script>
+function seleccionarEstrella(citaId, valor) {
+  document.getElementById("puntuacion-" + citaId).value = valor;
+  for (var i = 1; i <= 5; i++) {
+    var star = document.getElementById("star-" + citaId + "-" + i);
+    if (i <= valor) {
+      star.style.fontVariationSettings = "'FILL' 1";
+      star.style.color = "";
+      star.className = "material-symbols-outlined text-xl text-primary";
+    } else {
+      star.style.fontVariationSettings = "'FILL' 0";
+      star.style.color = "rgba(214,173,66,0.3)";
+      star.className = "material-symbols-outlined text-xl";
+    }
+  }
+}
+</script>
 </body>
 </html>

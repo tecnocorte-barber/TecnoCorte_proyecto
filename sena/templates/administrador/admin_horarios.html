@@ -6,13 +6,21 @@
 <main class="ml-64 flex-1 min-h-screen p-8 md:p-12 bg-surface">
   <header class="mb-10">
     <h1 class="font-headline text-4xl text-primary">Horarios de atención</h1>
-    <p class="text-on-surface-variant mt-2">Elige los días laborales y el horario en el que se pueden agendar citas.</p>
+    <p class="text-on-surface-variant mt-2">Elige los días laborales y el horario en el que se pueden agendar citas por peluquería.</p>
   </header>
 
+  <div class="mb-8 flex flex-wrap gap-3">
+    {% for p in peluquerias %}
+    <a href="?peluqueria={{ p.id }}" class="px-5 py-2.5 rounded-full text-sm font-bold border border-outline-variant/20 transition-all duration-200 {% if peluqueria_actual.id == p.id %}bg-gradient-to-br from-primary to-primary-container text-on-primary border-transparent shadow-[0_0_20px_rgba(242,202,80,0.2)]{% else %}bg-surface-container-high text-on-surface-variant hover:border-primary hover:text-primary{% endif %}">{{ p.nombre }}</a>
+    {% endfor %}
+  </div>
+
+  {% if peluqueria_actual %}
   <section class="bg-surface-container-low rounded-xl p-6 mb-8">
     <h2 class="font-headline text-2xl mb-5">Días de trabajo</h2>
     <form method="post">{% csrf_token %}
       <input type="hidden" name="accion" value="guardar_horarios">
+      <input type="hidden" name="peluqueria_seleccionada" value="{{ peluqueria_actual.id }}">
       <div class="overflow-x-auto">
         <table class="w-full text-sm">
           <thead class="text-on-surface-variant uppercase text-xs"><tr><th class="text-left pb-3">Día</th><th class="text-left pb-3">Se trabaja</th><th class="text-left pb-3">Desde</th><th class="text-left pb-3">Hasta</th></tr></thead>
@@ -38,6 +46,7 @@
       <p class="text-on-surface-variant text-sm mb-5">Si dejas la hora vacía, se bloquea el día completo.</p>
       <form method="post" class="space-y-4">{% csrf_token %}
         <input type="hidden" name="accion" value="crear_bloqueo">
+        <input type="hidden" name="peluqueria_seleccionada" value="{{ peluqueria_actual.id }}">
         <input required min="{{ hoy|date:'Y-m-d' }}" type="date" name="fecha" class="w-full bg-surface-container-high border-0 rounded px-3 py-3 text-on-surface">
         <input type="time" name="hora" class="w-full bg-surface-container-high border-0 rounded px-3 py-3 text-on-surface">
         <input type="text" name="motivo" placeholder="Motivo (opcional)" class="w-full bg-surface-container-high border-0 rounded px-3 py-3 text-on-surface">
@@ -56,5 +65,10 @@
       </div>
     </div>
   </section>
+  {% else %}
+  <div class="bg-surface-container-low rounded-xl p-12 text-center">
+    <p class="text-on-surface-variant text-lg">Selecciona una peluquería para configurar sus horarios.</p>
+  </div>
+  {% endif %}
 </main>
 {% endblock %}

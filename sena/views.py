@@ -1,16 +1,31 @@
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
 from django.utils import timezone
-from django.db import IntegrityError
+from django.db import IntegrityError, models
 from datetime import datetime, time, timedelta
-from .models import Usuario, Peluqueria, Producto, Reserva, Pedido, PedidoProducto, RegistroIngreso, Notificacion, HorarioTrabajo, BloqueoHorario, MensajeContacto
+from .models import Usuario, Peluqueria, Producto, Reserva, Pedido, PedidoProducto, RegistroIngreso, Notificacion, HorarioTrabajo, BloqueoHorario, MensajeContacto, Calificacion
 from .utilidades import autorizacion
 
 SERVICIOS = [
-    {"nombre": "Corte de Cabello", "descripcion": "Lavado, corte preciso con tijera y máquina, peinado con productos premium.", "duracion": "45 Minutos", "minutos": 45, "precio": 45000},
-    {"nombre": "Arreglo de Barba", "descripcion": "Toalla caliente, perfilado exacto, hidratación con aceites esenciales.", "duracion": "30 Minutos", "minutos": 30, "precio": 35000},
-    {"nombre": "Combo Completo", "descripcion": "Corte de cabello + arreglo de barba + limpieza facial.", "duracion": "1 Hora 15 Min", "minutos": 75, "precio": 75000},
+    {"nombre": "Corte de Cabello", "descripcion": "Lavado, corte preciso con tijera y máquina, peinado con productos premium.", "duracion": "45 Minutos", "minutos": 45, "precio": 40000},
+    {"nombre": "Arreglo de Barba", "descripcion": "Toalla caliente, perfilado exacto, hidratación con aceites esenciales.", "duracion": "30 Minutos", "minutos": 30, "precio": 30000},
+    {"nombre": "Combo Completo", "descripcion": "Corte de cabello + arreglo de barba + limpieza facial.", "duracion": "1 Hora 15 Min", "minutos": 75, "precio": 60000},
 ]
+
+def _horarios_para_template(peluqueria_id=None):
+    horarios = {}
+    for h in HorarioTrabajo.objects.all():
+        pid = str(h.peluqueria_id)
+        if pid not in horarios:
+            horarios[pid] = {}
+        horarios[pid][h.dia_semana] = {"activo": h.activo, "inicio": h.hora_inicio.strftime("%H:%M"), "fin": h.hora_fin.strftime("%H:%M")}
+    bloqueos = []
+    qs = BloqueoHorario.objects.all()
+    if peluqueria_id:
+        qs = qs.filter(peluqueria_id=peluqueria_id)
+    for b in qs:
+        bloqueos.append({"fecha": b.fecha.strftime("%Y-%m-%d"), "hora": b.hora.strftime("%H:%M") if b.hora else None})
+    return {"horarios_json": horarios, "bloqueos_json": bloqueos}
 
 def contexto_carrito(request):
     carrito = request.session.get("carrito", {})
@@ -18,8 +33,6 @@ def contexto_carrito(request):
     total = 0
     cantidad = 0
     for producto_id, cantidad_item in carrito.items():
-        if not email or not password:
-            return render(request, "publicos/login.html", {"error": "Escribe tu correo y contraseña.", "proximo": proximo})
         try:
             producto = Producto.objects.get(id=producto_id)
         except Producto.DoesNotExist:
@@ -107,6 +120,8 @@ def login(request):
 
         try:
             usuario = Usuario.objects.get(email=email, password=password)
+            if not usuario.activo:
+                return render(request, "publicos/login.html", {"error": "Tu cuenta ha sido suspendida. Contacta al administrador para más información.", "proximo": proximo})
             if usuario.rol != rol_seleccionado:
                 return render(request, "publicos/login.html", {"error": "Rol equivocado. Selecciona el rol correcto para tu cuenta.", "proximo": proximo})
 
@@ -317,6 +332,7 @@ def usuario_reservar_cita(request):
     contexto["peluqueros"] = Usuario.objects.filter(rol="Barbero")
     contexto["peluquerias"] = Peluqueria.objects.all()
     contexto["servicios"] = SERVICIOS
+    contexto.update(_horarios_para_template())
     return render(request, "usuarios/usuario_reservar_cita.html", contexto)
 
 @autorizacion(["Cliente"])
@@ -330,6 +346,7 @@ def usuario_pre_confirmar(request):
     if peluquero is None or peluqueria is None or not fecha or not hora:
         contexto = contexto_carrito(request)
         contexto.update({"error": "Datos inválidos. Elige servicio, barbero, peluquería, fecha y hora e inténtalo de nuevo.", "peluqueros": Usuario.objects.filter(rol="Barbero"), "peluquerias": Peluqueria.objects.all(), "servicios": SERVICIOS})
+        contexto.update(_horarios_para_template())
         return render(request, "usuarios/usuario_reservar_cita.html", contexto)
     datos = {
         "servicio": request.POST.get("servicio", "Corte de Cabello"),
@@ -353,6 +370,7 @@ def usuario_confirmar_reserva(request):
     if not disponible:
         contexto = contexto_carrito(request)
         contexto.update({"error": mensaje, "peluqueros": Usuario.objects.filter(rol="Barbero"), "peluquerias": Peluqueria.objects.all(), "servicios": SERVICIOS})
+        contexto.update(_horarios_para_template())
         return render(request, "usuarios/usuario_reservar_cita.html", contexto)
     reserva = Reserva.objects.create(
         cliente_id=request.session["logueado"]["id"],
@@ -367,7 +385,7 @@ def usuario_confirmar_reserva(request):
         reserva=reserva,
         mensaje=f"Nueva cita: {reserva.cliente.nombre} reservó {reserva.servicio} para {reserva.fecha} a las {reserva.hora}.",
     )
-    return redirect("sena:usuario_dashboard")
+    return redirect("sena:inicio")
 
 @autorizacion(["Cliente"])
 def usuario_perfil(request):
@@ -380,11 +398,13 @@ def usuario_perfil(request):
         return redirect("sena:usuario_perfil")
     citas = Reserva.objects.filter(cliente=usuario).order_by("-fecha", "-hora")
     pedidos = Pedido.objects.filter(cliente=usuario).order_by("-fecha")
+    calificaciones_reservas = set(Calificacion.objects.filter(cliente=usuario).values_list("reserva_id", flat=True))
     contexto = contexto_carrito(request)
     contexto["usuario"] = usuario
     contexto["citas"] = citas
     contexto["pedidos"] = pedidos
     contexto["notificaciones"] = Notificacion.objects.filter(usuario=usuario).order_by("-fecha")
+    contexto["calificaciones_reservas"] = calificaciones_reservas
     return render(request, "usuarios/usuario_perfil.html", contexto)
 
 
@@ -452,14 +472,84 @@ def usuario_confirmar_cita_peluquero(request, reserva_id):
     ).update(leida=True)
     return redirect("sena:usuario_notificaciones")
 
+@autorizacion(["Cliente"])
+def usuario_calificar(request, reserva_id):
+    if request.method != "POST":
+        return redirect("sena:usuario_perfil")
+    cliente_id = request.session["logueado"]["id"]
+    reserva = Reserva.objects.filter(id=reserva_id, cliente_id=cliente_id, estado="Completada").first()
+    if reserva is None:
+        return redirect("sena:usuario_perfil")
+    if Calificacion.objects.filter(reserva=reserva).exists():
+        return redirect("sena:usuario_perfil")
+    try:
+        puntuacion = int(request.POST.get("puntuacion", 0))
+    except (TypeError, ValueError):
+        puntuacion = 0
+    if puntuacion < 1 or puntuacion > 5:
+        return redirect("sena:usuario_perfil")
+    Calificacion.objects.create(
+        reserva=reserva,
+        cliente_id=cliente_id,
+        barbero=reserva.peluquero,
+        puntuacion=puntuacion,
+        comentario=request.POST.get("comentario", "").strip(),
+    )
+    return redirect("sena:usuario_perfil")
+
 # ═══════════════════════════════════════════════════════════════════════════
 # PELUQUERO
 # ═══════════════════════════════════════════════════════════════════════════
 
 @autorizacion(["Barbero"])
 def peluquero_dashboard(request):
-    citas = Reserva.objects.filter(peluquero_id=request.session["logueado"]["id"]).order_by("fecha", "hora")
-    return render(request, "peluqueros/peluquero_dashboard.html", {"citas": citas})
+    barbero_id = request.session["logueado"]["id"]
+    citas = Reserva.objects.filter(peluquero_id=barbero_id).order_by("fecha", "hora")
+    precios = {item["nombre"]: item["precio"] for item in SERVICIOS}
+    citas_completadas = citas.filter(estado="Completada")
+    citas_pendientes = citas.filter(estado="Pendiente")
+    citas_canceladas = citas.filter(estado="Cancelada")
+    citas_hoy = citas.filter(fecha=timezone.now().date())
+    ingresos_hoy = sum(precios.get(c.servicio, 0) for c in citas_hoy.filter(estado="Completada"))
+    ingresos_total = sum(precios.get(c.servicio, 0) for c in citas_completadas)
+    califs = Calificacion.objects.filter(barbero_id=barbero_id)
+    promedio = 0
+    if califs.exists():
+        promedio = round(califs.aggregate(models.Avg("puntuacion"))["puntuacion__avg"], 1)
+    contexto = {
+        "citas": citas,
+        "citas_completadas": citas_completadas,
+        "citas_pendientes": citas_pendientes,
+        "citas_canceladas": citas_canceladas,
+        "citas_hoy": citas_hoy,
+        "ingresos_hoy": ingresos_hoy,
+        "ingresos_total": ingresos_total,
+        "total_citas": citas.count(),
+        "promedio": promedio,
+        "total_calificaciones": califs.count(),
+        "calificaciones": califs[:5],
+    }
+    return render(request, "peluqueros/peluquero_dashboard.html", contexto)
+
+@autorizacion(["Barbero"])
+def peluquero_cambiar_estado(request, cita_id):
+    if request.method != "POST":
+        return redirect("sena:peluquero_dashboard")
+    cita = Reserva.objects.filter(id=cita_id, peluquero_id=request.session["logueado"]["id"]).first()
+    if cita is None:
+        return redirect("sena:peluquero_dashboard")
+    nuevo_estado = request.POST.get("estado", "")
+    estados_validos = [e[0] for e in Reserva.ESTADOS]
+    if nuevo_estado in estados_validos:
+        cita.estado = nuevo_estado
+        cita.save()
+        if nuevo_estado == "Completada":
+            Notificacion.objects.create(
+                usuario=cita.cliente,
+                reserva=cita,
+                mensaje=f"Tu cita de {cita.servicio} del {cita.fecha} fue marcada como completada. ¡Califica tu experiencia!",
+            )
+    return redirect("sena:peluquero_dashboard")
 
 @autorizacion(["Barbero"])
 def peluquero_perfil(request):
@@ -471,7 +561,18 @@ def peluquero_perfil(request):
         usuario.save()
         return redirect("sena:peluquero_perfil")
     citas = Reserva.objects.filter(peluquero=usuario).order_by("-fecha", "-hora")
-    return render(request, "peluqueros/peluquero_perfil.html", {"usuario": usuario, "citas": citas})
+    calificaciones = Calificacion.objects.filter(barbero=usuario)
+    promedio = 0
+    if calificaciones.exists():
+        promedio = round(calificaciones.aggregate(models.Avg("puntuacion"))["puntuacion__avg"], 1)
+    contexto = {
+        "usuario": usuario,
+        "citas": citas,
+        "calificaciones": calificaciones,
+        "promedio": promedio,
+        "total_calificaciones": calificaciones.count(),
+    }
+    return render(request, "peluqueros/peluquero_perfil.html", contexto)
 
 @autorizacion(["Barbero"])
 def peluquero_crear_cita(request):
@@ -658,16 +759,24 @@ def admin_cancelar_reserva(request, id):
 
 @autorizacion(["Admin"])
 def admin_horarios(request):
-    for numero in range(7):
-        HorarioTrabajo.objects.get_or_create(
-            dia_semana=numero,
-            defaults={"activo": numero < 6, "hora_inicio": time(9, 0), "hora_fin": time(18, 0)},
-        )
+    peluquerias = Peluqueria.objects.all()
+    peluqueria_id = request.GET.get("peluqueria") or request.POST.get("peluqueria_seleccionada") or (str(peluquerias.first().id) if peluquerias.exists() else None)
+    peluqueria_actual = Peluqueria.objects.filter(id=peluqueria_id).first() if peluqueria_id else None
+    if peluqueria_actual:
+        for numero in range(7):
+            HorarioTrabajo.objects.get_or_create(
+                peluqueria=peluqueria_actual,
+                dia_semana=numero,
+                defaults={"activo": numero < 6, "hora_inicio": time(9, 0), "hora_fin": time(18, 0)},
+            )
     if request.method == "POST":
         accion = request.POST.get("accion")
-        if accion == "guardar_horarios":
+        if accion == "guardar_horarios" and peluqueria_actual:
             for numero in range(7):
-                horario = HorarioTrabajo.objects.get(dia_semana=numero)
+                horario, _ = HorarioTrabajo.objects.get_or_create(
+                    peluqueria=peluqueria_actual, dia_semana=numero,
+                    defaults={"activo": numero < 6, "hora_inicio": time(9, 0), "hora_fin": time(18, 0)},
+                )
                 horario.activo = request.POST.get(f"activo_{numero}") == "on"
                 horario.hora_inicio = request.POST.get(f"inicio_{numero}", "09:00")
                 horario.hora_fin = request.POST.get(f"fin_{numero}", "18:00")
@@ -675,10 +784,12 @@ def admin_horarios(request):
         elif accion == "crear_bloqueo":
             fecha = request.POST.get("fecha")
             hora = request.POST.get("hora") or None
-            if fecha:
-                BloqueoHorario.objects.create(fecha=fecha, hora=hora, motivo=request.POST.get("motivo", ""))
-        return redirect("sena:admin_horarios")
-    return render(request, "administrador/admin_horarios.html", {"horarios": HorarioTrabajo.objects.order_by("dia_semana"), "bloqueos": BloqueoHorario.objects.all(), "hoy": datetime.today().date()})
+            if fecha and peluqueria_actual:
+                BloqueoHorario.objects.create(fecha=fecha, hora=hora, motivo=request.POST.get("motivo", ""), peluqueria=peluqueria_actual)
+        return redirect(f"sena:admin_horarios?peluqueria={peluqueria_id}")
+    horarios = HorarioTrabajo.objects.filter(peluqueria=peluqueria_actual).order_by("dia_semana") if peluqueria_actual else []
+    bloqueos = BloqueoHorario.objects.filter(peluqueria=peluqueria_actual) if peluqueria_actual else BloqueoHorario.objects.none()
+    return render(request, "administrador/admin_horarios.html", {"horarios": horarios, "bloqueos": bloqueos, "hoy": datetime.today().date(), "peluquerias": peluquerias, "peluqueria_actual": peluqueria_actual})
 
 @autorizacion(["Admin"])
 def admin_eliminar_bloqueo(request, id):
@@ -871,4 +982,14 @@ def admin_eliminar_usuario(request, id):
     """Eliminar usuario"""
     usuario = Usuario.objects.get(id=id)
     usuario.delete()
+    return redirect("sena:admin_usuarios")
+
+@autorizacion(["Admin"])
+def admin_suspender_usuario(request, id):
+    """Suspender o activar un usuario"""
+    if request.method == "POST":
+        usuario = Usuario.objects.filter(id=id).first()
+        if usuario and usuario.rol != "Admin":
+            usuario.activo = not usuario.activo
+            usuario.save()
     return redirect("sena:admin_usuarios")

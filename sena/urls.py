@@ -36,10 +36,12 @@ urlpatterns = [
     path('usuario/perfil/', views.usuario_perfil, name="usuario_perfil"),
     path('usuario/cita/<int:reserva_id>/cancelar/', views.usuario_cancelar_reserva, name="usuario_cancelar_reserva"),
     path('usuario/cita/<int:reserva_id>/editar/', views.usuario_editar_reserva, name="usuario_editar_reserva"),
+    path('usuario/cita/<int:reserva_id>/calificar/', views.usuario_calificar, name="usuario_calificar"),
     
     path('peluquero/dashboard/', views.peluquero_dashboard, name="peluquero_dashboard"),
     path('peluquero/perfil/', views.peluquero_perfil, name="peluquero_perfil"),
     path('peluquero/crear_cita/', views.peluquero_crear_cita, name="peluquero_crear_cita"),
+    path('peluquero/cita/<int:cita_id>/estado/', views.peluquero_cambiar_estado, name="peluquero_cambiar_estado"),
     path('peluquero/notificaciones/', views.peluquero_notificaciones, name="peluquero_notificaciones"),
     
     path('admin/dashboard/', views.admin_dashboard, name="admin_dashboard"),
@@ -47,6 +49,7 @@ urlpatterns = [
     path('admin/crear_usuario/', views.admin_crear_usuario, name="admin_crear_usuario"),
     path('admin/editar_usuario/<int:id>/', views.admin_editar_usuario, name="admin_editar_usuario"),
     path('admin/eliminar_usuario/<int:id>/', views.admin_eliminar_usuario, name="admin_eliminar_usuario"),
+    path('admin/suspender_usuario/<int:id>/', views.admin_suspender_usuario, name="admin_suspender_usuario"),
     path('admin/peluqueros/', views.admin_peluqueros, name="admin_peluqueros"),
     path('admin/crear_peluquero/', views.admin_crear_peluquero, name="admin_crear_peluquero"),
     path('admin/editar_peluquero/<int:id>/', views.admin_editar_peluquero, name="admin_editar_peluquero"),

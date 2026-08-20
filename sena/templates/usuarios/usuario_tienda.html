@@ -207,6 +207,59 @@
     </footer>
 
     <script>
+      var filtroActual = "";
+      function aplicarFiltros() {
+        var min = parseFloat(document.getElementById("precio-min").value) || 0;
+        var max = parseFloat(document.getElementById("precio-max").value) || Infinity;
+        var productos = document.querySelectorAll("#productos-grid article[data-categoria]");
+        var visibles = 0;
+        productos.forEach(function (art) {
+          var cat = art.dataset.categoria;
+          var precio = parseFloat(art.dataset.precio) || 0;
+          var mostrar = (filtroActual === "" || cat === filtroActual) && precio >= min && precio <= max;
+          art.style.display = mostrar ? "" : "none";
+          if (mostrar) visibles++;
+        });
+        var sinResultados = document.getElementById("sin-resultados");
+        if (visibles === 0) { sinResultados.classList.remove("hidden"); } else { sinResultados.classList.add("hidden"); }
+        var chip = document.getElementById("chip-filtro-activo");
+        var texto = document.getElementById("texto-filtro-activo");
+        if (filtroActual !== "") { chip.classList.remove("hidden"); chip.classList.add("inline-flex"); texto.textContent = filtroActual; }
+        else { chip.classList.add("hidden"); chip.classList.remove("inline-flex"); }
+      }
+      document.querySelectorAll(".categoria-link").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          filtroActual = this.dataset.cat;
+          document.querySelectorAll(".categoria-link").forEach(function (b) { b.classList.remove("text-primary", "font-bold"); });
+          this.classList.add("text-primary", "font-bold");
+          aplicarFiltros();
+        });
+      });
+      document.getElementById("btn-limpiar-filtros").addEventListener("click", function () {
+        filtroActual = "";
+        document.getElementById("precio-min").value = "";
+        document.getElementById("precio-max").value = "";
+        document.querySelectorAll(".categoria-link").forEach(function (b) { b.classList.remove("text-primary", "font-bold"); });
+        aplicarFiltros();
+      });
+      var btnQuitar = document.getElementById("btn-quitar-filtro");
+      if (btnQuitar) btnQuitar.addEventListener("click", function () {
+        filtroActual = "";
+        document.querySelectorAll(".categoria-link").forEach(function (b) { b.classList.remove("text-primary", "font-bold"); });
+        aplicarFiltros();
+      });
+      document.getElementById("ordenar").addEventListener("change", function () {
+        var valor = this.value;
+        var grid = document.getElementById("productos-grid");
+        var arts = Array.from(grid.querySelectorAll("article[data-categoria]"));
+        arts.sort(function (a, b) {
+          if (valor === "menor") return parseFloat(a.dataset.precio) - parseFloat(b.dataset.precio);
+          if (valor === "mayor") return parseFloat(b.dataset.precio) - parseFloat(a.dataset.precio);
+          return 0;
+        });
+        arts.forEach(function (el) { grid.appendChild(el); });
+      });
+
       document.addEventListener("submit", function (e) {
         var form = e.target;
         if (!form.classList.contains("add-to-cart-form")) return;
@@ -224,8 +277,8 @@
           if (!res.ok) throw new Error("error");
           return res.json();
         }).then(function (data) {
-          if (data && data.total) {
-            badge.textContent = data.total;
+          if (data && data.cantidad !== undefined) {
+            badge.textContent = data.cantidad;
             badge.classList.remove("hidden");
           }
           button.disabled = false;
@@ -235,7 +288,4 @@
       });
     </script>
   </body>
-</html>
-</script>
-</body>
 </html>

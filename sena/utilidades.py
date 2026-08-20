@@ -7,9 +7,14 @@ def autorizacion(roles=[]):
         @wraps(vista)
         def envoltorio(request, *args, **kwargs):
             if not request.session.get("logueado"):
-                # Redirigir a login con el parámetro next para volver después
                 login_url = reverse("sena:login")
                 return redirect(f"{login_url}?next={request.path_info}")
+            
+            from sena.models import Usuario
+            usuario = Usuario.objects.filter(id=request.session["logueado"]["id"], activo=True).first()
+            if usuario is None:
+                del request.session["logueado"]
+                return redirect("sena:login")
             
             if roles:
                 rol = request.session["logueado"]["rol"]

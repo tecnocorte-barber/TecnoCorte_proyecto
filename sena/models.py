@@ -13,6 +13,7 @@ class Usuario(models.Model):
     password = models.CharField(max_length=100)
     telefono = models.CharField(max_length=20, blank=True)
     rol = models.CharField(max_length=15, choices=ROLES, default="Cliente")
+    activo = models.BooleanField(default=True)
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     
     def __str__(self):
@@ -110,23 +111,29 @@ class Notificacion(models.Model):
 
 
 class HorarioTrabajo(models.Model):
-    """Horario general que configura el administrador para cada día."""
+    """Horario general que configura el administrador para cada día y cada peluquería."""
     DIAS = (
         (0, "Lunes"), (1, "Martes"), (2, "Miércoles"),
         (3, "Jueves"), (4, "Viernes"), (5, "Sábado"), (6, "Domingo"),
     )
 
-    dia_semana = models.PositiveSmallIntegerField(choices=DIAS, unique=True)
+    peluqueria = models.ForeignKey(Peluqueria, on_delete=models.CASCADE, related_name="horarios", default=1)
+    dia_semana = models.PositiveSmallIntegerField(choices=DIAS)
     activo = models.BooleanField(default=True)
     hora_inicio = models.TimeField(default="09:00")
     hora_fin = models.TimeField(default="18:00")
 
+    class Meta:
+        unique_together = ("peluqueria", "dia_semana")
+        ordering = ["dia_semana"]
+
     def __str__(self):
-        return self.get_dia_semana_display()
+        return f"{self.peluqueria.nombre} - {self.get_dia_semana_display()}"
 
 
 class BloqueoHorario(models.Model):
-    """Bloquea un día completo o una hora específica para las citas."""
+    """Bloquea un día completo o una hora específica para las citas de una peluquería."""
+    peluqueria = models.ForeignKey(Peluqueria, on_delete=models.CASCADE, related_name="bloqueos", default=1)
     fecha = models.DateField()
     hora = models.TimeField(null=True, blank=True)
     motivo = models.CharField(max_length=150, blank=True)
@@ -136,8 +143,8 @@ class BloqueoHorario(models.Model):
 
     def __str__(self):
         if self.hora:
-            return f"{self.fecha} {self.hora}"
-        return f"{self.fecha} (todo el día)"
+            return f"{self.peluqueria.nombre} - {self.fecha} {self.hora}"
+        return f"{self.peluqueria.nombre} - {self.fecha} (todo el día)"
 
 
 class MensajeContacto(models.Model):
@@ -153,3 +160,18 @@ class MensajeContacto(models.Model):
 
     def __str__(self):
         return f"{self.asunto} - {self.nombre}"
+
+
+class Calificacion(models.Model):
+    reserva = models.OneToOneField(Reserva, on_delete=models.CASCADE, related_name="calificacion")
+    cliente = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name="calificaciones_hechas")
+    barbero = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name="calificaciones_recibidas")
+    puntuacion = models.PositiveSmallIntegerField()
+    comentario = models.TextField(blank=True)
+    fecha = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-fecha"]
+
+    def __str__(self):
+        return f"{self.cliente.nombre} → {self.barbero.nombre} ({self.puntuacion}/5)"

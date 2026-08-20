@@ -73,9 +73,8 @@ border: 1px solid rgba(77, 70, 53, 0.15);
         <div class="flex items-center gap-2 px-2">
           <button class="text-primary hover:text-primary-container transition-colors active:scale-90 p-1" name="cantidad" value="{{ item.cantidad|add:-1 }}" type="submit" title="Menos"><span class="material-symbols-outlined text-base">remove</span>
         </button>
-        <input class="w-10 bg-transparent text-center text-on-surface font-bold" name="cantidad" type="hidden" value="{{ item.cantidad }}"><span class="text-on-surface font-bold">{{ item.cantidad }}
-      </span>
-      <button class="text-primary hover:text-primary-container transition-colors active:scale-90 p-1" name="cantidad" value="{{ item.cantidad|add:1 }}" type="submit" title="Más"><span class="material-symbols-outlined text-base">add</span>
+        <span class="text-on-surface font-bold w-10 text-center">{{ item.cantidad }}</span>
+        <button class="text-primary hover:text-primary-container transition-colors active:scale-90 p-1" name="cantidad" value="{{ item.cantidad|add:1 }}" type="submit" title="Más"><span class="material-symbols-outlined text-base">add</span>
     </button>
   </div>
 </form>

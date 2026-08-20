@@ -196,7 +196,8 @@ Continuar
   </div>
 </footer>
 <script>
-const HORAS = ["09:00","09:30","10:00","10:30","11:00","11:30","12:00","12:30","14:00","14:30","15:00","15:30","16:00","16:30","17:00"];
+const HORARIOS = {{ horarios_json|safe }};
+const BLOQUEOS = {{ bloqueos_json|safe }};
 let seleccion = { servicio: "", precio: 0, duracion: "", peluquero: "", peluqueria: "", fecha: "", hora: "" };
 function refrescar() {
   document.getElementById("res-servicio").textContent = seleccion.servicio || "Por elegir";
@@ -232,46 +233,101 @@ function seleccionarPeluqueria(el) {
   el.classList.add("opt-selected");
   seleccion.peluqueria = el.dataset.peluqueria;
   seleccion.peluqueriaNombre = el.querySelector("span:last-child").textContent.trim();
+  seleccion.fecha = "";
+  seleccion.hora = "";
+  seleccion.diaSemana = "";
+  buildFechas();
+  buildHoras();
   refrescar();
 }
+function getHorariosPeluqueria() {
+  if (!seleccion.peluqueria) return {};
+  return HORARIOS[seleccion.peluqueria] || {};
+}
+function esDiaActivo(diaSemana) {
+  var h = getHorariosPeluqueria();
+  if (!h[diaSemana]) return false;
+  return h[diaSemana].activo;
+}
+function estaBloqueada(fecha, hora) {
+  for (var i = 0; i < BLOQUEOS.length; i++) {
+    var b = BLOQUEOS[i];
+    if (b.fecha === fecha && (b.hora === null || b.hora === hora || b.hora === undefined)) return true;
+  }
+  return false;
+}
+function generarHoras(inicio, fin) {
+  var horas = [];
+  var h = inicio.split(":");
+  var f = fin.split(":");
+  var actual = parseInt(h[0]) * 60 + parseInt(h[1]);
+  var limite = parseInt(f[0]) * 60 + parseInt(f[1]);
+  while (actual < limite) {
+    var hh = String(Math.floor(actual / 60)).padStart(2, "0");
+    var mm = String(actual % 60).padStart(2, "0");
+    horas.push(hh + ":" + mm);
+    actual += 30;
+  }
+  return horas;
+}
 function buildFechas() {
-  const cont = document.getElementById("fechas");
-  const MESES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
-  const DIAS = ["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
-  const hoy = new Date();
+  var cont = document.getElementById("fechas");
+  cont.innerHTML = "";
+  var MESES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+  var DIAS = ["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"];
+  var hoy = new Date();
   document.getElementById("mes-visible").textContent = MESES[hoy.getMonth()] + " " + hoy.getFullYear();
-  for (let i = 0; i < 7; i++) {
-    const d = new Date();
+  for (var i = 0; i < 7; i++) {
+    var d = new Date();
     d.setDate(hoy.getDate() + i);
-    const iso = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
-    const div = document.createElement("div");
-    div.className = "opt flex flex-col items-center justify-center w-16 h-20 rounded-md bg-surface-container-highest text-on-surface-variant hover:bg-surface-bright";
-    div.innerHTML = "<span class='font-label text-xs uppercase mb-1'>" + DIAS[d.getDay()] + "</span><span class='font-body text-xl font-semibold'>" + d.getDate() + "</span>";
-    div.dataset.fecha = iso;
-    div.onclick = function () {
-      document.querySelectorAll("#fechas .opt").forEach(o => o.classList.remove("opt-selected"));
-      this.classList.add("opt-selected");
-      seleccion.fecha = this.dataset.fecha;
-      buildHoras();
-      refrescar();
-    };
+    var iso = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+    var diaJS = d.getDay();
+    var diaSemana = (diaJS + 6) % 7;
+    var activo = esDiaActivo(diaSemana) && !estaBloqueada(iso, null);
+    var div = document.createElement("div");
+    div.className = "flex flex-col items-center justify-center w-16 h-20 rounded-md text-on-surface-variant " + (activo ? "bg-surface-container-highest hover:bg-surface-bright cursor-pointer opt" : "bg-surface-container opacity-40 cursor-not-allowed");
+    div.innerHTML = "<span class='font-label text-xs uppercase mb-1'>" + DIAS[diaSemana] + "</span><span class='font-body text-xl font-semibold'>" + d.getDate() + "</span>";
+    if (activo) {
+      div.dataset.fecha = iso;
+      div.dataset.diasemana = diaSemana;
+      div.onclick = (function() {
+        document.querySelectorAll("#fechas .opt").forEach(function(o) { o.classList.remove("opt-selected"); });
+        this.classList.add("opt-selected");
+        seleccion.fecha = this.dataset.fecha;
+        seleccion.diaSemana = parseInt(this.dataset.diasemana);
+        buildHoras();
+        refrescar();
+      });
+    }
     cont.appendChild(div);
   }
 }
 function buildHoras() {
-  const cont = document.getElementById("horas");
+  var cont = document.getElementById("horas");
   cont.innerHTML = "";
-  HORAS.forEach(h => {
-    const b = document.createElement("button");
+  if (!seleccion.fecha) return;
+  var h = getHorariosPeluqueria();
+  var horario = h[seleccion.diaSemana];
+  if (!horario || !horario.activo) return;
+  var horas = generarHoras(horario.inicio, horario.fin);
+  horas.forEach(function(h) {
+    var b = document.createElement("button");
     b.type = "button";
-    b.className = "py-3 rounded-md border border-outline-variant/20 text-on-surface-variant font-body text-sm hover:border-primary hover:text-primary transition-colors active:scale-95";
-    b.textContent = h;
-    b.onclick = function () {
-      document.querySelectorAll("#horas button").forEach(x => x.classList.remove("bg-primary","text-on-primary","border-primary","bg-primary/5"));
-      this.classList.add("bg-primary","text-on-primary","border-primary","bg-primary/5");
-      seleccion.hora = h;
-      refrescar();
-    };
+    var bloqueada = estaBloqueada(seleccion.fecha, h);
+    if (bloqueada) {
+      b.className = "py-3 rounded-md border border-outline-variant/20 text-on-surface-variant font-body text-sm opacity-40 cursor-not-allowed";
+      b.textContent = h + " (no disponible)";
+      b.disabled = true;
+    } else {
+      b.className = "py-3 rounded-md border border-outline-variant/20 text-on-surface-variant font-body text-sm hover:border-primary hover:text-primary transition-colors active:scale-95";
+      b.textContent = h;
+      b.onclick = function () {
+        document.querySelectorAll("#horas button").forEach(function(x) { x.classList.remove("bg-primary","text-on-primary","border-primary","bg-primary/5"); });
+        this.classList.add("bg-primary","text-on-primary","border-primary","bg-primary/5");
+        seleccion.hora = h;
+        refrescar();
+      };
+    }
     cont.appendChild(b);
   });
 }
