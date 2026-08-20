@@ -1,0 +1,60 @@
+{% extends "usuarios/dashboard_base.html" %}
+{% block title %}Horarios y bloqueos - TecnoCorte{% endblock %}
+{% block body_class %}font-body antialiased flex bg-surface{% endblock %}
+{% block content %}
+{% include "includes/admin_sidebar.html" with active="horarios" %}
+<main class="ml-64 flex-1 min-h-screen p-8 md:p-12 bg-surface">
+  <header class="mb-10">
+    <h1 class="font-headline text-4xl text-primary">Horarios de atención</h1>
+    <p class="text-on-surface-variant mt-2">Elige los días laborales y el horario en el que se pueden agendar citas.</p>
+  </header>
+
+  <section class="bg-surface-container-low rounded-xl p-6 mb-8">
+    <h2 class="font-headline text-2xl mb-5">Días de trabajo</h2>
+    <form method="post">{% csrf_token %}
+      <input type="hidden" name="accion" value="guardar_horarios">
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="text-on-surface-variant uppercase text-xs"><tr><th class="text-left pb-3">Día</th><th class="text-left pb-3">Se trabaja</th><th class="text-left pb-3">Desde</th><th class="text-left pb-3">Hasta</th></tr></thead>
+          <tbody>
+            {% for horario in horarios %}
+            <tr class="border-t border-outline-variant/20">
+              <td class="py-4 font-semibold">{{ horario.get_dia_semana_display }}</td>
+              <td><input type="checkbox" name="activo_{{ horario.dia_semana }}" {% if horario.activo %}checked{% endif %} class="rounded text-primary focus:ring-primary"></td>
+              <td><input type="time" name="inicio_{{ horario.dia_semana }}" value="{{ horario.hora_inicio|time:'H:i' }}" class="bg-surface-container-high border-0 rounded px-3 py-2 text-on-surface"></td>
+              <td><input type="time" name="fin_{{ horario.dia_semana }}" value="{{ horario.hora_fin|time:'H:i' }}" class="bg-surface-container-high border-0 rounded px-3 py-2 text-on-surface"></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <button class="mt-6 btn-gold-gradient font-bold px-5 py-3 rounded-md" type="submit">Guardar horarios</button>
+    </form>
+  </section>
+
+  <section class="grid lg:grid-cols-2 gap-8">
+    <div class="bg-surface-container-low rounded-xl p-6">
+      <h2 class="font-headline text-2xl mb-2">Bloquear fecha u hora</h2>
+      <p class="text-on-surface-variant text-sm mb-5">Si dejas la hora vacía, se bloquea el día completo.</p>
+      <form method="post" class="space-y-4">{% csrf_token %}
+        <input type="hidden" name="accion" value="crear_bloqueo">
+        <input required min="{{ hoy|date:'Y-m-d' }}" type="date" name="fecha" class="w-full bg-surface-container-high border-0 rounded px-3 py-3 text-on-surface">
+        <input type="time" name="hora" class="w-full bg-surface-container-high border-0 rounded px-3 py-3 text-on-surface">
+        <input type="text" name="motivo" placeholder="Motivo (opcional)" class="w-full bg-surface-container-high border-0 rounded px-3 py-3 text-on-surface">
+        <button class="border border-primary text-primary font-bold px-5 py-3 rounded-md hover:bg-primary hover:text-on-primary" type="submit">Bloquear</button>
+      </form>
+    </div>
+    <div class="bg-surface-container-low rounded-xl p-6">
+      <h2 class="font-headline text-2xl mb-5">Bloqueos programados</h2>
+      <div class="space-y-3">
+        {% for bloqueo in bloqueos %}
+        <div class="flex justify-between items-center bg-surface-container-high p-3 rounded">
+          <div><strong>{{ bloqueo.fecha|date:'d/m/Y' }}</strong>{% if bloqueo.hora %} · {{ bloqueo.hora|time:'H:i' }}{% else %} · Día completo{% endif %}<p class="text-xs text-on-surface-variant">{{ bloqueo.motivo|default:'Sin motivo' }}</p></div>
+          <form method="post" action="{% url 'sena:admin_eliminar_bloqueo' bloqueo.id %}">{% csrf_token %}<button type="submit" class="text-error text-sm" onclick="return confirm('¿Quitar este bloqueo?')">Quitar</button></form>
+        </div>
+        {% empty %}<p class="text-on-surface-variant">No hay bloqueos registrados.</p>{% endfor %}
+      </div>
+    </div>
+  </section>
+</main>
+{% endblock %}

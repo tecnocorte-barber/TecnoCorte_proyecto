@@ -1,0 +1,114 @@
+{% extends "usuarios/dashboard_base.html" %}
+
+{% block content %}
+<div class="w-full">
+    {% include "includes/admin_sidebar.html" with active="usuarios" %}
+    
+    <div class="lg:ml-64 p-4 lg:p-8 bg-gray-950">
+        <!-- Encabezado -->
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8 gap-4">
+            <div>
+                <h1 class="text-3xl lg:text-4xl font-bold text-white mb-2">Gestión de Usuarios</h1>
+                <p class="text-gray-400">Administra todos los usuarios del sistema</p>
+            </div>
+            <a href="{% url 'sena:admin_crear_usuario' %}" 
+               class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition duration-200 self-start lg:self-auto">
+                + Crear Usuario
+            </a>
+        </div>
+
+        <!-- Estadísticas -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <div class="bg-gray-800 border border-gray-700 rounded-lg p-4">
+                <p class="text-gray-400 text-sm font-medium mb-1">Total Usuarios</p>
+                <p class="text-3xl font-bold text-white">{{ total_usuarios }}</p>
+            </div>
+            <div class="bg-gray-800 border border-gray-700 rounded-lg p-4">
+                <p class="text-gray-400 text-sm font-medium mb-1">Administradores</p>
+                <p class="text-3xl font-bold text-red-400">{{ total_admin }}</p>
+            </div>
+            <div class="bg-gray-800 border border-gray-700 rounded-lg p-4">
+                <p class="text-gray-400 text-sm font-medium mb-1">Clientes</p>
+                <p class="text-3xl font-bold text-blue-400">{{ total_clientes }}</p>
+            </div>
+            <div class="bg-gray-800 border border-gray-700 rounded-lg p-4">
+                <p class="text-gray-400 text-sm font-medium mb-1">Barberos</p>
+                <p class="text-3xl font-bold text-green-400">{{ total_peluqueros }}</p>
+            </div>
+        </div>
+
+        <!-- Tabla de usuarios -->
+        <div class="bg-gray-800 border border-gray-700 rounded-lg overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="bg-gray-900 border-b border-gray-700">
+                            <th class="px-4 py-3 text-left font-semibold text-gray-300">Nombre</th>
+                            <th class="px-4 py-3 text-left font-semibold text-gray-300">Email</th>
+                            <th class="px-4 py-3 text-left font-semibold text-gray-300">Teléfono</th>
+                            <th class="px-4 py-3 text-center font-semibold text-gray-300">Rol</th>
+                            <th class="px-4 py-3 text-left font-semibold text-gray-300">Creado</th>
+                            <th class="px-4 py-3 text-center font-semibold text-gray-300">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for usuario in usuarios %}
+                        <tr class="border-b border-gray-700 hover:bg-gray-750 transition duration-150">
+                            <td class="px-4 py-3 text-white font-medium">
+                                {{ usuario.nombre }} {{ usuario.apellido }}
+                            </td>
+                            <td class="px-4 py-3 text-gray-300">{{ usuario.email }}</td>
+                            <td class="px-4 py-3 text-gray-300">{{ usuario.telefono|default:"N/A" }}</td>
+                            <td class="px-4 py-3 text-center">
+                                {% if usuario.rol == 'Admin' %}
+                                    <span class="bg-red-900 text-red-200 px-3 py-1 rounded-full text-xs font-semibold">
+                                        ADMIN
+                                    </span>
+                                {% elif usuario.rol == 'Barbero' %}
+                                    <span class="bg-green-900 text-green-200 px-3 py-1 rounded-full text-xs font-semibold">
+                                        BARBERO
+                                    </span>
+                                {% else %}
+                                    <span class="bg-blue-900 text-blue-200 px-3 py-1 rounded-full text-xs font-semibold">
+                                        CLIENTE
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td class="px-4 py-3 text-gray-400 text-xs">
+                                {{ usuario.fecha_creacion|date:"d/m/Y H:i" }}
+                            </td>
+                            <td class="px-4 py-3 text-center">
+                                <div class="flex gap-2 justify-center flex-wrap">
+                                    <a href="{% url 'sena:admin_editar_usuario' usuario.id %}" 
+                                       class="bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-1 rounded text-xs font-semibold transition duration-150">
+                                        Editar
+                                    </a>
+                                    <a href="{% url 'sena:admin_eliminar_usuario' usuario.id %}" 
+                                       onclick="return confirm('¿Eliminar este usuario?');"
+                                       class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs font-semibold transition duration-150">
+                                        Eliminar
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="px-4 py-8 text-center text-gray-400">
+                                No hay usuarios registrados
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Total de registros -->
+        <div class="mt-4 text-gray-400 text-sm">
+            Total: <span class="text-white font-semibold">{{ total_usuarios }}</span> usuario(s)
+        </div>
+    </div>
+</div>
+
+{% include "includes/tema.html" %}
+{% endblock %}

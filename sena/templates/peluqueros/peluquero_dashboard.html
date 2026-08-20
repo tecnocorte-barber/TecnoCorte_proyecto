@@ -1,0 +1,140 @@
+{% extends "usuarios/dashboard_base.html" %}
+{% block title %}TecnoCorte - Panel de Barbero{% endblock %}
+{% block body_class %}antialiased min-h-screen flex bg-background text-on-surface{% endblock %}
+{% block content %}
+{% include "includes/peluquero_sidebar.html" with active="inicio" %}
+<!-- Main Content Area -->
+<main class="flex-1 md:ml-72 flex flex-col min-h-screen relative bg-background"><!-- TopAppBar -->
+  <header class="glass-header sticky top-0 z-40 flex justify-between items-center w-full px-6 md:px-12 py-4">
+    <h1 class="font-headline font-medium text-xl text-primary md:hidden">TecnoCorte
+    </h1>
+    <div class="hidden md:block">
+    </div>
+    <!-- Spacer for desktop -->
+    <div class="flex items-center gap-6"><a href="{% url 'sena:peluquero_dashboard' %}" class="text-on-surface-variant hover:text-primary transition-opacity cursor-pointer active:opacity-80" title="Notificaciones"><span class="material-symbols-outlined">notifications</span>
+  </a><a href="{% url 'sena:peluquero_perfil' %}" class="text-on-surface-variant hover:text-primary transition-opacity cursor-pointer active:opacity-80" title="Mi perfil"><span class="material-symbols-outlined">account_balance_wallet</span>
+</a>
+<div class="md:hidden w-8 h-8 rounded-full overflow-hidden border border-primary-container">
+  <img alt="Avatar del Barbero" class="w-full h-full object-cover" data-alt="Foto de perfil" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAehRxT2rMZGjO9fod7lxqsB04aND3_tH_T4egaLxW6ulNLsiFWtQxJtNaHAVg36lnamtzy1xAt5gqC11sWpTXjKIa5A-J2_oOs5_0vkG4pSrJG6SuklZBayfdFx1HReGEGI90xBGEMPqHj_3hg8ka20z_EB5JyFX3sXN6NHlCO9WbtW-u-qW_9n1eG58JwkuZWNbVmFfJuJrVopWKFrndV7MBmTrZzH75t_1nrXhNHUUzhZN4Ugzf40LLFGoHHaoxXaNBgzY_P0m2q"/>
+</div>
+</div>
+</header>
+<div class="p-6 md:p-12 space-y-16 max-w-7xl mx-auto w-full"><!-- Hero Header -->
+  <section class="flex flex-col md:flex-row justify-between items-end gap-6 border-b border-surface-container-low pb-8">
+    <div>
+      <h2 class="font-headline text-4xl md:text-5xl text-on-surface tracking-tight mb-2">Buen día, 
+        <span class="text-primary italic">{{ request.session.logueado.nombre }}.</span>
+    </h2>
+    <p class="font-body text-body-lg text-on-surface-variant">Resumen de tus citas para hoy.
+    </p>
+  </div>
+  <div class="text-right">
+    <p class="font-label uppercase tracking-widest text-label-sm text-on-surface-variant mb-1">Calificación
+    </p>
+    <div class="flex items-center justify-end gap-2"><span class="font-headline text-3xl text-primary font-bold">4.9</span><span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">star</span>
+</div>
+</div>
+</section>
+<!-- Bento Grid Metrics -->
+<section class="grid grid-cols-1 md:grid-cols-3 gap-6"><!-- Today's Earnings -->
+  <div class="bg-surface-container-low p-8 rounded-lg ambient-glow relative overflow-hidden group">
+    <div class="absolute -right-6 -top-6 text-primary/5 group-hover:text-primary/10 transition-colors duration-500"><span class="material-symbols-outlined text-[8rem]" style="font-variation-settings: 'FILL' 1;">payments</span>
+  </div>
+  <h3 class="font-label uppercase tracking-widest text-label-sm text-on-surface-variant mb-6">Ingresos Hoy
+  </h3>
+  <p class="font-headline text-4xl text-on-surface font-bold mb-2">$420.000 
+    <span class="text-lg text-on-surface-variant font-normal">COP</span>
+</p>
+<p class="font-body text-sm text-primary flex items-center gap-1"><span class="material-symbols-outlined text-sm">trending_up</span> +15% vs ayer
+
+</p>
+</div>
+<!-- Appointments -->
+<div class="bg-surface-container-low p-8 rounded-lg ambient-glow relative overflow-hidden group md:col-span-2">
+  <div class="absolute -right-6 -top-6 text-primary/5 group-hover:text-primary/10 transition-colors duration-500"><span class="material-symbols-outlined text-[8rem]" style="font-variation-settings: 'FILL' 1;">calendar_month</span>
+</div>
+<div class="flex justify-between items-start mb-6">
+  <h3 class="font-label uppercase tracking-widest text-label-sm text-on-surface-variant">Próximas Citas
+  </h3>
+  <!-- <a class="font-label text-primary text-sm uppercase tracking-widest hover:opacity-80 transition-opacity" href="#">Ver todas</a> -->
+</div>
+<div class="space-y-6">{% for cita in citas %}
+  <div class="flex items-center justify-between group/item">
+    <div class="flex items-center gap-4">
+      <div class="w-12 h-12 rounded-full overflow-hidden border border-outline-variant/30 flex items-center justify-center bg-surface-container-high"><span class="material-symbols-outlined text-primary">person</span>
+    </div>
+    <div>
+      <h4 class="font-body text-lg text-on-surface font-semibold group-hover/item:text-primary transition-colors">{{ cita.cliente.nombre }}
+      </h4>
+      <p class="font-body text-sm text-on-surface-variant">{{ cita.servicio }} · 
+        {{ cita.peluqueria.nombre }}
+      </p>
+    </div>
+  </div>
+  <div class="text-right">
+    <p class="font-headline text-xl text-primary font-bold">{{ cita.hora|time:"H:i" }}
+    </p>
+    <p class="font-label uppercase tracking-widest text-[0.65rem] text-on-surface-variant">{{ cita.fecha|date:"d M" }} · 
+      {{ cita.estado }}
+    </p>
+  </div>
+</div>
+{% if not forloop.last %}
+<div class="h-px w-full bg-surface-container-high">
+</div>
+{% endif %}{% empty %}
+<p class="font-body text-on-surface-variant">No tienes citas registradas.
+</p>
+{% endfor %}
+</div>
+</div>
+</div>
+</section>
+<!-- Signature Divider -->
+<div class="flex justify-center items-center h-12">
+  <div class="w-1 h-1 rounded-full bg-primary-container">
+  </div>
+</div>
+<!-- Recent Portfolio Gallery -->
+<section>
+  <div class="flex justify-between items-end mb-8">
+    <div>
+      <h3 class="font-headline text-3xl text-on-surface tracking-tight mb-2">Tu Obra Reciente
+      </h3>
+      <p class="font-body text-on-surface-variant">Últimos cortes añadidos al portafolio.
+      </p>
+    </div>
+    <button class="text-primary font-label uppercase tracking-widest text-sm hover:opacity-80 transition-opacity flex items-center gap-2">
+Galería 
+      <span class="material-symbols-outlined text-sm">add_a_photo</span>
+  </button>
+</div>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4"><!-- Gallery Item 1 -->
+  <div class="aspect-[3/4] rounded-lg overflow-hidden relative group cursor-pointer">
+    <img class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" data-alt="Corte degradado" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBfXImOoRddLvLwFRu5vu6rLeMGEAsABU4uP6YViiSFkWcOl8NlztzXWJzqtWmiInW-_BIycGJ6_tQySdvTQutzDXklQ--uTO4AbMkUPPhS9UGka7EHrT8QrXfOgmRqRMfGVMEnHqf1_0apPdzDaBs0vHHsf_0Z-zkKpIjRyYL76k7oCgZCjYSsQxBVmOu0vnnqgOoSEml4Zw8kcxIjFnRKCuuHArzA-OOMTi-JsdXK9RdcvRBk-ktaSU9a71aL5sePtBHbqh2MN5pS"/>
+    <div class="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4"><span class="font-label uppercase tracking-widest text-xs text-primary">Degradado</span>
+  </div>
+</div>
+<!-- Gallery Item 2 -->
+<div class="aspect-[3/4] rounded-lg overflow-hidden relative group cursor-pointer">
+  <img class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" data-alt="Barba bien cuidada" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDCWMeUC8dbkf0zLwbDbCqOvCFxU7FAK9uwudtE7_gVJGl-ORVP1CMO8KXZaPUUhdWSamX2B_FEbQZhwP4KPWIjy1iQo-QaDXFiqAckOlKu2B9I9Gy00WV82ORRiBlQZYxTLPVWAkiobJqJ1pYmiHW_VpnGX4eCOhZX8cdbp_mommb0xmgEmnp0ygPIvTNpJkhvP1D1iaNIwg-R2UCRbCn_v0g2aJ0YiVe8C54WKjgx2k7zw770K_ZYeRND0djDccUMW4BS06bJ02Ao"/>
+  <div class="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4"><span class="font-label uppercase tracking-widest text-xs text-primary">Diseño de Barba</span>
+</div>
+</div>
+<!-- Gallery Item 3 -->
+<div class="aspect-[3/4] rounded-lg overflow-hidden relative group cursor-pointer hidden md:block">
+  <img class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" data-alt="Máquina de cortar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDV4V20qKBbPC3gvzmY5qaFKdlP_nPl-xuf3vzwBh92JkcpcSaSXIjXH6KjC3xVEBsutCM_bRmcoEcM3KHekS9v6So13OfKDk5o37pH47APy3EsRTn0aKii4hy4kr6kXKPhrh4LWHFzaJXRAT5teVSzq8_0GxJJiFlv3RG64WKTLHnfGTyBXujlXexyM2L_bt9Ev2yTY1kF1Kh0VLJNhbGlRRqfKKD4vI29AtA1ghbTWLYHSU44w0fffPErB72MF6z9ZeH_VdjLPU05"/>
+  <div class="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4"><span class="font-label uppercase tracking-widest text-xs text-primary">Herramientas</span>
+</div>
+</div>
+<!-- Gallery Item 4 -->
+<div class="aspect-[3/4] rounded-lg overflow-hidden relative group cursor-pointer hidden md:block bg-surface-container-low flex flex-col justify-center items-center border border-outline-variant/20 hover:border-primary/50 transition-colors duration-300"><span class="material-symbols-outlined text-4xl text-primary/50 mb-2">photo_library</span><span class="font-label uppercase tracking-widest text-xs text-on-surface-variant">Ver Galería Completa</span>
+</div>
+</div>
+</section>
+<div class="h-24">
+</div>
+<!-- Bottom spacing -->
+</div>
+</main>
+{% endblock %}

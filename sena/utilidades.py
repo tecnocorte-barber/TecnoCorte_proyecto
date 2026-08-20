@@ -1,4 +1,5 @@
 from django.shortcuts import redirect
+from django.urls import reverse
 from functools import wraps
 
 def autorizacion(roles=[]):
@@ -6,7 +7,9 @@ def autorizacion(roles=[]):
         @wraps(vista)
         def envoltorio(request, *args, **kwargs):
             if not request.session.get("logueado"):
-                return redirect("sena:login")
+                # Redirigir a login con el parámetro next para volver después
+                login_url = reverse("sena:login")
+                return redirect(f"{login_url}?next={request.path_info}")
             
             if roles:
                 rol = request.session["logueado"]["rol"]

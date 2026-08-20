@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html class="dark" lang="es">
+  <head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Contactos / Ayuda - TecnoCorte</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Noto+Serif:wght@400;700;900&display=swap" rel="stylesheet"/>
+    {% include "includes/tema.html" %}
+    <style>
+      .glass-nav { background: rgba(19, 19, 19, 0.7); backdrop-filter: blur(20px); }
+      .gold-gradient { background: linear-gradient(135deg, #f2ca50 0%, #d4af37 100%); }
+      .ambient-glow { box-shadow: 0 20px 40px rgba(242, 202, 80, 0.06); }
+      .ghost-border { border: 1px solid rgba(77, 70, 53, 0.15); }
+    </style>
+  </head>
+  <body class="flex min-h-screen flex-col bg-surface font-body text-on-surface antialiased">
+    <nav class="glass-nav fixed top-0 z-50 w-full shadow-[0_20px_40px_rgba(242,202,80,0.06)]">
+      <div class="mx-auto flex w-full max-w-full items-center justify-between px-8 py-4">
+        <div class="font-headline text-2xl font-bold text-primary-container"><a href="{% url 'sena:inicio' %}">TecnoCorte</a></div>
+        <nav class="hidden items-center gap-8 text-sm font-display uppercase tracking-widest text-on-surface md:flex">
+          <a class="text-on-surface-variant transition-all duration-300 hover:text-primary" href="{% url 'sena:inicio' %}">Inicio</a>
+          <a class="text-on-surface-variant transition-all duration-300 hover:text-primary" href="{% url 'sena:usuario_servicios' %}">Servicios</a>
+          <a class="text-on-surface-variant transition-all duration-300 hover:text-primary" href="{% url 'sena:usuario_tienda' %}">Tienda</a>
+          <a class="text-on-surface-variant transition-all duration-300 hover:text-primary" href="{% url 'sena:usuario_peluquerias' %}">Barberías</a>
+          <a class="border-b-2 border-primary pb-1 text-primary" href="{% url 'sena:ayuda' %}">Contactos</a>
+        </nav>
+        <div class="flex items-center gap-5">
+          <a href="{% url 'sena:carrito' %}" class="relative text-primary transition-all duration-300 hover:text-primary-container active:scale-90" title="Carrito">
+            <span class="material-symbols-outlined">shopping_bag</span>
+            {% if cantidad %}
+              <span class="absolute -right-2 -top-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-on-primary">{{ cantidad }}</span>
+            {% endif %}
+          </a>
+          {% if request.session.logueado %}
+            <a href="{% url 'sena:usuario_perfil' %}" class="text-sm font-bold uppercase tracking-widest text-on-surface-variant transition-colors hover:text-primary">Perfil</a>
+          {% else %}
+            <a href="{% url 'sena:login' %}" class="text-sm font-bold uppercase tracking-widest text-on-surface-variant transition-colors hover:text-primary">Ingresar</a>
+          {% endif %}
+        </div>
+      </div>
+    </nav>
+
+    <main class="mx-auto flex w-full max-w-4xl flex-grow px-6 pb-24 pt-36 md:px-12">
+      <div class="w-full">
+        <header class="mb-16 text-center">
+          <h1 class="mb-4 font-headline text-5xl tracking-tight text-primary-container md:text-6xl">Contactos</h1>
+          <p class="text-lg text-on-surface-variant">¿Necesitas ayuda? Escríbenos y con gusto te atendemos.</p>
+          <div class="mt-4 flex h-12 items-center justify-center">
+            <div class="h-1 w-1 rounded-full bg-primary-container"></div>
+          </div>
+        </header>
+
+        <div class="mb-12 grid grid-cols-1 gap-6 md:grid-cols-3">
+          <div class="rounded-[24px] bg-surface-container-low p-8 text-center ambient-glow ghost-border transition-colors hover:bg-surface-container"><span class="material-symbols-outlined mb-4 text-4xl text-primary" style="font-variation-settings: 'FILL' 1;">call</span>
+            <h3 class="mb-2 font-headline text-xl">Teléfono</h3>
+            <p class="text-on-surface-variant">+57 300 123 4567</p>
+          </div>
+          <div class="rounded-[24px] bg-surface-container-low p-8 text-center ambient-glow ghost-border transition-colors hover:bg-surface-container"><span class="material-symbols-outlined mb-4 text-4xl text-primary" style="font-variation-settings: 'FILL' 1;">mail</span>
+            <h3 class="mb-2 font-headline text-xl">Correo</h3>
+            <p class="text-on-surface-variant">contacto@tecnocorte.com</p>
+          </div>
+          <div class="rounded-[24px] bg-surface-container-low p-8 text-center ambient-glow ghost-border transition-colors hover:bg-surface-container"><span class="material-symbols-outlined mb-4 text-4xl text-primary" style="font-variation-settings: 'FILL' 1;">location_on</span>
+            <h3 class="mb-2 font-headline text-xl">Dirección</h3>
+            <p class="text-on-surface-variant">Zona SENA, Itagüí</p>
+          </div>
+        </div>
+
+        {% if exito %}<div class="mb-6 rounded-lg border border-primary/40 bg-primary/10 p-4 text-primary">{{ exito }}</div>{% endif %}
+        {% if error %}<div class="mb-6 rounded-lg border border-error/40 bg-error-container/20 p-4 text-error">{{ error }}</div>{% endif %}
+
+        <section class="mb-8 rounded-[28px] bg-surface-container-low p-8 md:p-12 ambient-glow ghost-border">
+          <h2 class="mb-2 font-headline text-2xl text-primary-container">Envíanos un mensaje</h2>
+          <p class="mb-6 text-on-surface-variant">El administrador recibirá tu consulta en el panel.</p>
+          <form method="post" class="grid gap-4">{% csrf_token %}
+            <div class="grid gap-4 md:grid-cols-2">
+              <input required name="nombre" placeholder="Tu nombre" class="rounded-md border-0 bg-surface-container-high p-3 text-on-surface focus:outline-none"/>
+              <input required type="email" name="email" placeholder="Tu correo" class="rounded-md border-0 bg-surface-container-high p-3 text-on-surface focus:outline-none"/>
+            </div>
+            <input required name="asunto" placeholder="Asunto" class="rounded-md border-0 bg-surface-container-high p-3 text-on-surface focus:outline-none"/>
+            <textarea required name="mensaje" rows="5" placeholder="Escribe tu mensaje" class="rounded-md border-0 bg-surface-container-high p-3 text-on-surface focus:outline-none"></textarea>
+            <button class="gold-gradient w-full rounded-md py-3 font-bold uppercase tracking-widest text-on-primary md:w-auto md:px-8" type="submit">Enviar mensaje</button>
+          </form>
+        </section>
+
+        <div class="rounded-[28px] bg-surface-container-low p-8 md:p-12 ambient-glow ghost-border">
+          <h2 class="mb-6 font-headline text-2xl text-primary-container">Preguntas frecuentes</h2>
+          <div class="space-y-4">
+            <div class="rounded-lg border border-outline-variant/15 p-5">
+              <h3 class="mb-1 font-semibold text-on-surface">¿Cómo reservo una cita?</h3>
+              <p class="text-sm text-on-surface-variant">Inicia sesión como cliente, entra a “Reservar”, elige servicio, barbero, barbería, fecha y hora, y confirma.</p>
+            </div>
+            <div class="rounded-lg border border-outline-variant/15 p-5">
+              <h3 class="mb-1 font-semibold text-on-surface">¿Puedo comprar sin registrarme?</h3>
+              <p class="text-sm text-on-surface-variant">Sí. Agrega productos al carrito y, al finalizar la compra, te pediremos iniciar sesión o registrarte.</p>
+            </div>
+            <div class="rounded-lg border border-outline-variant/15 p-5">
+              <h3 class="mb-1 font-semibold text-on-surface">¿Dónde puedo ver mis citas y pedidos?</h3>
+              <p class="text-sm text-on-surface-variant">En tu perfil. Allí aparecen las citas reservadas y los pedidos realizados.</p>
+            </div>
+          </div>
+          <div class="mt-10 text-center">
+            <a href="{% url 'sena:inicio' %}" class="inline-flex justify-center rounded-md px-8 py-3 text-sm font-bold uppercase tracking-widest text-on-primary gold-gradient transition-all active:scale-95">Volver al inicio</a>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="flex w-full flex-col items-center gap-8 border-t border-outline-variant/10 bg-surface-container-lowest px-8 pb-8 pt-16">
+      <div class="font-headline text-xl text-primary">TecnoCorte</div>
+      <p class="text-center text-sm text-on-surface-variant opacity-70">© 2026 TecnoCorte. Todos los derechos reservados.</p>
+    </footer>
+  </body>
+</html>

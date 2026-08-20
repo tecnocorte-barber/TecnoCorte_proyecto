@@ -3,7 +3,7 @@ from django.db import models
 class Usuario(models.Model):
     ROLES = (
         ("Admin", "ADMINISTRADOR"),
-        ("Peluquero", "PELUQUERO"),
+        ("Barbero", "BARBERO"),
         ("Cliente", "CLIENTE"),
     )
     
@@ -49,6 +49,7 @@ class Reserva(models.Model):
     ESTADOS = (
         ("Pendiente", "Pendiente"),
         ("Confirmada", "Confirmada"),
+        ("Completada", "Completada"),
         ("Cancelada", "Cancelada"),
     )
 
@@ -106,3 +107,49 @@ class Notificacion(models.Model):
 
     def __str__(self):
         return f"Notificacion {self.id} - {self.usuario.nombre}"
+
+
+class HorarioTrabajo(models.Model):
+    """Horario general que configura el administrador para cada día."""
+    DIAS = (
+        (0, "Lunes"), (1, "Martes"), (2, "Miércoles"),
+        (3, "Jueves"), (4, "Viernes"), (5, "Sábado"), (6, "Domingo"),
+    )
+
+    dia_semana = models.PositiveSmallIntegerField(choices=DIAS, unique=True)
+    activo = models.BooleanField(default=True)
+    hora_inicio = models.TimeField(default="09:00")
+    hora_fin = models.TimeField(default="18:00")
+
+    def __str__(self):
+        return self.get_dia_semana_display()
+
+
+class BloqueoHorario(models.Model):
+    """Bloquea un día completo o una hora específica para las citas."""
+    fecha = models.DateField()
+    hora = models.TimeField(null=True, blank=True)
+    motivo = models.CharField(max_length=150, blank=True)
+
+    class Meta:
+        ordering = ["fecha", "hora"]
+
+    def __str__(self):
+        if self.hora:
+            return f"{self.fecha} {self.hora}"
+        return f"{self.fecha} (todo el día)"
+
+
+class MensajeContacto(models.Model):
+    nombre = models.CharField(max_length=100)
+    email = models.EmailField()
+    asunto = models.CharField(max_length=150)
+    mensaje = models.TextField()
+    fecha = models.DateTimeField(auto_now_add=True)
+    leido = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ["-fecha"]
+
+    def __str__(self):
+        return f"{self.asunto} - {self.nombre}"

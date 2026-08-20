@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html class="dark" lang="es">
+  <head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Confirmar Reserva - TecnoCorte
+    </title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&amp;family=Noto+Serif:ital,wght@0,400;0,700;1,400&amp;display=swap" rel="stylesheet"/>
+    {% include "includes/tema.html" %}
+    <style>
+.glass-nav { background: rgba(19, 19, 19, 0.7); backdrop-filter: blur(20px); }
+.gold-gradient { background: linear-gradient(135deg, #f2ca50 0%, #d4af37 100%); }
+.ambient-glow { box-shadow: 0 20px 40px rgba(242, 202, 80, 0.06); }
+.ghost-border { border: 1px solid rgba(77, 70, 53, 0.15); }
+</style>
+  </head>
+  <body class="bg-surface text-on-surface font-body antialiased min-h-screen flex flex-col">
+    <nav class="fixed top-0 w-full z-50 glass-nav shadow-[0_20px_40px_rgba(242,202,80,0.06)]">
+      <div class="flex justify-between items-center w-full px-8 py-4 max-w-full mx-auto">
+        <div class="font-headline text-2xl font-bold text-primary-container"><a href="{% url 'sena:usuario_dashboard' %}">TecnoCorte</a>
+      </div>
+      <ul class="hidden md:flex items-center gap-8 font-display text-on-surface uppercase tracking-widest text-sm">
+        <li><a class="text-on-surface-variant hover:text-primary transition-colors duration-300 active:scale-95" href="{% url 'sena:usuario_dashboard' %}">Inicio</a>
+      </li>
+      <li><a class="text-primary border-b-2 border-primary pb-1" href="{% url 'sena:usuario_reservar_cita' %}">Reservar</a>
+    </li>
+    <li><a class="text-on-surface-variant hover:text-primary transition-colors duration-300 active:scale-95" href="{% url 'sena:usuario_tienda' %}">Tienda</a>
+  </li>
+  <li><a class="text-on-surface-variant hover:text-primary transition-colors duration-300 active:scale-95" href="{% url 'sena:usuario_peluquerias' %}">Peluquerías</a>
+</li>
+<li><a class="text-on-surface-variant hover:text-primary transition-colors duration-300 active:scale-95" href="{% url 'sena:ayuda' %}">Contactos</a>
+</li>
+</ul>
+<div class="flex items-center gap-4 text-primary"><a href="{% url 'sena:carrito' %}" class="relative hover:text-primary-container transition-all duration-300 active:scale-90" title="Carrito"><span class="material-symbols-outlined">shopping_bag</span>{% if cantidad %}<span class="absolute -top-2 -right-2 min-w-5 h-5 px-1 rounded-full bg-primary text-on-primary text-[10px] font-bold flex items-center justify-center">{{ cantidad }}
+</span>{% endif %}
+</a><a href="{% url 'sena:usuario_perfil' %}" class="hover:text-primary-container transition-all duration-300 active:scale-90" title="Perfil"><span class="material-symbols-outlined">account_circle</span>
+</a>
+</div>
+</div>
+</nav>
+<main class="flex-grow pt-32 pb-24 px-8 max-w-3xl mx-auto w-full">
+  <header class="mb-12 text-center">
+    <h1 class="font-headline text-5xl md:text-6xl text-primary-container tracking-tight mb-4">Confirmar Reserva
+    </h1>
+    <p class="text-on-surface-variant text-lg font-body">Revisa los datos de tu cita antes de confirmar.
+    </p>
+    <div class="h-12 w-full flex justify-center items-center mt-4">
+      <div class="w-1 h-1 rounded-full bg-primary-container">
+      </div>
+    </div>
+  </header>
+  <div class="bg-surface-container-low rounded-xl p-8 md:p-12 ambient-glow ghost-border">
+    <div class="flex flex-col gap-7">
+      <div class="flex justify-between items-start">
+        <div><span class="font-label text-xs uppercase text-on-surface-variant tracking-widest block mb-1">Servicio</span><span class="font-headline text-2xl text-on-surface">{{ datos.servicio }}
+      </span>
+    </div>
+    <span class="material-symbols-outlined text-primary text-3xl" style="font-variation-settings: 'FILL' 1;">content_cut</span>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-7">
+  <div><span class="font-label text-xs uppercase text-on-surface-variant tracking-widest block mb-1">Barbero</span><span class="font-body text-lg text-on-surface">{{ datos.peluquero.nombre }} 
+  {{ datos.peluquero.apellido }}
+</span>
+</div>
+<div><span class="font-label text-xs uppercase text-on-surface-variant tracking-widest block mb-1">Peluquería</span><span class="font-body text-lg text-on-surface">{{ datos.peluqueria.nombre }}
+</span>
+</div>
+<div><span class="font-label text-xs uppercase text-on-surface-variant tracking-widest block mb-1">Fecha</span><span class="font-body text-lg text-on-surface">{{ datos.fecha }}
+</span>
+</div>
+<div><span class="font-label text-xs uppercase text-on-surface-variant tracking-widest block mb-1">Hora</span><span class="font-body text-lg text-on-surface">{{ datos.hora }}
+</span>
+</div>
+<div><span class="font-label text-xs uppercase text-on-surface-variant tracking-widest block mb-1">Duración estimada</span><span class="font-body text-lg text-on-surface">{{ datos.duracion }} minutos</span></div>
+</div>
+</div>
+<form method="post" action="{% url 'sena:usuario_confirmar_reserva' %}" class="mt-10 border-t border-outline-variant/20 pt-8 space-y-6">
+  {% csrf_token %}
+  <input type="hidden" name="servicio" value="{{ datos.servicio }}"/>
+  <input type="hidden" name="peluquero" value="{{ datos.peluquero.id }}"/>
+  <input type="hidden" name="peluqueria" value="{{ datos.peluqueria.id }}"/>
+  <input type="hidden" name="fecha" value="{{ datos.fecha }}"/>
+  <input type="hidden" name="hora" value="{{ datos.hora }}"/>
+  <p class="text-xs text-on-surface-variant opacity-70">El pago se realiza en el local.
+  </p>
+  <button type="submit" class="w-full inline-flex justify-center py-4 rounded-md gold-gradient text-on-primary font-bold text-lg hover:opacity-90 transition-all duration-300 active:scale-[0.98]">Confirmar Reserva
+  </button>
+  <a href="{% url 'sena:usuario_reservar_cita' %}" class="w-full inline-flex justify-center py-3 rounded-md border border-outline-variant/30 text-primary hover:border-primary transition-colors text-sm font-semibold uppercase tracking-widest active:scale-95">Volver a elegir</a>
+</form>
+</div>
+</main>
+</body>
+</html>
