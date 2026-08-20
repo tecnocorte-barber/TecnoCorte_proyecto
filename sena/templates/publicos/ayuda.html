@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html class="dark" lang="es">
+<html lang="es">
 
 <head>
   <meta charset="utf-8" />
@@ -14,7 +14,7 @@
   {% include "includes/tema.html" %}
   <style>
     .glass-nav {
-      background: rgba(19, 19, 19, 0.7);
+      background: var(--glass-bg);
       backdrop-filter: blur(20px);
     }
 
@@ -27,48 +27,13 @@
     }
 
     .ghost-border {
-      border: 1px solid rgba(77, 70, 53, 0.15);
+      border: 1px solid var(--c-outline-variant);
     }
   </style>
 </head>
 
 <body class="flex min-h-screen flex-col bg-surface font-body text-on-surface antialiased">
-  <nav class="glass-nav fixed top-0 z-50 w-full shadow-[0_20px_40px_rgba(242,202,80,0.06)]">
-    <div class="mx-auto flex w-full max-w-full items-center justify-between px-8 py-4">
-      <div class="font-headline text-2xl font-bold text-primary-container"><a
-          href="{% url 'sena:inicio' %}">TecnoCorte</a></div>
-      <nav class="hidden items-center gap-8 text-sm font-display uppercase tracking-widest text-on-surface md:flex">
-        <a class="text-on-surface-variant transition-all duration-300 hover:text-primary"
-          href="{% url 'sena:inicio' %}">Inicio</a>
-        <a class="text-on-surface-variant transition-all duration-300 hover:text-primary"
-          href="{% url 'sena:usuario_servicios' %}">Servicios</a>
-        <a class="text-on-surface-variant transition-all duration-300 hover:text-primary"
-          href="{% url 'sena:usuario_tienda' %}">Tienda</a>
-        <a class="text-on-surface-variant transition-all duration-300 hover:text-primary"
-          href="{% url 'sena:usuario_peluquerias' %}">Barberías</a>
-        <a class="border-b-2 border-primary pb-1 text-primary" href="{% url 'sena:ayuda' %}">Contactos</a>
-      </nav>
-      <div class="flex items-center gap-5">
-        <a href="{% url 'sena:carrito' %}"
-          class="relative text-primary transition-all duration-300 hover:text-primary-container active:scale-90"
-          title="Carrito">
-          <span class="material-symbols-outlined">shopping_bag</span>
-          {% if cantidad %}
-          <span
-            class="absolute -right-2 -top-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-on-primary">{{
-            cantidad }}</span>
-          {% endif %}
-        </a>
-        {% if request.session.logueado %}
-        <a href="{% url 'sena:usuario_perfil' %}"
-          class="text-sm font-bold uppercase tracking-widest text-on-surface-variant transition-colors hover:text-primary">Perfil</a>
-        {% else %}
-        <a href="{% url 'sena:login' %}"
-          class="text-sm font-bold uppercase tracking-widest text-on-surface-variant transition-colors hover:text-primary">Ingresar</a>
-        {% endif %}
-      </div>
-    </div>
-  </nav>
+  {% include "includes/site_nav.html" with active="contactos" %}
 
   <main class="mx-auto flex w-full max-w-4xl flex-grow px-6 pb-24 pt-36 md:px-12">
     <div class="w-full">

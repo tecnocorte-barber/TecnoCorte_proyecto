@@ -1,10 +1,9 @@
-<nav
-  class="h-screen w-64 fixed left-0 top-0 bg-surface-container-low flex flex-col p-6 space-y-4 z-40 border-r border-primary/10 shadow-2xl">
-  <div class="mb-12 rounded-xl bg-surface-container-high/60 p-4 border border-primary/10">
-    <h1 class="font-headline text-xl text-primary font-bold tracking-tight">TecnoCorte</h1>
-    <p class="font-label uppercase text-xs text-on-surface-variant mt-1 tracking-widest">Administración</p>
+<nav class="admin-sidebar fixed left-0 top-0 z-40 flex h-screen w-64 flex-col overflow-hidden border-r border-primary/10 bg-surface-container-low p-4 shadow-2xl">
+  <div class="mb-5 flex shrink-0 flex-col items-center gap-2 rounded-2xl border border-primary/15 bg-gradient-to-br from-primary/15 to-surface-container-high/70 p-3 shadow-lg">
+    {% include "includes/logo.html" with logo_class="h-16 w-16" %}
+    <p class="truncate font-label text-[0.62rem] uppercase tracking-[0.16em] text-on-surface-variant">Administración</p>
   </div>
-  <div class="space-y-2 flex-grow">
+  <div class="admin-sidebar-scroll min-h-0 flex-1 space-y-1 overflow-y-auto pr-1">
     <a class="flex items-center space-x-4 px-4 py-3 rounded-lg transition-all group {% if active == 'dashboard' %}bg-primary-container text-on-primary-container font-bold{% else %}text-on-surface-variant hover:bg-surface-container-high hover:bg-surface-container-highest{% endif %}"
       href="{% url 'sena:admin_dashboard' %}">
       <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">dashboard</span>
@@ -34,6 +33,9 @@
     <a class="flex items-center space-x-4 px-4 py-3 rounded-lg transition-all {% if active == 'mensajes' %}bg-primary-container text-on-primary-container font-bold{% else %}text-on-surface-variant hover:bg-surface-container-high{% endif %}"
       href="{% url 'sena:admin_mensajes' %}"><span class="material-symbols-outlined">mail</span><span
         class="font-label uppercase text-xs tracking-widest">Mensajes</span></a>
+    <a class="flex items-center space-x-4 px-4 py-3 rounded-lg transition-all {% if active == 'notificaciones' %}bg-primary-container text-on-primary-container font-bold{% else %}text-on-surface-variant hover:bg-surface-container-high{% endif %}"
+      href="{% url 'sena:admin_notificaciones' %}"><span class="material-symbols-outlined">notifications</span><span
+        class="font-label uppercase text-xs tracking-widest">Notificaciones</span></a>
     <a class="flex items-center space-x-4 px-4 py-3 rounded-lg transition-all group {% if active == 'ingresos' %}bg-primary-container text-on-primary-container font-bold{% else %}text-on-surface-variant hover:bg-surface-container-high hover:bg-surface-container-highest{% endif %}"
       href="{% url 'sena:admin_ingresos' %}">
       <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">login</span>
@@ -45,11 +47,22 @@
       <span class="font-label uppercase text-xs tracking-widest">Horarios</span>
     </a>
   </div>
-  <a href="{% url 'sena:admin_crear_reserva' %}"
-    class="bg-gradient-gold text-on-primary font-label uppercase text-xs tracking-widest py-3 px-4 rounded-md hover:opacity-90 transition-opacity w-full mt-auto text-center active:scale-95 block">
-    Nueva Cita
-  </a>
-  <a href="{% url 'sena:logout' %}"
-    class="text-on-surface-variant hover:text-error text-center font-label uppercase text-xs tracking-widest py-3">Cerrar
-    sesión</a>
+  <div class="mt-4 shrink-0 space-y-1 border-t border-primary/10 pt-3">
+    <a href="{% url 'sena:admin_crear_reserva' %}"
+      class="flex w-full items-center justify-center gap-2 rounded-xl border border-primary/30 bg-primary/10 px-3 py-3 text-center font-label text-xs font-bold uppercase tracking-widest text-primary transition-all hover:bg-primary hover:text-on-primary active:scale-95">
+      <span class="material-symbols-outlined text-lg">add</span>
+      Nueva cita
+    </a>
+    <button data-theme-toggle onclick="toggleTheme()" type="button"
+      class="flex w-full items-center justify-center gap-2 rounded-lg px-3 py-2.5 font-label text-xs uppercase tracking-widest text-on-surface-variant transition-colors hover:bg-surface-container-high hover:text-primary"
+      title="Activar tema claro">
+      <span class="material-symbols-outlined theme-icon text-base">dark_mode</span>
+      Tema
+    </button>
+    <a href="{% url 'sena:logout' %}"
+      class="flex w-full items-center justify-center gap-2 rounded-lg px-3 py-2.5 font-label text-xs uppercase tracking-widest text-on-surface-variant transition-colors hover:bg-error/10 hover:text-error">
+      <span class="material-symbols-outlined text-base">logout</span>
+      Cerrar sesión
+    </a>
+  </div>
 </nav>

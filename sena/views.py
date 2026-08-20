@@ -1,7 +1,10 @@
+import json
+
 from django.shortcuts import render, redirect
+from django.urls import reverse
 from django.http import JsonResponse
 from django.utils import timezone
-from django.db import IntegrityError, models
+from django.db import IntegrityError, models, transaction
 from datetime import datetime, time, timedelta
 from .models import Usuario, Peluqueria, Producto, Reserva, Pedido, PedidoProducto, RegistroIngreso, Notificacion, HorarioTrabajo, BloqueoHorario, MensajeContacto, Calificacion
 from .utilidades import autorizacion
@@ -25,7 +28,27 @@ def _horarios_para_template(peluqueria_id=None):
         qs = qs.filter(peluqueria_id=peluqueria_id)
     for b in qs:
         bloqueos.append({"fecha": b.fecha.strftime("%Y-%m-%d"), "hora": b.hora.strftime("%H:%M") if b.hora else None})
-    return {"horarios_json": horarios, "bloqueos_json": bloqueos}
+    return {"horarios_json": json.dumps(horarios), "bloqueos_json": json.dumps(bloqueos)}
+
+
+def _reservas_para_template():
+    reservas = []
+    for reserva in Reserva.objects.exclude(estado="Cancelada").only("peluquero_id", "fecha", "hora", "servicio"):
+        reservas.append({
+            "barbero": reserva.peluquero_id,
+            "fecha": reserva.fecha.isoformat(),
+            "hora": reserva.hora.strftime("%H:%M"),
+            "minutos": minutos_servicio(reserva.servicio),
+        })
+    return {"reservas_json": json.dumps(reservas)}
+
+
+def _id_entero(valor):
+    try:
+        valor = str(valor or "").strip()
+        return int(valor) if valor.isdigit() else None
+    except (TypeError, ValueError):
+        return None
 
 def contexto_carrito(request):
     carrito = request.session.get("carrito", {})
@@ -45,14 +68,21 @@ def contexto_carrito(request):
             "cantidad": int(cantidad_item),
             "subtotal": subtotal,
         })
-    return {"items": items, "total": total, "cantidad": cantidad, "carrito": carrito}
+    return {
+        "items": items,
+        "total": total,
+        "cantidad": cantidad,
+        "carrito": carrito,
+        "mensaje_tienda": request.session.pop("mensaje_tienda", ""),
+        "mensaje_carrito": request.session.pop("mensaje_carrito", ""),
+    }
 
 def registrar_ingreso(request, usuario):
     ip = request.META.get("REMOTE_ADDR", "")
     RegistroIngreso.objects.create(usuario=usuario, rol=usuario.rol, ip=ip)
 
 
-def cita_disponible(fecha_texto, hora_texto):
+def cita_disponible(fecha_texto, hora_texto, peluqueria_id=None, servicio=None):
     """Revisa el horario de trabajo y los bloqueos antes de crear una cita."""
     try:
         fecha = datetime.strptime(fecha_texto, "%Y-%m-%d").date()
@@ -60,14 +90,24 @@ def cita_disponible(fecha_texto, hora_texto):
     except (TypeError, ValueError):
         return False, "La fecha o la hora no son válidas."
 
-    horario = HorarioTrabajo.objects.filter(dia_semana=fecha.weekday()).first()
-    if horario and not horario.activo:
+    horarios = HorarioTrabajo.objects.filter(dia_semana=fecha.weekday())
+    if peluqueria_id:
+        horarios = horarios.filter(peluqueria_id=peluqueria_id)
+    horario = horarios.first()
+    if horario is None:
+        return False, "Esta barbería todavía no tiene horarios configurados."
+    if not horario.activo:
         return False, "Ese día no se trabaja. Elige otra fecha."
-    if horario and (hora < horario.hora_inicio or hora > horario.hora_fin):
+    duracion = minutos_servicio(servicio)
+    hora_fin_servicio = (datetime.combine(fecha, hora) + timedelta(minutes=duracion)).time()
+    if hora < horario.hora_inicio or hora_fin_servicio > horario.hora_fin:
         return False, "La hora elegida está por fuera del horario de atención."
-    if BloqueoHorario.objects.filter(fecha=fecha, hora__isnull=True).exists():
+    bloqueos = BloqueoHorario.objects.filter(fecha=fecha)
+    if peluqueria_id:
+        bloqueos = bloqueos.filter(peluqueria_id=peluqueria_id)
+    if bloqueos.filter(hora__isnull=True).exists():
         return False, "Ese día está bloqueado para citas."
-    if BloqueoHorario.objects.filter(fecha=fecha, hora=hora).exists():
+    if bloqueos.filter(hora=hora).exists():
         return False, "Ese horario está bloqueado. Elige otra hora."
     return True, ""
 
@@ -223,13 +263,27 @@ def carrito(request):
 def agregar_carrito(request, producto_id):
     es_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
     try:
-        producto = Producto.objects.get(id=producto_id, disponible=True)
+        producto = Producto.objects.get(id=producto_id)
     except Producto.DoesNotExist:
         if es_ajax:
-            return JsonResponse({"error": "Producto no disponible"}, status=404)
+            return JsonResponse({"error": "El producto no está disponible."}, status=404)
+        request.session["mensaje_tienda"] = "El producto no está disponible."
+        return redirect("sena:usuario_tienda")
+    if not producto.disponible or producto.stock <= 0:
+        mensaje = f"No hay stock disponible de {producto.nombre}."
+        if es_ajax:
+            return JsonResponse({"error": mensaje}, status=409)
+        request.session["mensaje_tienda"] = mensaje
         return redirect("sena:usuario_tienda")
     carrito = request.session.get("carrito", {})
-    carrito[str(producto.id)] = int(carrito.get(str(producto.id), 0)) + 1
+    cantidad_actual = int(carrito.get(str(producto.id), 0))
+    if cantidad_actual >= producto.stock:
+        mensaje = f"No hay más unidades disponibles de {producto.nombre}."
+        if es_ajax:
+            return JsonResponse({"error": mensaje}, status=409)
+        request.session["mensaje_tienda"] = mensaje
+        return redirect("sena:usuario_tienda")
+    carrito[str(producto.id)] = cantidad_actual + 1
     request.session["carrito"] = carrito
     if es_ajax:
         return JsonResponse({
@@ -246,6 +300,11 @@ def actualizar_carrito(request, producto_id):
             cantidad = 1
         carrito = request.session.get("carrito", {})
         if str(producto_id) in carrito:
+            producto = Producto.objects.filter(id=producto_id).first()
+            stock = producto.stock if producto and producto.disponible else 0
+            if cantidad > stock:
+                cantidad = stock
+                request.session["mensaje_carrito"] = f"No hay suficiente stock de {producto.nombre}. Disponible: {stock}."
             if cantidad <= 0:
                 del carrito[str(producto_id)]
             else:
@@ -268,24 +327,48 @@ def finalizar_pedido(request):
 
     if request.method == "POST":
         cliente_id = request.session["logueado"]["id"]
-        pedido = Pedido.objects.create(
-            cliente_id=cliente_id,
-            total=contexto["total"],
-            estado="Pendiente"
-        )
-        for item in contexto["items"]:
-            PedidoProducto.objects.create(
-                pedido=pedido,
-                producto=item["producto"],
-                cantidad=item["cantidad"],
-                precio=item["producto"].precio
+        with transaction.atomic():
+            producto_ids = [item["producto"].id for item in contexto["items"]]
+            productos = {
+                producto.id: producto
+                for producto in Producto.objects.select_for_update().filter(id__in=producto_ids)
+            }
+            error_stock = ""
+            for item in contexto["items"]:
+                producto = productos.get(item["producto"].id)
+                if producto is None or not producto.disponible or producto.stock < item["cantidad"]:
+                    disponible = producto.stock if producto and producto.disponible else 0
+                    nombre = producto.nombre if producto else item["producto"].nombre
+                    error_stock = f"No hay stock suficiente de {nombre}. Disponible: {disponible}."
+                    break
+                item["producto"] = producto
+                item["subtotal"] = producto.precio * item["cantidad"]
+
+            if error_stock:
+                contexto["error"] = error_stock
+                return render(request, "carrito/finalizar_pedido.html", contexto)
+
+            contexto["total"] = sum(item["subtotal"] for item in contexto["items"])
+            pedido = Pedido.objects.create(
+                cliente_id=cliente_id,
+                total=contexto["total"],
+                estado="Pendiente"
             )
-            producto = item["producto"]
-            if producto.stock is not None:
-                producto.stock = max(0, producto.stock - item["cantidad"])
+            for item in contexto["items"]:
+                producto = item["producto"]
+                stock_anterior = producto.stock
+                PedidoProducto.objects.create(
+                    pedido=pedido,
+                    producto=producto,
+                    cantidad=item["cantidad"],
+                    precio=producto.precio
+                )
+                producto.stock -= item["cantidad"]
                 if producto.stock == 0:
                     producto.disponible = False
-                producto.save()
+                    if stock_anterior > 0:
+                        notificar_producto_agotado(producto)
+                producto.save(update_fields=["stock", "disponible"])
         request.session["carrito"] = {}
         return redirect("sena:pedido_exitoso", pedido_id=pedido.id)
 
@@ -333,28 +416,42 @@ def usuario_reservar_cita(request):
     contexto["peluquerias"] = Peluqueria.objects.all()
     contexto["servicios"] = SERVICIOS
     contexto.update(_horarios_para_template())
+    contexto.update(_reservas_para_template())
     return render(request, "usuarios/usuario_reservar_cita.html", contexto)
 
 @autorizacion(["Cliente"])
 def usuario_pre_confirmar(request):
     if request.method != "POST":
         return redirect("sena:usuario_reservar_cita")
-    peluquero = Usuario.objects.filter(id=request.POST.get("peluquero"), rol="Barbero").first()
-    peluqueria = Peluqueria.objects.filter(id=request.POST.get("peluqueria")).first()
+    peluquero_id = _id_entero(request.POST.get("peluquero"))
+    peluqueria_id = _id_entero(request.POST.get("peluqueria"))
+    peluquero = Usuario.objects.filter(id=peluquero_id, rol="Barbero").first() if peluquero_id else None
+    peluqueria = Peluqueria.objects.filter(id=peluqueria_id).first() if peluqueria_id else None
     fecha = request.POST.get("fecha", "")
     hora = request.POST.get("hora", "")
-    if peluquero is None or peluqueria is None or not fecha or not hora:
+    servicio = request.POST.get("servicio", "").strip()
+    datos_validos = peluquero is not None and peluqueria is not None and bool(fecha) and bool(hora) and servicio in {item["nombre"] for item in SERVICIOS}
+    disponible = datos_validos
+    mensaje = ""
+    if not datos_validos:
+        mensaje = "Faltan datos. Elige servicio, barbero, barbería, fecha y hora antes de continuar."
+    if disponible:
+        disponible, mensaje = cita_disponible(fecha, hora, peluqueria_id, servicio)
+    if disponible:
+        disponible, mensaje = barbero_esta_disponible(peluquero_id, fecha, hora, servicio)
+    if not disponible:
         contexto = contexto_carrito(request)
-        contexto.update({"error": "Datos inválidos. Elige servicio, barbero, peluquería, fecha y hora e inténtalo de nuevo.", "peluqueros": Usuario.objects.filter(rol="Barbero"), "peluquerias": Peluqueria.objects.all(), "servicios": SERVICIOS})
+        contexto.update({"error": mensaje, "peluqueros": Usuario.objects.filter(rol="Barbero"), "peluquerias": Peluqueria.objects.all(), "servicios": SERVICIOS})
         contexto.update(_horarios_para_template())
+        contexto.update(_reservas_para_template())
         return render(request, "usuarios/usuario_reservar_cita.html", contexto)
     datos = {
-        "servicio": request.POST.get("servicio", "Corte de Cabello"),
+        "servicio": servicio,
         "peluquero": peluquero,
         "peluqueria": peluqueria,
         "fecha": fecha,
         "hora": hora,
-        "duracion": minutos_servicio(request.POST.get("servicio", "Corte de Cabello")),
+        "duracion": minutos_servicio(servicio),
     }
     contexto = contexto_carrito(request)
     contexto["datos"] = datos
@@ -364,26 +461,46 @@ def usuario_pre_confirmar(request):
 def usuario_confirmar_reserva(request):
     if request.method != "POST":
         return redirect("sena:usuario_reservar_cita")
-    disponible, mensaje = cita_disponible(request.POST.get("fecha"), request.POST.get("hora"))
+    peluquero_id = _id_entero(request.POST.get("peluquero"))
+    peluqueria_id = _id_entero(request.POST.get("peluqueria"))
+    peluquero = Usuario.objects.filter(id=peluquero_id, rol="Barbero").first() if peluquero_id else None
+    peluqueria = Peluqueria.objects.filter(id=peluqueria_id).first() if peluqueria_id else None
+    fecha = request.POST.get("fecha", "").strip()
+    hora = request.POST.get("hora", "").strip()
+    servicio = request.POST.get("servicio", "").strip()
+    datos_validos = peluquero is not None and peluqueria is not None and bool(fecha) and bool(hora) and servicio in {item["nombre"] for item in SERVICIOS}
+    disponible = datos_validos
+    mensaje = ""
+    if not datos_validos:
+        disponible = False
+        mensaje = "Faltan datos. Elige servicio, barbero, barbería, fecha y hora antes de confirmar."
     if disponible:
-        disponible, mensaje = barbero_esta_disponible(request.POST.get("peluquero"), request.POST.get("fecha"), request.POST.get("hora"), request.POST.get("servicio"))
+        disponible, mensaje = cita_disponible(fecha, hora, peluqueria_id, servicio)
+    if disponible:
+        disponible, mensaje = barbero_esta_disponible(peluquero_id, fecha, hora, servicio)
     if not disponible:
         contexto = contexto_carrito(request)
         contexto.update({"error": mensaje, "peluqueros": Usuario.objects.filter(rol="Barbero"), "peluquerias": Peluqueria.objects.all(), "servicios": SERVICIOS})
         contexto.update(_horarios_para_template())
+        contexto.update(_reservas_para_template())
         return render(request, "usuarios/usuario_reservar_cita.html", contexto)
     reserva = Reserva.objects.create(
         cliente_id=request.session["logueado"]["id"],
-        peluquero_id=request.POST.get("peluquero"),
-        peluqueria_id=request.POST.get("peluqueria"),
-        fecha=request.POST.get("fecha"),
-        hora=request.POST.get("hora"),
-        servicio=request.POST.get("servicio", "Corte de Cabello")
+        peluquero_id=peluquero_id,
+        peluqueria_id=peluqueria_id,
+        fecha=fecha,
+        hora=hora,
+        servicio=servicio
     )
     Notificacion.objects.create(
         usuario_id=reserva.peluquero_id,
         reserva=reserva,
         mensaje=f"Nueva cita: {reserva.cliente.nombre} reservó {reserva.servicio} para {reserva.fecha} a las {reserva.hora}.",
+    )
+    Notificacion.objects.create(
+        usuario_id=reserva.cliente_id,
+        reserva=reserva,
+        mensaje=f"Tu cita de {reserva.servicio} para el {reserva.fecha} a las {reserva.hora} fue reservada correctamente.",
     )
     return redirect("sena:inicio")
 
@@ -494,6 +611,11 @@ def usuario_calificar(request, reserva_id):
         barbero=reserva.peluquero,
         puntuacion=puntuacion,
         comentario=request.POST.get("comentario", "").strip(),
+    )
+    Notificacion.objects.create(
+        usuario=reserva.peluquero,
+        reserva=reserva,
+        mensaje=f"Recibiste una calificación de {puntuacion}/5 estrellas por tu servicio del {reserva.fecha}.",
     )
     return redirect("sena:usuario_perfil")
 
@@ -670,7 +792,8 @@ def admin_editar_peluquero(request, id):
 
 @autorizacion(["Admin"])
 def admin_eliminar_peluquero(request, id):
-    Usuario.objects.get(id=id).delete()
+    if request.method == "POST":
+        Usuario.objects.filter(id=id).delete()
     return redirect("sena:admin_peluqueros")
 
 @autorizacion(["Admin"])
@@ -778,15 +901,23 @@ def admin_horarios(request):
                     defaults={"activo": numero < 6, "hora_inicio": time(9, 0), "hora_fin": time(18, 0)},
                 )
                 horario.activo = request.POST.get(f"activo_{numero}") == "on"
-                horario.hora_inicio = request.POST.get(f"inicio_{numero}", "09:00")
-                horario.hora_fin = request.POST.get(f"fin_{numero}", "18:00")
+                inicio_str = request.POST.get(f"inicio_{numero}", "09:00")
+                fin_str = request.POST.get(f"fin_{numero}", "18:00")
+                try:
+                    horario.hora_inicio = datetime.strptime(inicio_str, "%H:%M").time()
+                except (ValueError, TypeError):
+                    horario.hora_inicio = time(9, 0)
+                try:
+                    horario.hora_fin = datetime.strptime(fin_str, "%H:%M").time()
+                except (ValueError, TypeError):
+                    horario.hora_fin = time(18, 0)
                 horario.save()
         elif accion == "crear_bloqueo":
             fecha = request.POST.get("fecha")
             hora = request.POST.get("hora") or None
             if fecha and peluqueria_actual:
                 BloqueoHorario.objects.create(fecha=fecha, hora=hora, motivo=request.POST.get("motivo", ""), peluqueria=peluqueria_actual)
-        return redirect(f"sena:admin_horarios?peluqueria={peluqueria_id}")
+        return redirect(f"{reverse('sena:admin_horarios')}?peluqueria={peluqueria_id}")
     horarios = HorarioTrabajo.objects.filter(peluqueria=peluqueria_actual).order_by("dia_semana") if peluqueria_actual else []
     bloqueos = BloqueoHorario.objects.filter(peluqueria=peluqueria_actual) if peluqueria_actual else BloqueoHorario.objects.none()
     return render(request, "administrador/admin_horarios.html", {"horarios": horarios, "bloqueos": bloqueos, "hoy": datetime.today().date(), "peluquerias": peluquerias, "peluqueria_actual": peluqueria_actual})
@@ -835,14 +966,26 @@ def admin_productos(request):
     return render(request, "administrador/admin_productos.html", {"productos": Producto.objects.all().order_by("nombre")})
 
 
+def notificar_producto_agotado(producto):
+    mensaje = f"Stock agotado: {producto.nombre}."
+    for admin in Usuario.objects.filter(rol="Admin", activo=True):
+        Notificacion.objects.create(usuario=admin, mensaje=mensaje)
+
+
 def datos_producto(request, producto=None):
+    stock_anterior = producto.stock if producto.pk else None
     producto.nombre = request.POST.get("nombre")
     producto.descripcion = request.POST.get("descripcion", "")
     producto.precio = request.POST.get("precio", 0)
     producto.categoria = request.POST.get("categoria", "Herramientas")
-    producto.stock = request.POST.get("stock", 0)
-    producto.disponible = request.POST.get("disponible") == "on"
+    try:
+        producto.stock = max(0, int(request.POST.get("stock", 0)))
+    except (TypeError, ValueError):
+        producto.stock = 0
+    producto.disponible = request.POST.get("disponible") == "on" and producto.stock > 0
     producto.save()
+    if stock_anterior and stock_anterior > 0 and producto.stock == 0:
+        notificar_producto_agotado(producto)
 
 
 @autorizacion(["Admin"])
@@ -875,6 +1018,14 @@ def admin_mensajes(request):
     MensajeContacto.objects.filter(leido=False).update(leido=True)
     return render(request, "administrador/admin_mensajes.html", {"mensajes": mensajes})
 
+
+@autorizacion(["Admin"])
+def admin_notificaciones(request):
+    usuario = Usuario.objects.get(id=request.session["logueado"]["id"])
+    notificaciones = Notificacion.objects.filter(usuario=usuario).order_by("-fecha")
+    notificaciones.update(leida=True)
+    return render(request, "administrador/admin_notificaciones.html", {"notificaciones": notificaciones})
+
 @autorizacion(["Admin"])
 def admin_perfil(request):
     usuario = Usuario.objects.get(id=request.session["logueado"]["id"])
@@ -882,8 +1033,14 @@ def admin_perfil(request):
         usuario.nombre = request.POST.get("nombre", usuario.nombre)
         usuario.apellido = request.POST.get("apellido", usuario.apellido)
         usuario.save()
-        return redirect("sena:admin_dashboard")
-    return render(request, "usuarios/usuario_perfil.html", {"usuario": usuario})
+        return redirect("sena:admin_perfil")
+    contexto = contexto_carrito(request)
+    contexto["usuario"] = usuario
+    contexto["citas"] = Reserva.objects.none()
+    contexto["pedidos"] = Pedido.objects.none()
+    contexto["calificaciones_reservas"] = set()
+    contexto["notificaciones"] = Notificacion.objects.filter(usuario=usuario).order_by("-fecha")
+    return render(request, "usuarios/usuario_perfil.html", contexto)
 
 @autorizacion(["Admin"])
 def admin_ingresos(request):
@@ -979,9 +1136,8 @@ def admin_editar_usuario(request, id):
 
 @autorizacion(["Admin"])
 def admin_eliminar_usuario(request, id):
-    """Eliminar usuario"""
-    usuario = Usuario.objects.get(id=id)
-    usuario.delete()
+    if request.method == "POST":
+        Usuario.objects.filter(id=id).delete()
     return redirect("sena:admin_usuarios")
 
 @autorizacion(["Admin"])

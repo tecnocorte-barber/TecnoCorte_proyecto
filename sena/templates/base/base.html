@@ -4,9 +4,16 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}TecnoCorte{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Noto+Serif:wght@400;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    {% include "includes/tema.html" %}
     <style>
-        :root {
-            color-scheme: dark;
+        html[data-theme="dark"] { color-scheme: dark; }
+        html[data-theme="light"] { color-scheme: light; }
+
+        html.dark, [data-theme="dark"] {
             --bg: #131313;
             --bg-soft: #1b1b1b;
             --panel: #1f1f1f;
@@ -15,35 +22,58 @@
             --gold-strong: #b88928;
             --text: #e2e2e2;
             --muted: #d0c5af;
+            --card-border: rgba(255,255,255,0.06);
+            --card-shadow: 0 30px 80px rgba(0,0,0,0.5);
         }
+        html:not(.dark), [data-theme="light"] {
+            --bg: #faf8f5;
+            --bg-soft: #f5f2ed;
+            --panel: #f0ede8;
+            --panel-strong: #e8e4de;
+            --gold: #8a6b1a;
+            --gold-strong: #6b5118;
+            --text: #1a1816;
+            --muted: #7c7567;
+            --card-border: rgba(0,0,0,0.06);
+            --card-shadow: 0 30px 80px rgba(0,0,0,0.08);
+        }
+
         * { box-sizing: border-box; }
         html, body { margin: 0; min-height: 100%; }
         body {
             background: radial-gradient(circle at top left, rgba(214, 173, 66, 0.12), transparent 30%),
-                        linear-gradient(180deg, #131313 0%, #171717 100%);
+                        linear-gradient(180deg, var(--bg) 0%, var(--bg-soft) 100%);
             color: var(--text);
-            font-family: "Segoe UI", Arial, sans-serif;
+            font-family: "Manrope", "Segoe UI", Arial, sans-serif;
+            transition: background .25s ease, color .25s ease;
         }
         .page { max-width: 1080px; margin: 0 auto; padding: 28px 20px 36px; }
         header {
             display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center;
             gap: 16px; margin-bottom: 28px; padding: 18px 20px; border-radius: 18px;
-            background: rgba(31, 31, 31, 0.9); border: 1px solid rgba(214, 173, 66, 0.16);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.22);
+            background: var(--panel); border: 1px solid rgba(214, 173, 66, 0.16);
+            box-shadow: var(--card-shadow);
         }
         .brand { display: flex; flex-direction: column; gap: 6px; }
+        .brand-logo { width: 44px; height: 44px; object-fit: cover; border-radius: 12px; }
         .brand h1 { margin: 0; font-size: 2rem; letter-spacing: -0.04em; color: var(--gold); }
         .brand p { margin: 0; color: var(--muted); }
         nav { display: flex; gap: 18px; align-items: center; }
         a { color: var(--gold); text-decoration: none; }
         a:hover { text-decoration: underline; }
         .card {
-            background: linear-gradient(180deg, rgba(31,31,31,0.96), rgba(21,21,21,0.96));
-            border: 1px solid rgba(214, 173, 66, 0.14);
-            border-radius: 24px; box-shadow: 0 30px 80px rgba(0, 0, 0, 0.24);
+            background: linear-gradient(180deg, var(--panel), var(--bg-soft));
+            border: 1px solid var(--card-border);
+            border-radius: 24px; box-shadow: var(--card-shadow);
             padding: 32px; color: var(--text);
         }
         footer { margin-top: 34px; text-align: center; color: var(--muted); font-size: 0.95rem; }
+        .theme-toggle-btn {
+            background: var(--panel-strong); border: 1px solid var(--card-border);
+            border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center;
+            justify-content: center; cursor: pointer; color: var(--text); transition: all .2s;
+        }
+        .theme-toggle-btn:hover { color: var(--gold); border-color: var(--gold); }
         @media (max-width: 720px) {
             .page { padding: 18px 14px 28px; }
             header { flex-direction: column; align-items: stretch; }
@@ -54,15 +84,20 @@
 
 </head>
 <body>
+    {% include "includes/site_nav.html" with active="" %}
     <div class="page">
-        <header>
+        <header class="hidden">
             <div class="brand">
-                <h1>TecnoCorte</h1>
+                {% include "includes/logo.html" %}
                 <p>Reservas de citas y productos para tu barbería.</p>
             </div>
             <nav>
                 <a href="{% url 'sena:inicio' %}">Inicio</a>
                 <a href="{% url 'sena:login' %}">Login</a>
+                {% include "includes/carrito_indicator.html" %}
+                <button class="theme-toggle-btn" data-theme-toggle aria-label="Activar tema claro" aria-pressed="true" onclick="toggleTheme()" title="Activar tema claro" type="button">
+                    <span class="material-symbols-outlined theme-icon">light_mode</span>
+                </button>
             </nav>
         </header>
         <section class="card">

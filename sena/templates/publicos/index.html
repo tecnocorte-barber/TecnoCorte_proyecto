@@ -1,6 +1,6 @@
 {% load static %}
 <!DOCTYPE html>
-<html class="dark" lang="es">
+<html lang="es">
 
 <head>
   <meta charset="utf-8" />
@@ -15,8 +15,8 @@
   {% include "includes/tema.html" %}
   <style>
     body {
-      background-color: #131313;
-      color: #e2e2e2;
+      background-color: var(--fondo);
+      color: var(--c-on-surface);
     }
 
     .text-gradient-primary {
@@ -38,7 +38,7 @@
     .divider-dot {
       width: 4px;
       height: 4px;
-      background-color: #d4af37;
+      background-color: var(--c-primary);
       border-radius: 50%;
       margin: 0 auto;
     }
@@ -46,43 +46,7 @@
 </head>
 
 <body class="font-body antialiased bg-surface text-on-surface">
-  <header class="fixed top-0 z-50 w-full bg-surface/70 shadow-[0_20px_40px_rgba(242,202,80,0.06)] backdrop-blur-xl">
-    <div class="mx-auto flex w-full max-w-full items-center justify-between px-6 py-4 md:px-8">
-      <div class="font-headline text-2xl font-bold text-primary-container">TecnoCorte</div>
-      <nav class="hidden items-center gap-8 text-sm font-display uppercase tracking-widest text-on-surface md:flex">
-        <a class="border-b-2 border-primary pb-1 text-primary" href="{% url 'sena:inicio' %}">Inicio</a>
-        <a class="text-on-surface-variant transition-colors duration-300 hover:text-primary"
-          href="{% url 'sena:usuario_servicios' %}">Servicios</a>
-        <a class="text-on-surface-variant transition-colors duration-300 hover:text-primary"
-          href="{% url 'sena:usuario_tienda' %}">Tienda</a>
-        <a class="text-on-surface-variant transition-colors duration-300 hover:text-primary"
-          href="{% url 'sena:usuario_peluquerias' %}">Barberías</a>
-        <a class="text-on-surface-variant transition-colors duration-300 hover:text-primary"
-          href="{% url 'sena:ayuda' %}">Contactos</a>
-      </nav>
-      <div class="flex items-center gap-4 text-primary">
-        {% if request.session.logueado %}
-        <a href="{% url 'sena:usuario_perfil' %}"
-          class="text-sm font-bold uppercase tracking-widest transition-colors hover:text-primary-container">Perfil</a>
-        <a href="{% url 'sena:logout' %}"
-          class="text-sm font-bold uppercase tracking-widest transition-colors hover:text-primary-container">Salir</a>
-        {% else %}
-        <a href="{% url 'sena:login' %}"
-          class="text-sm font-bold uppercase tracking-widest transition-colors hover:text-primary-container">Ingresar</a>
-        {% endif %}
-        <a href="{% url 'sena:carrito' %}"
-          class="relative text-primary transition-all duration-300 hover:text-primary-container active:scale-90"
-          title="Carrito">
-          <span class="material-symbols-outlined">shopping_bag</span>
-          {% if cantidad %}
-          <span
-            class="absolute -right-2 -top-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-on-primary">{{
-            cantidad }}</span>
-          {% endif %}
-        </a>
-      </div>
-    </div>
-  </header>
+  {% include "includes/site_nav.html" with active="inicio" %}
 
   <main class="pt-24">
     <section class="relative flex min-h-[820px] items-center justify-center overflow-hidden bg-surface-container-low">

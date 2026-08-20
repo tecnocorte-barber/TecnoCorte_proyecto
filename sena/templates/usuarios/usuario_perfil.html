@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html class="dark" lang="es">
+<html lang="es">
 
 <head>
   <meta charset="utf-8" />
@@ -16,8 +16,8 @@
   {% include "includes/tema.html" %}
   <style>
     body {
-      background-color: #131313;
-      color: #e2e2e2;
+      background-color: var(--fondo);
+      color: var(--c-on-surface);
       font-family: 'Manrope', sans-serif;
     }
 
@@ -32,7 +32,7 @@
     }
 
     .glass-nav {
-      background: rgba(19, 19, 19, 0.7);
+      background: var(--glass-bg);
       backdrop-filter: blur(20px);
     }
 
@@ -45,17 +45,17 @@
     }
 
     .ghost-border {
-      border: 1px solid rgba(77, 70, 53, 0.15);
+      border: 1px solid var(--c-outline-variant);
     }
   </style>
 </head>
 
 <body class="min-h-screen flex flex-col pt-24 bg-background text-on-background">
+  {% include "includes/site_nav.html" with active="" %}
   <!-- TopNavBar -->
-  <nav class="fixed top-0 w-full z-50 glass-nav shadow-[0_20px_40px_rgba(242,202,80,0.06)]">
-    <div class="flex justify-between items-center px-8 py-4 w-full max-w-7xl mx-auto"><a
-        class="font-headline text-2xl font-bold text-primary-container"
-        href="{% url 'sena:usuario_dashboard' %}">TecnoCorte</a>
+  <nav class="hidden">
+      <div class="flex justify-between items-center px-8 py-4 w-full max-w-7xl mx-auto"><a class="inline-flex"
+        href="{% url 'sena:usuario_dashboard' %}" aria-label="TecnoCorte">{% include "includes/logo.html" %}</a>
       <div class="hidden md:flex gap-8 items-center font-display uppercase tracking-widest text-sm"><a
           class="text-on-surface-variant hover:text-primary transition-all duration-300 active:opacity-80"
           href="{% url 'sena:usuario_dashboard' %}">Inicio</a><a
@@ -68,12 +68,11 @@
           class="text-on-surface-variant hover:text-primary transition-all duration-300 active:opacity-80"
           href="{% url 'sena:ayuda' %}">Contactos</a>
       </div>
-      <div class="flex items-center gap-5"><a href="{% url 'sena:carrito' %}"
+      <div class="flex items-center gap-5"><button data-theme-toggle onclick="toggleTheme()" class="text-primary transition-all duration-300 hover:text-primary-container active:scale-90" title="Activar tema claro" type="button"><span class="material-symbols-outlined theme-icon">light_mode</span></button>{% include "includes/notificaciones_indicator.html" %}<a href="{% url 'sena:carrito' %}"
           class="relative text-primary hover:text-primary-container transition-all duration-300 active:scale-90"
-          title="Carrito"><span class="material-symbols-outlined">shopping_bag</span>{% if cantidad %}<span
-            class="absolute -top-2 -right-2 min-w-5 h-5 px-1 rounded-full bg-primary text-on-primary text-[10px] font-bold flex items-center justify-center">{{
-            cantidad }}
-          </span>{% endif %}
+          title="Carrito"><span class="material-symbols-outlined">shopping_cart</span><span
+            class="absolute -top-2 -right-2 min-w-5 h-5 px-1 rounded-full bg-primary text-on-primary text-[10px] font-bold flex items-center justify-center">{{ cantidad|default:0 }}
+          </span>
         </a><a href="{% url 'sena:usuario_perfil' %}"
           class="text-primary hover:text-primary-container transition-colors" title="Perfil"><span
             class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">account_circle</span>
@@ -81,182 +80,6 @@
           class="text-on-surface-variant hover:text-error transition-colors text-xs font-bold uppercase tracking-widest">Salir</a>
       </div>
     </div>
-<<<<<<< Updated upstream
-    <h1 class="font-headline text-3xl font-bold tracking-tight mb-1">{{ usuario.nombre }} 
-      {{ usuario.apellido }}
-    </h1>
-    <p class="text-primary text-xs uppercase tracking-widest font-bold mb-1">{{ usuario.rol }}
-    </p>
-    <p class="text-on-surface-variant text-sm mb-6">Miembro desde 
-      {{ usuario.fecha_creacion|date:"F Y" }}
-    </p>
-    <div class="w-full space-y-3 text-left text-sm">
-      <p class="flex items-center gap-3 text-on-surface-variant"><span class="material-symbols-outlined text-primary text-base">mail</span>{{ usuario.email }}
-    </p>
-    <p class="flex items-center gap-3 text-on-surface-variant"><span class="material-symbols-outlined text-primary text-base">call</span>{{ usuario.telefono|default:"Sin registrar" }}
-  </p>
-</div>
-<div class="flex gap-3 w-full mt-6"><a href="#editar" class="flex-1 gold-gradient text-on-primary font-bold py-3 rounded-md hover:opacity-90 transition-opacity active:scale-95 text-sm tracking-wide">EDITAR PERFIL</a>
-</div>
-</div>
-<div class="grid grid-cols-2 gap-4">
-  <div class="bg-surface-container-low p-6 rounded-xl flex flex-col items-center justify-center"><span class="font-headline text-3xl text-primary mb-1">{{ citas|length }}
-  </span><span class="text-xs text-on-surface-variant uppercase tracking-widest">Citas Totales</span>
-</div>
-<div class="bg-surface-container-low p-6 rounded-xl flex flex-col items-center justify-center"><span class="font-headline text-3xl text-primary mb-1">{{ pedidos|length }}
-</span><span class="text-xs text-on-surface-variant uppercase tracking-widest">Pedidos</span>
-</div>
-</div>
-<!-- Edit form -->
-<div id="editar" class="bg-surface-container-low rounded-xl p-8 ambient-glow scroll-mt-28">
-  <h3 class="font-headline text-xl text-primary-container mb-6">Editar mis datos
-  </h3>
-  <form method="post" class="space-y-5">
-    {% csrf_token %}
-    <div><label class="text-[10px] uppercase tracking-[0.2em] text-primary font-bold block mb-1">Nombre</label>
-    <input class="w-full bg-transparent border-b border-outline-variant/30 py-2 focus:outline-none focus:border-primary text-on-surface text-sm" name="nombre" value="{{ usuario.nombre }}" required/>
-  </div>
-  <div><label class="text-[10px] uppercase tracking-[0.2em] text-primary font-bold block mb-1">Apellido</label>
-  <input class="w-full bg-transparent border-b border-outline-variant/30 py-2 focus:outline-none focus:border-primary text-on-surface text-sm" name="apellido" value="{{ usuario.apellido }}" required/>
-</div>
-<div><label class="text-[10px] uppercase tracking-[0.2em] text-primary font-bold block mb-1">Teléfono</label>
-<input class="w-full bg-transparent border-b border-outline-variant/30 py-2 focus:outline-none focus:border-primary text-on-surface text-sm" name="telefono" value="{{ usuario.telefono }}"/>
-</div>
-<button type="submit" class="w-full py-3 rounded-md border border-primary/40 text-primary hover:bg-primary/5 transition-colors text-sm font-semibold uppercase tracking-widest active:scale-95">Guardar cambios
-</button>
-</form>
-</div>
-<a href="{% url 'sena:logout' %}" class="flex items-center justify-center gap-2 w-full py-4 text-error hover:text-error/80 transition-colors group"><span class="material-symbols-outlined transition-transform group-hover:-translate-x-1">logout</span><span class="text-sm uppercase tracking-widest font-semibold">Cerrar Sesión</span>
-</a>
-</div>
-<!-- Right Column -->
-<div class="lg:col-span-8 flex flex-col gap-12">
-  <!-- Mis Citas -->
-  <section>
-    <div class="flex justify-between items-end mb-8 border-b border-outline-variant/10 pb-4">
-      <h2 class="font-headline text-3xl tracking-tight">Mis Citas
-      </h2>
-      <a class="text-primary text-sm uppercase tracking-widest hover:text-primary-container transition-colors active:scale-95 flex items-center gap-1 group" href="{% url 'sena:usuario_reservar_cita' %}">Agendar Nueva 
-      <span class="material-symbols-outlined text-sm transition-transform group-hover:translate-x-1">arrow_forward</span>
-  </a>
-</div>
-<div class="flex flex-col gap-6">
-  {% for cita in citas %}
-  <div class="bg-surface-container-low rounded-xl p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 ambient-glow">
-    <div class="flex items-start gap-6">
-      <div class="flex flex-col items-center justify-center bg-surface-container-highest p-4 rounded-lg min-w-[80px]"><span class="text-primary-container text-sm font-bold uppercase">{{ cita.fecha|date:"M" }}
-      </span><span class="font-headline text-3xl text-on-surface">{{ cita.fecha|date:"d" }}
-    </span>
-  </div>
-  <div>
-    <h3 class="font-headline text-xl mb-1">{{ cita.servicio }}
-    </h3>
-    <p class="text-on-surface-variant text-sm mb-1 flex items-center gap-2"><span class="material-symbols-outlined text-[16px]">schedule</span>{{ cita.hora|time:"H:i" }} - 
-    {{ cita.peluqueria.nombre }}
-  </p>
-  <p class="text-on-surface-variant text-sm">Con: 
-    <span class="text-on-surface">{{ cita.peluquero.nombre }} 
-    {{ cita.peluquero.apellido }}
-  </span>
-</p>
-</div>
-</div>
-<div class="flex flex-col gap-3 items-end"><span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest {% if cita.estado == 'Confirmada' or cita.estado == 'Completada' %}bg-primary/10 text-primary border border-primary/20{% elif cita.estado == 'Cancelada' %}bg-error/10 text-error border border-error/20{% else %}bg-secondary-container/20 text-secondary border border-secondary-container/30{% endif %}">{{ cita.estado }}</span>
-{% if cita.estado != 'Cancelada' and cita.estado != 'Completada' %}<div class="flex gap-3 text-sm"><a href="{% url 'sena:usuario_editar_reserva' cita.id %}" class="text-primary">Modificar</a><form method="post" action="{% url 'sena:usuario_cancelar_reserva' cita.id %}">{% csrf_token %}<button class="text-error" onclick="return confirm('¿Cancelar esta cita? Si faltan menos de 2 horas, verás el contacto del barbero.')">Cancelar</button></form></div>{% endif %}
-{% if cita.estado == 'Completada' and cita.id not in calificaciones_reservas %}
-<div class="mt-3 w-full border-t border-outline-variant/10 pt-3">
-  <p class="text-xs text-primary uppercase tracking-widest font-bold mb-2">Califica esta cita</p>
-  <form method="post" action="{% url 'sena:usuario_calificar' cita.id %}" class="space-y-3">
-    {% csrf_token %}
-    <div class="flex gap-1" id="estrellas-{{ cita.id }}">
-      {% for i in "12345" %}
-      <button type="button" class="estrella" data-valor="{{ forloop.counter }}" onclick="seleccionarEstrella({{ cita.id }}, {{ forloop.counter }})">
-        <span class="material-symbols-outlined text-xl text-primary/30 hover:text-primary transition-colors" id="star-{{ cita.id }}-{{ forloop.counter }}">star</span>
-      </button>
-      {% endfor %}
-    </div>
-    <input type="hidden" name="puntuacion" id="puntuacion-{{ cita.id }}" value="0">
-    <textarea name="comentario" rows="2" placeholder="Deja un comentario (opcional)" class="w-full bg-surface-container-high border border-outline-variant/20 rounded-lg px-3 py-2 text-sm text-on-surface focus:outline-none focus:border-primary resize-none"></textarea>
-    <button type="submit" class="gold-gradient text-on-primary font-bold py-2 px-6 rounded-md text-xs uppercase tracking-widest hover:opacity-90 transition-opacity active:scale-95">Enviar Calificación</button>
-  </form>
-</div>
-{% elif cita.estado == 'Completada' %}
-<div class="mt-2 text-xs text-primary/60 flex items-center gap-1">
-  <span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">star</span> Ya calificada
-</div>
-{% endif %}
-</div>
-</div>
-{% empty %}
-<div class="text-center py-16 bg-surface-container-low rounded-xl ghost-border"><span class="material-symbols-outlined text-primary/40 text-5xl mb-4 block">event_available</span>
-<p class="text-on-surface-variant mb-6">Aún no tienes citas reservadas.
-</p>
-<a href="{% url 'sena:usuario_reservar_cita' %}" class="inline-flex justify-center py-3 px-8 rounded-md gold-gradient text-on-primary font-bold text-sm uppercase tracking-widest hover:opacity-90 transition-all active:scale-95">Reservar ahora</a>
-</div>
-{% endfor %}
-</div>
-</section>
-<!-- Mis Pedidos -->
-<section>
-  <div class="flex justify-between items-end mb-8 border-b border-outline-variant/10 pb-4">
-    <h2 class="font-headline text-3xl tracking-tight">Mis Pedidos
-    </h2>
-    <a class="text-on-surface-variant text-sm uppercase tracking-widest hover:text-primary transition-colors active:scale-95 flex items-center gap-1 group" href="{% url 'sena:usuario_tienda' %}">Ver Tienda 
-    <span class="material-symbols-outlined text-sm transition-transform group-hover:translate-x-1">storefront</span>
-</a>
-</div>
-<div class="flex flex-col gap-6">
-  {% for pedido in pedidos %}
-  <div class="bg-surface-container-low rounded-xl p-6">
-    <div class="flex flex-wrap justify-between items-center gap-3 mb-4 pb-4 border-b border-outline-variant/10">
-      <div><span class="text-[10px] uppercase tracking-widest text-primary block mb-1">Pedido #{{ pedido.id }} • 
-        {{ pedido.fecha|date:"d M Y" }}
-      </span>
-      <h4 class="font-headline text-lg">{{ pedido.estado }}
-      </h4>
-    </div>
-    <span class="font-headline text-xl text-primary">${{ pedido.total|floatformat:"0g" }} COP</span>
-</div>
-<div class="space-y-2">{% for item in pedido.productos.all %}
-  <div class="flex justify-between text-sm"><span class="text-on-surface-variant">{{ item.producto.nombre }} 
-    <span class="text-on-surface-variant/60">x{{ item.cantidad }}
-  </span>
-</span><span class="text-on-surface">${{ item.precio|floatformat:"0g" }}
-</span>
-</div>
-{% endfor %}
-</div>
-<a href="{% url 'sena:usuario_tienda' %}" class="mt-4 inline-flex items-center gap-1 text-primary text-xs uppercase tracking-widest hover:underline">Comprar de nuevo</a>
-</div>
-{% empty %}
-<div class="text-center py-16 bg-surface-container-low rounded-xl ghost-border"><span class="material-symbols-outlined text-primary/40 text-5xl mb-4 block">receipt_long</span>
-<p class="text-on-surface-variant mb-6">Aún no tienes pedidos.
-</p>
-<a href="{% url 'sena:usuario_tienda' %}" class="inline-flex justify-center py-3 px-8 rounded-md gold-gradient text-on-primary font-bold text-sm uppercase tracking-widest hover:opacity-90 transition-all active:scale-95">Ir a la tienda</a>
-</div>
-{% endfor %}
-</div>
-</section>
-</div>
-</main>
-<script>
-function seleccionarEstrella(citaId, valor) {
-  document.getElementById("puntuacion-" + citaId).value = valor;
-  for (var i = 1; i <= 5; i++) {
-    var star = document.getElementById("star-" + citaId + "-" + i);
-    if (i <= valor) {
-      star.style.fontVariationSettings = "'FILL' 1";
-      star.style.color = "";
-      star.className = "material-symbols-outlined text-xl text-primary";
-    } else {
-      star.style.fontVariationSettings = "'FILL' 0";
-      star.style.color = "rgba(214,173,66,0.3)";
-      star.className = "material-symbols-outlined text-xl";
-    }
-  }
-}
-</script>
-=======
   </nav>
   <!-- Main Content -->
   <main class="flex-grow w-full max-w-7xl mx-auto px-6 py-12 md:py-16 grid grid-cols-1 lg:grid-cols-12 gap-12">
@@ -284,8 +107,7 @@ function seleccionarEstrella(citaId, valor) {
               class="material-symbols-outlined text-primary text-base">mail</span>{{ usuario.email }}
           </p>
           <p class="flex items-center gap-3 text-on-surface-variant"><span
-              class="material-symbols-outlined text-primary text-base">call</span>{{ usuario.telefono|default:"Sin
-            registrar" }}
+              class="material-symbols-outlined text-primary text-base">call</span>{{ usuario.telefono|default:"Sin registrar" }}
           </p>
         </div>
         <div class="flex gap-3 w-full mt-6"><a href="#editar"
@@ -339,7 +161,7 @@ function seleccionarEstrella(citaId, valor) {
     <!-- Right Column -->
     <div class="lg:col-span-8 flex flex-col gap-12">
       <!-- Mis Citas -->
-      <section>
+       <section id="citas">
         <div class="flex justify-between items-end mb-8 border-b border-outline-variant/10 pb-4">
           <h2 class="font-headline text-3xl tracking-tight">Mis Citas
           </h2>
@@ -375,8 +197,7 @@ function seleccionarEstrella(citaId, valor) {
               </div>
             </div>
             <div class="flex flex-col gap-3 items-end"><span
-                class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest {% if cita.estado == 'Confirmada' or cita.estado == 'Completada' %}bg-primary/10 text-primary border border-primary/20{% elif cita.estado == 'Cancelada' %}bg-error/10 text-error border border-error/20{% else %}bg-secondary-container/20 text-secondary border border-secondary-container/30{% endif %}">{{
-                cita.estado }}</span>
+                class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest {% if cita.estado == 'Confirmada' or cita.estado == 'Completada' %}bg-primary/10 text-primary border border-primary/20{% elif cita.estado == 'Cancelada' %}bg-error/10 text-error border border-error/20{% else %}bg-secondary-container/20 text-secondary border border-secondary-container/30{% endif %}">{{ cita.estado }}</span>
               {% if cita.estado != 'Cancelada' and cita.estado != 'Completada' %}<div class="flex gap-3 text-sm"><a
                   href="{% url 'sena:usuario_editar_reserva' cita.id %}" class="text-primary">Modificar</a>
                 <form method="post" action="{% url 'sena:usuario_cancelar_reserva' cita.id %}">{% csrf_token %}<button
@@ -384,6 +205,28 @@ function seleccionarEstrella(citaId, valor) {
                     onclick="return confirm('¿Cancelar esta cita? Si faltan menos de 2 horas, verás el contacto del barbero.')">Cancelar</button>
                 </form>
               </div>{% endif %}
+              {% if cita.estado == 'Completada' and cita.id not in calificaciones_reservas %}
+              <div class="mt-3 w-full border-t border-outline-variant/10 pt-3">
+                <p class="text-xs text-primary uppercase tracking-widest font-bold mb-2">Califica esta cita</p>
+                <form method="post" action="{% url 'sena:usuario_calificar' cita.id %}" class="space-y-3">
+                  {% csrf_token %}
+                  <div class="flex gap-1" id="estrellas-{{ cita.id }}">
+                    {% for i in "12345" %}
+                    <button type="button" class="estrella" data-valor="{{ forloop.counter }}" onclick="seleccionarEstrella({{ cita.id }}, {{ forloop.counter }})">
+                      <span class="material-symbols-outlined text-xl text-primary/30 hover:text-primary transition-colors" id="star-{{ cita.id }}-{{ forloop.counter }}">star</span>
+                    </button>
+                    {% endfor %}
+                  </div>
+                  <input type="hidden" name="puntuacion" id="puntuacion-{{ cita.id }}" value="0">
+                  <textarea name="comentario" rows="2" placeholder="Deja un comentario (opcional)" class="w-full bg-surface-container-high border border-outline-variant/20 rounded-lg px-3 py-2 text-sm text-on-surface focus:outline-none focus:border-primary resize-none"></textarea>
+                  <button type="submit" class="gold-gradient text-on-primary font-bold py-2 px-6 rounded-md text-xs uppercase tracking-widest hover:opacity-90 transition-opacity active:scale-95">Enviar Calificación</button>
+                </form>
+              </div>
+              {% elif cita.estado == 'Completada' %}
+              <div class="mt-2 text-xs text-primary/60 flex items-center gap-1">
+                <span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">star</span> Ya calificada
+              </div>
+              {% endif %}
             </div>
           </div>
           {% empty %}
@@ -448,7 +291,23 @@ function seleccionarEstrella(citaId, valor) {
       </section>
     </div>
   </main>
->>>>>>> Stashed changes
+  <script>
+function seleccionarEstrella(citaId, valor) {
+  document.getElementById("puntuacion-" + citaId).value = valor;
+  for (var i = 1; i <= 5; i++) {
+    var star = document.getElementById("star-" + citaId + "-" + i);
+    if (i <= valor) {
+      star.style.fontVariationSettings = "'FILL' 1";
+      star.style.color = "";
+      star.className = "material-symbols-outlined text-xl text-primary";
+    } else {
+      star.style.fontVariationSettings = "'FILL' 0";
+      star.style.color = "rgba(214,173,66,0.3)";
+      star.className = "material-symbols-outlined text-xl";
+    }
+  }
+}
+  </script>
 </body>
 
 </html>

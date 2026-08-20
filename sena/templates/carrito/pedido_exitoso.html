@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html class="dark" lang="es">
+<html lang="es">
 
 <head>
   <meta charset="utf-8" />
@@ -23,13 +23,19 @@
     }
 
     .ghost-border {
-      border: 1px solid rgba(77, 70, 53, 0.15);
+      border: 1px solid var(--c-outline-variant);
     }
   </style>
 </head>
 
 <body
-  class="bg-surface text-on-surface font-body antialiased min-h-screen flex items-center justify-center selection:bg-primary/30 selection:text-primary">
+  class="bg-surface text-on-surface font-body antialiased min-h-screen flex items-center justify-center">
+  <div class="fixed right-6 top-6 z-10 flex items-center gap-5">
+    {% include "includes/carrito_indicator.html" %}
+    <button data-theme-toggle onclick="toggleTheme()" class="flex h-11 w-11 items-center justify-center rounded-full border border-outline-variant/30 bg-surface-container-high text-primary shadow-lg" aria-label="Activar tema claro" aria-pressed="true" title="Activar tema claro" type="button">
+      <span class="material-symbols-outlined theme-icon">light_mode</span>
+    </button>
+  </div>
   <main class="w-full max-w-md px-6">
     <div class="bg-surface-container-low rounded-xl p-10 text-center ambient-glow ghost-border">
       <div class="w-20 h-20 mx-auto rounded-full gold-gradient-bg flex items-center justify-center mb-8"><span

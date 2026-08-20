@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="utf-8" />
+  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <title>Notificaciones - TecnoCorte</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Noto+Serif:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
+  {% include "includes/tema.html" %}
+  <style>
+    body {
+      background-color: var(--fondo);
+      color: var(--c-on-surface);
+      font-family: 'Manrope', sans-serif;
+    }
+    h1, h2, h3, h4, h5, h6, .font-headline {
+      font-family: 'Noto Serif', serif;
+    }
+    .glass-nav {
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px);
+    }
+    .gold-gradient {
+      background: linear-gradient(135deg, #f2ca50 0%, #d4af37 100%);
+    }
+    .ambient-glow {
+      box-shadow: 0 20px 40px rgba(242, 202, 80, 0.06);
+    }
+    .ghost-border {
+      border: 1px solid var(--c-outline-variant);
+    }
+  </style>
+</head>
+
+<body class="min-h-screen flex flex-col pt-24 bg-background text-on-background">
+  {% include "includes/site_nav.html" with active="" %}
+  <nav class="hidden">
+    <div class="flex justify-between items-center px-8 py-4 w-full max-w-7xl mx-auto">
+      <a class="inline-flex" href="{% url 'sena:usuario_dashboard' %}" aria-label="TecnoCorte">{% include "includes/logo.html" %}</a>
+      <div class="hidden md:flex gap-8 items-center font-display uppercase tracking-widest text-sm">
+        <a class="text-on-surface-variant hover:text-primary transition-all duration-300" href="{% url 'sena:usuario_dashboard' %}">Inicio</a>
+        <a class="text-on-surface-variant hover:text-primary transition-all duration-300" href="{% url 'sena:usuario_servicios' %}">Servicios</a>
+        <a class="text-on-surface-variant hover:text-primary transition-all duration-300" href="{% url 'sena:usuario_tienda' %}">Tienda</a>
+        <a class="text-on-surface-variant hover:text-primary transition-all duration-300" href="{% url 'sena:usuario_peluquerias' %}">Peluquerías</a>
+        <a class="text-on-surface-variant hover:text-primary transition-all duration-300" href="{% url 'sena:ayuda' %}">Contactos</a>
+      </div>
+      <div class="flex items-center gap-5">
+        <button data-theme-toggle onclick="toggleTheme()" class="text-primary transition-all duration-300 hover:text-primary-container active:scale-90" title="Activar tema claro" type="button"><span class="material-symbols-outlined theme-icon">light_mode</span></button>
+        <a href="{% url 'sena:carrito' %}" class="relative text-primary hover:text-primary-container transition-all duration-300" title="Carrito">
+          <span class="material-symbols-outlined">shopping_cart</span>
+          <span class="absolute -top-2 -right-2 min-w-5 h-5 px-1 rounded-full bg-primary text-on-primary text-[10px] font-bold flex items-center justify-center">{{ cantidad|default:0 }}</span>
+        </a>
+        <a href="{% url 'sena:usuario_perfil' %}" class="text-primary hover:text-primary-container transition-colors" title="Perfil">
+          <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">account_circle</span>
+        </a>
+        <a href="{% url 'sena:logout' %}" class="text-on-surface-variant hover:text-error transition-colors text-xs font-bold uppercase tracking-widest">Salir</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="flex-grow w-full max-w-4xl mx-auto px-6 py-12 md:py-16">
+    <div class="flex justify-between items-end mb-8 border-b border-outline-variant/10 pb-4">
+      <div>
+        <a href="{% url 'sena:usuario_perfil' %}" class="flex items-center gap-1 text-primary text-xs uppercase tracking-widest hover:text-primary-container transition-colors mb-4 active:scale-95">
+          <span class="material-symbols-outlined text-sm">arrow_back</span>Volver al perfil
+        </a>
+        <h1 class="font-headline text-4xl tracking-tight">Notificaciones</h1>
+      </div>
+    </div>
+
+    <div class="space-y-4">
+      {% for notificacion in notificaciones %}
+      <article class="bg-surface-container-low rounded-xl p-6 ambient-glow flex gap-4">
+        <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+          <span class="material-symbols-outlined text-primary text-lg">{% if notificacion.leida %}notifications_off{% else %}notifications{% endif %}</span>
+        </div>
+        <div class="flex-1">
+          <p class="font-body text-on-surface">{{ notificacion.mensaje }}</p>
+          <div class="flex items-center justify-between mt-3">
+            <p class="text-on-surface-variant text-xs">{{ notificacion.fecha|date:'d/m/Y H:i' }}</p>
+            {% if notificacion.reserva and notificacion.reserva.estado == 'Completada' and notificacion.reserva.id not in calificaciones_reservas %}
+            <a href="{% url 'sena:usuario_perfil' %}#citas" class="gold-gradient inline-flex text-on-primary font-bold py-1 px-4 rounded-md text-[10px] uppercase tracking-widest hover:opacity-90 transition-opacity active:scale-95">Calificar servicio</a>
+            {% endif %}
+          </div>
+        </div>
+      </article>
+      {% empty %}
+      <div class="text-center py-16 bg-surface-container-low rounded-xl ghost-border">
+        <span class="material-symbols-outlined text-primary/40 text-5xl mb-4 block">notifications_off</span>
+        <p class="text-on-surface-variant mb-6">No tienes notificaciones nuevas.</p>
+        <a href="{% url 'sena:usuario_reservar_cita' %}" class="inline-flex justify-center py-3 px-8 rounded-md gold-gradient text-on-primary font-bold text-sm uppercase tracking-widest hover:opacity-90 transition-all active:scale-95">Reservar una cita</a>
+      </div>
+      {% endfor %}
+    </div>
+  </main>
+</body>
+
+</html>

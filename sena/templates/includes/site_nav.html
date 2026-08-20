@@ -1,0 +1,30 @@
+<header class="site-header fixed left-0 right-0 top-4 z-50 px-4">
+  <nav class="pill-nav mx-auto flex w-full max-w-7xl items-center gap-3 rounded-full px-3 py-2">
+    <a class="pill-brand inline-flex shrink-0 items-center rounded-full p-1" href="{% url 'sena:inicio' %}" aria-label="TecnoCorte">
+      {% include "includes/logo.html" with logo_class="h-10 w-10" %}
+    </a>
+
+    <div class="pill-nav-menu hidden min-w-0 flex-1 items-center justify-center gap-1 md:flex" data-pill-nav>
+      <span class="pill-nav-highlight" aria-hidden="true"></span>
+      <a data-pill-link class="pill-nav-link {% if active == 'inicio' %}is-active{% endif %}" href="{% url 'sena:inicio' %}">Inicio</a>
+      <a data-pill-link class="pill-nav-link {% if active == 'servicios' %}is-active{% endif %}" href="{% url 'sena:usuario_servicios' %}">Servicios</a>
+      <a data-pill-link class="pill-nav-link {% if active == 'tienda' %}is-active{% endif %}" href="{% url 'sena:usuario_tienda' %}">Tienda</a>
+      <a data-pill-link class="pill-nav-link {% if active == 'barberias' %}is-active{% endif %}" href="{% url 'sena:usuario_peluquerias' %}">Barberías</a>
+      <a data-pill-link class="pill-nav-link {% if active == 'contactos' %}is-active{% endif %}" href="{% url 'sena:ayuda' %}">Contactos</a>
+    </div>
+
+    <div class="pill-actions ml-auto flex shrink-0 items-center gap-2 text-primary">
+      <button data-theme-toggle onclick="toggleTheme()" class="pill-action" title="Activar tema claro" type="button" aria-label="Activar tema claro">
+        <span class="material-symbols-outlined theme-icon">light_mode</span>
+      </button>
+      {% include "includes/notificaciones_indicator.html" %}
+      {% include "includes/carrito_indicator.html" %}
+      {% if request.session.logueado %}
+      <a class="pill-text-action hidden sm:inline-flex" href="{% url 'sena:usuario_perfil' %}">Perfil</a>
+      <a class="pill-text-action hidden sm:inline-flex" href="{% url 'sena:logout' %}">Salir</a>
+      {% else %}
+      <a class="pill-text-action hidden sm:inline-flex" href="{% url 'sena:login' %}">Ingresar</a>
+      {% endif %}
+    </div>
+  </nav>
+</header>

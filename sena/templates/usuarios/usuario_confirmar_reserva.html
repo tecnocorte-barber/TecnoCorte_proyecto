@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html class="dark" lang="es">
+<html lang="es">
 
 <head>
   <meta charset="utf-8" />
@@ -16,7 +16,7 @@
   {% include "includes/tema.html" %}
   <style>
     .glass-nav {
-      background: rgba(19, 19, 19, 0.7);
+      background: var(--glass-bg);
       backdrop-filter: blur(20px);
     }
 
@@ -29,17 +29,16 @@
     }
 
     .ghost-border {
-      border: 1px solid rgba(77, 70, 53, 0.15);
+      border: 1px solid var(--c-outline-variant);
     }
   </style>
 </head>
 
 <body class="bg-surface text-on-surface font-body antialiased min-h-screen flex flex-col">
-  <nav class="fixed top-0 w-full z-50 glass-nav shadow-[0_20px_40px_rgba(242,202,80,0.06)]">
+  {% include "includes/site_nav.html" with active="" %}
+  <nav class="hidden">
     <div class="flex justify-between items-center w-full px-8 py-4 max-w-full mx-auto">
-      <div class="font-headline text-2xl font-bold text-primary-container"><a
-          href="{% url 'sena:usuario_dashboard' %}">TecnoCorte</a>
-      </div>
+      <a class="inline-flex" href="{% url 'sena:usuario_dashboard' %}" aria-label="TecnoCorte">{% include "includes/logo.html" %}</a>
       <ul class="hidden md:flex items-center gap-8 font-display text-on-surface uppercase tracking-widest text-sm">
         <li><a class="text-on-surface-variant hover:text-primary transition-colors duration-300 active:scale-95"
             href="{% url 'sena:usuario_dashboard' %}">Inicio</a>
@@ -57,12 +56,11 @@
             href="{% url 'sena:ayuda' %}">Contactos</a>
         </li>
       </ul>
-      <div class="flex items-center gap-4 text-primary"><a href="{% url 'sena:carrito' %}"
+      <div class="flex items-center gap-4 text-primary"><button data-theme-toggle onclick="toggleTheme()" class="text-primary transition-all duration-300 hover:text-primary-container active:scale-90" title="Activar tema claro" type="button"><span class="material-symbols-outlined theme-icon">light_mode</span></button>{% include "includes/notificaciones_indicator.html" %}<a href="{% url 'sena:carrito' %}"
           class="relative hover:text-primary-container transition-all duration-300 active:scale-90"
-          title="Carrito"><span class="material-symbols-outlined">shopping_bag</span>{% if cantidad %}<span
-            class="absolute -top-2 -right-2 min-w-5 h-5 px-1 rounded-full bg-primary text-on-primary text-[10px] font-bold flex items-center justify-center">{{
-            cantidad }}
-          </span>{% endif %}
+          title="Carrito"><span class="material-symbols-outlined">shopping_cart</span><span
+            class="absolute -top-2 -right-2 min-w-5 h-5 px-1 rounded-full bg-primary text-on-primary text-[10px] font-bold flex items-center justify-center">{{ cantidad|default:0 }}
+          </span>
         </a><a href="{% url 'sena:usuario_perfil' %}"
           class="hover:text-primary-container transition-all duration-300 active:scale-90" title="Perfil"><span
             class="material-symbols-outlined">account_circle</span>

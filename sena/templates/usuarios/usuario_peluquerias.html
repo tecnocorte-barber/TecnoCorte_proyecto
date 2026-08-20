@@ -1,6 +1,6 @@
 {% load static %}
 <!DOCTYPE html>
-<html class="dark" lang="es">
+<html lang="es">
 
 <head>
   <meta charset="utf-8" />
@@ -15,8 +15,8 @@
   {% include "includes/tema.html" %}
   <style>
     body {
-      background-color: #131313;
-      color: #e2e2e2;
+      background-color: var(--fondo);
+      color: var(--c-on-surface);
       font-family: 'Manrope', sans-serif;
     }
 
@@ -60,45 +60,7 @@
     class="pointer-events-none fixed left-0 top-0 -z-10 h-[512px] w-full bg-gradient-to-b from-primary/5 to-transparent">
   </div>
 
-  <header class="fixed top-0 z-50 w-full bg-surface/70 backdrop-blur-xl">
-    <div
-      class="mx-auto flex w-full max-w-full items-center justify-between bg-surface-container-low px-6 py-4 shadow-[0_20px_40px_rgba(242,202,80,0.06)] md:px-8">
-      <div class="font-headline text-2xl font-bold text-primary-container"><a
-          href="{% url 'sena:inicio' %}">TecnoCorte</a></div>
-      <nav class="hidden items-center space-x-8 text-sm font-display uppercase tracking-widest text-on-surface md:flex">
-        <a class="text-on-surface-variant transition-all duration-300 hover:text-primary"
-          href="{% url 'sena:inicio' %}">Inicio</a>
-        <a class="text-on-surface-variant transition-all duration-300 hover:text-primary"
-          href="{% url 'sena:usuario_servicios' %}">Servicios</a>
-        <a class="text-on-surface-variant transition-all duration-300 hover:text-primary"
-          href="{% url 'sena:usuario_tienda' %}">Tienda</a>
-        <a class="border-b-2 border-primary pb-1 text-primary" href="{% url 'sena:usuario_peluquerias' %}">Barberías</a>
-        <a class="text-on-surface-variant transition-all duration-300 hover:text-primary"
-          href="{% url 'sena:ayuda' %}">Contactos</a>
-      </nav>
-      <div class="flex items-center gap-5">
-        {% if request.session.logueado %}
-        <a href="{% url 'sena:usuario_perfil' %}"
-          class="text-sm font-bold uppercase tracking-widest transition-colors hover:text-primary-container">Perfil</a>
-        <a href="{% url 'sena:logout' %}"
-          class="text-sm font-bold uppercase tracking-widest transition-colors hover:text-primary-container">Salir</a>
-        {% else %}
-        <a href="{% url 'sena:login' %}"
-          class="text-sm font-bold uppercase tracking-widest transition-colors hover:text-primary-container">Ingresar</a>
-        {% endif %}
-        <a href="{% url 'sena:carrito' %}"
-          class="relative text-primary transition-all duration-300 hover:text-primary-container active:scale-90"
-          title="Carrito">
-          <span class="material-symbols-outlined">shopping_bag</span>
-          {% if cantidad %}
-          <span
-            class="absolute -right-2 -top-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-on-primary">{{
-            cantidad }}</span>
-          {% endif %}
-        </a>
-      </div>
-    </div>
-  </header>
+  {% include "includes/site_nav.html" with active="barberias" %}
 
   <main
     class="relative z-10 mx-auto grid w-full max-w-screen-2xl flex-grow grid-cols-1 gap-8 px-4 pb-24 pt-32 md:px-8 lg:grid-cols-12">
@@ -175,8 +137,7 @@
           </div>
 
           <div class="flex flex-grow flex-col p-6">
-            <h3 class="mb-3 font-headline text-2xl text-primary-container transition-colors group-hover:text-primary">{{
-              peluqueria.nombre }}</h3>
+            <h3 class="mb-3 font-headline text-2xl text-primary-container transition-colors group-hover:text-primary">{{ peluqueria.nombre }}</h3>
             <div class="mt-auto mb-6 flex items-start gap-3">
               <span class="material-symbols-outlined mt-0.5 text-primary-container/70">location_on</span>
               <div>

@@ -1,6 +1,6 @@
 {% load static %}
 <!DOCTYPE html>
-<html class="dark" lang="es">
+<html lang="es">
 
 <head>
   <meta charset="utf-8" />
@@ -26,7 +26,7 @@
     }
 
     .ghost-border {
-      border: 1px solid rgba(77, 70, 53, 0.15);
+      border: 1px solid var(--c-outline-variant);
     }
 
     .hover-ambient-glow:hover {
@@ -38,82 +38,22 @@
     }
 
     ::-webkit-scrollbar-track {
-      background: #0e0e0e;
+      background: var(--c-surface-container-lowest);
     }
 
     ::-webkit-scrollbar-thumb {
-      background: #2a2a2a;
+      background: var(--c-surface-container-high);
       border-radius: 4px;
     }
 
     ::-webkit-scrollbar-thumb:hover {
-      background: #d4af37;
+      background: var(--c-primary);
     }
   </style>
 </head>
 
-<body class="bg-surface font-body text-on-surface antialiased selection:bg-primary/30 selection:text-primary">
-  <nav class="fixed top-0 z-50 w-full bg-surface/70 shadow-[0_20px_40px_rgba(242,202,80,0.06)] backdrop-blur-xl">
-    <div class="mx-auto flex w-full max-w-full items-center justify-between px-6 py-4 md:px-8">
-      <div class="font-headline text-2xl font-bold text-primary-container"><a
-          href="{% url 'sena:inicio' %}">TecnoCorte</a></div>
-      <div class="hidden items-center space-x-8 text-sm font-display uppercase tracking-widest text-on-surface md:flex">
-        <a class="text-on-surface-variant transition-all duration-300 hover:text-primary"
-          href="{% url 'sena:inicio' %}">Inicio</a>
-        <a class="text-on-surface-variant transition-all duration-300 hover:text-primary"
-          href="{% url 'sena:usuario_servicios' %}">Servicios</a>
-        <a class="border-b-2 border-primary pb-1 text-primary" href="{% url 'sena:usuario_tienda' %}">Tienda</a>
-        <a class="text-on-surface-variant transition-all duration-300 hover:text-primary"
-          href="{% url 'sena:usuario_peluquerias' %}">Barberías</a>
-        <a class="text-on-surface-variant transition-all duration-300 hover:text-primary"
-          href="{% url 'sena:ayuda' %}">Contactos</a>
-      </div>
-      <div class="flex items-center space-x-6">
-        {% if request.session.logueado %}
-        <a href="{% url 'sena:usuario_perfil' %}"
-          class="font-bold uppercase tracking-widest text-on-surface-variant transition-colors hover:text-primary">Perfil</a>
-        <a href="{% url 'sena:logout' %}"
-          class="font-bold uppercase tracking-widest text-on-surface-variant transition-colors hover:text-primary">Salir</a>
-        {% else %}
-        <a href="{% url 'sena:login' %}"
-          class="font-bold uppercase tracking-widest text-on-surface-variant transition-colors hover:text-primary">Ingresar</a>
-        {% endif %}
-        <a href="{% url 'sena:carrito' %}"
-          class="relative text-primary transition-all duration-300 hover:text-primary-container active:scale-90"
-          title="Carrito">
-          <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">shopping_bag</span>
-          <span id="cart-count"
-            class="absolute -right-2 -top-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-on-primary {% if not cantidad %}hidden{% endif %}">{{
-            cantidad|default:0 }}</span>
-        </a>
-        <button id="btn-menu-movil" class="text-on-surface-variant md:hidden" title="Menú"><span
-            class="material-symbols-outlined">menu</span></button>
-      </div>
-    </div>
-  </nav>
-
-  <div id="menu-movil"
-    class="fixed left-0 right-0 top-[76px] z-40 hidden flex-col gap-4 border-b border-outline-variant/15 bg-surface/95 px-8 py-6 backdrop-blur-xl md:hidden">
-    <a class="text-sm font-semibold uppercase tracking-widest text-on-surface-variant hover:text-primary"
-      href="{% url 'sena:inicio' %}">Inicio</a>
-    <a class="text-sm font-semibold uppercase tracking-widest text-on-surface-variant hover:text-primary"
-      href="{% url 'sena:usuario_servicios' %}">Servicios</a>
-    <a class="text-sm font-semibold uppercase tracking-widest text-primary"
-      href="{% url 'sena:usuario_tienda' %}">Tienda</a>
-    <a class="text-sm font-semibold uppercase tracking-widest text-on-surface-variant hover:text-primary"
-      href="{% url 'sena:usuario_peluquerias' %}">Barberías</a>
-    <a class="text-sm font-semibold uppercase tracking-widest text-on-surface-variant hover:text-primary"
-      href="{% url 'sena:ayuda' %}">Contactos</a>
-    {% if request.session.logueado %}
-    <a class="text-sm font-bold uppercase tracking-widest text-on-surface-variant hover:text-primary"
-      href="{% url 'sena:usuario_perfil' %}">Perfil</a>
-    <a class="text-sm font-bold uppercase tracking-widest text-on-surface-variant hover:text-primary"
-      href="{% url 'sena:logout' %}">Salir</a>
-    {% else %}
-    <a class="text-sm font-bold uppercase tracking-widest text-on-surface-variant hover:text-primary"
-      href="{% url 'sena:login' %}">Ingresar</a>
-    {% endif %}
-  </div>
+<body class="bg-surface font-body text-on-surface antialiased">
+  {% include "includes/site_nav.html" with active="tienda" %}
 
   <main class="mx-auto min-h-screen max-w-[1600px] px-4 pb-24 pt-32 md:px-12">
     <header class="mb-12 flex flex-col items-end justify-between gap-8 md:flex-row">
@@ -138,6 +78,13 @@
           title="Mostrar filtros"><span class="material-symbols-outlined text-sm">tune</span></button>
       </div>
     </header>
+    {% if mensaje_tienda %}
+    <div id="tienda-feedback" class="mb-8 flex items-center gap-3 rounded-xl border border-error/30 bg-error-container/15 p-4 text-error" role="alert">
+      <span class="material-symbols-outlined">error</span>{{ mensaje_tienda }}
+    </div>
+    {% else %}
+    <div id="tienda-feedback" class="mb-8 hidden items-center gap-3 rounded-xl border border-error/30 bg-error-container/15 p-4 text-error" role="alert"></div>
+    {% endif %}
 
     <div class="mb-16 flex h-12 w-full items-center justify-center">
       <div class="h-1 w-1 rounded-full bg-primary-container shadow-[0_0_10px_rgba(212,175,55,0.8)]"></div>
@@ -225,7 +172,7 @@
         <div id="productos-grid" class="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
           {% for producto in productos %}
           <article
-            class="{% if forloop.first %}md:col-span-2 lg:col-span-2{% endif %} flex flex-col rounded-[28px] bg-surface-container-low p-6 transition-all duration-500 hover-ambient-glow {% if not producto.disponible %}opacity-70 grayscale-[30%]{% endif %}"
+            class="{% if forloop.first %}md:col-span-2 lg:col-span-2{% endif %} flex flex-col rounded-[28px] bg-surface-container-low p-6 transition-all duration-500 hover-ambient-glow {% if not producto.disponible or producto.stock <= 0 %}opacity-70 grayscale-[30%]{% endif %}"
             data-categoria="{{ producto.categoria }}" data-precio="{{ producto.precio }}"
             data-nombre="{{ producto.nombre|lower }}" data-disponible="{{ producto.disponible|yesno:'1,0' }}">
             <div class="relative mb-6 h-52 overflow-hidden rounded-xl bg-surface-container-highest">
@@ -254,8 +201,7 @@
 
             <div class="flex flex-1 flex-col justify-between">
               <div>
-                <span class="mb-1 block text-[10px] font-bold uppercase tracking-[0.18em] text-on-surface-variant">{{
-                  producto.get_categoria_display }}</span>
+                <span class="mb-1 block text-[10px] font-bold uppercase tracking-[0.18em] text-on-surface-variant">{{ producto.get_categoria_display }}</span>
                 <h2 class="mb-2 font-headline text-xl text-on-surface">{{ producto.nombre }}</h2>
                 {% if producto.descripcion %}
                 <p class="mb-4 text-sm text-on-surface-variant">{{ producto.descripcion|truncatewords:15 }}</p>
@@ -265,7 +211,7 @@
               <div class="mt-4 flex items-center justify-between border-t border-outline-variant/10 pt-4">
                 <span class="font-body text-base font-bold text-on-surface">${{ producto.precio|floatformat:"0g" }}
                   <span class="text-[10px] font-normal text-on-surface-variant">COP</span></span>
-                {% if producto.disponible %}
+                {% if producto.disponible and producto.stock > 0 %}
                 <form method="post" action="{% url 'sena:agregar_carrito' producto.id %}"
                   class="add-to-cart-form inline-flex" data-nombre="{{ producto.nombre }}">{% csrf_token %}
                   <button type="submit"
@@ -273,7 +219,9 @@
                     <span class="material-symbols-outlined text-[16px]">add</span></button>
                 </form>
                 {% else %}
-                <button class="cursor-not-allowed text-sm font-medium text-on-surface-variant">No Disponible</button>
+                <button class="cursor-not-allowed text-left text-sm font-medium text-error" disabled>
+                  {% if producto.stock <= 0 %}No hay stock disponible{% else %}No disponible{% endif %}
+                </button>
                 {% endif %}
               </div>
             </div>
@@ -308,88 +256,60 @@
       reservados.</div>
   </footer>
 
-<<<<<<< Updated upstream
-    <script>
-      var filtroActual = "";
-      function aplicarFiltros() {
-        var min = parseFloat(document.getElementById("precio-min").value) || 0;
-        var max = parseFloat(document.getElementById("precio-max").value) || Infinity;
-        var productos = document.querySelectorAll("#productos-grid article[data-categoria]");
-        var visibles = 0;
-        productos.forEach(function (art) {
-          var cat = art.dataset.categoria;
-          var precio = parseFloat(art.dataset.precio) || 0;
-          var mostrar = (filtroActual === "" || cat === filtroActual) && precio >= min && precio <= max;
-          art.style.display = mostrar ? "" : "none";
-          if (mostrar) visibles++;
-        });
-        var sinResultados = document.getElementById("sin-resultados");
-        if (visibles === 0) { sinResultados.classList.remove("hidden"); } else { sinResultados.classList.add("hidden"); }
-        var chip = document.getElementById("chip-filtro-activo");
-        var texto = document.getElementById("texto-filtro-activo");
-        if (filtroActual !== "") { chip.classList.remove("hidden"); chip.classList.add("inline-flex"); texto.textContent = filtroActual; }
-        else { chip.classList.add("hidden"); chip.classList.remove("inline-flex"); }
-      }
-      document.querySelectorAll(".categoria-link").forEach(function (btn) {
-        btn.addEventListener("click", function () {
-          filtroActual = this.dataset.cat;
-          document.querySelectorAll(".categoria-link").forEach(function (b) { b.classList.remove("text-primary", "font-bold"); });
-          this.classList.add("text-primary", "font-bold");
-          aplicarFiltros();
-        });
-      });
-      document.getElementById("btn-limpiar-filtros").addEventListener("click", function () {
-        filtroActual = "";
-        document.getElementById("precio-min").value = "";
-        document.getElementById("precio-max").value = "";
-        document.querySelectorAll(".categoria-link").forEach(function (b) { b.classList.remove("text-primary", "font-bold"); });
-        aplicarFiltros();
-      });
-      var btnQuitar = document.getElementById("btn-quitar-filtro");
-      if (btnQuitar) btnQuitar.addEventListener("click", function () {
-        filtroActual = "";
-        document.querySelectorAll(".categoria-link").forEach(function (b) { b.classList.remove("text-primary", "font-bold"); });
-        aplicarFiltros();
-      });
-      document.getElementById("ordenar").addEventListener("change", function () {
-        var valor = this.value;
-        var grid = document.getElementById("productos-grid");
-        var arts = Array.from(grid.querySelectorAll("article[data-categoria]"));
-        arts.sort(function (a, b) {
-          if (valor === "menor") return parseFloat(a.dataset.precio) - parseFloat(b.dataset.precio);
-          if (valor === "mayor") return parseFloat(b.dataset.precio) - parseFloat(a.dataset.precio);
-          return 0;
-        });
-        arts.forEach(function (el) { grid.appendChild(el); });
-      });
-
-      document.addEventListener("submit", function (e) {
-        var form = e.target;
-        if (!form.classList.contains("add-to-cart-form")) return;
-        e.preventDefault();
-        var button = form.querySelector('button[type="submit"]');
-        var badge = document.getElementById("cart-count");
-        button.disabled = true;
-        fetch(form.action, {
-          method: "POST",
-          headers: {
-            "X-CSRFToken": form.querySelector('input[name="csrfmiddlewaretoken"]').value,
-            "X-Requested-With": "XMLHttpRequest"
-          }
-        }).then(function (res) {
-          if (!res.ok) throw new Error("error");
-          return res.json();
-        }).then(function (data) {
-          if (data && data.cantidad !== undefined) {
-            badge.textContent = data.cantidad;
-            badge.classList.remove("hidden");
-          }
-          button.disabled = false;
-        }).catch(function () {
-          button.disabled = false;
-        });
-=======
   <script>
+    var filtroActual = "";
+    function aplicarFiltros() {
+      var min = parseFloat(document.getElementById("precio-min").value) || 0;
+      var max = parseFloat(document.getElementById("precio-max").value) || Infinity;
+      var productos = document.querySelectorAll("#productos-grid article[data-categoria]");
+      var visibles = 0;
+      productos.forEach(function (art) {
+        var cat = art.dataset.categoria;
+        var precio = parseFloat(art.dataset.precio) || 0;
+        var mostrar = (filtroActual === "" || cat === filtroActual) && precio >= min && precio <= max;
+        art.style.display = mostrar ? "" : "none";
+        if (mostrar) visibles++;
+      });
+      var sinResultados = document.getElementById("sin-resultados");
+      if (visibles === 0) { sinResultados.classList.remove("hidden"); } else { sinResultados.classList.add("hidden"); }
+      var chip = document.getElementById("chip-filtro-activo");
+      var texto = document.getElementById("texto-filtro-activo");
+      if (filtroActual !== "") { chip.classList.remove("hidden"); chip.classList.add("inline-flex"); texto.textContent = filtroActual; }
+      else { chip.classList.add("hidden"); chip.classList.remove("inline-flex"); }
+    }
+    document.querySelectorAll(".categoria-link").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        filtroActual = this.dataset.cat;
+        document.querySelectorAll(".categoria-link").forEach(function (b) { b.classList.remove("text-primary", "font-bold"); });
+        this.classList.add("text-primary", "font-bold");
+        aplicarFiltros();
+      });
+    });
+    document.getElementById("btn-limpiar-filtros").addEventListener("click", function () {
+      filtroActual = "";
+      document.getElementById("precio-min").value = "";
+      document.getElementById("precio-max").value = "";
+      document.querySelectorAll(".categoria-link").forEach(function (b) { b.classList.remove("text-primary", "font-bold"); });
+      aplicarFiltros();
+    });
+    var btnQuitar = document.getElementById("btn-quitar-filtro");
+    if (btnQuitar) btnQuitar.addEventListener("click", function () {
+      filtroActual = "";
+      document.querySelectorAll(".categoria-link").forEach(function (b) { b.classList.remove("text-primary", "font-bold"); });
+      aplicarFiltros();
+    });
+    document.getElementById("ordenar").addEventListener("change", function () {
+      var valor = this.value;
+      var grid = document.getElementById("productos-grid");
+      var arts = Array.from(grid.querySelectorAll("article[data-categoria]"));
+      arts.sort(function (a, b) {
+        if (valor === "menor") return parseFloat(a.dataset.precio) - parseFloat(b.dataset.precio);
+        if (valor === "mayor") return parseFloat(b.dataset.precio) - parseFloat(a.dataset.precio);
+        return 0;
+      });
+      arts.forEach(function (el) { grid.appendChild(el); });
+    });
+
     document.addEventListener("submit", function (e) {
       var form = e.target;
       if (!form.classList.contains("add-to-cart-form")) return;
@@ -404,27 +324,25 @@
           "X-Requested-With": "XMLHttpRequest"
         }
       }).then(function (res) {
-        if (!res.ok) throw new Error("error");
-        return res.json();
+        return res.json().then(function (data) {
+          if (!res.ok) throw new Error(data.error || "No se pudo agregar el producto.");
+          return data;
+        });
       }).then(function (data) {
-        if (data && data.total) {
-          badge.textContent = data.total;
+        if (data && data.cantidad !== undefined) {
+          badge.textContent = data.cantidad;
           badge.classList.remove("hidden");
         }
         button.disabled = false;
-      }).catch(function () {
+      }).catch(function (error) {
+        var feedback = document.getElementById("tienda-feedback");
+        feedback.textContent = error.message;
+        feedback.classList.remove("hidden");
+        feedback.classList.add("flex");
         button.disabled = false;
->>>>>>> Stashed changes
       });
     });
   </script>
 </body>
 
 </html>
-<<<<<<< Updated upstream
-=======
-</script>
-</body>
-
-</html>
->>>>>>> Stashed changes

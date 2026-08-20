@@ -1,0 +1,5 @@
+{% if request.session.logueado and request.session.logueado.rol == 'Cliente' %}
+<a href="{% url 'sena:usuario_notificaciones' %}" class="inline-flex items-center justify-center text-primary transition-all duration-300 hover:scale-105 hover:text-primary-container" title="Notificaciones" aria-label="Notificaciones">
+  <span class="material-symbols-outlined" aria-hidden="true">notifications</span>
+</a>
+{% endif %}

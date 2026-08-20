@@ -1,4 +1,3 @@
-<<<<<<< Updated upstream
 {% extends "usuarios/dashboard_base.html" %}
 {% block title %}TecnoCorte - Notificaciones{% endblock %}
 {% block body_class %}antialiased min-h-screen flex bg-background text-on-surface{% endblock %}
@@ -6,7 +5,7 @@
 {% include "includes/peluquero_sidebar.html" with active="notificaciones" %}
 <main class="flex-1 md:ml-72 flex flex-col min-h-screen relative bg-background">
   <header class="glass-header sticky top-0 z-40 flex justify-between items-center w-full px-6 md:px-12 py-4">
-    <h1 class="font-headline font-medium text-xl text-primary md:hidden">TecnoCorte</h1>
+    <a class="inline-flex md:hidden" href="{% url 'sena:peluquero_dashboard' %}" aria-label="TecnoCorte">{% include "includes/logo.html" %}</a>
     <div class="hidden md:block"></div>
     <a href="{% url 'sena:peluquero_dashboard' %}" class="flex items-center gap-2 text-primary uppercase tracking-widest text-sm font-bold hover:text-primary-container transition-colors active:scale-95">
       <span class="material-symbols-outlined text-base">arrow_back</span>Volver
@@ -38,15 +37,3 @@
   </div>
 </main>
 {% endblock %}
-=======
-{% extends "usuarios/dashboard_base.html" %}{% block body_class %}font-body antialiased flex bg-surface{% endblock %}{%
-block content %}{% include "includes/peluquero_sidebar.html" with active="notificaciones" %}<main
-    class="ml-72 flex-1 p-12"><a href="{% url 'sena:peluquero_dashboard' %}" class="text-primary">← Volver al panel</a>
-    <h1 class="font-headline text-4xl text-primary mt-6 mb-8">Bandeja de entrada</h1>
-    <div class="space-y-4">{% for notificacion in notificaciones %}<article
-            class="bg-surface-container-low border border-outline-variant/20 rounded-xl p-6">
-            <p>{{ notificacion.mensaje }}</p>
-            <p class="text-on-surface-variant text-xs mt-3">{{ notificacion.fecha|date:'d/m/Y H:i' }}</p>
-        </article>{% empty %}<p class="text-on-surface-variant">No tienes notificaciones nuevas.</p>{% endfor %}</div>
-</main>{% endblock %}
->>>>>>> Stashed changes

@@ -37,6 +37,8 @@ urlpatterns = [
     path('usuario/cita/<int:reserva_id>/cancelar/', views.usuario_cancelar_reserva, name="usuario_cancelar_reserva"),
     path('usuario/cita/<int:reserva_id>/editar/', views.usuario_editar_reserva, name="usuario_editar_reserva"),
     path('usuario/cita/<int:reserva_id>/calificar/', views.usuario_calificar, name="usuario_calificar"),
+    path('usuario/notificaciones/', views.usuario_notificaciones, name="usuario_notificaciones"),
+    path('usuario/cita/<int:reserva_id>/confirmar_peluquero/', views.usuario_confirmar_cita_peluquero, name="usuario_confirmar_cita_peluquero"),
     
     path('peluquero/dashboard/', views.peluquero_dashboard, name="peluquero_dashboard"),
     path('peluquero/perfil/', views.peluquero_perfil, name="peluquero_perfil"),
@@ -72,6 +74,7 @@ urlpatterns = [
     path('admin/productos/<int:id>/editar/', views.admin_editar_producto, name="admin_editar_producto"),
     path('admin/productos/<int:id>/eliminar/', views.admin_eliminar_producto, name="admin_eliminar_producto"),
     path('admin/mensajes/', views.admin_mensajes, name="admin_mensajes"),
+    path('admin/notificaciones/', views.admin_notificaciones, name="admin_notificaciones"),
 
     path('api/', include(router.urls)),
 ]
