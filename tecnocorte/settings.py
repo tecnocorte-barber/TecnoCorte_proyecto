@@ -75,10 +75,10 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 LOGIN_URL = 'sena:login'
 
-SESSION_COOKIE_SECURE = not DEBUG
-CSRF_COOKIE_SECURE = not DEBUG
-SECURE_SSL_REDIRECT = os.environ.get('DJANGO_SSL_REDIRECT', 'False').lower() == 'true'
-SECURE_HSTS_SECONDS = int(os.environ.get('DJANGO_HSTS_SECONDS', '0'))
+SESSION_COOKIE_SECURE = not DEBUG #Cuando inicias sesión, el sistema te da un "carnet".
+CSRF_COOKIE_SECURE = not DEBUG #Es una marca de agua que confirma que un formulario realmente lo llenaste tú y no un virus.
+SECURE_SSL_REDIRECT = os.environ.get('DJANGO_SSL_REDIRECT', 'False').lower() == 'true' #Si un usuario intenta entrar por la puerta transparente (http://) esta regla lo agarra de la mano y lo manda automáticamente al túnel seguro (https://).
+SECURE_HSTS_SECONDS = int(os.environ.get('DJANGO_HSTS_SECONDS', '0')) #Le dice al navegador de la persona: "Memoriza esto: por los próximos X segundos, ni se te ocurra intentar entrar por la puerta transparente, entra siempre por el túnel seguro.
 
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
@@ -86,12 +86,12 @@ REST_FRAMEWORK = {
     ],
     # Límite de peticiones para frenar abusos (spam)
     'DEFAULT_THROTTLE_CLASSES': [
-        'rest_framework.throttling.AnonRateThrottle',
-        'rest_framework.throttling.UserRateThrottle',
+        'rest_framework.throttling.AnonRateThrottle', #Controla el tráfico de usuarios no autenticados
+        'rest_framework.throttling.UserRateThrottle', #Controla el tráfico de usuarios autenticados
     ],
     'DEFAULT_THROTTLE_RATES': {
-        'anon': '100/day',
-        'user': '1000/day',
+        'anon': '100/day', # Límite para usuarios no autenticados
+        'user': '1000/day', # Límite para usuarios autenticados
     },
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
