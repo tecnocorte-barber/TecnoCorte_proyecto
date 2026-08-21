@@ -10,7 +10,7 @@ class Usuario(models.Model):
     nombre = models.CharField(max_length=100)
     apellido = models.CharField(max_length=100)
     email = models.EmailField(unique=True)
-    password = models.CharField(max_length=100)
+    password = models.CharField(max_length=128)
     telefono = models.CharField(max_length=20, blank=True)
     rol = models.CharField(max_length=15, choices=ROLES, default="Cliente")
     activo = models.BooleanField(default=True)
@@ -55,9 +55,9 @@ class Reserva(models.Model):
         ("Cancelada", "Cancelada"),
     )
 
-    cliente = models.ForeignKey(Usuario, on_delete=models.DO_NOTHING, related_name="reservas_cliente")
-    peluquero = models.ForeignKey(Usuario, on_delete=models.DO_NOTHING, related_name="reservas_peluquero")
-    peluqueria = models.ForeignKey(Peluqueria, on_delete=models.DO_NOTHING)
+    cliente = models.ForeignKey(Usuario, on_delete=models.PROTECT, related_name="reservas_cliente")
+    peluquero = models.ForeignKey(Usuario, on_delete=models.PROTECT, related_name="reservas_peluquero")
+    peluqueria = models.ForeignKey(Peluqueria, on_delete=models.PROTECT)
     fecha = models.DateField()
     hora = models.TimeField()
     servicio = models.CharField(max_length=100, blank=True, default="Corte de Cabello")
@@ -74,7 +74,7 @@ class Pedido(models.Model):
         ("Cancelado", "Cancelado"),
     )
 
-    cliente = models.ForeignKey(Usuario, on_delete=models.DO_NOTHING, related_name="pedidos")
+    cliente = models.ForeignKey(Usuario, on_delete=models.PROTECT, related_name="pedidos")
     fecha = models.DateTimeField(auto_now_add=True)
     total = models.IntegerField(default=0)
     estado = models.CharField(max_length=20, choices=ESTADOS, default="Pendiente")
@@ -84,7 +84,7 @@ class Pedido(models.Model):
 
 class PedidoProducto(models.Model):
     pedido = models.ForeignKey(Pedido, on_delete=models.CASCADE, related_name="productos")
-    producto = models.ForeignKey(Producto, on_delete=models.DO_NOTHING, related_name="pedidos_productos")
+    producto = models.ForeignKey(Producto, on_delete=models.PROTECT, related_name="pedidos_productos")
     cantidad = models.IntegerField(default=1)
     precio = models.IntegerField(default=0)
 

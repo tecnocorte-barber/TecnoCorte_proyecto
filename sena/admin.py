@@ -12,6 +12,7 @@ class UsuarioAdmin(admin.ModelAdmin):
     list_filter = ("rol", "activo")
     search_fields = ("nombre", "apellido", "email")
     list_editable = ("activo",)
+    exclude = ("password",)
 
 
 @admin.register(Peluqueria)

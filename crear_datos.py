@@ -2,6 +2,7 @@ import os, django
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'tecnocorte.settings')
 django.setup()
 from sena.models import Usuario, Peluqueria, Producto
+from django.contrib.auth.hashers import make_password
 
 print("=" * 60)
 print("CREANDO PELUQUERÍAS")
@@ -26,7 +27,7 @@ for user_data in admin_users:
         defaults={
             "nombre": user_data["nombre"],
             "apellido": user_data["apellido"],
-            "password": user_data["password"],
+            "password": make_password(user_data["password"]),
             "telefono": user_data["telefono"],
             "rol": "Admin"
         }
@@ -35,7 +36,7 @@ for user_data in admin_users:
     print(f"  {status}: {user_data['email']} / {user_data['password']}")
 
 # BARBEROS
-print("\n💈 BARBEROS:")
+print("\n BARBEROS:")
 barber_users = [
     {"email": "barbero1@test.com", "nombre": "Juan", "apellido": "García", "password": "barbero123", "telefono": "300-2000"},
     {"email": "barbero2@test.com", "nombre": "Carlos", "apellido": "López", "password": "barbero123", "telefono": "300-2001"},
@@ -47,7 +48,7 @@ for user_data in barber_users:
         defaults={
             "nombre": user_data["nombre"],
             "apellido": user_data["apellido"],
-            "password": user_data["password"],
+            "password": make_password(user_data["password"]),
             "telefono": user_data["telefono"],
             "rol": "Barbero"
         }
@@ -56,7 +57,7 @@ for user_data in barber_users:
     print(f"  {status}: {user_data['email']} / {user_data['password']}")
 
 # CLIENTES
-print("\n👤 CLIENTES:")
+print("\n CLIENTES:")
 client_users = [
     {"email": "cliente@test.com", "nombre": "Usuario", "apellido": "Prueba", "password": "cliente123", "telefono": "300-3000"},
     {"email": "juan@example.com", "nombre": "Juan", "apellido": "Pérez", "password": "cliente123", "telefono": "300-3001"},
@@ -68,12 +69,12 @@ for user_data in client_users:
         defaults={
             "nombre": user_data["nombre"],
             "apellido": user_data["apellido"],
-            "password": user_data["password"],
+            "password": make_password(user_data["password"]),
             "telefono": user_data["telefono"],
             "rol": "Cliente"
         }
     )
-    status = "✨ Creado" if created else " Existente"
+    status = " Creado" if created else " Existente"
     print(f"  {status}: {user_data['email']} / {user_data['password']}")
 
 print("\n" + "=" * 60)
@@ -100,12 +101,8 @@ Producto.objects.get_or_create(nombre="Cepillo para Cabello", defaults={
 Producto.objects.get_or_create(nombre='Tijeras Profesionales', defaults={
     "descripcion": "Tijeras de acero para corte de precisión.",
     "precio": 180000, "categoria": "Herramientas",
-<<<<<<< Updated upstream
     "stock": 1, "disponible": True,
-=======
-    "stock": 0, "disponible": False,
     "imagen": "Tijeras.jpeg",
->>>>>>> Stashed changes
 })
 print(" Productos creados")
 
@@ -117,18 +114,11 @@ print("\n ADMINISTRADOR:")
 print("   Email: admin@test.com")
 print("   Contraseña: admin123")
 print("\n PELUQUERO:")
-print("   Email: peluquero1@test.com")
-print("   Contraseña: peluquero123")
+print("   Email: barbero1@test.com")
+print("   Contraseña: barbero123")
 print("\n CLIENTE:")
 print("   Email: cliente@test.com")
 print("   Contraseña: cliente123")
 print("\n" + "=" * 60)
 
-from django.contrib.auth.models import User
-from rest_framework.authtoken.models import Token
-token_count = 0
-for user in User.objects.all():
-    token, created = Token.objects.get_or_create(user=user)
-    token_count += 1
-print(f"\n Tokens generados: {token_count}")
 
