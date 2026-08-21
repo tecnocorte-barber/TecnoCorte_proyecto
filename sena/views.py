@@ -690,7 +690,7 @@ def peluquero_dashboard(request):
     citas_completadas = citas.filter(estado="Completada")
     citas_pendientes = citas.filter(estado="Pendiente")
     citas_canceladas = citas.filter(estado="Cancelada")
-    citas_hoy = citas.filter(fecha=timezone.now().date())
+    citas_hoy = citas.filter(fecha=timezone.localdate())
     ingresos_hoy = sum(precios.get(c.servicio, 0) for c in citas_hoy.filter(estado="Completada"))
     ingresos_total = sum(precios.get(c.servicio, 0) for c in citas_completadas)
     califs = Calificacion.objects.filter(barbero_id=barbero_id)
