@@ -1,7 +1,10 @@
+# Archivo de rutas URL principales del proyecto TecnoCorte
+# Conecta la app "sena", el panel de administración y la documentación de la API
 from django.contrib import admin
 from django.urls import path, include
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 
+# Lista de rutas del proyecto: web principal, login de API, admin y documentación
 urlpatterns = [
     path('', include('sena.urls')),
     path('api/auth/', include('rest_framework.urls')),

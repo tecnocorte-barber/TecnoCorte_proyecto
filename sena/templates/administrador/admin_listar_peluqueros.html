@@ -72,8 +72,8 @@
     <td class="p-6 text-right">
       <div class="flex items-center justify-end space-x-4"><a class="text-on-surface-variant hover:text-primary transition-colors" href="{% url 'sena:admin_editar_peluquero' peluquero.id %}" title="Editar"><span class="material-symbols-outlined text-[20px]">edit</span>
     </a><form method="post" action="{% url 'sena:admin_suspender_usuario' peluquero.id %}" class="inline">
-  {% csrf_token %}{% if peluquero.activo %}<button class="text-on-surface-variant hover:text-error transition-colors" type="submit" onclick="return confirm('¿Suspender a {{ peluquero.nombre }} {{ peluquero.apellido }}? No podrá iniciar sesión.')" title="Suspender"><span class="material-symbols-outlined text-[20px]">block</span>
-</button>{% else %}<button class="text-on-surface-variant hover:text-green-400 transition-colors" type="submit" onclick="return confirm('¿Reactivar a {{ peluquero.nombre }} {{ peluquero.apellido }}?')" title="Reactivar"><span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+  {% csrf_token %}{% if peluquero.activo %}<button class="btn-confirmar-accion text-on-surface-variant hover:text-error transition-colors" type="submit" data-nombre="{{ peluquero.nombre }}" data-apellido="{{ peluquero.apellido }}" data-accion="suspender" title="Suspender"><span class="material-symbols-outlined text-[20px]">block</span>
+</button>{% else %}<button class="btn-confirmar-accion text-on-surface-variant hover:text-green-400 transition-colors" type="submit" data-nombre="{{ peluquero.nombre }}" data-apellido="{{ peluquero.apellido }}" data-accion="reactivar" title="Reactivar"><span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">check_circle</span>
 </button>{% endif %}</form>
 </div>
 </td>
@@ -130,5 +130,18 @@ var contador = document.getElementById('barberos-visibles');
 if (contador) contador.textContent = visibles;
 });
 })();
+// Confirmación de suspender/reactivar: el nombre se lee como texto desde los data-*
+// (así un nombre con comillas o código no puede romper ni inyectar JavaScript)
+document.querySelectorAll('.btn-confirmar-accion').forEach(function (boton) {
+boton.addEventListener('click', function (evento) {
+var nombre = ((boton.dataset.nombre || '') + ' ' + (boton.dataset.apellido || '')).trim();
+var mensaje = boton.dataset.accion === 'suspender'
+? '¿Suspender a ' + nombre + '? No podrá iniciar sesión.'
+: '¿Reactivar a ' + nombre + '?';
+if (!confirm(mensaje)) {
+evento.preventDefault();
+}
+});
+});
 </script>
 {% endblock %}

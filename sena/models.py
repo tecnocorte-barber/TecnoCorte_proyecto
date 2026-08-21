@@ -1,5 +1,8 @@
+# Modelos de la base de datos de TecnoCorte (barbería):
+# usuarios, peluquerías, productos, reservas, pedidos, notificaciones, horarios y calificaciones.
 from django.db import models
 
+# Usuario del sistema con rol Admin, Barbero o Cliente
 class Usuario(models.Model):
     ROLES = (
         ("Admin", "ADMINISTRADOR"),
@@ -19,6 +22,7 @@ class Usuario(models.Model):
     def __str__(self):
         return f"{self.nombre} - {self.rol}"
 
+# Sede o barbería donde se atienden las citas
 class Peluqueria(models.Model):
     nombre = models.CharField(max_length=100)
     ubicacion = models.CharField(max_length=200)
@@ -27,6 +31,7 @@ class Peluqueria(models.Model):
     def __str__(self):
         return self.nombre
 
+# Producto de la tienda con precio, stock y categoría
 class Producto(models.Model):
     CATEGORIAS = (
         ("Herramientas", "Herramientas"),
@@ -47,6 +52,7 @@ class Producto(models.Model):
     def __str__(self):
         return self.nombre
 
+# Cita que un cliente reserva con un barbero en una peluquería
 class Reserva(models.Model):
     ESTADOS = (
         ("Pendiente", "Pendiente"),
@@ -66,6 +72,7 @@ class Reserva(models.Model):
     def __str__(self):
         return f"Reserva {self.id}"
 
+# Compra de productos hecha por un cliente
 class Pedido(models.Model):
     ESTADOS = (
         ("Pendiente", "Pendiente"),
@@ -82,6 +89,7 @@ class Pedido(models.Model):
     def __str__(self):
         return f"Pedido {self.id} - {self.cliente.nombre}"
 
+# Detalle de cada producto incluido en un pedido
 class PedidoProducto(models.Model):
     pedido = models.ForeignKey(Pedido, on_delete=models.CASCADE, related_name="productos")
     producto = models.ForeignKey(Producto, on_delete=models.PROTECT, related_name="pedidos_productos")
@@ -91,6 +99,7 @@ class PedidoProducto(models.Model):
     def __str__(self):
         return f"{self.producto.nombre} x{self.cantidad}"
 
+# Historial de inicios de sesión de los usuarios
 class RegistroIngreso(models.Model):
     usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name="ingresos")
     rol = models.CharField(max_length=15)
@@ -100,6 +109,7 @@ class RegistroIngreso(models.Model):
     def __str__(self):
         return f"{self.usuario.nombre} ({self.rol}) - {self.fecha}"
 
+# Aviso que recibe un usuario sobre sus citas o pedidos
 class Notificacion(models.Model):
     usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name="notificaciones")
     reserva = models.ForeignKey(Reserva, on_delete=models.CASCADE, null=True, blank=True, related_name="notificaciones")
@@ -111,6 +121,7 @@ class Notificacion(models.Model):
         return f"Notificacion {self.id} - {self.usuario.nombre}"
 
 
+# Horario de atención semanal de cada peluquería (lo configura el Admin)
 class HorarioTrabajo(models.Model):
     """Horario general que configura el administrador para cada día y cada peluquería."""
     DIAS = (
@@ -132,6 +143,7 @@ class HorarioTrabajo(models.Model):
         return f"{self.peluqueria.nombre} - {self.get_dia_semana_display()}"
 
 
+# Día u hora bloqueada para no recibir citas (lo configura el Admin)
 class BloqueoHorario(models.Model):
     """Bloquea un día completo o una hora específica para las citas de una peluquería."""
     peluqueria = models.ForeignKey(Peluqueria, on_delete=models.CASCADE, related_name="bloqueos", default=1)
@@ -148,6 +160,7 @@ class BloqueoHorario(models.Model):
         return f"{self.peluqueria.nombre} - {self.fecha} (todo el día)"
 
 
+# Mensaje enviado desde el formulario de contacto de la página de ayuda
 class MensajeContacto(models.Model):
     nombre = models.CharField(max_length=100)
     email = models.EmailField()
@@ -163,6 +176,7 @@ class MensajeContacto(models.Model):
         return f"{self.asunto} - {self.nombre}"
 
 
+# Calificación de 1 a 5 que el cliente da al barbero tras una cita completada
 class Calificacion(models.Model):
     reserva = models.OneToOneField(Reserva, on_delete=models.CASCADE, related_name="calificacion")
     cliente = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name="calificaciones_hechas")

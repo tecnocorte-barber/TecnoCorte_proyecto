@@ -4,7 +4,11 @@
       {% include "includes/logo.html" with logo_class="h-10 w-10" %}
     </a>
 
-    <div class="pill-nav-menu hidden min-w-0 flex-1 items-center justify-center gap-1 md:flex" data-pill-nav>
+    <button class="pill-menu-toggle" type="button" aria-label="Abrir menú" aria-expanded="false" aria-controls="pill-mobile-menu" onclick="togglePillMenu(this)">
+      <span class="material-symbols-outlined">menu</span>
+    </button>
+
+    <div id="pill-mobile-menu" class="pill-nav-menu hidden min-w-0 flex-1 items-center justify-center gap-1 md:flex" data-pill-nav>
       <span class="pill-nav-highlight" aria-hidden="true"></span>
       <a data-pill-link class="pill-nav-link {% if active == 'inicio' %}is-active{% endif %}" href="{% url 'sena:inicio' %}">Inicio</a>
       <a data-pill-link class="pill-nav-link {% if active == 'servicios' %}is-active{% endif %}" href="{% url 'sena:usuario_servicios' %}">Servicios</a>
@@ -28,3 +32,13 @@
     </div>
   </nav>
 </header>
+
+<script>
+  function togglePillMenu(button) {
+    var menu = document.getElementById(button.getAttribute('aria-controls'));
+    var isOpen = menu.classList.toggle('is-open');
+    button.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    button.setAttribute('aria-label', isOpen ? 'Cerrar menú' : 'Abrir menú');
+    button.querySelector('.material-symbols-outlined').textContent = isOpen ? 'close' : 'menu';
+  }
+</script>

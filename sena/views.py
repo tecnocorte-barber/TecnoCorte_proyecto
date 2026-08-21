@@ -1,15 +1,18 @@
 import json
 
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.http import JsonResponse
 from django.utils import timezone
 from django.db import IntegrityError, models, transaction
 from django.contrib.auth.hashers import check_password, make_password
 from django.utils.http import url_has_allowed_host_and_scheme
+from django.core.cache import cache
+from django.core.validators import validate_email
+from django.core.exceptions import ValidationError
 from datetime import datetime, time, timedelta
 from .models import Usuario, Peluqueria, Producto, Reserva, Pedido, PedidoProducto, RegistroIngreso, Notificacion, HorarioTrabajo, BloqueoHorario, MensajeContacto, Calificacion
-from .utilidades import autorizacion
+from .utilidades import autorizacion, validar_password
 
 SERVICIOS = [
     {"nombre": "Corte de Cabello", "descripcion": "Lavado, corte preciso con tijera y máquina, peinado con productos premium.", "duracion": "45 Minutos", "minutos": 45, "precio": 40000},
@@ -163,6 +166,14 @@ def login(request):
         rol_seleccionado = request.POST.get("rol", "Cliente")
         proximo = request.POST.get("next", "")
 
+        # Bloqueo anti fuerza bruta: 5 intentos fallidos bloquean 5 minutos (por correo + IP)
+        ip = request.META.get("REMOTE_ADDR", "")
+        clave_base = f"{(email or '').strip().lower()}_{ip}"
+        clave_intentos = f"login_intentos_{clave_base}"
+        clave_bloqueo = f"login_bloqueo_{clave_base}"
+        if cache.get(clave_bloqueo):
+            return render(request, "publicos/login.html", {"error": "Demasiados intentos fallidos. Espera 5 minutos e inténtalo de nuevo.", "proximo": proximo})
+
         if rol_seleccionado == "Usuario":
             rol_seleccionado = "Cliente"
 
@@ -174,6 +185,9 @@ def login(request):
                 return render(request, "publicos/login.html", {"error": "Tu cuenta ha sido suspendida. Contacta al administrador para más información.", "proximo": proximo})
             if usuario.rol != rol_seleccionado:
                 return render(request, "publicos/login.html", {"error": "Rol equivocado. Selecciona el rol correcto para tu cuenta.", "proximo": proximo})
+
+            # Login correcto: se limpia el contador de intentos
+            cache.delete(clave_intentos)
 
             request.session["logueado"] = {
                 "id": usuario.id,
@@ -197,7 +211,14 @@ def login(request):
             else:
                 return redirect("sena:inicio")
         except Usuario.DoesNotExist:
-            return render(request, "publicos/login.html", {"error": "Credenciales incorrectas", "proximo": proximo})
+            # Cuenta el intento fallido; al llegar a 5 bloquea durante 5 minutos
+            intentos = cache.get(clave_intentos, 0) + 1
+            if intentos >= 5:
+                cache.set(clave_bloqueo, True, 300)
+                cache.delete(clave_intentos)
+                return render(request, "publicos/login.html", {"error": "Demasiados intentos fallidos. Espera 5 minutos e inténtalo de nuevo.", "proximo": proximo})
+            cache.set(clave_intentos, intentos, 300)
+            return render(request, "publicos/login.html", {"error": f"Credenciales incorrectas. Te quedan {5 - intentos} intentos.", "proximo": proximo})
 
     return render(request, "publicos/login.html", {"proximo": request.GET.get("next", "")})
 
@@ -219,6 +240,17 @@ def registro(request):
 
         if not nombre or not apellido or not email or not password:
             return render(request, "publicos/registro.html", {"error": "Completa todos los campos obligatorios."})
+
+        # El correo debe tener un formato válido
+        try:
+            validate_email(email)
+        except ValidationError:
+            return render(request, "publicos/registro.html", {"error": "Ese correo no tiene un formato válido."})
+
+        # La contraseña debe cumplir las reglas de seguridad
+        error_password = validar_password(password)
+        if error_password:
+            return render(request, "publicos/registro.html", {"error": error_password})
 
         if Usuario.objects.filter(email=email).exists():
             return render(request, "publicos/registro.html", {"error": "Ya existe una cuenta con ese correo."})
@@ -571,8 +603,11 @@ def usuario_editar_reserva(request, reserva_id):
         fecha = request.POST.get("fecha", "").strip()
         hora = request.POST.get("hora", "").strip()
         servicio = request.POST.get("servicio", "").strip()
-        barbero = Usuario.objects.filter(id=request.POST.get("peluquero"), rol="Barbero").first()
-        peluqueria = Peluqueria.objects.filter(id=request.POST.get("peluqueria")).first()
+        # Los ids se validan como enteros para evitar errores con valores no numéricos
+        barbero_id = _id_entero(request.POST.get("peluquero"))
+        peluqueria_id = _id_entero(request.POST.get("peluqueria"))
+        barbero = Usuario.objects.filter(id=barbero_id, rol="Barbero").first() if barbero_id else None
+        peluqueria = Peluqueria.objects.filter(id=peluqueria_id).first() if peluqueria_id else None
         disponible = bool(barbero and peluqueria and servicio in {item["nombre"] for item in SERVICIOS})
         mensaje = "Los datos de la reserva no son válidos."
         if disponible:
@@ -723,8 +758,11 @@ def peluquero_perfil(request):
 @autorizacion(["Barbero"])
 def peluquero_crear_cita(request):
     if request.method == "POST":
-        cliente = Usuario.objects.filter(id=request.POST.get("cliente"), rol="Cliente").first()
-        peluqueria = Peluqueria.objects.filter(id=request.POST.get("peluqueria")).first()
+        # Los ids se validan como enteros para evitar errores con valores no numéricos
+        cliente_id = _id_entero(request.POST.get("cliente"))
+        peluqueria_id = _id_entero(request.POST.get("peluqueria"))
+        cliente = Usuario.objects.filter(id=cliente_id, rol="Cliente").first() if cliente_id else None
+        peluqueria = Peluqueria.objects.filter(id=peluqueria_id).first() if peluqueria_id else None
         if cliente is None or peluqueria is None:
             return redirect("sena:peluquero_crear_cita")
         disponible, mensaje = cita_disponible(request.POST.get("fecha"), request.POST.get("hora"), peluqueria.id, request.POST.get("servicio"))
@@ -791,6 +829,13 @@ def admin_crear_peluquero(request):
         password = request.POST.get("password", "")
         if not all([nombre, apellido, email, password]):
             return render(request, "administrador/admin_formulario_peluquero.html", {"error": "Completa todos los campos obligatorios."})
+        try:
+            validate_email(email)
+        except ValidationError:
+            return render(request, "administrador/admin_formulario_peluquero.html", {"error": "Ese correo no tiene un formato válido."})
+        error_password = validar_password(password)
+        if error_password:
+            return render(request, "administrador/admin_formulario_peluquero.html", {"error": error_password})
         if Usuario.objects.filter(email=email).exists():
             return render(request, "administrador/admin_formulario_peluquero.html", {"error": "Ya existe un usuario con ese correo."})
         Usuario.objects.create(nombre=nombre, apellido=apellido, email=email, password=make_password(password), telefono=request.POST.get("telefono", "").strip(), rol="Barbero")
@@ -799,9 +844,13 @@ def admin_crear_peluquero(request):
 
 @autorizacion(["Admin"])
 def admin_editar_peluquero(request, id):
-    peluquero = Usuario.objects.get(id=id, rol="Barbero")
+    peluquero = get_object_or_404(Usuario, id=id, rol="Barbero")
     if request.method == "POST":
         email = request.POST.get("email", "").strip()
+        try:
+            validate_email(email)
+        except ValidationError:
+            return render(request, "administrador/admin_formulario_peluquero.html", {"datos": peluquero, "error": "Ese correo no tiene un formato válido."})
         if Usuario.objects.exclude(id=id).filter(email=email).exists():
             return render(request, "administrador/admin_formulario_peluquero.html", {"datos": peluquero, "error": "Ese correo ya está registrado."})
         peluquero.nombre = request.POST.get("nombre", "").strip()
@@ -809,6 +858,10 @@ def admin_editar_peluquero(request, id):
         peluquero.email = email
         peluquero.telefono = request.POST.get("telefono", "").strip()
         if request.POST.get("password"):
+            # Solo se actualiza si la nueva contraseña cumple las reglas
+            error_password = validar_password(request.POST.get("password"))
+            if error_password:
+                return render(request, "administrador/admin_formulario_peluquero.html", {"datos": peluquero, "error": error_password})
             peluquero.password = make_password(request.POST.get("password"))
         peluquero.save()
         return redirect("sena:admin_peluqueros")
@@ -828,13 +881,16 @@ def admin_reservas(request):
 @autorizacion(["Admin"])
 def admin_crear_reserva(request):
     if request.method == "POST":
-        cliente = Usuario.objects.filter(id=request.POST.get("cliente"), rol="Cliente").first()
-        peluquero = Usuario.objects.filter(id=request.POST.get("peluquero"), rol="Barbero").first()
-        peluqueria = Peluqueria.objects.filter(id=request.POST.get("peluqueria")).first()
+        # Los ids se validan como enteros para evitar errores con valores no numéricos
+        cliente_id = _id_entero(request.POST.get("cliente"))
+        peluquero_id = _id_entero(request.POST.get("peluquero"))
+        peluqueria_id = _id_entero(request.POST.get("peluqueria"))
+        cliente = Usuario.objects.filter(id=cliente_id, rol="Cliente").first() if cliente_id else None
+        peluquero = Usuario.objects.filter(id=peluquero_id, rol="Barbero").first() if peluquero_id else None
+        peluqueria = Peluqueria.objects.filter(id=peluqueria_id).first() if peluqueria_id else None
         servicio = request.POST.get("servicio", "")
         if cliente is None or peluquero is None or peluqueria is None or servicio not in {item["nombre"] for item in SERVICIOS}:
             return redirect("sena:admin_crear_reserva")
-        peluqueria_id = request.POST.get("peluqueria")
         disponible, mensaje = cita_disponible(request.POST.get("fecha"), request.POST.get("hora"), peluqueria_id, servicio)
         if disponible:
             disponible, mensaje = barbero_esta_disponible(peluquero.id, request.POST.get("fecha"), request.POST.get("hora"), request.POST.get("servicio"))
@@ -863,11 +919,15 @@ def admin_crear_reserva(request):
 
 @autorizacion(["Admin"])
 def admin_editar_reserva(request, id):
-    reserva = Reserva.objects.get(id=id)
+    reserva = get_object_or_404(Reserva, id=id)
     if request.method == "POST":
-        cliente = Usuario.objects.filter(id=request.POST.get("cliente"), rol="Cliente").first()
-        peluquero = Usuario.objects.filter(id=request.POST.get("peluquero"), rol="Barbero").first()
-        peluqueria = Peluqueria.objects.filter(id=request.POST.get("peluqueria")).first()
+        # Los ids se validan como enteros para evitar errores con valores no numéricos
+        cliente_id = _id_entero(request.POST.get("cliente"))
+        peluquero_id = _id_entero(request.POST.get("peluquero"))
+        peluqueria_id = _id_entero(request.POST.get("peluqueria"))
+        cliente = Usuario.objects.filter(id=cliente_id, rol="Cliente").first() if cliente_id else None
+        peluquero = Usuario.objects.filter(id=peluquero_id, rol="Barbero").first() if peluquero_id else None
+        peluqueria = Peluqueria.objects.filter(id=peluqueria_id).first() if peluqueria_id else None
         servicio = request.POST.get("servicio", "").strip()
         if cliente is None or peluquero is None or peluqueria is None or servicio not in {item["nombre"] for item in SERVICIOS}:
             return redirect("sena:admin_editar_reserva", id=id)
@@ -878,7 +938,7 @@ def admin_editar_reserva(request, id):
         reserva.hora = request.POST.get("hora")
         reserva.servicio = servicio
         reserva.estado = request.POST.get("estado")
-        disponible, mensaje = cita_disponible(request.POST.get("fecha"), request.POST.get("hora"), request.POST.get("peluqueria"), request.POST.get("servicio"))
+        disponible, mensaje = cita_disponible(request.POST.get("fecha"), request.POST.get("hora"), peluqueria_id, servicio)
         if disponible:
             disponible, mensaje = barbero_esta_disponible(peluquero.id, request.POST.get("fecha"), request.POST.get("hora"), request.POST.get("servicio"), reserva)
         if not disponible:
@@ -912,7 +972,9 @@ def admin_cancelar_reserva(request, id):
 @autorizacion(["Admin"])
 def admin_horarios(request):
     peluquerias = Peluqueria.objects.all()
-    peluqueria_id = request.GET.get("peluqueria") or request.POST.get("peluqueria_seleccionada") or (str(peluquerias.first().id) if peluquerias.exists() else None)
+    peluqueria_id_raw = request.GET.get("peluqueria") or request.POST.get("peluqueria_seleccionada") or (str(peluquerias.first().id) if peluquerias.exists() else None)
+    # Se valida que el id sea numérico para evitar errores con valores inválidos
+    peluqueria_id = _id_entero(peluqueria_id_raw)
     peluqueria_actual = Peluqueria.objects.filter(id=peluqueria_id).first() if peluqueria_id else None
     if peluqueria_actual:
         for numero in range(7):
@@ -944,9 +1006,18 @@ def admin_horarios(request):
         elif accion == "crear_bloqueo":
             fecha = request.POST.get("fecha")
             hora = request.POST.get("hora") or None
-            if fecha and peluqueria_actual:
-                BloqueoHorario.objects.create(fecha=fecha, hora=hora, motivo=request.POST.get("motivo", ""), peluqueria=peluqueria_actual)
-        return redirect(f"{reverse('sena:admin_horarios')}?peluqueria={peluqueria_id}")
+            # Se validan los formatos de fecha y hora antes de guardar
+            try:
+                fecha_valida = datetime.strptime(fecha, "%Y-%m-%d").date() if fecha else None
+            except (ValueError, TypeError):
+                fecha_valida = None
+            try:
+                hora_valida = datetime.strptime(hora, "%H:%M").time() if hora else None
+            except (ValueError, TypeError):
+                hora_valida = None
+            if fecha_valida and peluqueria_actual:
+                BloqueoHorario.objects.create(fecha=fecha_valida, hora=hora_valida, motivo=request.POST.get("motivo", ""), peluqueria=peluqueria_actual)
+        return redirect(f"{reverse('sena:admin_horarios')}?peluqueria={peluqueria_id or ''}")
     horarios = HorarioTrabajo.objects.filter(peluqueria=peluqueria_actual).order_by("dia_semana") if peluqueria_actual else []
     bloqueos = BloqueoHorario.objects.filter(peluqueria=peluqueria_actual) if peluqueria_actual else BloqueoHorario.objects.none()
     return render(request, "administrador/admin_horarios.html", {"horarios": horarios, "bloqueos": bloqueos, "hoy": datetime.today().date(), "peluquerias": peluquerias, "peluqueria_actual": peluqueria_actual})
@@ -973,7 +1044,7 @@ def admin_crear_peluqueria(request):
 
 @autorizacion(["Admin"])
 def admin_editar_peluqueria(request, id):
-    peluqueria = Peluqueria.objects.get(id=id)
+    peluqueria = get_object_or_404(Peluqueria, id=id)
     if request.method == "POST":
         peluqueria.nombre = request.POST.get("nombre")
         peluqueria.ubicacion = request.POST.get("ubicacion")
@@ -1007,7 +1078,11 @@ def datos_producto(request, producto=None):
     stock_anterior = producto.stock if producto.pk else None
     producto.nombre = request.POST.get("nombre")
     producto.descripcion = request.POST.get("descripcion", "")
-    producto.precio = request.POST.get("precio", 0)
+    # El precio se convierte a entero y nunca queda negativo
+    try:
+        producto.precio = max(0, int(request.POST.get("precio", 0)))
+    except (TypeError, ValueError):
+        producto.precio = 0
     producto.categoria = request.POST.get("categoria", "Herramientas")
     try:
         producto.stock = max(0, int(request.POST.get("stock", 0)))
@@ -1029,7 +1104,7 @@ def admin_crear_producto(request):
 
 @autorizacion(["Admin"])
 def admin_editar_producto(request, id):
-    producto = Producto.objects.get(id=id)
+    producto = get_object_or_404(Producto, id=id)
     if request.method == "POST":
         datos_producto(request, producto)
         return redirect("sena:admin_productos")
@@ -1119,6 +1194,19 @@ def admin_crear_usuario(request):
                 "error": "Todos los campos son obligatorios"
             })
 
+        try:
+            validate_email(email)
+        except ValidationError:
+            return render(request, "administrador/admin_formulario_usuario.html", {
+                "error": "Ese correo no tiene un formato válido"
+            })
+
+        error_password = validar_password(password)
+        if error_password:
+            return render(request, "administrador/admin_formulario_usuario.html", {
+                "error": error_password
+            })
+
         if Usuario.objects.filter(email=email).exists():
             return render(request, "administrador/admin_formulario_usuario.html", {
                 "error": f"Ya existe un usuario con el email {email}"
@@ -1142,21 +1230,32 @@ def admin_crear_usuario(request):
 @autorizacion(["Admin"])
 def admin_editar_usuario(request, id):
     """Editar usuario existente"""
-    usuario = Usuario.objects.get(id=id)
+    usuario = get_object_or_404(Usuario, id=id)
     
     if request.method == "POST":
+        email = request.POST.get("email", usuario.email).strip()
+        # El correo debe ser válido y no estar repetido en otro usuario
+        try:
+            validate_email(email)
+        except ValidationError:
+            return render(request, "administrador/admin_formulario_usuario.html", {"usuario": usuario, "roles": Usuario.ROLES, "editar": True, "error": "Ese correo no tiene un formato válido."})
+        if Usuario.objects.exclude(id=id).filter(email=email).exists():
+            return render(request, "administrador/admin_formulario_usuario.html", {"usuario": usuario, "roles": Usuario.ROLES, "editar": True, "error": "Ese correo ya está registrado por otro usuario."})
         usuario.nombre = request.POST.get("nombre", usuario.nombre).strip()
         usuario.apellido = request.POST.get("apellido", usuario.apellido).strip()
-        usuario.email = request.POST.get("email", usuario.email).strip()
+        usuario.email = email
         usuario.telefono = request.POST.get("telefono", usuario.telefono).strip()
         nuevo_rol = request.POST.get("rol", usuario.rol)
         if nuevo_rol not in dict(Usuario.ROLES):
             return render(request, "administrador/admin_formulario_usuario.html", {"usuario": usuario, "roles": Usuario.ROLES, "editar": True, "error": "El rol seleccionado no es válido."})
         usuario.rol = nuevo_rol
         
-        # Actualizar contraseña si se proporciona
+        # Actualizar contraseña si se proporciona y cumple las reglas
         password = request.POST.get("password", "").strip()
         if password:
+            error_password = validar_password(password)
+            if error_password:
+                return render(request, "administrador/admin_formulario_usuario.html", {"usuario": usuario, "roles": Usuario.ROLES, "editar": True, "error": error_password})
             usuario.password = make_password(password)
         
         usuario.save()

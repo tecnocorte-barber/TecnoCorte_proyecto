@@ -1,9 +1,13 @@
+# Script de datos de prueba: crea peluquerías, usuarios y productos de ejemplo
+# Se ejecuta por separado con: python crear_datos.py
 import os, django
+# Configura el entorno de Django para poder usar los modelos fuera del servidor
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'tecnocorte.settings')
 django.setup()
 from sena.models import Usuario, Peluqueria, Producto
 from django.contrib.auth.hashers import make_password
 
+# Bloque: creación de las peluquerías (sedes) de prueba
 print("=" * 60)
 print("CREANDO PELUQUERÍAS")
 print("=" * 60)
@@ -21,6 +25,7 @@ admin_users = [
     {"email": "admin@test.com", "nombre": "Admin", "apellido": "Test", "password": "admin123", "telefono": "300-0000"},
     {"email": "administrador@tecnocorte.com", "nombre": "Daniel", "apellido": "García", "password": "admin123", "telefono": "300-1234"},
 ]
+# Recorre la lista y crea cada administrador si no existe (con contraseña cifrada)
 for user_data in admin_users:
     user, created = Usuario.objects.get_or_create(
         email=user_data["email"],
@@ -42,6 +47,7 @@ barber_users = [
     {"email": "barbero2@test.com", "nombre": "Carlos", "apellido": "López", "password": "barbero123", "telefono": "300-2001"},
     {"email": "barbero3@test.com", "nombre": "Miguel", "apellido": "Rodríguez", "password": "barbero123", "telefono": "300-2002"},
 ]
+# Recorre la lista y crea cada barbero si no existe
 for user_data in barber_users:
     user, created = Usuario.objects.get_or_create(
         email=user_data["email"],
@@ -63,6 +69,7 @@ client_users = [
     {"email": "juan@example.com", "nombre": "Juan", "apellido": "Pérez", "password": "cliente123", "telefono": "300-3001"},
     {"email": "maria@example.com", "nombre": "María", "apellido": "González", "password": "cliente123", "telefono": "300-3002"},
 ]
+# Recorre la lista y crea cada cliente si no existe
 for user_data in client_users:
     user, created = Usuario.objects.get_or_create(
         email=user_data["email"],
@@ -77,6 +84,7 @@ for user_data in client_users:
     status = " Creado" if created else " Existente"
     print(f"  {status}: {user_data['email']} / {user_data['password']}")
 
+# Bloque: creación de los productos de la tienda de prueba
 print("\n" + "=" * 60)
 print("CREANDO PRODUCTOS")
 print("=" * 60)
@@ -106,6 +114,7 @@ Producto.objects.get_or_create(nombre='Tijeras Profesionales', defaults={
 })
 print(" Productos creados")
 
+# Bloque final: resumen en consola con las credenciales de acceso creadas
 print("\n" + "=" * 60)
 print(" ¡DATOS DE PRUEBA CREADOS EXITOSAMENTE!")
 print("=" * 60)
