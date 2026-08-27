@@ -337,6 +337,8 @@
   </button>
   {% block content %}{% endblock %}
 
+  {% include "includes/toast_notifications.html" %}
+
   <script>
     function setTheme(theme) {
       var html = document.documentElement;

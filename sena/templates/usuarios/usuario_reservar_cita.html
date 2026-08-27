@@ -36,13 +36,48 @@
 
     .opt-selected {
       background: linear-gradient(135deg, #f2ca50, #d4af37);
-      color: #3c2f00;
+      color: #241a00 !important;
       border-color: transparent;
       box-shadow: 0 0 20px rgba(242, 202, 80, .2);
     }
 
+    .opt-selected h3,
+    .opt-selected span,
+    .opt-selected p,
+    .opt-selected .text-on-surface,
+    .opt-selected .text-on-surface-variant,
+    .opt-selected .text-primary,
+    .opt-selected .text-primary-container,
     .opt-selected .icon-muted {
-      color: #3c2f00 !important;
+      color: #241a00 !important;
+    }
+
+    #fechas .opt-selected,
+    #horas button.hora-selected {
+      background: linear-gradient(135deg, #f2ca50, #d4af37) !important;
+      color: #241a00 !important;
+      border-color: transparent !important;
+      font-weight: 800;
+    }
+
+    #horas button {
+      min-height: 3rem;
+      color: var(--c-on-surface) !important;
+      font-variant-numeric: tabular-nums;
+    }
+
+    #horas button.hora-selected {
+      box-shadow: 0 0 18px rgba(242, 202, 80, .2);
+    }
+
+    #horas button:disabled {
+      color: var(--c-on-surface-variant) !important;
+    }
+
+    .opt:focus-visible,
+    #horas button:focus-visible {
+      outline: 3px solid var(--c-primary);
+      outline-offset: 3px;
     }
   </style>
 </head>
@@ -135,7 +170,7 @@
           <div class="grid grid-cols-1 md:grid-cols-3 gap-4">{% for peluquero in peluqueros %}
             <div
               class="opt bg-surface-container-low rounded-md p-6 border border-outline-variant/15 hover:bg-surface-container relative"
-              data-peluquero="{{ peluquero.id }}" onclick="seleccionarPeluquero(this)">
+              data-peluquero="{{ peluquero.id }}" data-nombre="{{ peluquero.nombre }} {{ peluquero.apellido }}" onclick="seleccionarPeluquero(this)">
               <div class="flex flex-col items-center text-center gap-3">
                 <div class="w-16 h-16 rounded-full bg-surface-container-highest flex items-center justify-center"><span
                     class="material-symbols-outlined text-3xl text-primary">content_cut</span>
@@ -160,7 +195,7 @@
           <div class="grid grid-cols-1 md:grid-cols-3 gap-4">{% for peluqueria in peluquerias %}
             <div
               class="opt bg-surface-container-low rounded-md p-6 border border-outline-variant/15 hover:bg-surface-container relative"
-              data-peluqueria="{{ peluqueria.id }}" onclick="seleccionarPeluqueria(this)">
+              data-peluqueria="{{ peluqueria.id }}" data-nombre="{{ peluqueria.nombre }}" onclick="seleccionarPeluqueria(this)">
               <div class="flex flex-col items-center text-center gap-2"><span
                   class="material-symbols-outlined text-primary text-3xl">storefront</span><span
                   class="font-body text-sm font-semibold">{{ peluqueria.nombre }}
@@ -257,17 +292,29 @@
     </div>
   </main>
   <footer
-    class="w-full pt-16 pb-8 bg-surface-container-lowest flex flex-col items-center gap-8 px-8 border-t border-outline-variant/10">
-    <div class="font-headline text-xl text-primary">TecnoCorte
-    </div>
-    <div class="font-body text-on-surface-variant text-sm text-center">© 2026 TecnoCorte. Precios en COP. Todos los
-      derechos reservados.
-    </div>
+    class="flex w-full flex-col items-center gap-8 border-t border-outline-variant/10 bg-surface-container-lowest px-8 pb-8 pt-16">
+    <div class="font-headline text-xl font-bold text-primary">TecnoCorte</div>
+    <nav class="flex flex-wrap justify-center gap-6 text-sm text-on-surface-variant">
+      <a class="opacity-80 transition-colors duration-300 hover:text-primary hover:opacity-100"
+        href="{% url 'sena:ayuda' %}">Privacidad</a>
+      <a class="opacity-80 transition-colors duration-300 hover:text-primary hover:opacity-100"
+        href="{% url 'sena:ayuda' %}">Términos</a>
+      <a class="opacity-80 transition-colors duration-300 hover:text-primary hover:opacity-100"
+        href="{% url 'sena:ayuda' %}">Soporte</a>
+      <a class="opacity-80 transition-colors duration-300 hover:text-primary hover:opacity-100"
+        href="{% url 'sena:ayuda' %}">Franquicias</a>
+    </nav>
+    <div class="mt-4 text-center text-sm text-on-surface-variant opacity-60">© 2026 TecnoCorte. Todos los derechos
+      reservados.</div>
   </footer>
   <script>
 const HORARIOS = {{ horarios_json|safe }};
 const BLOQUEOS = {{ bloqueos_json|safe }};
 const RESERVAS = {{ reservas_json|safe }};
+const FECHA_HOY = "{{ fecha_hoy }}";
+const HORA_ACTUAL = "{{ hora_actual }}";
+const DATOS_ENVIADOS = new URLSearchParams("{{ form_post|escapejs }}");
+const SERVICIO_INICIAL = "{{ servicio_inicial|escapejs }}";
 let seleccion = { servicio: "", precio: 0, duracion: "", minutos: 30, peluquero: "", peluqueria: "", fecha: "", hora: "" };
 function refrescar() {
   document.getElementById("res-servicio").textContent = seleccion.servicio || "Por elegir";
@@ -298,7 +345,7 @@ function seleccionarPeluquero(el) {
   document.querySelectorAll(".opt[data-peluquero]").forEach(o => o.classList.remove("opt-selected"));
   el.classList.add("opt-selected");
   seleccion.peluquero = el.dataset.peluquero;
-  seleccion.peluqueroNombre = el.querySelector("span:last-child").textContent.trim();
+   seleccion.peluqueroNombre = el.dataset.nombre;
   if (seleccion.fecha) buildHoras();
   refrescar();
 }
@@ -306,7 +353,7 @@ function seleccionarPeluqueria(el) {
   document.querySelectorAll(".opt[data-peluqueria]").forEach(o => o.classList.remove("opt-selected"));
   el.classList.add("opt-selected");
   seleccion.peluqueria = el.dataset.peluqueria;
-  seleccion.peluqueriaNombre = el.querySelector("span:last-child").textContent.trim();
+   seleccion.peluqueriaNombre = el.dataset.nombre;
   seleccion.fecha = "";
   seleccion.hora = "";
   seleccion.diaSemana = "";
@@ -348,6 +395,9 @@ function horaEnMinutos(hora) {
   var partes = hora.split(":");
   return parseInt(partes[0]) * 60 + parseInt(partes[1]);
 }
+function horaEsPasada(fecha, hora) {
+  return fecha === FECHA_HOY && horaEnMinutos(hora) <= horaEnMinutos(HORA_ACTUAL);
+}
 function turnoOcupado(fecha, hora) {
   var inicio = horaEnMinutos(hora);
   var fin = inicio + (seleccion.minutos || 30);
@@ -363,7 +413,7 @@ function buildFechas() {
   cont.innerHTML = "";
   var MESES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
   var DIAS = ["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"];
-  var hoy = new Date();
+  var hoy = new Date(FECHA_HOY + "T00:00:00");
   document.getElementById("mes-visible").textContent = MESES[hoy.getMonth()] + " " + hoy.getFullYear();
   for (var i = 0; i < 7; i++) {
     var d = new Date();
@@ -401,27 +451,48 @@ function buildHoras() {
   horas.forEach(function(h) {
     var b = document.createElement("button");
     b.type = "button";
+    var pasada = horaEsPasada(seleccion.fecha, h);
     var bloqueada = estaBloqueada(seleccion.fecha, h);
     var ocupada = turnoOcupado(seleccion.fecha, h);
-    if (bloqueada || ocupada) {
+    if (pasada || bloqueada || ocupada) {
       b.className = "py-3 rounded-md border border-outline-variant/20 text-on-surface-variant font-body text-sm opacity-40 cursor-not-allowed";
-      b.textContent = h + (ocupada ? " (ocupado)" : " (no disponible)");
+      b.textContent = h + (pasada ? " (hora pasada)" : (ocupada ? " (ocupado)" : " (no disponible)"));
+      b.setAttribute("aria-label", h + (pasada ? ", hora pasada" : ", no disponible"));
       b.disabled = true;
     } else {
       b.className = "py-3 rounded-md border border-outline-variant/20 text-on-surface-variant font-body text-sm hover:border-primary hover:text-primary transition-colors active:scale-95";
       b.textContent = h;
+      b.setAttribute("aria-label", "Seleccionar hora " + h);
       b.onclick = function () {
-        document.querySelectorAll("#horas button").forEach(function(x) { x.classList.remove("bg-primary","text-on-primary","border-primary","bg-primary/5"); });
-        this.classList.add("bg-primary","text-on-primary","border-primary","bg-primary/5");
-    seleccion.hora = h;
+        document.querySelectorAll("#horas button").forEach(function(x) { x.classList.remove("hora-selected"); });
+        this.classList.add("hora-selected");
+        seleccion.hora = h;
         refrescar();
       };
     }
     cont.appendChild(b);
   });
 }
+function restaurarSeleccionEnviada() {
+  var servicio = document.querySelector('.opt[data-servicio="' + CSS.escape(DATOS_ENVIADOS.get("servicio") || "") + '"]');
+  var peluquero = document.querySelector('.opt[data-peluquero="' + CSS.escape(DATOS_ENVIADOS.get("peluquero") || "") + '"]');
+  var peluqueria = document.querySelector('.opt[data-peluqueria="' + CSS.escape(DATOS_ENVIADOS.get("peluqueria") || "") + '"]');
+  if (servicio) seleccionarServicio(servicio);
+  if (peluquero) seleccionarPeluquero(peluquero);
+  if (peluqueria) seleccionarPeluqueria(peluqueria);
+  var fecha = document.querySelector('#fechas .opt[data-fecha="' + CSS.escape(DATOS_ENVIADOS.get("fecha") || "") + '"]');
+  if (fecha) fecha.click();
+  var horaEnviada = DATOS_ENVIADOS.get("hora");
+  var hora = Array.from(document.querySelectorAll("#horas button:not(:disabled)")).find(function (boton) { return boton.textContent === horaEnviada; });
+  if (hora) hora.click();
+}
 buildFechas();
 buildHoras();
+if (SERVICIO_INICIAL && !DATOS_ENVIADOS.has("servicio")) {
+  var servicioInicial = Array.from(document.querySelectorAll('.opt[data-servicio]')).find(function (card) { return card.dataset.servicio === SERVICIO_INICIAL; });
+  if (servicioInicial) seleccionarServicio(servicioInicial);
+}
+if (DATOS_ENVIADOS.has("servicio") || DATOS_ENVIADOS.has("peluquero") || DATOS_ENVIADOS.has("peluqueria")) restaurarSeleccionEnviada();
 document.getElementById("form-reserva").addEventListener("submit", function (e) {
   if (!seleccion.servicio || !seleccion.peluquero || !seleccion.peluqueria || !seleccion.fecha || !seleccion.hora) {
     e.preventDefault();

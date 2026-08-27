@@ -1,0 +1,266 @@
+<div id="tc-toast-region" class="tc-toast-region" aria-live="polite" aria-atomic="true">
+  {% for message in messages %}
+  <div class="tc-toast-seed" data-toast-message="{{ message|escape }}" data-toast-type="{{ message.tags|default:'info' }}"></div>
+  {% endfor %}
+  {% if exito %}<div class="tc-toast-seed" data-toast-message="{{ exito|escape }}" data-toast-type="success"></div>{% endif %}
+  {% if error %}<div class="tc-toast-seed" data-toast-message="{{ error|escape }}" data-toast-type="error"></div>{% endif %}
+  {% if mensaje_tienda %}<div class="tc-toast-seed" data-toast-message="{{ mensaje_tienda|escape }}" data-toast-type="error"></div>{% endif %}
+  {% if mensaje_carrito %}<div class="tc-toast-seed" data-toast-message="{{ mensaje_carrito|escape }}" data-toast-type="warning"></div>{% endif %}
+</div>
+
+<style>
+  .tc-toast-region {
+    position: fixed;
+    top: 5.5rem;
+    right: 1.25rem;
+    z-index: 100;
+    display: grid;
+    gap: .75rem;
+    width: min(25rem, calc(100vw - 2rem));
+    pointer-events: none;
+  }
+  .tc-toast {
+    --tc-accent: var(--c-primary, #d6ad42);
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    gap: .75rem;
+    overflow: hidden;
+    padding: 1rem 1rem .95rem;
+    color: var(--c-on-surface, #e2e2e2);
+    background: var(--c-surface-container-high, #2a2a2a);
+    background: color-mix(in srgb, var(--c-surface-container-high, #2a2a2a) 94%, var(--tc-accent));
+    border: 1px solid var(--tc-accent);
+    border-color: color-mix(in srgb, var(--tc-accent) 42%, transparent);
+    border-left: 3px solid var(--tc-accent);
+    border-radius: .85rem;
+    box-shadow: 0 18px 45px rgba(0, 0, 0, .24);
+    pointer-events: auto;
+    animation: tc-toast-in .3s cubic-bezier(.2, .8, .2, 1) both;
+  }
+  .tc-toast.is-leaving { animation: tc-toast-out .25s ease both; }
+  .tc-toast[data-type="success"] { --tc-accent: #57c785; }
+  .tc-toast[data-type="error"] { --tc-accent: var(--c-error, #ffb4ab); }
+  .tc-toast[data-type="warning"] { --tc-accent: #f2ca50; }
+  .tc-toast__icon {
+    flex: 0 0 auto;
+    color: var(--tc-accent);
+    font-size: 1.3rem;
+    line-height: 1.25;
+  }
+  .tc-toast__copy { min-width: 0; flex: 1; }
+  .tc-toast__title {
+    margin: 0 0 .15rem;
+    color: var(--tc-accent);
+    font-size: .68rem;
+    font-weight: 800;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+  }
+  .tc-toast__message { margin: 0; font-size: .86rem; line-height: 1.45; }
+  .tc-toast__close {
+    flex: 0 0 auto;
+    padding: .1rem;
+    color: var(--c-on-surface-variant, #d0c5af);
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+  }
+  .tc-toast__close:hover { color: var(--tc-accent); }
+  .tc-toast__progress {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    height: 2px;
+    background: var(--tc-accent);
+    transform-origin: left;
+    animation: tc-toast-progress 5.5s linear both;
+  }
+  .tc-confirm-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 110;
+    display: grid;
+    place-items: center;
+    padding: 1.25rem;
+    background: rgba(8, 8, 8, .68);
+    backdrop-filter: blur(5px);
+    animation: tc-fade-in .2s ease both;
+  }
+  .tc-confirm {
+    width: min(28rem, 100%);
+    padding: 1.5rem;
+    color: var(--c-on-surface, #e2e2e2);
+    background: var(--c-surface-container-low, #1b1b1b);
+    border: 1px solid color-mix(in srgb, var(--c-primary, #d6ad42) 25%, transparent);
+    border-radius: 1rem;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, .4);
+    animation: tc-modal-in .25s cubic-bezier(.2, .8, .2, 1) both;
+  }
+  .tc-confirm__icon {
+    display: grid;
+    width: 2.75rem;
+    height: 2.75rem;
+    margin-bottom: 1rem;
+    place-items: center;
+    color: var(--c-primary, #d6ad42);
+    background: color-mix(in srgb, var(--c-primary, #d6ad42) 13%, transparent);
+    border-radius: 50%;
+  }
+  .tc-confirm h2 { margin: 0 0 .45rem; font: 700 1.3rem/1.25 'Noto Serif', serif; }
+  .tc-confirm p { margin: 0; color: var(--c-on-surface-variant, #d0c5af); font-size: .9rem; line-height: 1.5; }
+  .tc-confirm__actions { display: flex; justify-content: flex-end; gap: .65rem; margin-top: 1.4rem; }
+  .tc-confirm__actions button {
+    padding: .65rem 1rem;
+    border-radius: .55rem;
+    font: 700 .75rem/1 'Manrope', sans-serif;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+  .tc-confirm__cancel { color: var(--c-on-surface-variant, #d0c5af); background: transparent; border: 1px solid var(--c-outline-variant, #4d4635); }
+  .tc-confirm__accept { color: var(--c-on-primary, #3c2f00); background: var(--c-primary, #d6ad42); border: 1px solid var(--c-primary, #d6ad42); }
+  @keyframes tc-toast-in { from { opacity: 0; transform: translate3d(1rem, -.5rem, 0) scale(.97); } to { opacity: 1; transform: none; } }
+  @keyframes tc-toast-out { to { opacity: 0; transform: translate3d(1rem, 0, 0) scale(.97); } }
+  @keyframes tc-toast-progress { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+  @keyframes tc-fade-in { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes tc-modal-in { from { opacity: 0; transform: translateY(.75rem) scale(.97); } to { opacity: 1; transform: none; } }
+  @media (max-width: 640px) { .tc-toast-region { top: 1rem; right: 1rem; left: 1rem; width: auto; } }
+  @media (prefers-reduced-motion: reduce) { .tc-toast, .tc-toast__progress, .tc-confirm-backdrop, .tc-confirm { animation-duration: .01ms !important; } }
+</style>
+
+<script>
+(function () {
+  if (window.TecnoCorteNotify) return;
+
+  var icons = { success: 'check_circle', error: 'error', warning: 'warning', info: 'info' };
+  var titles = { success: 'Listo', error: 'No se pudo completar', warning: 'Atención', info: 'Información' };
+
+  function region() {
+    var current = document.getElementById('tc-toast-region');
+    if (current) return current;
+    current = document.createElement('div');
+    current.id = 'tc-toast-region';
+    current.className = 'tc-toast-region';
+    current.setAttribute('aria-live', 'polite');
+    current.setAttribute('aria-atomic', 'true');
+    document.body.appendChild(current);
+    return current;
+  }
+
+  function closeToast(toast) {
+    if (!toast || toast.classList.contains('is-leaving')) return;
+    toast.classList.add('is-leaving');
+    window.setTimeout(function () { toast.remove(); }, 260);
+  }
+
+  function show(message, type) {
+    if (!message) return;
+    type = icons[type] ? type : 'info';
+    var toast = document.createElement('div');
+    toast.className = 'tc-toast';
+    toast.dataset.type = type;
+    toast.setAttribute('role', type === 'error' ? 'alert' : 'status');
+    toast.innerHTML = '<span class="material-symbols-outlined tc-toast__icon" aria-hidden="true">' + icons[type] + '</span>' +
+      '<div class="tc-toast__copy"><p class="tc-toast__title">' + titles[type] + '</p><p class="tc-toast__message"></p></div>' +
+      '<button class="tc-toast__close" type="button" aria-label="Cerrar notificación"><span class="material-symbols-outlined">close</span></button>' +
+      '<span class="tc-toast__progress" aria-hidden="true"></span>';
+    toast.querySelector('.tc-toast__message').textContent = message;
+    toast.querySelector('.tc-toast__close').addEventListener('click', function () { closeToast(toast); });
+    region().appendChild(toast);
+    window.setTimeout(function () { closeToast(toast); }, 5500);
+  }
+
+  function closeConfirm(backdrop, accepted) {
+    if (!backdrop) return;
+    var control = backdrop._tcControl;
+    backdrop.remove();
+    if (!accepted || !control) return;
+    control.dataset.confirming = 'true';
+    if (control.form) {
+      if (control.form.requestSubmit) control.form.requestSubmit(control);
+      else control.form.submit();
+    } else if (control.href) {
+      window.location.href = control.href;
+    }
+  }
+
+  function openConfirm(control) {
+    var backdrop = document.createElement('div');
+    backdrop.className = 'tc-confirm-backdrop';
+    backdrop.innerHTML = '<section class="tc-confirm" role="alertdialog" aria-modal="true" aria-labelledby="tc-confirm-title" aria-describedby="tc-confirm-message">' +
+      '<div class="tc-confirm__icon"><span class="material-symbols-outlined">help</span></div>' +
+      '<h2 id="tc-confirm-title">¿Confirmar acción?</h2>' +
+      '<p id="tc-confirm-message"></p>' +
+      '<div class="tc-confirm__actions"><button type="button" class="tc-confirm__cancel">Cancelar</button><button type="button" class="tc-confirm__accept">Confirmar</button></div>' +
+      '</section>';
+    backdrop._tcControl = control;
+    backdrop.querySelector('#tc-confirm-message').textContent = control.dataset.confirm;
+    var cancel = backdrop.querySelector('.tc-confirm__cancel');
+    var accept = backdrop.querySelector('.tc-confirm__accept');
+    accept.textContent = control.dataset.confirmLabel || 'Confirmar';
+    cancel.addEventListener('click', function () { closeConfirm(backdrop, false); });
+    accept.addEventListener('click', function () { closeConfirm(backdrop, true); });
+    backdrop.addEventListener('click', function (event) { if (event.target === backdrop) closeConfirm(backdrop, false); });
+    document.body.appendChild(backdrop);
+    accept.focus();
+  }
+
+  window.TecnoCorteNotify = { show: show, success: function (text) { show(text, 'success'); }, error: function (text) { show(text, 'error'); }, warning: function (text) { show(text, 'warning'); }, info: function (text) { show(text, 'info'); } };
+
+  var formPostQuery = "{{ form_post|escapejs }}";
+  function restoreFormValues() {
+    if (!formPostQuery) return;
+    var posted = new URLSearchParams(formPostQuery);
+    window.TecnoCorteFormPost = posted;
+    document.querySelectorAll('input[name], textarea[name], select[name]').forEach(function (field) {
+      if (field.type === 'hidden' && field.name === 'csrfmiddlewaretoken') return;
+      if (!posted.has(field.name) || field.type === 'password') return;
+      if (field.type === 'checkbox' || field.type === 'radio') {
+        field.checked = posted.getAll(field.name).indexOf(field.value || 'on') !== -1;
+      } else if (field.tagName === 'SELECT' && field.multiple) {
+        var selected = posted.getAll(field.name);
+        Array.from(field.options).forEach(function (option) { option.selected = selected.indexOf(option.value) !== -1; });
+      } else {
+        field.value = posted.get(field.name);
+      }
+    });
+  }
+
+  function bindProfileEditors() {
+    document.querySelectorAll('[data-profile-edit]').forEach(function (button) {
+      var target = document.getElementById(button.dataset.profileEdit);
+      if (!target) return;
+      button.setAttribute('aria-expanded', 'false');
+      button.addEventListener('click', function () {
+        var open = target.classList.toggle('hidden') === false;
+        button.setAttribute('aria-expanded', open ? 'true' : 'false');
+        if (open) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
+  }
+
+  function boot() {
+    restoreFormValues();
+    bindProfileEditors();
+    document.querySelectorAll('.tc-toast-seed').forEach(function (seed) {
+      show(seed.dataset.toastMessage, (seed.dataset.toastType || 'info').split(' ')[0]);
+      seed.remove();
+    });
+    document.addEventListener('click', function (event) {
+      var control = event.target.closest('[data-confirm]');
+      if (!control || control.dataset.confirming === 'true') return;
+      event.preventDefault();
+      openConfirm(control);
+    });
+    document.addEventListener('keydown', function (event) {
+      if (event.key !== 'Escape') return;
+      var backdrop = document.querySelector('.tc-confirm-backdrop');
+      closeConfirm(backdrop, false);
+    });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
+})();
+</script>

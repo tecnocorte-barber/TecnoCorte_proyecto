@@ -93,8 +93,8 @@
     </header>
     {% if items %}
     <div class="flex flex-col lg:flex-row gap-10"><!-- Items List -->
-      <div class="flex-1 space-y-6">{% for item in items %}
-        <div class="bg-surface-container-low rounded-xl p-6 flex items-center gap-6 ghost-border group">
+      <div class="flex-1 space-y-6" id="cart-items">{% for item in items %}
+        <div class="bg-surface-container-low rounded-xl p-6 flex items-center gap-6 ghost-border group" data-cart-item="{{ item.producto.id }}">
           <div
             class="w-20 h-24 bg-surface-container-highest rounded-md overflow-hidden shrink-0 flex items-center justify-center">
             {% if item.producto.imagen %}<img src="{{ item.producto.imagen }}" alt="{{ item.producto.nombre }}"
@@ -110,15 +110,15 @@
           </div>
           <div class="flex flex-col items-end gap-4">
             <div class="flex items-center gap-3 bg-surface-container-highest rounded-lg p-1">
-              <form method="post" action="{% url 'sena:actualizar_carrito' item.producto.id %}">{% csrf_token %}
+              <form method="post" action="{% url 'sena:actualizar_carrito' item.producto.id %}" class="cart-update-form">{% csrf_token %}
                 <input type="hidden" name="accion" value="decrementar">
                 <button class="text-primary hover:text-primary-container transition-colors active:scale-90 p-1"
                   name="cantidad" value="{{ item.cantidad|add:-1 }}" type="submit" title="Menos"><span
                     class="material-symbols-outlined text-base">remove</span>
                 </button>
               </form>
-              <span class="text-on-surface font-bold min-w-[2rem] text-center">{{ item.cantidad }}</span>
-              <form method="post" action="{% url 'sena:actualizar_carrito' item.producto.id %}">{% csrf_token %}
+              <span class="text-on-surface font-bold min-w-[2rem] text-center" data-cart-quantity>{{ item.cantidad }}</span>
+              <form method="post" action="{% url 'sena:actualizar_carrito' item.producto.id %}" class="cart-update-form">{% csrf_token %}
                 <input type="hidden" name="accion" value="incrementar">
                 <button class="text-primary hover:text-primary-container transition-colors active:scale-90 p-1"
                   name="cantidad" value="{{ item.cantidad|add:1 }}" type="submit" title="Más"><span
@@ -126,9 +126,9 @@
                 </button>
               </form>
             </div>
-            <span class="font-headline text-lg text-primary">${{ item.subtotal|floatformat:"0g" }}
+            <span class="font-headline text-lg text-primary" data-cart-subtotal>${{ item.subtotal|floatformat:"0g" }}
             </span>
-            <form method="post" action="{% url 'sena:eliminar_carrito' item.producto.id %}">{% csrf_token %}
+            <form method="post" action="{% url 'sena:eliminar_carrito' item.producto.id %}" class="cart-remove-form">{% csrf_token %}
               <button
                 class="text-error hover:text-error/80 transition-colors text-xs uppercase tracking-widest font-semibold active:scale-95"
                 type="submit">Eliminar
@@ -144,11 +144,11 @@
           <h3 class="font-headline text-2xl text-primary-container mb-6 border-b border-outline-variant/20 pb-4">Resumen
           </h3>
           <div class="flex justify-between items-center mb-4"><span
-              class="text-on-surface-variant text-sm">Productos</span><span class="text-on-surface font-semibold">{{ cantidad|default:0 }}
+              class="text-on-surface-variant text-sm">Productos</span><span class="text-on-surface font-semibold" id="cart-total-quantity">{{ cantidad|default:0 }}
             </span>
           </div>
           <div class="flex justify-between items-end mb-8 pt-4 border-t border-outline-variant/20"><span
-              class="text-on-surface-variant text-sm">Total</span><span class="font-headline text-3xl text-primary">${{ total|default:0|floatformat:"0g" }}
+              class="text-on-surface-variant text-sm">Total</span><span class="font-headline text-3xl text-primary" id="cart-total-price">${{ total|default:0|floatformat:"0g" }}
             </span>
           </div>
           {% if request.session.logueado %}<a href="{% url 'sena:finalizar_pedido' %}"
@@ -181,16 +181,97 @@
     {% endif %}
   </main>
   <footer
-    class="bg-surface-container-lowest w-full pt-16 pb-8 border-t border-outline-variant/10 flex flex-col items-center gap-8 px-8">
-    <div class="font-headline text-xl text-primary">
-      TecnoCorte
-
-    </div>
-    <div class="font-body text-on-surface-variant text-sm opacity-60 text-center">
-      © 2026 TecnoCorte. Todos los derechos reservados.
-
-    </div>
+    class="flex w-full flex-col items-center gap-8 border-t border-outline-variant/10 bg-surface-container-lowest px-8 pb-8 pt-16">
+    <div class="font-headline text-xl font-bold text-primary">TecnoCorte</div>
+    <nav class="flex flex-wrap justify-center gap-6 text-sm text-on-surface-variant">
+      <a class="opacity-80 transition-colors duration-300 hover:text-primary hover:opacity-100"
+        href="{% url 'sena:ayuda' %}">Privacidad</a>
+      <a class="opacity-80 transition-colors duration-300 hover:text-primary hover:opacity-100"
+        href="{% url 'sena:ayuda' %}">Términos</a>
+      <a class="opacity-80 transition-colors duration-300 hover:text-primary hover:opacity-100"
+        href="{% url 'sena:ayuda' %}">Soporte</a>
+      <a class="opacity-80 transition-colors duration-300 hover:text-primary hover:opacity-100"
+        href="{% url 'sena:ayuda' %}">Franquicias</a>
+    </nav>
+    <div class="mt-4 text-center text-sm text-on-surface-variant opacity-60">© 2026 TecnoCorte. Todos los derechos
+      reservados.</div>
   </footer>
+  <script>
+    (function () {
+      var tiendaUrl = "{% url 'sena:usuario_tienda' %}";
+      function money(value) {
+        return "$" + Number(value || 0).toLocaleString("es-CO");
+      }
+
+      function updateSummary(data) {
+        var count = document.getElementById("cart-count");
+        var quantity = document.getElementById("cart-total-quantity");
+        var total = document.getElementById("cart-total-price");
+        if (count) count.textContent = data.cantidad;
+        if (quantity) quantity.textContent = data.cantidad;
+        if (total) total.textContent = money(data.total);
+      }
+
+      function showEmptyCart() {
+        var items = document.getElementById("cart-items");
+        var aside = document.querySelector("#cart-items + aside");
+        if (items) items.innerHTML = '<div class="text-center py-16 bg-surface-container-low rounded-xl ghost-border"><span class="material-symbols-outlined text-primary/40 text-5xl mb-4 block">shopping_bag</span><h2 class="font-headline text-3xl text-on-surface mb-3">Tu carrito está vacío</h2><p class="text-on-surface-variant mb-8">Explora la tienda y agrega productos para tu cuidado personal.</p><a href="' + tiendaUrl + '" class="inline-flex justify-center py-3 px-8 rounded-md gold-gradient-bg text-on-primary font-bold text-sm uppercase tracking-widest">Ir a la tienda</a></div>';
+        if (aside) aside.style.display = "none";
+      }
+
+      function sendCartForm(form, remove) {
+        var buttons = form.querySelectorAll("button");
+        buttons.forEach(function (button) { button.disabled = true; });
+        fetch(form.action, {
+          method: "POST",
+          body: new URLSearchParams(new FormData(form)),
+          headers: {
+            "X-CSRFToken": form.querySelector('input[name="csrfmiddlewaretoken"]').value,
+            "X-Requested-With": "XMLHttpRequest"
+          }
+        }).then(function (response) {
+          return response.json().then(function (data) {
+            if (!response.ok) throw new Error(data.error || "No se pudo actualizar el carrito.");
+            return data;
+          });
+        }).then(function (data) {
+          var item = form.closest("[data-cart-item]");
+          updateSummary(data);
+          if (remove || data.item_cantidad === 0) {
+            if (item) item.remove();
+            if (data.empty) showEmptyCart();
+            if (window.TecnoCorteNotify) window.TecnoCorteNotify.info("Producto eliminado del carrito.");
+            return;
+          }
+          if (item) {
+            var quantity = item.querySelector("[data-cart-quantity]");
+            var subtotal = item.querySelector("[data-cart-subtotal]");
+            var updateForms = item.querySelectorAll(".cart-update-form");
+            if (quantity) quantity.textContent = data.item_cantidad;
+            if (subtotal) subtotal.textContent = money(data.subtotal);
+            if (updateForms[0]) updateForms[0].querySelector("button[name=cantidad]").value = Math.max(data.item_cantidad - 1, 0);
+            if (updateForms[1]) updateForms[1].querySelector("button[name=cantidad]").value = data.item_cantidad + 1;
+          }
+          if (window.TecnoCorteNotify) {
+            if (data.mensaje) window.TecnoCorteNotify.warning(data.mensaje);
+            else window.TecnoCorteNotify.success("Carrito actualizado.");
+          }
+        }).catch(function (error) {
+          if (window.TecnoCorteNotify) window.TecnoCorteNotify.error(error.message);
+        }).finally(function () {
+          buttons.forEach(function (button) { button.disabled = false; });
+        });
+      }
+
+      document.addEventListener("submit", function (event) {
+        var form = event.target;
+        var remove = form.classList.contains("cart-remove-form");
+        if (!remove && !form.classList.contains("cart-update-form")) return;
+        event.preventDefault();
+        sendCartForm(form, remove);
+      });
+    })();
+  </script>
 </body>
 
 </html>

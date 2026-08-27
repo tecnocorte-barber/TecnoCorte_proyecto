@@ -13,6 +13,8 @@ router.register(r"reservas", api.ReservaViewSet)
 urlpatterns = [
     path('', views.inicio, name="inicio"),
     path('login/', views.login, name="login"),
+    path('recuperar-password/', views.solicitar_recuperacion, name="solicitar_recuperacion"),
+    path('restablecer-password/<str:token>/', views.restablecer_password, name="restablecer_password"),
     path('registro/', views.registro, name="registro"),
     path('logout/', views.logout, name="logout"),
     path('como_funciona/', views.como_funciona, name="como_funciona"),
@@ -38,7 +40,9 @@ urlpatterns = [
     path('usuario/cita/<int:reserva_id>/editar/', views.usuario_editar_reserva, name="usuario_editar_reserva"),
     path('usuario/cita/<int:reserva_id>/calificar/', views.usuario_calificar, name="usuario_calificar"),
     path('usuario/notificaciones/', views.usuario_notificaciones, name="usuario_notificaciones"),
+    path('usuario/notificaciones/leidas/', views.usuario_marcar_notificaciones_leidas, name="usuario_marcar_notificaciones_leidas"),
     path('usuario/cita/<int:reserva_id>/confirmar_peluquero/', views.usuario_confirmar_cita_peluquero, name="usuario_confirmar_cita_peluquero"),
+    path('cuenta/cambiar-password/', views.cambiar_password, name="cambiar_password"),
     
     path('peluquero/dashboard/', views.peluquero_dashboard, name="peluquero_dashboard"),
     path('peluquero/perfil/', views.peluquero_perfil, name="peluquero_perfil"),

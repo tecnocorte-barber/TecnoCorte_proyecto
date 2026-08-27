@@ -59,7 +59,7 @@
         {% for bloqueo in bloqueos %}
         <div class="flex justify-between items-center bg-surface-container-high p-3 rounded">
           <div><strong>{{ bloqueo.fecha|date:'d/m/Y' }}</strong>{% if bloqueo.hora %} · {{ bloqueo.hora|time:'H:i' }}{% else %} · Día completo{% endif %}<p class="text-xs text-on-surface-variant">{{ bloqueo.motivo|default:'Sin motivo' }}</p></div>
-          <form method="post" action="{% url 'sena:admin_eliminar_bloqueo' bloqueo.id %}">{% csrf_token %}<button type="submit" class="text-error text-sm" onclick="return confirm('¿Quitar este bloqueo?')">Quitar</button></form>
+          <form method="post" action="{% url 'sena:admin_eliminar_bloqueo' bloqueo.id %}">{% csrf_token %}<button type="submit" class="text-error text-sm" data-confirm="¿Quitar este bloqueo?">Quitar</button></form>
         </div>
         {% empty %}<p class="text-on-surface-variant">No hay bloqueos registrados.</p>{% endfor %}
       </div>

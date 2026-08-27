@@ -32,10 +32,10 @@
         class="font-label uppercase text-xs tracking-widest">Productos</span></a>
     <a class="flex items-center space-x-4 px-4 py-3 rounded-lg transition-all {% if active == 'mensajes' %}bg-primary-container text-on-primary-container font-bold{% else %}text-on-surface-variant hover:bg-surface-container-high{% endif %}"
       href="{% url 'sena:admin_mensajes' %}"><span class="material-symbols-outlined">mail</span><span
-        class="font-label uppercase text-xs tracking-widest">Mensajes</span></a>
+        class="font-label uppercase text-xs tracking-widest">Mensajes</span>{% if mensajes_no_leidos %}<span class="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-error px-1 text-[10px] font-bold text-on-error">{{ mensajes_no_leidos }}</span>{% endif %}</a>
     <a class="flex items-center space-x-4 px-4 py-3 rounded-lg transition-all {% if active == 'notificaciones' %}bg-primary-container text-on-primary-container font-bold{% else %}text-on-surface-variant hover:bg-surface-container-high{% endif %}"
       href="{% url 'sena:admin_notificaciones' %}"><span class="material-symbols-outlined">notifications</span><span
-        class="font-label uppercase text-xs tracking-widest">Notificaciones</span></a>
+        class="font-label uppercase text-xs tracking-widest">Notificaciones</span>{% if notificaciones_no_leidas %}<span class="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-error px-1 text-[10px] font-bold text-on-error">{{ notificaciones_no_leidas }}</span>{% endif %}</a>
     <a class="flex items-center space-x-4 px-4 py-3 rounded-lg transition-all group {% if active == 'ingresos' %}bg-primary-container text-on-primary-container font-bold{% else %}text-on-surface-variant hover:bg-surface-container-high hover:bg-surface-container-highest{% endif %}"
       href="{% url 'sena:admin_ingresos' %}">
       <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">login</span>

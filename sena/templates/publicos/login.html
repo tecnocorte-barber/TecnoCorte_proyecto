@@ -31,22 +31,6 @@
       box-shadow: 0 20px 40px rgba(242, 202, 80, 0.06);
     }
 
-    .role-tab-active {
-      color: var(--c-primary);
-      position: relative;
-    }
-
-    .role-tab-active::after {
-      content: '';
-      position: absolute;
-      bottom: -8px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 4px;
-      height: 4px;
-      background-color: var(--c-primary);
-      border-radius: 50%;
-    }
   </style>
 </head>
 
@@ -88,20 +72,8 @@
         <p class="mt-2 text-sm tracking-wide text-on-surface-variant">Accede a tu experiencia premium de barbería.</p>
       </header>
 
-      <div class="mb-10 flex items-center justify-between border-b border-outline-variant/20 px-2 pb-4">
-        <button class="role-tab role-tab-active text-xs font-bold uppercase tracking-widest transition-all duration-300"
-          data-role="Cliente" onclick="selectRole(this)">Cliente</button>
-        <button
-          class="role-tab text-xs font-bold uppercase tracking-widest text-on-surface-variant transition-all duration-300 hover:text-primary"
-          data-role="Barbero" onclick="selectRole(this)">Barbero</button>
-        <button
-          class="role-tab text-xs font-bold uppercase tracking-widest text-on-surface-variant transition-all duration-300 hover:text-primary"
-          data-role="Admin" onclick="selectRole(this)">Administrador</button>
-      </div>
-
       <form class="space-y-8" method="post">
         {% if proximo %}<input type="hidden" name="next" value="{{ proximo }}">{% endif %}
-        <input type="hidden" name="rol" id="selected-role" value="Cliente">
         {% if error %}
         <div class="mb-8 flex items-start gap-3 rounded-lg border border-error/40 bg-error-container/20 p-4">
           <span class="material-symbols-outlined text-lg text-error">error</span>
@@ -115,7 +87,7 @@
             Electrónico</label>
           <input
             class="w-full border-b border-outline-variant/30 bg-transparent py-3 text-sm tracking-wide text-on-surface placeholder:text-on-surface-variant/30 focus:border-primary focus:outline-none"
-            name="user" placeholder="ejemplo@tecnocorte.com" type="email" />
+            name="user" placeholder="ejemplo@tecnocorte.com" type="email" value="{% if request.method == 'POST' %}{{ request.POST.user }}{% endif %}" />
         </div>
 
         <div class="group relative">
@@ -138,11 +110,11 @@
 
       <footer class="mt-10 space-y-5 text-center">
         <a class="block text-sm font-semibold tracking-wide text-on-surface-variant transition-colors hover:text-primary"
-          href="{% url 'sena:registro' %}">¿No tienes cuenta? <span
+          href="{% url 'sena:registro' %}{% if proximo %}?next={{ proximo|urlencode }}{% endif %}">¿No tienes cuenta? <span
             class="text-primary underline underline-offset-4">Regístrate</span></a>
         <div class="mx-auto h-px w-8 bg-outline-variant/30"></div>
         <a class="block text-xs font-medium tracking-wide text-on-surface-variant transition-colors hover:text-primary"
-          href="{% url 'sena:ayuda' %}">¿Olvidaste tu contraseña?</a>
+          href="{% url 'sena:solicitar_recuperacion' %}">¿Olvidaste tu contraseña?</a>
       </footer>
     </div>
 
@@ -166,15 +138,6 @@
       }
     }
 
-    function selectRole(element) {
-      document.querySelectorAll('.role-tab').forEach(function (tab) {
-        tab.classList.remove('role-tab-active', 'text-primary');
-        tab.classList.add('text-on-surface-variant');
-      });
-      element.classList.add('role-tab-active');
-      element.classList.remove('text-on-surface-variant');
-      document.getElementById('selected-role').value = element.dataset.role;
-    }
   </script>
 </body>
 

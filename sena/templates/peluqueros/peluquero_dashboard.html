@@ -124,7 +124,7 @@
             <form method="post" action="{% url 'sena:peluquero_cambiar_estado' cita.id %}" class="inline">
               {% csrf_token %}
               <input type="hidden" name="estado" value="Cancelada">
-              <button type="submit" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest bg-error/10 text-error border border-error/20 hover:bg-error/20 transition-colors active:scale-95" onclick="return confirm('¿Cancelar esta cita?')">
+              <button type="submit" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest bg-error/10 text-error border border-error/20 hover:bg-error/20 transition-colors active:scale-95" data-confirm="¿Cancelar esta cita?">
                 <span class="material-symbols-outlined text-[14px]">cancel</span> Cancelar
               </button>
             </form>

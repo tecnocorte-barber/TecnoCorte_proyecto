@@ -258,15 +258,20 @@
 
   <script>
     var filtroActual = "";
+    var filtroBusqueda = "";
     function aplicarFiltros() {
-      var min = parseFloat(document.getElementById("precio-min").value) || 0;
-      var max = parseFloat(document.getElementById("precio-max").value) || Infinity;
+      var minValue = document.getElementById("precio-min").value.trim();
+      var maxValue = document.getElementById("precio-max").value.trim();
+      var min = minValue === "" ? 0 : Math.max(0, parseFloat(minValue) || 0);
+      var max = maxValue === "" ? Infinity : Math.max(0, parseFloat(maxValue) || 0);
+      filtroBusqueda = document.getElementById("tienda-buscar").value.trim().toLowerCase();
       var productos = document.querySelectorAll("#productos-grid article[data-categoria]");
       var visibles = 0;
       productos.forEach(function (art) {
         var cat = art.dataset.categoria;
         var precio = parseFloat(art.dataset.precio) || 0;
-        var mostrar = (filtroActual === "" || cat === filtroActual) && precio >= min && precio <= max;
+        var nombre = art.dataset.nombre || "";
+        var mostrar = (filtroActual === "" || cat === filtroActual) && (!filtroBusqueda || nombre.indexOf(filtroBusqueda) !== -1) && precio >= min && precio <= max;
         art.style.display = mostrar ? "" : "none";
         if (mostrar) visibles++;
       });
@@ -274,7 +279,11 @@
       if (visibles === 0) { sinResultados.classList.remove("hidden"); } else { sinResultados.classList.add("hidden"); }
       var chip = document.getElementById("chip-filtro-activo");
       var texto = document.getElementById("texto-filtro-activo");
-      if (filtroActual !== "") { chip.classList.remove("hidden"); chip.classList.add("inline-flex"); texto.textContent = filtroActual; }
+      var etiquetas = [];
+      if (filtroActual !== "") etiquetas.push(filtroActual);
+      if (filtroBusqueda) etiquetas.push('"' + filtroBusqueda + '"');
+      if (min || max !== Infinity) etiquetas.push("$" + min.toLocaleString("es-CO") + " - " + (max === Infinity ? "sin límite" : "$" + max.toLocaleString("es-CO")));
+      if (etiquetas.length) { chip.classList.remove("hidden"); chip.classList.add("inline-flex"); texto.textContent = etiquetas.join(" · "); }
       else { chip.classList.add("hidden"); chip.classList.remove("inline-flex"); }
     }
     document.querySelectorAll(".categoria-link").forEach(function (btn) {
@@ -287,6 +296,7 @@
     });
     document.getElementById("btn-limpiar-filtros").addEventListener("click", function () {
       filtroActual = "";
+      document.getElementById("tienda-buscar").value = "";
       document.getElementById("precio-min").value = "";
       document.getElementById("precio-max").value = "";
       document.querySelectorAll(".categoria-link").forEach(function (b) { b.classList.remove("text-primary", "font-bold"); });
@@ -295,9 +305,15 @@
     var btnQuitar = document.getElementById("btn-quitar-filtro");
     if (btnQuitar) btnQuitar.addEventListener("click", function () {
       filtroActual = "";
+      document.getElementById("tienda-buscar").value = "";
+      document.getElementById("precio-min").value = "";
+      document.getElementById("precio-max").value = "";
       document.querySelectorAll(".categoria-link").forEach(function (b) { b.classList.remove("text-primary", "font-bold"); });
       aplicarFiltros();
     });
+    document.getElementById("tienda-buscar").addEventListener("input", aplicarFiltros);
+    document.getElementById("precio-min").addEventListener("input", aplicarFiltros);
+    document.getElementById("precio-max").addEventListener("input", aplicarFiltros);
     document.getElementById("ordenar").addEventListener("change", function () {
       var valor = this.value;
       var grid = document.getElementById("productos-grid");
@@ -332,14 +348,16 @@
         if (data && data.cantidad !== undefined) {
           badge.textContent = data.cantidad;
           badge.classList.remove("hidden");
-        }
-        button.disabled = false;
-      }).catch(function (error) {
-        var feedback = document.getElementById("tienda-feedback");
+         }
+         button.disabled = false;
+         if (window.TecnoCorteNotify) window.TecnoCorteNotify.success(data.mensaje || "Producto agregado al carrito.");
+       }).catch(function (error) {
+         var feedback = document.getElementById("tienda-feedback");
         feedback.textContent = error.message;
         feedback.classList.remove("hidden");
-        feedback.classList.add("flex");
-        button.disabled = false;
+         feedback.classList.add("flex");
+         if (window.TecnoCorteNotify) window.TecnoCorteNotify.error(error.message);
+         button.disabled = false;
       });
     });
   </script>

@@ -21,7 +21,7 @@
     </a>
     <a class="flex items-center gap-4 p-3 rounded-lg {% if active == 'notificaciones' %}text-primary font-bold bg-surface-container-high{% else %}text-on-surface-variant font-medium hover:bg-surface-container-highest{% endif %} transition-colors" href="{% url 'sena:peluquero_notificaciones' %}">
       <span class="material-symbols-outlined">notifications</span>
-      <span class="font-label uppercase tracking-widest text-sm">Notificaciones</span>
+      <span class="font-label uppercase tracking-widest text-sm">Notificaciones</span>{% if notificaciones_no_leidas %}<span class="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-error px-1 text-[10px] font-bold text-on-error">{{ notificaciones_no_leidas }}</span>{% endif %}
     </a>
   </div>
 

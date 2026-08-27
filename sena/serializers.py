@@ -37,7 +37,7 @@ class ProductoSerializer(serializers.ModelSerializer):
 
 class ReservaSerializer(serializers.ModelSerializer):
     cliente = serializers.PrimaryKeyRelatedField(queryset=Usuario.objects.filter(rol="Cliente"))
-    peluquero = serializers.PrimaryKeyRelatedField(queryset=Usuario.objects.filter(rol="Barbero"))
+    peluquero = serializers.PrimaryKeyRelatedField(queryset=Usuario.objects.filter(rol="Barbero", activo=True))
     cliente_nombre = serializers.SerializerMethodField()
     peluquero_nombre = serializers.SerializerMethodField()
     peluqueria_nombre = serializers.SerializerMethodField()
@@ -66,8 +66,8 @@ class ReservaSerializer(serializers.ModelSerializer):
         return value
 
     def validate_peluquero(self, value):
-        if value.rol != "Barbero":
-            raise serializers.ValidationError("El barbero debe tener rol Barbero.")
+        if value.rol != "Barbero" or not value.activo:
+            raise serializers.ValidationError("El barbero no está disponible para nuevas citas.")
         return value
 
     def get_cliente_nombre(self, obj) -> str:

@@ -98,9 +98,9 @@
                   <form method="post" action="{% url 'sena:admin_suspender_usuario' usuario.id %}" class="inline">
                     {% csrf_token %}
                     {% if usuario.activo %}
-                    <button class="text-on-surface-variant hover:text-error transition-colors" type="submit" onclick="return confirm('¿Suspender este usuario? No podrá iniciar sesión.')" title="Suspender"><span class="material-symbols-outlined text-[20px]">block</span></button>
+                    <button class="text-on-surface-variant hover:text-error transition-colors" type="submit" data-confirm="¿Suspender este usuario? No podrá iniciar sesión." title="Suspender"><span class="material-symbols-outlined text-[20px]">block</span></button>
                     {% else %}
-                    <button class="text-on-surface-variant hover:text-green-400 transition-colors" type="submit" onclick="return confirm('¿Reactivar este usuario?')" title="Reactivar"><span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">check_circle</span></button>
+                    <button class="text-on-surface-variant hover:text-green-400 transition-colors" type="submit" data-confirm="¿Reactivar este usuario?" title="Reactivar"><span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">check_circle</span></button>
                     {% endif %}
                   </form>
                   {% endif %}

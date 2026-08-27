@@ -21,6 +21,7 @@
         <h2 class="font-headline text-4xl md:text-5xl text-on-surface tracking-tight mb-2">Mi Perfil</h2>
         <p class="font-body text-body-lg text-on-surface-variant">Administra tus datos personales.</p>
       </div>
+      <button type="button" data-profile-edit="editar" class="inline-flex items-center gap-2 rounded-md border border-primary/40 px-4 py-3 text-xs font-bold uppercase tracking-widest text-primary transition-colors hover:bg-primary/10"><span class="material-symbols-outlined text-base">edit</span>Editar perfil</button>
     </section>
 
     <!-- Perfil + Editar -->
@@ -59,7 +60,7 @@
       </div>
 
       <!-- Formulario editar -->
-      <div id="editar" class="bg-surface-container-low rounded-xl p-8 ambient-glow scroll-mt-28">
+      <div id="editar" class="hidden bg-surface-container-low rounded-xl p-8 ambient-glow scroll-mt-28">
         <h3 class="font-headline text-xl text-primary-container mb-6">Editar mis datos</h3>
         <form method="post" class="space-y-5">
           {% csrf_token %}
@@ -77,6 +78,7 @@
           </div>
           <button type="submit" class="w-full gold-gradient-bg text-on-primary py-3 rounded-md font-bold text-sm uppercase tracking-widest hover:opacity-90 transition-opacity active:scale-95">Guardar cambios</button>
         </form>
+        <a href="{% url 'sena:cambiar_password' %}" class="mt-4 flex w-full items-center justify-center gap-2 rounded-md border border-outline-variant/30 py-3 text-sm font-semibold uppercase tracking-widest text-primary transition-colors hover:border-primary"><span class="material-symbols-outlined text-base">lock_reset</span>Cambiar contraseña</a>
       </div>
     </div>
 

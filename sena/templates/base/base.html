@@ -103,8 +103,21 @@
         <section class="card">
             {% block content %}{% endblock %}
         </section>
-        <footer>
-            <p>TecnoCorte - Sistema de reserva para peluquería.</p>
+        <footer
+            class="flex w-full flex-col items-center gap-8 border-t border-outline-variant/10 bg-surface-container-lowest px-8 pb-8 pt-16">
+            <div class="font-headline text-xl font-bold text-primary">TecnoCorte</div>
+            <nav class="flex flex-wrap justify-center gap-6 text-sm text-on-surface-variant">
+            <a class="opacity-80 transition-colors duration-300 hover:text-primary hover:opacity-100"
+                href="{% url 'sena:ayuda' %}">Privacidad</a>
+            <a class="opacity-80 transition-colors duration-300 hover:text-primary hover:opacity-100"
+                href="{% url 'sena:ayuda' %}">Términos</a>
+            <a class="opacity-80 transition-colors duration-300 hover:text-primary hover:opacity-100"
+                href="{% url 'sena:ayuda' %}">Soporte</a>
+            <a class="opacity-80 transition-colors duration-300 hover:text-primary hover:opacity-100"
+                href="{% url 'sena:ayuda' %}">Franquicias</a>
+            </nav>
+            <div class="mt-4 text-center text-sm text-on-surface-variant opacity-60">© 2026 TecnoCorte. Todos los derechos
+            reservados.</div>
         </footer>
     </div>
 </body>

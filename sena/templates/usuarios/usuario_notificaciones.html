@@ -61,18 +61,19 @@
   </nav>
 
   <main class="flex-grow w-full max-w-4xl mx-auto px-6 py-12 md:py-16">
-    <div class="flex justify-between items-end mb-8 border-b border-outline-variant/10 pb-4">
+    <div class="flex flex-col gap-5 justify-between items-start mb-8 border-b border-outline-variant/10 pb-4 sm:flex-row sm:items-end">
       <div>
         <a href="{% url 'sena:usuario_perfil' %}" class="flex items-center gap-1 text-primary text-xs uppercase tracking-widest hover:text-primary-container transition-colors mb-4 active:scale-95">
           <span class="material-symbols-outlined text-sm">arrow_back</span>Volver al perfil
         </a>
         <h1 class="font-headline text-4xl tracking-tight">Notificaciones</h1>
       </div>
+      {% if notificaciones_no_leidas %}<form method="post" action="{% url 'sena:usuario_marcar_notificaciones_leidas' %}">{% csrf_token %}<button type="submit" class="inline-flex items-center gap-2 rounded-md border border-outline-variant/30 px-4 py-2 text-xs font-bold uppercase tracking-widest text-primary transition-colors hover:border-primary"><span class="material-symbols-outlined text-base">done_all</span>Marcar como leídas</button></form>{% endif %}
     </div>
 
     <div class="space-y-4">
       {% for notificacion in notificaciones %}
-      <article class="bg-surface-container-low rounded-xl p-6 ambient-glow flex gap-4">
+      <article class="bg-surface-container-low rounded-xl p-6 ambient-glow flex gap-4 {% if notificacion.leida %}opacity-75{% else %}border-l-2 border-primary{% endif %}">
         <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
           <span class="material-symbols-outlined text-primary text-lg">{% if notificacion.leida %}notifications_off{% else %}notifications{% endif %}</span>
         </div>
@@ -80,6 +81,7 @@
           <p class="font-body text-on-surface">{{ notificacion.mensaje }}</p>
           <div class="flex items-center justify-between mt-3">
             <p class="text-on-surface-variant text-xs">{{ notificacion.fecha|date:'d/m/Y H:i' }}</p>
+            {% if notificacion.reserva and notificacion.reserva.estado == 'Pendiente' %}{% if 'suspendido' in notificacion.mensaje %}<a href="{% url 'sena:usuario_editar_reserva' notificacion.reserva.id %}" class="inline-flex items-center gap-1 rounded-md bg-primary px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-on-primary transition-opacity hover:opacity-90"><span class="material-symbols-outlined text-sm">edit_calendar</span>Modificar cita</a>{% elif 'Confírmala' in notificacion.mensaje %}<form method="post" action="{% url 'sena:usuario_confirmar_cita_peluquero' notificacion.reserva.id %}">{% csrf_token %}<button type="submit" class="inline-flex items-center gap-1 rounded-md bg-primary px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-on-primary transition-opacity hover:opacity-90"><span class="material-symbols-outlined text-sm">event_available</span>Confirmar cita</button></form>{% endif %}{% endif %}
             {% if notificacion.reserva and notificacion.reserva.estado == 'Completada' and notificacion.reserva.id not in calificaciones_reservas %}
             <a href="{% url 'sena:usuario_perfil' %}#citas" class="gold-gradient inline-flex text-on-primary font-bold py-1 px-4 rounded-md text-[10px] uppercase tracking-widest hover:opacity-90 transition-opacity active:scale-95">Calificar servicio</a>
             {% endif %}

@@ -62,7 +62,7 @@
 <span class="material-symbols-outlined">edit_calendar</span>
 </a>
 <form method="post" action="{% url 'sena:admin_cancelar_reserva' reserva.id %}" class="inline">{% csrf_token %}
-<button class="text-error hover:text-error-container transition-colors p-2" onclick="return confirm('¿Cancelar esta reserva?')" title="Cancelar" type="submit">
+<button class="text-error hover:text-error-container transition-colors p-2" data-confirm="¿Cancelar esta reserva?" title="Cancelar" type="submit">
 <span class="material-symbols-outlined">cancel</span>
 </button></form>
 </div>

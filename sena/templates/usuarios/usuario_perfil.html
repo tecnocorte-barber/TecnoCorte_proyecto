@@ -110,9 +110,9 @@
               class="material-symbols-outlined text-primary text-base">call</span>{{ usuario.telefono|default:"Sin registrar" }}
           </p>
         </div>
-        <div class="flex gap-3 w-full mt-6"><a href="#editar"
+        <div class="flex gap-3 w-full mt-6"><button type="button" data-profile-edit="editar"
             class="flex-1 gold-gradient text-on-primary font-bold py-3 rounded-md hover:opacity-90 transition-opacity active:scale-95 text-sm tracking-wide">EDITAR
-            PERFIL</a>
+            PERFIL</button>
         </div>
       </div>
       <div class="grid grid-cols-2 gap-4">
@@ -126,7 +126,7 @@
         </div>
       </div>
       <!-- Edit form -->
-      <div id="editar" class="bg-surface-container-low rounded-xl p-8 ambient-glow scroll-mt-28">
+      <div id="editar" class="hidden bg-surface-container-low rounded-xl p-8 ambient-glow scroll-mt-28">
         <h3 class="font-headline text-xl text-primary-container mb-6">Editar mis datos
         </h3>
         <form method="post" class="space-y-5">
@@ -151,6 +151,7 @@
             cambios
           </button>
         </form>
+        <a href="{% url 'sena:cambiar_password' %}" class="mt-4 flex w-full items-center justify-center gap-2 rounded-md border border-outline-variant/30 py-3 text-sm font-semibold uppercase tracking-widest text-primary transition-colors hover:border-primary"><span class="material-symbols-outlined text-base">lock_reset</span>Cambiar contraseña</a>
       </div>
       <a href="{% url 'sena:logout' %}"
         class="flex items-center justify-center gap-2 w-full py-4 text-error hover:text-error/80 transition-colors group"><span
@@ -193,16 +194,17 @@
                   <span class="text-on-surface">{{ cita.peluquero.nombre }}
                     {{ cita.peluquero.apellido }}
                   </span>
+                  {% if not cita.peluquero.activo %}<span class="ml-2 inline-flex items-center gap-1 rounded-full border border-error/20 bg-error/10 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-error"><span class="material-symbols-outlined text-xs">person_off</span>Barbero suspendido</span>{% endif %}
                 </p>
               </div>
             </div>
             <div class="flex flex-col gap-3 items-end"><span
                 class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest {% if cita.estado == 'Confirmada' or cita.estado == 'Completada' %}bg-primary/10 text-primary border border-primary/20{% elif cita.estado == 'Cancelada' %}bg-error/10 text-error border border-error/20{% else %}bg-secondary-container/20 text-secondary border border-secondary-container/30{% endif %}">{{ cita.estado }}</span>
               {% if cita.estado != 'Cancelada' and cita.estado != 'Completada' %}<div class="flex gap-3 text-sm"><a
-                  href="{% url 'sena:usuario_editar_reserva' cita.id %}" class="text-primary">Modificar</a>
+                  href="{% url 'sena:usuario_editar_reserva' cita.id %}" class="text-primary">{% if not cita.peluquero.activo %}Reagendar cita{% else %}Modificar{% endif %}</a>
                 <form method="post" action="{% url 'sena:usuario_cancelar_reserva' cita.id %}">{% csrf_token %}<button
                     class="text-error"
-                    onclick="return confirm('¿Cancelar esta cita? Si faltan menos de 2 horas, verás el contacto del barbero.')">Cancelar</button>
+                    data-confirm="¿Cancelar esta cita? Si faltan menos de 2 horas, verás el contacto del barbero.">Cancelar</button>
                 </form>
               </div>{% endif %}
               {% if cita.estado == 'Completada' and cita.id not in calificaciones_reservas %}

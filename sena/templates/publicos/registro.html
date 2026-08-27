@@ -88,14 +88,14 @@
               class="absolute -top-6 left-0 text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Nombre</label>
             <input
               class="w-full border-b border-outline-variant/30 bg-transparent py-3 text-sm tracking-wide text-on-surface placeholder:text-on-surface-variant/30 focus:border-primary focus:outline-none"
-              name="nombre" placeholder="Tu nombre" type="text" required />
+            name="nombre" placeholder="Tu nombre" type="text" value="{% if request.method == 'POST' %}{{ request.POST.nombre }}{% endif %}" required />
           </div>
           <div class="group relative">
             <label
               class="absolute -top-6 left-0 text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Apellido</label>
             <input
               class="w-full border-b border-outline-variant/30 bg-transparent py-3 text-sm tracking-wide text-on-surface placeholder:text-on-surface-variant/30 focus:border-primary focus:outline-none"
-              name="apellido" placeholder="Tu apellido" type="text" required />
+            name="apellido" placeholder="Tu apellido" type="text" value="{% if request.method == 'POST' %}{{ request.POST.apellido }}{% endif %}" required />
           </div>
         </div>
 
@@ -104,7 +104,7 @@
             Electrónico</label>
           <input
             class="w-full border-b border-outline-variant/30 bg-transparent py-3 text-sm tracking-wide text-on-surface placeholder:text-on-surface-variant/30 focus:border-primary focus:outline-none"
-            name="email" placeholder="ejemplo@tecnocorte.com" type="email" required />
+            name="email" placeholder="ejemplo@tecnocorte.com" type="email" value="{% if request.method == 'POST' %}{{ request.POST.email }}{% endif %}" required />
         </div>
 
         <div class="group relative">
@@ -112,7 +112,7 @@
             class="absolute -top-6 left-0 text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Teléfono</label>
           <input
             class="w-full border-b border-outline-variant/30 bg-transparent py-3 text-sm tracking-wide text-on-surface placeholder:text-on-surface-variant/30 focus:border-primary focus:outline-none"
-            name="telefono" placeholder="300 000 0000" type="tel" />
+            name="telefono" placeholder="300 000 0000" type="tel" value="{% if request.method == 'POST' %}{{ request.POST.telefono }}{% endif %}" />
         </div>
 
         <div class="group relative">

@@ -97,9 +97,9 @@
           </div>
         </div>
 
-        <div class="grid gap-8 md:grid-cols-2">
+        <div class="grid items-stretch gap-8 md:grid-cols-2">
           <article
-            class="group overflow-hidden rounded-[28px] border border-outline-variant/20 bg-surface-container-low shadow-[0_20px_40px_rgba(0,0,0,0.08)] transition-transform duration-300 hover:-translate-y-1">
+            id="servicio-corte" class="group flex h-full flex-col overflow-hidden rounded-[28px] border border-outline-variant/20 bg-surface-container-low shadow-[0_20px_40px_rgba(0,0,0,0.08)] transition-transform duration-300 hover:-translate-y-1">
             <div class="overflow-hidden">
               <img src="{% static 'sena/images/corte_cabello.jpeg' %}" alt="Corte de cabello masculino"
                 class="h-72 w-full object-cover transition-transform duration-700 group-hover:scale-105 md:h-80" />
@@ -111,7 +111,7 @@
               </div>
               <p class="mb-6 text-base leading-relaxed text-on-surface-variant">Estilo personalizado con precisión,
                 lavado y asesoría para realzar tus facciones.</p>
-              <a href="{% url 'sena:usuario_servicios' %}"
+              <a href="{% url 'sena:usuario_servicios' %}?servicio=corte#servicio-corte"
                 class="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-[0.12em] text-primary transition-all group-hover:gap-3">
                 Ver más
                 <span class="material-symbols-outlined text-sm">east</span>
@@ -120,7 +120,7 @@
           </article>
 
           <article
-            class="group overflow-hidden rounded-[28px] border border-outline-variant/20 bg-surface-container-low shadow-[0_20px_40px_rgba(0,0,0,0.08)] transition-transform duration-300 hover:-translate-y-1 md:mt-16">
+            id="servicio-barba" class="group flex h-full flex-col overflow-hidden rounded-[28px] border border-outline-variant/20 bg-surface-container-low shadow-[0_20px_40px_rgba(0,0,0,0.08)] transition-transform duration-300 hover:-translate-y-1">
             <div class="overflow-hidden">
               <img src="{% static 'sena/images/arreglo_barba.jpeg' %}" alt="Arreglo de barba masculina"
                 class="h-72 w-full object-cover transition-transform duration-700 group-hover:scale-105 md:h-80" />
@@ -132,9 +132,9 @@
               </div>
               <p class="mb-6 text-base leading-relaxed text-on-surface-variant">Perfilado fino con toalla caliente,
                 cuidado hidratante y forma impecable.</p>
-              <a href="{% url 'sena:usuario_servicios' %}"
+              <a href="{% url 'sena:usuario_servicios' %}?servicio=barba#servicio-barba"
                 class="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-[0.12em] text-primary transition-all group-hover:gap-3">
-                Descubrir
+                Ver más
                 <span class="material-symbols-outlined text-sm">east</span>
               </a>
             </div>
@@ -154,8 +154,8 @@
         </div>
 
         <div class="grid gap-6 md:grid-cols-3">
-          <div
-            class="md:col-span-2 overflow-hidden rounded-[28px] bg-surface-container-low shadow-[0_20px_40px_rgba(0,0,0,0.08)]">
+          <a href="{% url 'sena:usuario_tienda' %}"
+            class="group md:col-span-2 block overflow-hidden rounded-[28px] bg-surface-container-low text-inherit no-underline shadow-[0_20px_40px_rgba(0,0,0,0.08)] transition-transform duration-300 hover:-translate-y-1 hover:no-underline">
             <div class="relative h-full min-h-[360px] bg-surface-container-low">
               <img src="{% static 'sena/images/pomada_barba.jpeg' %}" alt="Productos para barbería"
                 class="h-full w-full object-cover opacity-80" />
@@ -169,9 +169,10 @@
                 <span class="text-xl font-bold text-primary">$85.000</span>
               </div>
             </div>
-          </div>
+          </a>
 
-          <div class="overflow-hidden rounded-[28px] bg-surface-container-low shadow-[0_20px_40px_rgba(0,0,0,0.08)]">
+          <a href="{% url 'sena:usuario_tienda' %}"
+            class="group block overflow-hidden rounded-[28px] bg-surface-container-low text-inherit no-underline shadow-[0_20px_40px_rgba(0,0,0,0.08)] transition-transform duration-300 hover:-translate-y-1 hover:no-underline">
             <div class="relative h-full min-h-[360px]">
               <img src="{% static 'sena/images/aceite_barba.jpeg' %}" alt="Aceite para barba"
                 class="h-full w-full object-cover opacity-80" />
@@ -186,7 +187,7 @@
                 </div>
               </div>
             </div>
-          </div>
+          </a>
         </div>
       </div>
     </section>
