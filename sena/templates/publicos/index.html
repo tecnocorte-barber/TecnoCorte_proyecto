@@ -19,18 +19,6 @@
       color: var(--c-on-surface);
     }
 
-    .text-gradient-primary {
-      background: linear-gradient(135deg, #f2ca50 0%, #d4af37 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    .btn-primary {
-      background: linear-gradient(135deg, #f2ca50 0%, #d4af37 100%);
-      color: #3c2f00;
-    }
-
     .shadow-ambient {
       box-shadow: 0 20px 40px rgba(242, 202, 80, 0.06);
     }
@@ -59,7 +47,7 @@
       <div class="relative z-10 mx-auto flex max-w-5xl flex-col items-center px-6 text-center">
         <span class="mb-6 block text-sm font-medium uppercase tracking-[0.2em] text-primary">TecnoCorte</span>
         <h1 class="mb-8 font-headline text-5xl font-black leading-tight tracking-tight text-on-surface md:text-7xl">
-          Tu <span class="text-gradient-primary italic">Estilo</span>
+           Tu <span class="heading-accent italic">Estilo</span>
         </h1>
         <p class="mx-auto mb-12 max-w-2xl text-lg font-light leading-relaxed text-on-surface-variant md:text-xl">
           Barbería de confianza para cortes modernos, arreglo de barba y cuidado personal premium.
@@ -67,14 +55,14 @@
 
         {% if request.session.logueado %}
         <a href="{% url 'sena:usuario_reservar_cita' %}"
-          class="btn-primary inline-flex items-center justify-center gap-3 rounded-md px-10 py-4 text-sm font-bold uppercase tracking-[0.1em] transition-all duration-300 hover:shadow-ambient active:scale-95">
+           class="btn-brand inline-flex items-center justify-center gap-3 rounded-md px-10 py-4 text-sm font-bold uppercase tracking-[0.1em] transition-all duration-300 hover:shadow-ambient active:scale-95">
           Reservar Cita
           <span class="material-symbols-outlined text-lg"
             style="font-variation-settings: 'FILL' 1;">arrow_right_alt</span>
         </a>
         {% else %}
         <a href="{% url 'sena:login' %}"
-          class="btn-primary inline-flex items-center justify-center gap-3 rounded-md px-10 py-4 text-sm font-bold uppercase tracking-[0.1em] transition-all duration-300 hover:shadow-ambient active:scale-95">
+           class="btn-brand inline-flex items-center justify-center gap-3 rounded-md px-10 py-4 text-sm font-bold uppercase tracking-[0.1em] transition-all duration-300 hover:shadow-ambient active:scale-95">
           Reservar Cita
           <span class="material-symbols-outlined text-lg"
             style="font-variation-settings: 'FILL' 1;">arrow_right_alt</span>
@@ -92,7 +80,7 @@
         <div class="mb-14 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div class="max-w-2xl">
             <h2 class="font-headline text-4xl font-bold text-on-surface md:text-5xl">
-              Nuestros <span class="text-primary-container">Servicios</span>
+               Nuestros <span class="heading-accent">Servicios</span>
             </h2>
           </div>
         </div>
@@ -147,7 +135,7 @@
       <div class="mx-auto max-w-7xl">
         <div class="mb-12 text-center">
           <h2 class="font-headline text-4xl font-bold text-on-surface md:text-5xl">
-            Nuestra <span class="text-primary-container">Tienda</span>
+             Nuestra <span class="heading-accent">Tienda</span>
           </h2>
           <p class="mx-auto mt-4 max-w-2xl text-lg text-on-surface-variant">Productos y herramientas para tu cuidado
             personal.</p>
@@ -183,7 +171,7 @@
                 <h3 class="font-headline text-2xl font-bold text-on-surface">Aceite de Barba</h3>
                 <div class="mt-4 flex items-center justify-between">
                   <span class="text-lg font-bold text-primary">$120.000</span>
-                  <span class="material-symbols-outlined text-primary">add_shopping_cart</span>
+                  
                 </div>
               </div>
             </div>

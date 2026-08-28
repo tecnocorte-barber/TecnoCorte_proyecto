@@ -1,10 +1,12 @@
 from datetime import date, time, timedelta
 
-from django.contrib.auth.hashers import make_password
+from django.contrib.auth.hashers import check_password, make_password
+from django.core import mail
 from django.test import TestCase
+from django.test import override_settings
 from django.urls import reverse
 
-from .models import HorarioTrabajo, Peluqueria, Usuario
+from .models import HorarioTrabajo, Notificacion, Peluqueria, Usuario
 from .serializers import ReservaSerializer
 from .views import cita_disponible
 
@@ -46,6 +48,24 @@ class TecnoCorteTests(TestCase):
         })
         self.assertRedirects(response, reverse("sena:inicio"))
 
+    @override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
+    def test_registro_envia_correo_con_diseno_html(self):
+        response = self.client.post(reverse("sena:registro"), {
+            "nombre": "Nuevo",
+            "apellido": "Cliente",
+            "email": "nuevo@test.com",
+            "telefono": "3000000",
+            "password": "Cliente123!",
+        })
+
+        self.assertRedirects(response, reverse("sena:inicio"))
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(len(mail.outbox[0].alternatives), 1)
+        html = mail.outbox[0].alternatives[0][0]
+        self.assertIn("background:#090909", html)
+        self.assertIn("cid:tecnocorte-logo", html)
+        self.assertEqual(mail.outbox[0].attachments[0].get("Content-ID"), "<tecnocorte-logo>")
+
     def test_no_permite_reservar_fecha_pasada(self):
         lunes_pasado = date.today() - timedelta(days=date.today().weekday() + 7)
         disponible, mensaje = cita_disponible(
@@ -58,6 +78,39 @@ class TecnoCorteTests(TestCase):
         self.iniciar_sesion(self.cliente)
         response = self.client.get(reverse("sena:admin_dashboard"))
         self.assertRedirects(response, reverse("sena:login"))
+
+    def test_cambio_password_usa_la_cuenta_de_la_sesion(self):
+        self.iniciar_sesion(self.cliente)
+        response = self.client.get(reverse("sena:cambiar_password"))
+
+        self.assertContains(response, self.cliente.email)
+        response = self.client.post(reverse("sena:cambiar_password"), {
+            "password_actual": "cliente123",
+            "password": "ClienteNueva123!",
+            "password_confirm": "ClienteNueva123!",
+        })
+
+        self.assertRedirects(response, reverse("sena:usuario_perfil"))
+        self.cliente.refresh_from_db()
+        self.assertTrue(check_password("ClienteNueva123!", self.cliente.password))
+
+    @override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend", CONTACT_EMAIL="tecnocorte083@gmail.com")
+    def test_mensaje_de_ayuda_llega_al_correo_oficial_y_al_panel(self):
+        admin = Usuario.objects.create(
+            nombre="Admin", apellido="Prueba", email="admin@test.com",
+            password=make_password("admin123"), rol="Admin"
+        )
+        response = self.client.post(reverse("sena:ayuda"), {
+            "nombre": "Visitante",
+            "email": "visitante@test.com",
+            "asunto": "Consulta de horarios",
+            "mensaje": "¿Qué horarios tienen disponibles?",
+        })
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(mail.outbox[0].to, ["tecnocorte083@gmail.com"])
+        self.assertIn("Consulta de horarios", mail.outbox[0].subject)
+        self.assertTrue(Notificacion.objects.filter(usuario=admin, mensaje__contains="Consulta de horarios").exists())
 
     def test_serializer_incluye_y_valida_servicio(self):
         serializer = ReservaSerializer(data={

@@ -26,16 +26,6 @@
       box-shadow: 0 20px 40px rgba(242, 202, 80, 0.06);
     }
 
-    .text-gradient-gold {
-      background: linear-gradient(135deg, #f2ca50 0%, #d4af37 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    .bg-gradient-gold {
-      background: linear-gradient(135deg, #f2ca50 0%, #d4af37 100%);
-    }
-
     #servicio-corte, #servicio-barba { scroll-margin-top: 7rem; }
     #servicio-corte:target, #servicio-barba:target {
       border-color: var(--c-primary);
@@ -120,7 +110,7 @@
         <h1
           class="font-display text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight text-on-surface leading-[0.95]">
           Nuestros
-          <span class="text-gradient-gold italic block">Servicios</span>
+           <span class="heading-accent italic block">Servicios</span>
         </h1>
         <p class="max-w-lg text-base md:text-lg text-on-surface-variant leading-relaxed">
           Cortes de cabello, arreglo de barba y cuidado personal ejecutados por profesionales para que siempre luzcas
@@ -175,7 +165,7 @@
             <p class="mx-auto max-w-2xl text-base leading-relaxed text-on-surface-variant md:text-lg">Corte moderno con lavado incluido y asesoría personalizada para encontrar el estilo que mejor se adapte a tu rostro y rutina.</p>
           </div>
           <div class="mt-8 flex justify-center">
-            {% if request.session.logueado %}<a href="{% url 'sena:usuario_reservar_cita' %}" class="inline-flex items-center gap-3 rounded-md bg-gradient-gold px-8 py-4 text-sm font-bold uppercase tracking-[0.14em] text-on-primary shadow-[0_15px_30px_rgba(242,202,80,0.2)] transition-transform duration-300 hover:scale-[1.02] active:scale-95"><span>Reservar Cita</span><span class="material-symbols-outlined text-xl">workspace_premium</span></a>{% else %}<a href="{% url 'sena:login' %}?next={% url 'sena:usuario_reservar_cita' %}" class="inline-flex items-center gap-3 rounded-md bg-gradient-gold px-8 py-4 text-sm font-bold uppercase tracking-[0.14em] text-on-primary shadow-[0_15px_30px_rgba(242,202,80,0.2)] transition-transform duration-300 hover:scale-[1.02] active:scale-95"><span>Reservar Cita</span><span class="material-symbols-outlined text-xl">workspace_premium</span></a>{% endif %}
+            {% if request.session.logueado %}<a href="{% url 'sena:usuario_reservar_cita' %}" class="btn-brand inline-flex items-center gap-3 rounded-md px-8 py-4 text-sm font-bold uppercase tracking-[0.14em] transition-transform duration-300 hover:scale-[1.02] active:scale-95"><span>Reservar Cita</span><span class="material-symbols-outlined text-xl">workspace_premium</span></a>{% else %}<a href="{% url 'sena:login' %}?next={% url 'sena:usuario_reservar_cita' %}" class="btn-brand inline-flex items-center gap-3 rounded-md px-8 py-4 text-sm font-bold uppercase tracking-[0.14em] transition-transform duration-300 hover:scale-[1.02] active:scale-95"><span>Reservar Cita</span><span class="material-symbols-outlined text-xl">workspace_premium</span></a>{% endif %}
           </div>
         </div>
         </div>
@@ -218,7 +208,7 @@
             <p class="mx-auto max-w-2xl text-base leading-relaxed text-on-surface-variant md:text-lg">Perfilado preciso, toalla caliente, hidratación y cuidado de la barba para dejarla con una forma limpia y bien definida.</p>
           </div>
           <div class="mt-8 flex justify-center">
-            {% if request.session.logueado %}<a href="{% url 'sena:usuario_reservar_cita' %}" class="inline-flex items-center gap-3 rounded-md bg-gradient-gold px-8 py-4 text-sm font-bold uppercase tracking-[0.14em] text-on-primary shadow-[0_15px_30px_rgba(242,202,80,0.2)] transition-transform duration-300 hover:scale-[1.02] active:scale-95"><span>Reservar Cita</span><span class="material-symbols-outlined text-xl">workspace_premium</span></a>{% else %}<a href="{% url 'sena:login' %}?next={% url 'sena:usuario_reservar_cita' %}" class="inline-flex items-center gap-3 rounded-md bg-gradient-gold px-8 py-4 text-sm font-bold uppercase tracking-[0.14em] text-on-primary shadow-[0_15px_30px_rgba(242,202,80,0.2)] transition-transform duration-300 hover:scale-[1.02] active:scale-95"><span>Reservar Cita</span><span class="material-symbols-outlined text-xl">workspace_premium</span></a>{% endif %}
+            {% if request.session.logueado %}<a href="{% url 'sena:usuario_reservar_cita' %}" class="btn-brand inline-flex items-center gap-3 rounded-md px-8 py-4 text-sm font-bold uppercase tracking-[0.14em] transition-transform duration-300 hover:scale-[1.02] active:scale-95"><span>Reservar Cita</span><span class="material-symbols-outlined text-xl">workspace_premium</span></a>{% else %}<a href="{% url 'sena:login' %}?next={% url 'sena:usuario_reservar_cita' %}" class="btn-brand inline-flex items-center gap-3 rounded-md px-8 py-4 text-sm font-bold uppercase tracking-[0.14em] transition-transform duration-300 hover:scale-[1.02] active:scale-95"><span>Reservar Cita</span><span class="material-symbols-outlined text-xl">workspace_premium</span></a>{% endif %}
           </div>
         </div>
         </div>
@@ -280,13 +270,13 @@
           <div class="mt-8 flex justify-center">
             {% if request.session.logueado %}
             <a href="{% url 'sena:usuario_reservar_cita' %}"
-              class="inline-flex items-center gap-3 rounded-md bg-gradient-gold px-8 py-4 text-sm font-bold uppercase tracking-[0.14em] text-on-primary shadow-[0_15px_30px_rgba(242,202,80,0.2)] transition-transform duration-300 hover:scale-[1.02] active:scale-95">
+              class="btn-brand inline-flex items-center gap-3 rounded-md px-8 py-4 text-sm font-bold uppercase tracking-[0.14em] transition-transform duration-300 hover:scale-[1.02] active:scale-95">
               <span>Reservar Cita</span>
               <span class="material-symbols-outlined text-xl">workspace_premium</span>
             </a>
             {% else %}
             <a href="{% url 'sena:login' %}?next={% url 'sena:usuario_reservar_cita' %}"
-              class="inline-flex items-center gap-3 rounded-md bg-gradient-gold px-8 py-4 text-sm font-bold uppercase tracking-[0.14em] text-on-primary shadow-[0_15px_30px_rgba(242,202,80,0.2)] transition-transform duration-300 hover:scale-[1.02] active:scale-95">
+              class="btn-brand inline-flex items-center gap-3 rounded-md px-8 py-4 text-sm font-bold uppercase tracking-[0.14em] transition-transform duration-300 hover:scale-[1.02] active:scale-95">
               <span>Reservar Cita</span>
               <span class="material-symbols-outlined text-xl">workspace_premium</span>
             </a>

@@ -1,5 +1,7 @@
 import json
 import hmac
+import os
+from email.mime.image import MIMEImage
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
@@ -9,13 +11,14 @@ from django.db import IntegrityError, models, transaction
 from django.contrib.auth.hashers import check_password, make_password
 from django.contrib import messages
 from django.conf import settings
-from django.core.mail import send_mail
+from django.core.mail import EmailMultiAlternatives
 from django.core import signing
 from django.core.signing import salted_hmac
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.core.cache import cache
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
+from django.template.loader import render_to_string
 from datetime import datetime, time, timedelta
 from .models import Usuario, Peluqueria, Producto, Reserva, Pedido, PedidoProducto, RegistroIngreso, Notificacion, HorarioTrabajo, BloqueoHorario, MensajeContacto, Calificacion
 from .utilidades import autorizacion, validar_password
@@ -153,23 +156,46 @@ def formato_cita(reserva):
     return f"{fecha.strftime('%d/%m/%Y')} a las {hora.strftime('%H:%M')}"
 
 
-def enviar_correo(usuario, asunto, cuerpo):
-    """Envía un correo sin romper la operación si el proveedor falla."""
+def enviar_correo(usuario, asunto, cuerpo, request=None, enlace=None, texto_enlace=None):
+    """Envía una versión de texto y otra visual sin romper la operación si falla el proveedor."""
     if not usuario or not usuario.email:
         return
-    send_mail(
+    enviar_correo_destino(usuario.email, asunto, cuerpo, request=request, enlace=enlace, texto_enlace=texto_enlace)
+
+
+def enviar_correo_destino(destinatario, asunto, cuerpo, request=None, enlace=None, texto_enlace=None):
+    """Envía un correo HTML a una dirección que no pertenece a un usuario registrado."""
+    if not destinatario:
+        return
+    html = render_to_string(
+        "emails/notificacion.html",
+        {
+            "asunto": asunto,
+            "cuerpo": cuerpo,
+            "enlace": enlace,
+            "texto_enlace": texto_enlace or "Ver en TecnoCorte",
+            "logo_url": "cid:tecnocorte-logo",
+        },
+    )
+    correo = EmailMultiAlternatives(
         asunto,
         cuerpo,
         settings.DEFAULT_FROM_EMAIL,
-        [usuario.email],
-        fail_silently=True,
+        [destinatario],
     )
+    correo.attach_alternative(html, "text/html")
+    logo_path = os.path.join(settings.BASE_DIR, "sena", "static", "sena", "images", "Logo.png")
+    if os.path.exists(logo_path):
+        with open(logo_path, "rb") as archivo_logo:
+            imagen = MIMEImage(archivo_logo.read(), _subtype="png")
+        imagen.add_header("Content-ID", "<tecnocorte-logo>")
+        imagen.add_header("Content-Disposition", "inline", filename="Logo.png")
+        correo.attach(imagen)
+    correo.send(fail_silently=True)
 
 
 def enviar_correo_cita(request, usuario, asunto, cuerpo, enlace=None):
-    if enlace:
-        cuerpo = f"{cuerpo}\n\nPuedes revisar o modificar la cita aquí:\n{enlace}"
-    enviar_correo(usuario, asunto, cuerpo)
+    enviar_correo(usuario, asunto, cuerpo, request=request, enlace=enlace, texto_enlace="Revisar mi cita" if enlace else None)
 
 
 RESET_SALT = "tecnocorte-password-reset"
@@ -326,7 +352,10 @@ def solicitar_recuperacion(request):
             enviar_correo(
                 usuario,
                 "Recupera tu contraseña de TecnoCorte",
-                f"Hola {usuario.nombre},\n\nRecibimos una solicitud para cambiar la contraseña de tu cuenta. Este enlace será válido durante una hora:\n\n{enlace}\n\nSi no solicitaste este cambio, puedes ignorar este mensaje.",
+                f"Hola {usuario.nombre},\n\nRecibimos una solicitud para cambiar la contraseña de tu cuenta. El enlace será válido durante una hora.\n\nSi no solicitaste este cambio, puedes ignorar este mensaje.",
+                request=request,
+                enlace=enlace,
+                texto_enlace="Cambiar mi contraseña",
             )
         return render(request, "publicos/recuperar_password.html", {"enviado": True})
     return render(request, "publicos/recuperar_password.html")
@@ -399,7 +428,10 @@ def registro(request):
         enviar_correo(
             usuario,
             "Bienvenido a TecnoCorte",
-            f"Hola {usuario.nombre},\n\nTu cuenta de TecnoCorte fue creada correctamente. Ya puedes reservar citas y comprar productos.\n\nIngresa a tu cuenta aquí:\n{request.build_absolute_uri(reverse('sena:usuario_perfil'))}",
+            f"Hola {usuario.nombre},\n\nTu cuenta de TecnoCorte fue creada correctamente. Ya puedes reservar citas y comprar productos.",
+            request=request,
+            enlace=request.build_absolute_uri(reverse('sena:usuario_perfil')),
+            texto_enlace="Ir a mi cuenta",
         )
         guardar_carrito_activo(request)
         request.session["logueado"] = {
@@ -434,6 +466,13 @@ def ayuda(request):
             MensajeContacto.objects.create(nombre=nombre, email=email, asunto=asunto, mensaje=mensaje)
             for admin in Usuario.objects.filter(rol="Admin", activo=True):
                 Notificacion.objects.create(usuario=admin, mensaje=f"Nuevo mensaje de contacto: {asunto}.")
+            asunto_correo = asunto.replace("\r", " ").replace("\n", " ")
+            enviar_correo_destino(
+                settings.CONTACT_EMAIL,
+                f"Nuevo mensaje de contacto: {asunto_correo}",
+                f"Recibiste un nuevo mensaje desde el formulario de TecnoCorte.\n\nNombre: {nombre}\nCorreo del cliente: {email}\nAsunto: {asunto}\n\nMensaje:\n{mensaje}",
+                request=request,
+            )
             contexto["exito"] = "Tu mensaje fue enviado. Te responderemos pronto."
         else:
             contexto["error"] = "Completa todos los campos para enviar tu mensaje."
@@ -937,12 +976,12 @@ def cambiar_password(request):
         else:
             error = validar_password(nueva)
         if error:
-            return render(request, "usuarios/cambiar_password.html", {"rol": rol, "error": error})
+            return render(request, "usuarios/cambiar_password.html", {"rol": rol, "usuario": usuario, "error": error})
         usuario.password = make_password(nueva)
         usuario.save(update_fields=["password"])
         messages.success(request, "Contraseña actualizada correctamente.")
         return redirect(destino)
-    return render(request, "usuarios/cambiar_password.html", {"rol": rol})
+    return render(request, "usuarios/cambiar_password.html", {"rol": rol, "usuario": usuario})
 
 # ═══════════════════════════════════════════════════════════════════════════
 # PELUQUERO

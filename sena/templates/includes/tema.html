@@ -152,38 +152,38 @@
 
   /* ── LIGHT ── */
   html:not(.dark), [data-theme="light"] {
-    --c-bg: #faf8f5;
+    --c-bg: #f8f6f1;
     --c-surface-bright: #ffffff;
-    --c-surface-container: #f0ede8;
-    --c-surface-container-low: #f5f2ed;
+    --c-surface-container: #eeebe4;
+    --c-surface-container-low: #f4f1eb;
     --c-surface-container-lowest: #ffffff;
-    --c-surface-container-high: #e8e4de;
-    --c-surface-container-highest: #ddd9d2;
-    --c-surface-variant: #ddd9d2;
-    --c-on-bg: #1a1816;
-    --c-on-surface: #1a1816;
-    --c-on-surface-variant: #4a4539;
-    --c-outline: #7c7567;
-    --c-outline-variant: #cdc6b8;
-    --c-primary: #8a6b1a;
-    --c-primary-container: #c49a2e;
+    --c-surface-container-high: #e5e1d8;
+    --c-surface-container-highest: #d9d4ca;
+    --c-surface-variant: #d9d4ca;
+    --c-on-bg: #211e19;
+    --c-on-surface: #211e19;
+    --c-on-surface-variant: #514b40;
+    --c-outline: #6f685b;
+    --c-outline-variant: #bdb5a6;
+    --c-primary: #6f520d;
+    --c-primary-container: #8c6510;
     --c-on-primary: #ffffff;
-    --c-on-primary-container: #2e1f00;
+    --c-on-primary-container: #ffffff;
     --c-on-primary-fixed: #241a00;
     --c-on-primary-fixed-variant: #574500;
     --c-primary-fixed: #f0cf72;
     --c-primary-fixed-dim: #d6ad42;
     --c-inverse-primary: #eac249;
-    --c-secondary: #6b5118;
-    --c-secondary-container: #d4a832;
+    --c-secondary: #60470d;
+    --c-secondary-container: #967019;
     --c-on-secondary: #ffffff;
-    --c-on-secondary-container: #2e1f00;
+    --c-on-secondary-container: #ffffff;
     --c-on-secondary-fixed: #241a00;
     --c-on-secondary-fixed-variant: #584400;
     --c-secondary-fixed: #ffe08b;
     --c-secondary-fixed-dim: #eac249;
-    --c-tertiary: #3d5ca8;
-    --c-tertiary-container: #7a9de0;
+    --c-tertiary: #315895;
+    --c-tertiary-container: #5578b8;
     --c-on-tertiary: #ffffff;
     --c-on-tertiary-container: #001b44;
     --c-on-tertiary-fixed: #00174b;
@@ -196,23 +196,23 @@
     --c-on-error-container: #410002;
     --c-inverse-surface: #2f3033;
     --c-inverse-on-surface: #f1f0f4;
-    --c-surface-tint: #8a6b1a;
-    --oro: #8a6b1a;
-    --oro-oscuro: #6b5118;
-    --fondo: #faf8f5;
-    --tarjeta: #f5f2ed;
-    --borde: rgba(138,107,26,0.18);
-    --glass-bg: rgba(250,248,245,0.78);
-    --pill-bg: rgba(250,248,245,0.58);
-    --glass-border: rgba(138,107,26,0.12);
-    --body-gradient: radial-gradient(circle at 90% 0%,rgba(138,107,26,0.06),transparent 30%),radial-gradient(circle at 0% 80%,rgba(107,81,24,0.04),transparent 28%);
-    --card-shadow: 0 18px 45px rgba(0,0,0,0.06);
-    --card-border: 1px solid rgba(0,0,0,0.06);
-    --nav-border: 1px solid rgba(138,107,26,0.10);
-    --input-border: rgba(0,0,0,0.18);
-    --input-placeholder: #7c7567;
-    --select-bg: #f5f2ed;
-    --selection-bg: rgba(138,107,26,0.18);
+    --c-surface-tint: #6f520d;
+    --oro: #6f520d;
+    --oro-oscuro: #4f3908;
+    --fondo: #f8f6f1;
+    --tarjeta: #f4f1eb;
+    --borde: rgba(79,57,8,0.22);
+    --glass-bg: rgba(255,255,255,0.92);
+    --pill-bg: rgba(255,255,255,0.88);
+    --glass-border: rgba(79,57,8,0.18);
+    --body-gradient: radial-gradient(circle at 90% 0%,rgba(111,82,13,0.08),transparent 30%),radial-gradient(circle at 0% 80%,rgba(96,71,13,0.05),transparent 28%);
+    --card-shadow: 0 18px 45px rgba(43,35,20,0.10);
+    --card-border: 1px solid rgba(79,57,8,0.12);
+    --nav-border: 1px solid rgba(79,57,8,0.18);
+    --input-border: rgba(43,35,20,0.28);
+    --input-placeholder: #625b4d;
+    --select-bg: #eeebe4;
+    --selection-bg: rgba(111,82,13,0.22);
   }
 
   body {
@@ -279,6 +279,19 @@
     color: #3c2f00;
   }
   .btn-gold-gradient:hover { opacity: 0.9; }
+
+  /* Accent elements use the same contrast in every page and theme. */
+  .heading-accent {
+    color: var(--c-primary);
+    background: none;
+    -webkit-text-fill-color: currentColor;
+  }
+  .btn-brand {
+    background: var(--c-primary);
+    color: var(--c-on-primary);
+    box-shadow: 0 15px 30px rgba(111, 82, 13, 0.16);
+  }
+  .btn-brand:hover { background: var(--c-primary-container); color: var(--c-on-primary-container); }
 
   .input-underline {
     background: transparent;
@@ -423,6 +436,9 @@
     transition: background-color .2s ease, color .2s ease;
   }
   .pill-text-action:hover { background: rgba(255,255,255,.08); color: var(--c-primary); }
+  html:not(.dark) .pill-nav-highlight { background: rgba(79,57,8,.08); }
+  html:not(.dark) .pill-text-action:hover,
+  html:not(.dark) .pill-menu-toggle:hover { background: rgba(79,57,8,.08); }
   @media (max-width: 640px) {
     .pill-nav-menu { display: none; }
     .pill-menu-toggle {
