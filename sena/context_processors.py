@@ -1,6 +1,6 @@
 # Procesadores de contexto compartidos para las plantillas.
 
-from .models import Notificacion, MensajeContacto
+from .models import Notificacion, MensajeContacto, Usuario
 
 
 def carrito_visible(request):
@@ -56,10 +56,11 @@ def notificaciones_contexto(request):
     sesion = request.session.get("logueado") or {}
     usuario_id = sesion.get("id")
     if not usuario_id:
-        return {"notificaciones_no_leidas": 0, "mensajes_no_leidos": 0}
+        return {"notificaciones_no_leidas": 0, "mensajes_no_leidos": 0, "usuario_actual": None}
     return {
         "notificaciones_no_leidas": Notificacion.objects.filter(usuario_id=usuario_id, leida=False).count(),
         "mensajes_no_leidos": MensajeContacto.objects.filter(leido=False).count() if sesion.get("rol") == "Admin" else 0,
+        "usuario_actual": Usuario.objects.filter(id=usuario_id).first(),
     }
 
 

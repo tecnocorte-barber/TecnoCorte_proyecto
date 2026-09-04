@@ -642,11 +642,14 @@ def finalizar_pedido(request):
                         notificar_producto_agotado(producto)
                 producto.save(update_fields=["stock", "disponible"])
         request.session["carrito"] = {}
+        productos_resumen = ", ".join(f"{item['cantidad']} x {item['producto'].nombre}" for item in contexto["items"][:3])
+        if len(contexto["items"]) > 3:
+            productos_resumen += f" y {len(contexto['items']) - 3} productos más"
         Notificacion.objects.create(
             usuario_id=cliente_id,
-            mensaje=f"Tu pedido #{pedido.id} fue recibido por un total de ${pedido.total:,} COP.",
+            mensaje=f"Tu pedido #{pedido.id} fue recibido: {productos_resumen}. Total: ${pedido.total:,} COP.",
         )
-        messages.success(request, f"Pedido #{pedido.id} confirmado correctamente.")
+        messages.success(request, f"Pedido #{pedido.id} confirmado por ${pedido.total:,} COP.")
         return redirect("sena:pedido_exitoso", pedido_id=pedido.id)
 
     return render(request, "carrito/finalizar_pedido.html", contexto)
@@ -689,6 +692,8 @@ def usuario_reservar_cita(request):
     contexto["servicios"] = SERVICIOS
     servicio_inicial = request.GET.get("servicio", "").strip()
     contexto["servicio_inicial"] = servicio_inicial if servicio_inicial in {item["nombre"] for item in SERVICIOS} else ""
+    peluqueria_id = _id_entero(request.GET.get("peluqueria"))
+    contexto["peluqueria_inicial"] = str(peluqueria_id) if peluqueria_id and Peluqueria.objects.filter(id=peluqueria_id).exists() else ""
     contexto.update(_horarios_para_template())
     contexto.update(_reservas_para_template())
     return render(request, "usuarios/usuario_reservar_cita.html", contexto)
@@ -705,10 +710,13 @@ def usuario_pre_confirmar(request):
     hora = request.POST.get("hora", "")
     servicio = request.POST.get("servicio", "").strip()
     datos_validos = peluquero is not None and peluqueria is not None and bool(fecha) and bool(hora) and servicio in {item["nombre"] for item in SERVICIOS}
+    # El barbero debe pertenecer a la peluquería elegida.
+    if datos_validos and peluquero.peluqueria_id != peluqueria.id:
+        datos_validos = False
     disponible = datos_validos
     mensaje = ""
     if not datos_validos:
-        mensaje = "Faltan datos. Elige servicio, barbero, barbería, fecha y hora antes de continuar."
+        mensaje = "Faltan datos o el barbero no pertenece a la barbería elegida. Completa todos los datos antes de continuar."
     if disponible:
         disponible, mensaje = cita_disponible(fecha, hora, peluqueria_id, servicio)
     if disponible:
@@ -743,11 +751,14 @@ def usuario_confirmar_reserva(request):
     hora = request.POST.get("hora", "").strip()
     servicio = request.POST.get("servicio", "").strip()
     datos_validos = peluquero is not None and peluqueria is not None and bool(fecha) and bool(hora) and servicio in {item["nombre"] for item in SERVICIOS}
+    # El barbero debe pertenecer a la peluquería elegida.
+    if datos_validos and peluquero.peluqueria_id != peluqueria.id:
+        datos_validos = False
     disponible = datos_validos
     mensaje = ""
     if not datos_validos:
         disponible = False
-        mensaje = "Faltan datos. Elige servicio, barbero, barbería, fecha y hora antes de confirmar."
+        mensaje = "Faltan datos o el barbero no pertenece a la barbería elegida. Elige servicio, barbero, barbería, fecha y hora antes de confirmar."
     if disponible:
         disponible, mensaje = cita_disponible(fecha, hora, peluqueria_id, servicio)
     if disponible:
@@ -780,12 +791,12 @@ def usuario_confirmar_reserva(request):
     Notificacion.objects.create(
         usuario_id=reserva.peluquero_id,
         reserva=reserva,
-        mensaje=f"Nueva cita: {reserva.cliente.nombre} reservó {reserva.servicio} para el {formato_cita(reserva)}.",
+        mensaje=f"Nueva cita: {reserva.cliente.nombre} {reserva.cliente.apellido} reservó {reserva.servicio} para el {formato_cita(reserva)} en {reserva.peluqueria.nombre}.",
     )
     Notificacion.objects.create(
         usuario_id=reserva.cliente_id,
         reserva=reserva,
-        mensaje=f"Tu cita de {reserva.servicio} para el {formato_cita(reserva)} fue reservada correctamente.",
+        mensaje=f"Tu cita de {reserva.servicio} para el {formato_cita(reserva)} en {reserva.peluqueria.nombre} con el barbero {reserva.peluquero.nombre} {reserva.peluquero.apellido} fue reservada correctamente.",
     )
     enviar_correo_cita(
         request,
@@ -811,6 +822,9 @@ def usuario_perfil(request):
         usuario.nombre = request.POST.get("nombre", usuario.nombre)
         usuario.apellido = request.POST.get("apellido", usuario.apellido)
         usuario.telefono = request.POST.get("telefono", usuario.telefono)
+        foto = request.FILES.get("foto")
+        if foto:
+            usuario.foto = foto
         usuario.save()
         messages.success(request, "Perfil actualizado correctamente.")
         return redirect("sena:usuario_perfil")
@@ -861,7 +875,9 @@ def usuario_editar_reserva(request, reserva_id):
         barbero = Usuario.objects.filter(id=barbero_id, rol="Barbero", activo=True).first() if barbero_id else None
         peluqueria = Peluqueria.objects.filter(id=peluqueria_id).first() if peluqueria_id else None
         disponible = bool(barbero and peluqueria and servicio in {item["nombre"] for item in SERVICIOS})
-        mensaje = "Los datos de la reserva no son válidos."
+        mensaje = None
+        if barbero and peluqueria and barbero.peluqueria_id != peluqueria.id:
+            disponible, mensaje = False, "El barbero elegido no pertenece a la barbería seleccionada."
         if disponible:
             disponible, mensaje = cita_disponible(fecha, hora, peluqueria.id, servicio)
         if disponible and barbero:
@@ -872,8 +888,8 @@ def usuario_editar_reserva(request, reserva_id):
             reserva.peluquero, reserva.peluqueria = barbero, peluqueria
             reserva.estado = "Pendiente"
             reserva.save()
-            Notificacion.objects.create(usuario=barbero, reserva=reserva, mensaje=f"Una cita fue modificada para el {formato_cita(reserva)}.")
-            Notificacion.objects.create(usuario=reserva.cliente, reserva=reserva, mensaje=f"Tu cita fue modificada para el {formato_cita(reserva)} y quedó pendiente de confirmación.")
+            Notificacion.objects.create(usuario=barbero, reserva=reserva, mensaje=f"Una cita fue modificada para el {formato_cita(reserva)} en {reserva.peluqueria.nombre}.")
+            Notificacion.objects.create(usuario=reserva.cliente, reserva=reserva, mensaje=f"Tu cita de {reserva.servicio} fue modificada para el {formato_cita(reserva)} en {reserva.peluqueria.nombre} y quedó pendiente de confirmación.")
             enviar_correo_cita(
                 request,
                 reserva.cliente,
@@ -1056,6 +1072,9 @@ def peluquero_perfil(request):
         usuario.nombre = request.POST.get("nombre", usuario.nombre)
         usuario.apellido = request.POST.get("apellido", usuario.apellido)
         usuario.telefono = request.POST.get("telefono", usuario.telefono)
+        foto = request.FILES.get("foto")
+        if foto:
+            usuario.foto = foto
         usuario.save()
         messages.success(request, "Perfil actualizado correctamente.")
         return redirect("sena:peluquero_perfil")
@@ -1107,7 +1126,7 @@ def peluquero_crear_cita(request):
         Notificacion.objects.create(
             usuario=cliente,
             reserva=reserva,
-            mensaje=f"El barbero {request.session['logueado']['nombre']} agendó una cita de {reserva.servicio} para el {formato_cita(reserva)}. Confírmala desde tu cuenta.",
+            mensaje=f"El barbero {request.session['logueado']['nombre']} agendó una cita de {reserva.servicio} para el {formato_cita(reserva)} en {reserva.peluqueria.nombre}. Confírmala desde tu cuenta.",
         )
         enviar_correo_cita(
             request,
@@ -1159,21 +1178,28 @@ def admin_crear_peluquero(request):
         apellido = request.POST.get("apellido", "").strip()
         email = request.POST.get("email", "").strip()
         password = request.POST.get("password", "")
+        peluqueria_id = _id_entero(request.POST.get("peluqueria"))
         if not all([nombre, apellido, email, password]):
-            return render(request, "administrador/admin_formulario_peluquero.html", {"error": "Completa todos los campos obligatorios."})
+            return render(request, "administrador/admin_formulario_peluquero.html", {"error": "Completa todos los campos obligatorios.", "peluquerias": Peluqueria.objects.all()})
         try:
             validate_email(email)
         except ValidationError:
-            return render(request, "administrador/admin_formulario_peluquero.html", {"error": "Ese correo no tiene un formato válido."})
+            return render(request, "administrador/admin_formulario_peluquero.html", {"error": "Ese correo no tiene un formato válido.", "peluquerias": Peluqueria.objects.all()})
         error_password = validar_password(password)
         if error_password:
-            return render(request, "administrador/admin_formulario_peluquero.html", {"error": error_password})
+            return render(request, "administrador/admin_formulario_peluquero.html", {"error": error_password, "peluquerias": Peluqueria.objects.all()})
         if Usuario.objects.filter(email=email).exists():
-            return render(request, "administrador/admin_formulario_peluquero.html", {"error": "Ya existe un usuario con ese correo."})
-        Usuario.objects.create(nombre=nombre, apellido=apellido, email=email, password=make_password(password), telefono=request.POST.get("telefono", "").strip(), rol="Barbero")
+            return render(request, "administrador/admin_formulario_peluquero.html", {"error": "Ya existe un usuario con ese correo.", "peluquerias": Peluqueria.objects.all()})
+        if not peluqueria_id or not Peluqueria.objects.filter(id=peluqueria_id).exists():
+            return render(request, "administrador/admin_formulario_peluquero.html", {"error": "Selecciona la barbería a la que pertenece el barbero.", "peluquerias": Peluqueria.objects.all()})
+        barbero = Usuario.objects.create(nombre=nombre, apellido=apellido, email=email, password=make_password(password), telefono=request.POST.get("telefono", "").strip(), rol="Barbero", peluqueria_id=peluqueria_id)
+        foto = request.FILES.get("foto")
+        if foto:
+            barbero.foto = foto
+            barbero.save()
         messages.success(request, "Barbero creado correctamente.")
         return redirect("sena:admin_peluqueros")
-    return render(request, "administrador/admin_formulario_peluquero.html")
+    return render(request, "administrador/admin_formulario_peluquero.html", {"peluquerias": Peluqueria.objects.all()})
 
 @autorizacion(["Admin"])
 def admin_editar_peluquero(request, id):
@@ -1183,23 +1209,29 @@ def admin_editar_peluquero(request, id):
         try:
             validate_email(email)
         except ValidationError:
-            return render(request, "administrador/admin_formulario_peluquero.html", {"datos": peluquero, "error": "Ese correo no tiene un formato válido."})
+            return render(request, "administrador/admin_formulario_peluquero.html", {"datos": peluquero, "error": "Ese correo no tiene un formato válido.", "peluquerias": Peluqueria.objects.all()})
         if Usuario.objects.exclude(id=id).filter(email=email).exists():
-            return render(request, "administrador/admin_formulario_peluquero.html", {"datos": peluquero, "error": "Ese correo ya está registrado."})
+            return render(request, "administrador/admin_formulario_peluquero.html", {"datos": peluquero, "error": "Ese correo ya está registrado.", "peluquerias": Peluqueria.objects.all()})
         peluquero.nombre = request.POST.get("nombre", "").strip()
         peluquero.apellido = request.POST.get("apellido", "").strip()
         peluquero.email = email
         peluquero.telefono = request.POST.get("telefono", "").strip()
+        peluqueria_id = _id_entero(request.POST.get("peluqueria"))
+        if peluqueria_id and Peluqueria.objects.filter(id=peluqueria_id).exists():
+            peluquero.peluqueria_id = peluqueria_id
+        foto = request.FILES.get("foto")
+        if foto:
+            peluquero.foto = foto
         if request.POST.get("password"):
             # Solo se actualiza si la nueva contraseña cumple las reglas
             error_password = validar_password(request.POST.get("password"))
             if error_password:
-                return render(request, "administrador/admin_formulario_peluquero.html", {"datos": peluquero, "error": error_password})
+                return render(request, "administrador/admin_formulario_peluquero.html", {"datos": peluquero, "error": error_password, "peluquerias": Peluqueria.objects.all()})
             peluquero.password = make_password(request.POST.get("password"))
         peluquero.save()
         messages.success(request, "Datos del barbero actualizados.")
         return redirect("sena:admin_peluqueros")
-    return render(request, "administrador/admin_formulario_peluquero.html", {"datos": peluquero})
+    return render(request, "administrador/admin_formulario_peluquero.html", {"datos": peluquero, "peluquerias": Peluqueria.objects.all()})
 
 @autorizacion(["Admin"])
 def admin_eliminar_peluquero(request, id):
@@ -1253,8 +1285,8 @@ def admin_crear_reserva(request):
             servicio=servicio,
             estado=request.POST.get("estado", "Pendiente")
         )
-        Notificacion.objects.create(usuario=cliente, reserva=reserva, mensaje=f"El administrador agendó tu cita de {reserva.servicio} para el {formato_cita(reserva)}.")
-        Notificacion.objects.create(usuario=peluquero, reserva=reserva, mensaje=f"El administrador agendó una cita de {reserva.servicio} para el {formato_cita(reserva)}.")
+        Notificacion.objects.create(usuario=cliente, reserva=reserva, mensaje=f"El administrador agendó tu cita de {reserva.servicio} para el {formato_cita(reserva)} en {reserva.peluqueria.nombre}.")
+        Notificacion.objects.create(usuario=peluquero, reserva=reserva, mensaje=f"El administrador agendó una cita de {reserva.servicio} para el {formato_cita(reserva)} en {reserva.peluqueria.nombre}.")
         enviar_correo_cita(request, cliente, "Cita agendada en TecnoCorte", f"El administrador agendó tu cita de {reserva.servicio} para el {formato_cita(reserva)} en {reserva.peluqueria.nombre}.", request.build_absolute_uri(reverse("sena:usuario_editar_reserva", args=[reserva.id])))
         enviar_correo_cita(request, peluquero, "Nueva cita agendada en TecnoCorte", f"Tienes una nueva cita con {cliente.nombre} {cliente.apellido} para el {formato_cita(reserva)} en {reserva.peluqueria.nombre}.", request.build_absolute_uri(reverse("sena:peluquero_dashboard")))
         messages.success(request, "La cita fue creada y ambas partes recibieron una notificación.")
@@ -1537,6 +1569,9 @@ def admin_perfil(request):
     if request.method == "POST":
         usuario.nombre = request.POST.get("nombre", usuario.nombre)
         usuario.apellido = request.POST.get("apellido", usuario.apellido)
+        foto = request.FILES.get("foto")
+        if foto:
+            usuario.foto = foto
         usuario.save()
         messages.success(request, "Perfil de administrador actualizado.")
         return redirect("sena:admin_perfil")
@@ -1591,41 +1626,58 @@ def admin_crear_usuario(request):
         # Validaciones
         if not all([nombre, apellido, email, password, rol]) or rol not in dict(Usuario.ROLES):
             return render(request, "administrador/admin_formulario_usuario.html", {
-                "error": "Todos los campos son obligatorios"
+                "error": "Todos los campos son obligatorios",
+                "roles": Usuario.ROLES,
             })
 
         try:
             validate_email(email)
         except ValidationError:
             return render(request, "administrador/admin_formulario_usuario.html", {
-                "error": "Ese correo no tiene un formato válido"
+                "error": "Ese correo no tiene un formato válido",
+                "roles": Usuario.ROLES,
             })
 
         error_password = validar_password(password)
         if error_password:
             return render(request, "administrador/admin_formulario_usuario.html", {
-                "error": error_password
+                "error": error_password,
+                "roles": Usuario.ROLES,
             })
 
         if Usuario.objects.filter(email=email).exists():
             return render(request, "administrador/admin_formulario_usuario.html", {
-                "error": f"Ya existe un usuario con el email {email}"
+                "error": f"Ya existe un usuario con el email {email}",
+                "roles": Usuario.ROLES,
             })
 
+        peluqueria_id = _id_entero(request.POST.get("peluqueria"))
+        if rol == "Barbero" and not peluqueria_id:
+            return render(request, "administrador/admin_formulario_usuario.html", {
+                "error": "Para crear un barbero debes seleccionar la barbería a la que pertenece.",
+                "roles": Usuario.ROLES,
+                "peluquerias": Peluqueria.objects.all(),
+            })
         # Crear usuario
-        Usuario.objects.create(
+        usuario = Usuario.objects.create(
             nombre=nombre,
             apellido=apellido,
             email=email,
             password=make_password(password),
             telefono=telefono,
-            rol=rol
+            rol=rol,
+            peluqueria_id=peluqueria_id if rol == "Barbero" else None,
         )
+        foto = request.FILES.get("foto")
+        if foto:
+            usuario.foto = foto
+            usuario.save()
         messages.success(request, "Usuario creado correctamente.")
         return redirect("sena:admin_usuarios")
 
     return render(request, "administrador/admin_formulario_usuario.html", {
-        "roles": Usuario.ROLES
+        "roles": Usuario.ROLES,
+        "peluquerias": Peluqueria.objects.all(),
     })
 
 @autorizacion(["Admin"])
@@ -1647,9 +1699,22 @@ def admin_editar_usuario(request, id):
         usuario.email = email
         usuario.telefono = request.POST.get("telefono", usuario.telefono).strip()
         nuevo_rol = request.POST.get("rol", usuario.rol)
+        # El rol de un administrador no se puede modificar
+        if usuario.rol == "Admin":
+            nuevo_rol = "Admin"
         if nuevo_rol not in dict(Usuario.ROLES):
-            return render(request, "administrador/admin_formulario_usuario.html", {"usuario": usuario, "roles": Usuario.ROLES, "editar": True, "error": "El rol seleccionado no es válido."})
+            return render(request, "administrador/admin_formulario_usuario.html", {"usuario": usuario, "roles": Usuario.ROLES, "editar": True, "error": "El rol seleccionado no es válido.", "peluquerias": Peluqueria.objects.all()})
         usuario.rol = nuevo_rol
+        peluqueria_id = _id_entero(request.POST.get("peluqueria"))
+        if nuevo_rol == "Barbero":
+            if not peluqueria_id or not Peluqueria.objects.filter(id=peluqueria_id).exists():
+                return render(request, "administrador/admin_formulario_usuario.html", {"usuario": usuario, "roles": Usuario.ROLES, "editar": True, "error": "Para un barbero debes seleccionar la barbería a la que pertenece.", "peluquerias": Peluqueria.objects.all()})
+            usuario.peluqueria_id = peluqueria_id
+        else:
+            usuario.peluqueria = None
+        foto = request.FILES.get("foto")
+        if foto:
+            usuario.foto = foto
         
         # Actualizar contraseña si se proporciona y cumple las reglas
         password = request.POST.get("password", "").strip()

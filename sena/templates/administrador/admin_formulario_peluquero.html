@@ -14,7 +14,7 @@
 </header>
 <!-- Form Card -->
 <div class="bg-surface-container-low rounded-lg ambient-shadow p-10 max-w-2xl">
-<form method="post" class="grid gap-6">
+<form method="post" enctype="multipart/form-data" class="grid gap-6">
 {% csrf_token %}
 {% if error %}<p class="rounded-lg border border-error/40 bg-error-container/20 p-3 text-error text-sm">{{ error }}</p>{% endif %}
 <div class="grid grid-cols-2 gap-6">
@@ -34,6 +34,23 @@
 <div class="grid gap-2">
 <label class="font-label text-xs uppercase tracking-widest text-on-surface-variant">Teléfono</label>
 <input type="text" name="telefono" value="{{ datos.telefono|default_if_none:'' }}" placeholder="Teléfono" class="w-full bg-surface-container-highest border border-outline-variant/20 text-on-surface rounded-lg px-4 py-3 focus:ring-0 focus:border-primary transition-colors placeholder:text-on-surface-variant/50">
+</div>
+<div class="grid gap-2">
+<label class="font-label text-xs uppercase tracking-widest text-on-surface-variant">Barbería</label>
+<select name="peluqueria" required class="w-full bg-surface-container-highest border border-outline-variant/20 text-on-surface rounded-lg px-4 py-3 focus:ring-0 focus:border-primary transition-colors">
+<option value="">-- Selecciona la barbería --</option>
+{% for peluqueria in peluquerias %}
+<option value="{{ peluqueria.id }}" {% if datos.peluqueria_id == peluqueria.id %}selected{% endif %}>{{ peluqueria.nombre }}</option>
+{% endfor %}
+</select>
+</div>
+<div class="grid gap-2">
+<label class="font-label text-xs uppercase tracking-widest text-on-surface-variant">Foto de perfil</label>
+{% if datos.foto %}<div class="flex items-center gap-3">
+<img src="{{ datos.foto.url }}" alt="Foto actual" class="w-16 h-16 rounded-full object-cover border border-outline-variant/30">
+<span class="text-xs text-on-surface-variant">Actual</span>
+</div>{% endif %}
+<input type="file" name="foto" accept="image/*" class="w-full bg-surface-container-highest border border-outline-variant/20 text-on-surface rounded-lg px-4 py-3 focus:ring-0 focus:border-primary transition-colors">
 </div>
 <div class="grid gap-2">
 <label class="font-label text-xs uppercase tracking-widest text-on-surface-variant">Contraseña</label>

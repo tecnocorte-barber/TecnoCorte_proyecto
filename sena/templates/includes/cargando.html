@@ -1,0 +1,58 @@
+<script>
+(function () {
+  if (window.TecnoCorteCargando) return;
+  window.TecnoCorteCargando = true;
+  var ICONO = '<span class="material-symbols-outlined animate-spin" aria-hidden="true">progress_activity</span> ';
+  var TEXTO = 'Procesando…';
+  var REINTENTAR_EN_MS = 15000;
+  var EXCLUIDOS = ['sin-cargando'];
+
+  function botonDeFormulario(form, submitter) {
+    if (submitter && submitter.matches && submitter.matches('button[type="submit"], input[type="submit"]')) return submitter;
+    return form.querySelector('button[type="submit"], input[type="submit"]');
+  }
+
+  function sePuedeBloquear(boton) {
+    if (!boton || boton.disabled) return false;
+    if (EXCLUIDOS.some(function (clase) { return boton.classList.contains(clase); })) return false;
+    return true;
+  }
+
+  function bloquear(boton) {
+    if (!sePuedeBloquear(boton) || boton.dataset.cargando === 'true') return false;
+    var contenedor = boton.tagName === 'INPUT' ? boton.parentNode : boton;
+    if (contenedor) contenedor.style.pointerEvents = 'none';
+    boton.dataset.textoOriginal = boton.innerHTML;
+    boton.dataset.cargando = 'true';
+    boton.setAttribute('aria-busy', 'true');
+    boton.innerHTML = ICONO + TEXTO;
+    boton.disabled = true;
+    window.setTimeout(function () {
+      if (boton.dataset.cargando === 'true') restaurar(boton);
+    }, REINTENTAR_EN_MS);
+    return true;
+  }
+
+  function restaurar(boton) {
+    boton.dataset.cargando = 'false';
+    boton.removeAttribute('aria-busy');
+    boton.disabled = false;
+    if (boton.dataset.textoOriginal) boton.innerHTML = boton.dataset.textoOriginal;
+    if (boton.tagName === 'BUTTON' && boton.parentNode && boton.parentNode.style.pointerEvents === 'none') {
+      boton.parentNode.style.pointerEvents = '';
+    }
+  }
+
+  document.addEventListener('submit', function (evento) {
+    if (evento.defaultPrevented) return;
+    if (evento.target.matches('form[data-sin-cargando]')) return;
+    var boton = botonDeFormulario(evento.target, evento.submitter);
+    if (!boton) return;
+    if (boton.dataset.cargando === 'true' || boton.disabled) {
+      evento.preventDefault();
+      return;
+    }
+    bloquear(boton);
+  });
+})();
+</script>

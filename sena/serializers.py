@@ -6,10 +6,11 @@ from .models import Usuario, Peluqueria, Producto, Reserva
 class UsuarioSerializer(serializers.ModelSerializer):
     class Meta:
         model = Usuario
-        fields = ["id", "nombre", "apellido", "email", "password", "telefono", "rol", "fecha_creacion"]
+        fields = ["id", "nombre", "apellido", "email", "password", "telefono", "rol", "peluqueria", "foto", "fecha_creacion"]
         extra_kwargs = {
             "password": {"write_only": True},
             "fecha_creacion": {"read_only": True},
+            "foto": {"read_only": True},
         }
 
     def create(self, validated_data):
@@ -20,6 +21,9 @@ class UsuarioSerializer(serializers.ModelSerializer):
         password = validated_data.pop("password", None)
         if password:
             instance.password = make_password(password)
+        # El rol de un administrador no se puede cambiar
+        if instance.rol == "Admin":
+            validated_data["rol"] = "Admin"
         return super().update(instance, validated_data)
 
 

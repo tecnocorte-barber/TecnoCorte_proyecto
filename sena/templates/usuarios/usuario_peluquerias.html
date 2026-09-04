@@ -148,10 +148,11 @@
             </div>
 
             <div class="flex gap-3">
-              <a href="{% url 'sena:usuario_reservar_cita' %}"
+              {% if request.session.logueado %}
+              <a href="{% url 'sena:usuario_reservar_cita' %}?peluqueria={{ peluqueria.id }}"
                 class="gold-gradient w-full rounded-md px-6 py-3 text-center text-sm font-bold uppercase tracking-wider text-on-primary transition-all hover:brightness-110 active:scale-95">Reservar</a>
-              {% if not request.session.logueado %}
-              <a href="{% url 'sena:login' %}"
+              {% else %}
+              <a href="{% url 'sena:usuario_reservar_cita' %}?peluqueria={{ peluqueria.id }}"
                 class="w-full rounded-md border border-outline-variant bg-transparent px-6 py-3 text-center text-sm font-bold uppercase tracking-wider text-primary transition-all hover:border-primary active:scale-95">Ingresar</a>
               {% endif %}
             </div>

@@ -16,6 +16,16 @@ class Usuario(models.Model):
     password = models.CharField(max_length=128)
     telefono = models.CharField(max_length=20, blank=True)
     rol = models.CharField(max_length=15, choices=ROLES, default="Cliente")
+    # Peluquería a la que pertenece el usuario (obligatoria solo para barberos)
+    peluqueria = models.ForeignKey(
+        "Peluqueria",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="usuarios",
+    )
+    # Foto de perfil. Se sube desde los formularios de edición de perfil.
+    foto = models.ImageField(upload_to="fotos_perfil/", blank=True, null=True)
     activo = models.BooleanField(default=True)
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     

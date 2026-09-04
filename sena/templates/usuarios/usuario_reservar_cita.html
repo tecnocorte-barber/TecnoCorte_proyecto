@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="es">
 
@@ -133,14 +134,77 @@
         </div>
       </div>
     </header>
+    <div id="bar-peluqueria"
+      class="hidden mb-10 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-outline-variant/15 bg-surface-container-low px-5 py-4">
+      <div class="flex items-center gap-3">
+        <span class="material-symbols-outlined text-primary text-3xl">storefront</span>
+        <div>
+          <span class="block font-label text-xs uppercase tracking-widest text-on-surface-variant">Peluquería
+            seleccionada</span>
+          <span class="font-body text-lg font-semibold text-primary-container" id="bar-peluqueria-nombre">-</span>
+        </div>
+      </div>
+      <button type="button" onclick="cambiarPeluqueria()"
+        class="inline-flex items-center gap-2 rounded-md border border-outline-variant/25 px-5 py-2.5 text-sm font-bold uppercase tracking-wider text-primary transition-all hover:border-primary active:scale-95">
+        <span class="material-symbols-outlined text-[18px]">swap_horiz</span>
+        Cambiar peluquería
+      </button>
+    </div>
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 relative">
       <div class="lg:col-span-8 flex flex-col gap-12">
-        <!-- Step 1: Services -->
-        <section class="flex flex-col gap-6">
+        <!-- Step 1: Peluquerías -->
+        <section class="flex flex-col gap-6" id="paso-peluqueria">
           <div class="flex items-baseline gap-4"><span class="font-headline text-3xl text-primary-container">01</span>
-            <h2 class="font-headline text-2xl text-on-surface">Seleccionar Servicio
+            <h2 class="font-headline text-2xl text-on-surface">Selecciona tu Peluquería
             </h2>
           </div>
+          <p class="text-on-surface-variant text-sm -mt-2">Elige la barbería para ver sus cortes y barberos.</p>
+          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">{% for peluqueria in peluquerias %}
+            <div
+              class="opt group overflow-hidden rounded-xl bg-surface-container-low border border-outline-variant/15 hover:bg-surface-container-highest relative py-0"
+              data-peluqueria="{{ peluqueria.id }}" data-nombre="{{ peluqueria.nombre }}" onclick="seleccionarPeluqueria(this)">
+              <div class="relative h-44 overflow-hidden bg-surface-container-highest">
+                {% if 'Itagüí' in peluqueria.nombre or 'itagui' in peluqueria.nombre|lower %}
+                <img src="{% static 'sena/images/barberia_itagui.jpeg' %}" alt="{{ peluqueria.nombre }}"
+                  class="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                {% elif 'Centro' in peluqueria.nombre or 'centro' in peluqueria.nombre|lower %}
+                <img src="{% static 'sena/images/barberia_centro.jpg' %}" alt="{{ peluqueria.nombre }}"
+                  class="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                {% elif 'Envigado' in peluqueria.nombre or 'envigado' in peluqueria.nombre|lower %}
+                <img src="{% static 'sena/images/servicio_completo.jpeg' %}" alt="{{ peluqueria.nombre }}"
+                  class="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                {% else %}
+                <img src="{% static 'sena/images/corte_cabello.jpeg' %}" alt="{{ peluqueria.nombre }}"
+                  class="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                {% endif %}
+                <span
+                  class="material-symbols-outlined icon-muted absolute right-3 top-3 z-10 rounded-full bg-surface-container-highest/80 p-1 text-[18px] text-outline-variant backdrop-blur-sm">circle</span>
+              </div>
+              <div class="flex flex-col gap-1 p-5">
+                <span class="font-body text-base font-semibold"> {{ peluqueria.nombre }}
+                </span>
+                <span class="text-xs text-on-surface-variant flex items-center gap-1"><span
+                    class="material-symbols-outlined text-[14px]">location_on</span>{{ peluqueria.ubicacion }}
+                </span>
+                <span class="text-xs text-on-surface-variant flex items-center gap-1"><span
+                    class="material-symbols-outlined text-[13px]">call</span>{{ peluqueria.telefono }}
+                </span>
+              </div>
+            </div>
+            {% empty %}
+            <p class="text-on-surface-variant">No hay peluquerías disponibles.
+            </p>
+            {% endfor %}
+          </div>
+        </section>
+        <!-- Step 2: Services (solo de la peluquería elegida) -->
+        <section class="hidden flex-col gap-6" id="paso-servicio">
+          <div class="flex items-baseline gap-4"><span class="font-headline text-3xl text-primary-container">02</span>
+            <h2 class="font-headline text-2xl text-on-surface">Selecciona tu Corte
+            </h2>
+          </div>
+          <p class="text-on-surface-variant text-sm -mt-2">Servicios disponibles en <span
+              class="font-semibold text-primary" id="titulo-servicios">-</span>.</p>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">{% for servicio in servicios %}
             <div
               class="opt bg-surface-container-low rounded-md p-6 border border-outline-variant/15 hover:bg-surface-container relative"
@@ -161,19 +225,22 @@
             {% endfor %}
           </div>
         </section>
-        <!-- Step 2: Barbers -->
-        <section class="flex flex-col gap-6">
-          <div class="flex items-baseline gap-4"><span class="font-headline text-3xl text-primary-container">02</span>
-            <h2 class="font-headline text-2xl text-on-surface">Seleccionar Barbero
+        <!-- Step 3: Barbers (solo de la peluquería elegida) -->
+        <section class="hidden flex-col gap-6" id="paso-barbero">
+          <div class="flex items-baseline gap-4"><span class="font-headline text-3xl text-primary-container">03</span>
+            <h2 class="font-headline text-2xl text-on-surface">Selecciona tu Barbero
             </h2>
           </div>
+          <p class="text-on-surface-variant text-sm -mt-2">Barberos de <span class="font-semibold text-primary"
+              id="titulo-barberos">-</span>.</p>
           <div class="grid grid-cols-1 md:grid-cols-3 gap-4">{% for peluquero in peluqueros %}
             <div
               class="opt bg-surface-container-low rounded-md p-6 border border-outline-variant/15 hover:bg-surface-container relative"
-              data-peluquero="{{ peluquero.id }}" data-nombre="{{ peluquero.nombre }} {{ peluquero.apellido }}" onclick="seleccionarPeluquero(this)">
+              data-peluquero="{{ peluquero.id }}" data-peluqueria="{{ peluquero.peluqueria_id }}" data-nombre="{{ peluquero.nombre }} {{ peluquero.apellido }}" onclick="seleccionarPeluquero(this)">
               <div class="flex flex-col items-center text-center gap-3">
-                <div class="w-16 h-16 rounded-full bg-surface-container-highest flex items-center justify-center"><span
-                    class="material-symbols-outlined text-3xl text-primary">content_cut</span>
+                <div class="w-16 h-16 rounded-full bg-surface-container-highest flex items-center justify-center overflow-hidden">
+                  {% if peluquero.foto %}<img src="{{ peluquero.foto.url }}" alt="{{ peluquero.nombre }}" class="w-full h-full object-cover">{% else %}<span
+                    class="material-symbols-outlined text-3xl text-primary">content_cut</span>{% endif %}
                 </div>
                 <span class="font-body text-sm font-semibold">{{ peluquero.nombre }}
                   {{ peluquero.apellido }}
@@ -186,32 +253,8 @@
             {% endfor %}
           </div>
         </section>
-        <!-- Step 3: Peluquerías -->
-        <section class="flex flex-col gap-6">
-          <div class="flex items-baseline gap-4"><span class="font-headline text-3xl text-primary-container">03</span>
-            <h2 class="font-headline text-2xl text-on-surface">Seleccionar Peluquería
-            </h2>
-          </div>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">{% for peluqueria in peluquerias %}
-            <div
-              class="opt bg-surface-container-low rounded-md p-6 border border-outline-variant/15 hover:bg-surface-container relative"
-              data-peluqueria="{{ peluqueria.id }}" data-nombre="{{ peluqueria.nombre }}" onclick="seleccionarPeluqueria(this)">
-              <div class="flex flex-col items-center text-center gap-2"><span
-                  class="material-symbols-outlined text-primary text-3xl">storefront</span><span
-                  class="font-body text-sm font-semibold">{{ peluqueria.nombre }}
-                </span><span class="text-xs text-on-surface-variant flex items-center gap-1"><span
-                    class="material-symbols-outlined text-[14px]">location_on</span>{{ peluqueria.ubicacion }}
-                </span>
-              </div>
-            </div>
-            {% empty %}
-            <p class="text-on-surface-variant">No hay peluquerías disponibles.
-            </p>
-            {% endfor %}
-          </div>
-        </section>
         <!-- Step 4: Calendar -->
-        <section class="flex flex-col gap-6">
+        <section class="hidden flex-col gap-6" id="paso-fecha">
           <div class="flex items-baseline gap-4"><span class="font-headline text-3xl text-primary-container">04</span>
             <h2 class="font-headline text-2xl text-on-surface">Fecha y Hora
             </h2>
@@ -315,7 +358,8 @@ const FECHA_HOY = "{{ fecha_hoy }}";
 const HORA_ACTUAL = "{{ hora_actual }}";
 const DATOS_ENVIADOS = new URLSearchParams("{{ form_post|escapejs }}");
 const SERVICIO_INICIAL = "{{ servicio_inicial|escapejs }}";
-let seleccion = { servicio: "", precio: 0, duracion: "", minutos: 30, peluquero: "", peluqueria: "", fecha: "", hora: "" };
+const PELUQUERIA_INICIAL = "{{ peluqueria_inicial|default:""|escapejs }}";
+let seleccion = { servicio: "", precio: 0, duracion: "", minutos: 30, peluquero: "", peluqueria: "", peluqueriaNombre: "", peluqueroNombre: "", fecha: "", hora: "" };
 function refrescar() {
   document.getElementById("res-servicio").textContent = seleccion.servicio || "Por elegir";
   document.getElementById("res-precio").textContent = seleccion.precio ? "$ " + seleccion.precio.toLocaleString("es-CO") : "-";
@@ -341,6 +385,19 @@ function seleccionarServicio(el) {
   if (seleccion.fecha && seleccion.peluquero) buildHoras();
   refrescar();
 }
+function filtrarBarberos() {
+  var elegido = seleccion.peluqueria;
+  document.querySelectorAll(".opt[data-peluquero]").forEach(function (o) {
+    var pertenece = elegido && String(o.dataset.peluqueria) === String(elegido);
+    o.style.display = pertenece ? "" : "none";
+    if (!pertenece && seleccion.peluquero === o.dataset.peluquero) {
+      o.classList.remove("opt-selected");
+      seleccion.peluquero = "";
+      seleccion.peluqueroNombre = "";
+      seleccion.hora = "";
+    }
+  });
+}
 function seleccionarPeluquero(el) {
   document.querySelectorAll(".opt[data-peluquero]").forEach(o => o.classList.remove("opt-selected"));
   el.classList.add("opt-selected");
@@ -350,16 +407,54 @@ function seleccionarPeluquero(el) {
   refrescar();
 }
 function seleccionarPeluqueria(el) {
-  document.querySelectorAll(".opt[data-peluqueria]").forEach(o => o.classList.remove("opt-selected"));
+  document.querySelectorAll(".opt[data-peluqueria]").forEach(o => { o.classList.remove("opt-selected"); o.querySelector(".icon-muted").textContent = "circle"; });
   el.classList.add("opt-selected");
+  el.querySelector(".icon-muted").textContent = "check_circle";
   seleccion.peluqueria = el.dataset.peluqueria;
-   seleccion.peluqueriaNombre = el.dataset.nombre;
+  seleccion.peluqueriaNombre = el.dataset.nombre;
   seleccion.fecha = "";
   seleccion.hora = "";
   seleccion.diaSemana = "";
+  seleccion.peluquero = "";
+  seleccion.peluqueroNombre = "";
+  mostrarPasosSiguientes();
+  filtrarBarberos();
   buildFechas();
   buildHoras();
   refrescar();
+}
+function mostrarPasosSiguientes() {
+  document.getElementById("paso-peluqueria").classList.add("hidden");
+  document.getElementById("paso-servicio").classList.remove("hidden");
+  document.getElementById("paso-barbero").classList.remove("hidden");
+  document.getElementById("paso-fecha").classList.remove("hidden");
+  var bar = document.getElementById("bar-peluqueria");
+  bar.classList.remove("hidden");
+  document.getElementById("bar-peluqueria-nombre").textContent = seleccion.peluqueriaNombre;
+  document.getElementById("titulo-servicios").textContent = seleccion.peluqueriaNombre;
+  document.getElementById("titulo-barberos").textContent = seleccion.peluqueriaNombre;
+}
+function ocultarPasosSiguientes() {
+  document.getElementById("paso-servicio").classList.add("hidden");
+  document.getElementById("paso-barbero").classList.add("hidden");
+  document.getElementById("paso-fecha").classList.add("hidden");
+  document.getElementById("bar-peluqueria").classList.add("hidden");
+}
+function cambiarPeluqueria() {
+  document.querySelectorAll(".opt[data-peluqueria]").forEach(o => { o.classList.remove("opt-selected"); o.querySelector(".icon-muted").textContent = "circle"; });
+  seleccion.peluqueria = "";
+  seleccion.peluqueriaNombre = "";
+  seleccion.peluquero = "";
+  seleccion.peluqueroNombre = "";
+  seleccion.fecha = "";
+  seleccion.hora = "";
+  seleccion.diaSemana = "";
+  filtrarBarberos();
+  buildHoras();
+  ocultarPasosSiguientes();
+  refrescar();
+  document.getElementById("paso-peluqueria").classList.remove("hidden");
+  document.getElementById("paso-peluqueria").scrollIntoView({ behavior: "smooth", block: "start" });
 }
 function getHorariosPeluqueria() {
   if (!seleccion.peluqueria) return {};
@@ -475,11 +570,11 @@ function buildHoras() {
 }
 function restaurarSeleccionEnviada() {
   var servicio = document.querySelector('.opt[data-servicio="' + CSS.escape(DATOS_ENVIADOS.get("servicio") || "") + '"]');
-  var peluquero = document.querySelector('.opt[data-peluquero="' + CSS.escape(DATOS_ENVIADOS.get("peluquero") || "") + '"]');
   var peluqueria = document.querySelector('.opt[data-peluqueria="' + CSS.escape(DATOS_ENVIADOS.get("peluqueria") || "") + '"]');
+  var peluquero = document.querySelector('.opt[data-peluquero="' + CSS.escape(DATOS_ENVIADOS.get("peluquero") || "") + '"]');
   if (servicio) seleccionarServicio(servicio);
-  if (peluquero) seleccionarPeluquero(peluquero);
   if (peluqueria) seleccionarPeluqueria(peluqueria);
+  if (peluquero) seleccionarPeluquero(peluquero);
   var fecha = document.querySelector('#fechas .opt[data-fecha="' + CSS.escape(DATOS_ENVIADOS.get("fecha") || "") + '"]');
   if (fecha) fecha.click();
   var horaEnviada = DATOS_ENVIADOS.get("hora");
@@ -488,11 +583,17 @@ function restaurarSeleccionEnviada() {
 }
 buildFechas();
 buildHoras();
+filtrarBarberos();
 if (SERVICIO_INICIAL && !DATOS_ENVIADOS.has("servicio")) {
   var servicioInicial = Array.from(document.querySelectorAll('.opt[data-servicio]')).find(function (card) { return card.dataset.servicio === SERVICIO_INICIAL; });
   if (servicioInicial) seleccionarServicio(servicioInicial);
 }
-if (DATOS_ENVIADOS.has("servicio") || DATOS_ENVIADOS.has("peluquero") || DATOS_ENVIADOS.has("peluqueria")) restaurarSeleccionEnviada();
+if (DATOS_ENVIADOS.has("servicio") || DATOS_ENVIADOS.has("peluquero") || DATOS_ENVIADOS.has("peluqueria")) {
+  restaurarSeleccionEnviada();
+} else if (PELUQUERIA_INICIAL) {
+  var peluqueriaInicial = document.querySelector('.opt[data-peluqueria="' + CSS.escape(PELUQUERIA_INICIAL) + '"]');
+  if (peluqueriaInicial) seleccionarPeluqueria(peluqueriaInicial);
+}
 document.getElementById("form-reserva").addEventListener("submit", function (e) {
   if (!seleccion.servicio || !seleccion.peluquero || !seleccion.peluqueria || !seleccion.fecha || !seleccion.hora) {
     e.preventDefault();

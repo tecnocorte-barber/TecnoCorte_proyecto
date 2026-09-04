@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="es">
 
@@ -98,8 +99,8 @@
           <div
             class="w-20 h-24 bg-surface-container-highest rounded-md overflow-hidden shrink-0 flex items-center justify-center">
             {% if item.producto.imagen %}<img src="{{ item.producto.imagen }}" alt="{{ item.producto.nombre }}"
-              class="h-full w-full object-cover" />{% else %}<span
-              class="material-symbols-outlined text-primary/40 text-4xl">content_cut</span>{% endif %}
+              class="h-full w-full object-cover" />{% else %}<img src="{% static 'sena/images/Logo.png' %}"
+              alt="TecnoCorte" class="h-full w-full object-contain p-2" />{% endif %}
           </div>
           <div class="flex-1 min-w-0"><span class="text-[10px] uppercase tracking-widest text-primary block mb-1">{{ item.producto.get_categoria_display }}
             </span>

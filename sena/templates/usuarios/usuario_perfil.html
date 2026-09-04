@@ -91,8 +91,9 @@
           class="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none">
         </div>
         <div
-          class="w-28 h-28 rounded-full mb-6 bg-surface-container-highest border border-outline-variant/30 flex items-center justify-center">
-          <span class="material-symbols-outlined text-primary text-6xl">person</span>
+          class="w-28 h-28 rounded-full mb-6 bg-surface-container-highest border border-outline-variant/30 flex items-center justify-center overflow-hidden">
+          {% if usuario.foto %}<img src="{{ usuario.foto.url }}" alt="Foto de perfil"
+            class="w-full h-full object-cover">{% else %}<span class="material-symbols-outlined text-primary text-6xl">person</span>{% endif %}
         </div>
         <h1 class="font-headline text-3xl font-bold tracking-tight mb-1">{{ usuario.nombre }}
           {{ usuario.apellido }}
@@ -129,7 +130,7 @@
       <div id="editar" class="hidden bg-surface-container-low rounded-xl p-8 ambient-glow scroll-mt-28">
         <h3 class="font-headline text-xl text-primary-container mb-6">Editar mis datos
         </h3>
-        <form method="post" class="space-y-5">
+        <form method="post" enctype="multipart/form-data" class="space-y-5">
           {% csrf_token %}
           <div><label class="text-[10px] uppercase tracking-[0.2em] text-primary font-bold block mb-1">Nombre</label>
             <input
@@ -145,6 +146,12 @@
             <input
               class="w-full bg-transparent border-b border-outline-variant/30 py-2 focus:outline-none focus:border-primary text-on-surface text-sm"
               name="telefono" value="{{ usuario.telefono }}" />
+          </div>
+          <div><label class="text-[10px] uppercase tracking-[0.2em] text-primary font-bold block mb-1">Foto de
+              perfil</label>
+            <input type="file" name="foto" accept="image/*"
+              class="w-full text-sm text-on-surface-variant file:mr-3 file:rounded-md file:border-none file:bg-primary file:px-4 file:py-2 file:text-xs file:font-bold file:uppercase file:tracking-widest file:text-on-primary hover:file:opacity-90" />
+            <p class="text-xs text-on-surface-variant/60 mt-1">JPG, PNG o WebP. Se verá en tu perfil y en tus citas.</p>
           </div>
           <button type="submit"
             class="w-full py-3 rounded-md border border-primary/40 text-primary hover:bg-primary/5 transition-colors text-sm font-semibold uppercase tracking-widest active:scale-95">Guardar

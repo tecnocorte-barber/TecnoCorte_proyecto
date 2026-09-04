@@ -174,21 +174,10 @@
                   class="rounded bg-surface px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-on-surface-variant">Agotado</span>
               </div>
               {% endif %}
-              {% if 'Máquina' in producto.nombre or 'máquina' in producto.nombre %}
-              <img src="{% static 'sena/images/maquina_motilar.jpg' %}" alt="{{ producto.nombre }}"
-                class="h-full w-full object-cover" />
-              {% elif 'Pomada' in producto.nombre or 'pomada' in producto.nombre %}
-              <img src="{% static 'sena/images/pomada_barba.jpeg' %}" alt="{{ producto.nombre }}"
-                class="h-full w-full object-cover" />
-              {% elif 'Cepillo' in producto.nombre or 'cepillo' in producto.nombre %}
-              <img src="{% static 'sena/images/cepillo.jpeg' %}" alt="{{ producto.nombre }}"
-                class="h-full w-full object-cover" />
-              {% elif 'Tijera' in producto.nombre or 'tijera' in producto.nombre %}
-              <img src="{% static 'sena/images/Tijeras.jpeg' %}" alt="{{ producto.nombre }}"
-                class="h-full w-full object-cover" />
+              {% if producto.imagen %}
+              <img src="{{ producto.imagen }}" alt="{{ producto.nombre }}" class="h-full w-full object-cover" />
               {% else %}
-              <img src="{% static 'sena/images/corte_cabello.jpeg' %}" alt="{{ producto.nombre }}"
-                class="h-full w-full object-cover" />
+              <img src="{% static 'sena/images/Logo.png' %}" alt="TecnoCorte" class="h-full w-full object-contain p-8" />
               {% endif %}
             </div>
 

@@ -165,7 +165,7 @@
             <p class="mx-auto max-w-2xl text-base leading-relaxed text-on-surface-variant md:text-lg">Corte moderno con lavado incluido y asesoría personalizada para encontrar el estilo que mejor se adapte a tu rostro y rutina.</p>
           </div>
           <div class="mt-8 flex justify-center">
-            {% if request.session.logueado %}<a href="{% url 'sena:usuario_reservar_cita' %}" class="btn-brand inline-flex items-center gap-3 rounded-md px-8 py-4 text-sm font-bold uppercase tracking-[0.14em] transition-transform duration-300 hover:scale-[1.02] active:scale-95"><span>Reservar Cita</span><span class="material-symbols-outlined text-xl">workspace_premium</span></a>{% else %}<a href="{% url 'sena:login' %}?next={% url 'sena:usuario_reservar_cita' %}" class="btn-brand inline-flex items-center gap-3 rounded-md px-8 py-4 text-sm font-bold uppercase tracking-[0.14em] transition-transform duration-300 hover:scale-[1.02] active:scale-95"><span>Reservar Cita</span><span class="material-symbols-outlined text-xl">workspace_premium</span></a>{% endif %}
+            {% if request.session.logueado %}<a href="{% url 'sena:usuario_reservar_cita' %}?servicio={{ 'Corte de Cabello'|urlencode }}" class="btn-brand inline-flex items-center gap-3 rounded-md px-8 py-4 text-sm font-bold uppercase tracking-[0.14em] transition-transform duration-300 hover:scale-[1.02] active:scale-95"><span>Reservar Cita</span><span class="material-symbols-outlined text-xl">workspace_premium</span></a>{% else %}<a href="{% url 'sena:login' %}?next={% filter urlencode %}{% url 'sena:usuario_reservar_cita' %}?servicio=Corte de Cabello{% endfilter %}" class="btn-brand inline-flex items-center gap-3 rounded-md px-8 py-4 text-sm font-bold uppercase tracking-[0.14em] transition-transform duration-300 hover:scale-[1.02] active:scale-95"><span>Reservar Cita</span><span class="material-symbols-outlined text-xl">workspace_premium</span></a>{% endif %}
           </div>
         </div>
         </div>
@@ -180,7 +180,7 @@
             <li><span class="material-symbols-outlined">check</span>Peinado y acabado profesional</li>
             <li><span class="material-symbols-outlined">check</span>Asesoría para mantener el look</li>
           </ul>
-          {% if request.session.logueado %}<a href="{% url 'sena:usuario_reservar_cita' %}" class="service-flip-back__action">Agendar cita <span class="material-symbols-outlined">arrow_forward</span></a>{% else %}<a href="{% url 'sena:login' %}?next={% url 'sena:usuario_reservar_cita' %}" class="service-flip-back__action">Iniciar sesión para reservar <span class="material-symbols-outlined">arrow_forward</span></a>{% endif %}
+          {% if request.session.logueado %}<a href="{% url 'sena:usuario_reservar_cita' %}?servicio={{ 'Corte de Cabello'|urlencode }}" class="service-flip-back__action">Agendar cita <span class="material-symbols-outlined">arrow_forward</span></a>{% else %}<a href="{% url 'sena:login' %}?next={% filter urlencode %}{% url 'sena:usuario_reservar_cita' %}?servicio=Corte de Cabello{% endfilter %}" class="service-flip-back__action">Iniciar sesión para reservar <span class="material-symbols-outlined">arrow_forward</span></a>{% endif %}
         </div>
         </div>
       </article>
@@ -208,7 +208,7 @@
             <p class="mx-auto max-w-2xl text-base leading-relaxed text-on-surface-variant md:text-lg">Perfilado preciso, toalla caliente, hidratación y cuidado de la barba para dejarla con una forma limpia y bien definida.</p>
           </div>
           <div class="mt-8 flex justify-center">
-            {% if request.session.logueado %}<a href="{% url 'sena:usuario_reservar_cita' %}" class="btn-brand inline-flex items-center gap-3 rounded-md px-8 py-4 text-sm font-bold uppercase tracking-[0.14em] transition-transform duration-300 hover:scale-[1.02] active:scale-95"><span>Reservar Cita</span><span class="material-symbols-outlined text-xl">workspace_premium</span></a>{% else %}<a href="{% url 'sena:login' %}?next={% url 'sena:usuario_reservar_cita' %}" class="btn-brand inline-flex items-center gap-3 rounded-md px-8 py-4 text-sm font-bold uppercase tracking-[0.14em] transition-transform duration-300 hover:scale-[1.02] active:scale-95"><span>Reservar Cita</span><span class="material-symbols-outlined text-xl">workspace_premium</span></a>{% endif %}
+            {% if request.session.logueado %}<a href="{% url 'sena:usuario_reservar_cita' %}?servicio={{ 'Arreglo de Barba'|urlencode }}" class="btn-brand inline-flex items-center gap-3 rounded-md px-8 py-4 text-sm font-bold uppercase tracking-[0.14em] transition-transform duration-300 hover:scale-[1.02] active:scale-95"><span>Reservar Cita</span><span class="material-symbols-outlined text-xl">workspace_premium</span></a>{% else %}<a href="{% url 'sena:login' %}?next={% filter urlencode %}{% url 'sena:usuario_reservar_cita' %}?servicio=Arreglo de Barba{% endfilter %}" class="btn-brand inline-flex items-center gap-3 rounded-md px-8 py-4 text-sm font-bold uppercase tracking-[0.14em] transition-transform duration-300 hover:scale-[1.02] active:scale-95"><span>Reservar Cita</span><span class="material-symbols-outlined text-xl">workspace_premium</span></a>{% endif %}
           </div>
         </div>
         </div>
@@ -223,7 +223,7 @@
             <li><span class="material-symbols-outlined">check</span>Hidratación y nutrición</li>
             <li><span class="material-symbols-outlined">check</span>Definición adaptada a tu rostro</li>
           </ul>
-          {% if request.session.logueado %}<a href="{% url 'sena:usuario_reservar_cita' %}" class="service-flip-back__action">Agendar cita <span class="material-symbols-outlined">arrow_forward</span></a>{% else %}<a href="{% url 'sena:login' %}?next={% url 'sena:usuario_reservar_cita' %}" class="service-flip-back__action">Iniciar sesión para reservar <span class="material-symbols-outlined">arrow_forward</span></a>{% endif %}
+          {% if request.session.logueado %}<a href="{% url 'sena:usuario_reservar_cita' %}?servicio={{ 'Arreglo de Barba'|urlencode }}" class="service-flip-back__action">Agendar cita <span class="material-symbols-outlined">arrow_forward</span></a>{% else %}<a href="{% url 'sena:login' %}?next={% filter urlencode %}{% url 'sena:usuario_reservar_cita' %}?servicio=Arreglo de Barba{% endfilter %}" class="service-flip-back__action">Iniciar sesión para reservar <span class="material-symbols-outlined">arrow_forward</span></a>{% endif %}
         </div>
         </div>
       </article>
@@ -269,13 +269,13 @@
 
           <div class="mt-8 flex justify-center">
             {% if request.session.logueado %}
-            <a href="{% url 'sena:usuario_reservar_cita' %}"
+            <a href="{% url 'sena:usuario_reservar_cita' %}?servicio={{ 'Combo Completo'|urlencode }}"
               class="btn-brand inline-flex items-center gap-3 rounded-md px-8 py-4 text-sm font-bold uppercase tracking-[0.14em] transition-transform duration-300 hover:scale-[1.02] active:scale-95">
               <span>Reservar Cita</span>
               <span class="material-symbols-outlined text-xl">workspace_premium</span>
             </a>
             {% else %}
-            <a href="{% url 'sena:login' %}?next={% url 'sena:usuario_reservar_cita' %}"
+            <a href="{% url 'sena:login' %}?next={% filter urlencode %}{% url 'sena:usuario_reservar_cita' %}?servicio=Combo Completo{% endfilter %}"
               class="btn-brand inline-flex items-center gap-3 rounded-md px-8 py-4 text-sm font-bold uppercase tracking-[0.14em] transition-transform duration-300 hover:scale-[1.02] active:scale-95">
               <span>Reservar Cita</span>
               <span class="material-symbols-outlined text-xl">workspace_premium</span>
@@ -295,7 +295,7 @@
             <li><span class="material-symbols-outlined">check</span>Limpieza facial revitalizante</li>
             <li><span class="material-symbols-outlined">check</span>Peinado y acabado final</li>
           </ul>
-          {% if request.session.logueado %}<a href="{% url 'sena:usuario_reservar_cita' %}" class="service-flip-back__action">Reservar combo <span class="material-symbols-outlined">arrow_forward</span></a>{% else %}<a href="{% url 'sena:login' %}?next={% url 'sena:usuario_reservar_cita' %}" class="service-flip-back__action">Iniciar sesión para reservar <span class="material-symbols-outlined">arrow_forward</span></a>{% endif %}
+          {% if request.session.logueado %}<a href="{% url 'sena:usuario_reservar_cita' %}?servicio={{ 'Combo Completo'|urlencode }}" class="service-flip-back__action">Reservar combo <span class="material-symbols-outlined">arrow_forward</span></a>{% else %}<a href="{% url 'sena:login' %}?next={% filter urlencode %}{% url 'sena:usuario_reservar_cita' %}?servicio=Combo Completo{% endfilter %}" class="service-flip-back__action">Iniciar sesión para reservar <span class="material-symbols-outlined">arrow_forward</span></a>{% endif %}
         </div>
         </div>
       </article>

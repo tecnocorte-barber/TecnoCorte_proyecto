@@ -31,7 +31,7 @@
             </div>
             {% endif %}
 
-            <form method="POST" class="space-y-6">
+            <form method="POST" enctype="multipart/form-data" class="space-y-6">
                 {% csrf_token %}
 
                 <!-- Nombre -->
@@ -96,8 +96,10 @@
                     </label>
                     <select id="rol" 
                             name="rol" 
-                            class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:border-blue-500 focus:outline-none"
-                            required>
+                            class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:border-blue-500 focus:outline-none {% if editar and usuario.rol == 'Admin' %}opacity-60 cursor-not-allowed{% endif %}"
+                            required
+                            {% if editar and usuario.rol == 'Admin' %}disabled{% endif %}
+                            onchange="document.getElementById('dim-peluqueria').classList.toggle('hidden', this.value !== 'Barbero');">
                         <option value="">-- Selecciona un rol --</option>
                         {% for value, label in roles %}
                             <option value="{{ value }}" {% if usuario.rol == value %}selected{% endif %}>
@@ -105,6 +107,40 @@
                             </option>
                         {% endfor %}
                     </select>
+                    {% if editar and usuario.rol == 'Admin' %}
+                    <input type="hidden" name="rol" value="Admin">
+                    <p class="mt-2 text-xs text-yellow-400">El rol de un administrador no se puede cambiar.</p>
+                    {% endif %}
+                </div>
+
+                <!-- Peluquería (solo barberos) -->
+                <div id="dim-peluqueria" class="{% if usuario.rol != 'Barbero' %}hidden{% endif %}">
+                    <label for="peluqueria" class="block text-sm font-medium text-gray-300 mb-2">
+                        Barbería de este barbero <span class="text-red-500">*</span>
+                    </label>
+                    <select id="peluqueria" name="peluqueria" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:border-blue-500 focus:outline-none">
+                        <option value="">-- Selecciona la barbería --</option>
+                        {% for peluqueria in peluquerias %}
+                            <option value="{{ peluqueria.id }}" {% if usuario.peluqueria_id == peluqueria.id %}selected{% endif %}>
+                                {{ peluqueria.nombre }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Foto de perfil -->
+                <div>
+                    <label for="foto" class="block text-sm font-medium text-gray-300 mb-2">
+                        Foto de perfil
+                    </label>
+                    {% if usuario.foto %}
+                    <div class="flex items-center gap-3 mb-2">
+                        <img src="{{ usuario.foto.url }}" alt="Foto actual" class="w-16 h-16 rounded-full object-cover border border-gray-600">
+                        <span class="text-xs text-gray-400">Foto actual</span>
+                    </div>
+                    {% endif %}
+                    <input type="file" id="foto" name="foto" accept="image/*"
+                           class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none">
                 </div>
 
                 <!-- Contraseña -->

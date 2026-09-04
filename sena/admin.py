@@ -11,8 +11,8 @@ from .models import (
 # Admin de usuarios: gestiona cuentas, roles y estado activo (oculta la contraseña)
 @admin.register(Usuario)
 class UsuarioAdmin(admin.ModelAdmin):
-    list_display = ("nombre", "apellido", "email", "rol", "telefono", "activo", "fecha_creacion")
-    list_filter = ("rol", "activo")
+    list_display = ("nombre", "apellido", "email", "rol", "peluqueria", "activo", "fecha_creacion")
+    list_filter = ("rol", "activo", "peluqueria")
     search_fields = ("nombre", "apellido", "email")
     list_editable = ("activo",)
     exclude = ("password",)

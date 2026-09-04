@@ -2,7 +2,7 @@
   class="hidden md:flex flex-col fixed left-0 top-0 h-screen w-72 bg-surface p-6 shadow-[0_0_40px_rgba(242,202,80,0.06)] z-50 border-r border-surface-container-low">
   <div class="mb-12 flex items-center gap-4">
     <div class="w-12 h-12 rounded-full overflow-hidden border-2 border-primary-container bg-surface-container-high flex items-center justify-center">
-      <span class="material-symbols-outlined text-primary">person</span>
+      {% if usuario_actual.foto %}<img src="{{ usuario_actual.foto.url }}" alt="{{ request.session.logueado.nombre }}" class="w-full h-full object-cover">{% else %}<span class="material-symbols-outlined text-primary">person</span>{% endif %}
     </div>
     <div>
       <h2 class="font-headline text-xl font-bold text-primary-container">{{ request.session.logueado.nombre }}</h2>

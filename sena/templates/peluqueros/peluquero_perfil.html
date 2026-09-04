@@ -28,9 +28,10 @@
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
       <!-- Tarjeta perfil -->
       <div class="bg-surface-container-low rounded-xl p-8 flex flex-col items-center text-center ambient-glow">
-        <div class="w-28 h-28 rounded-full mb-6 bg-surface-container-highest border border-outline-variant/30 flex items-center justify-center">
-          <span class="material-symbols-outlined text-primary text-6xl">content_cut</span>
+        <div class="w-28 h-28 rounded-full mb-6 bg-surface-container-highest border border-outline-variant/30 flex items-center justify-center overflow-hidden">
+          {% if usuario.foto %}<img src="{{ usuario.foto.url }}" alt="Foto de perfil" class="w-full h-full object-cover">{% else %}<span class="material-symbols-outlined text-primary text-6xl">content_cut</span>{% endif %}
         </div>
+        {% if usuario.peluqueria %}<p class="text-on-surface-variant text-xs uppercase tracking-widest mb-2">Barbero de {{ usuario.peluqueria.nombre }}</p>{% endif %}
         <h3 class="font-headline text-3xl font-bold tracking-tight mb-1">{{ usuario.nombre }} {{ usuario.apellido }}</h3>
         <p class="text-primary text-xs uppercase tracking-widest font-bold mb-4">Barbero</p>
 
@@ -62,7 +63,7 @@
       <!-- Formulario editar -->
       <div id="editar" class="hidden bg-surface-container-low rounded-xl p-8 ambient-glow scroll-mt-28">
         <h3 class="font-headline text-xl text-primary-container mb-6">Editar mis datos</h3>
-        <form method="post" class="space-y-5">
+        <form method="post" enctype="multipart/form-data" class="space-y-5">
           {% csrf_token %}
           <div>
             <label class="text-[10px] uppercase tracking-[0.2em] text-primary font-bold block mb-1">Nombre</label>
@@ -75,6 +76,11 @@
           <div>
             <label class="text-[10px] uppercase tracking-[0.2em] text-primary font-bold block mb-1">Teléfono</label>
             <input class="w-full bg-transparent border-b border-outline-variant/30 py-2 focus:outline-none focus:border-primary text-on-surface text-sm" name="telefono" value="{{ usuario.telefono }}"/>
+          </div>
+          <div>
+            <label class="text-[10px] uppercase tracking-[0.2em] text-primary font-bold block mb-1">Foto de perfil</label>
+            <input type="file" name="foto" accept="image/*" class="w-full text-sm text-on-surface-variant file:mr-3 file:rounded-md file:border-none file:bg-primary file:px-4 file:py-2 file:text-xs file:font-bold file:uppercase file:tracking-widest file:text-on-primary hover:file:opacity-90"/>
+            <p class="text-xs text-on-surface-variant/60 mt-1">JPG, PNG o WebP. Se mostrará a los clientes al reservar.</p>
           </div>
           <button type="submit" class="w-full gold-gradient-bg text-on-primary py-3 rounded-md font-bold text-sm uppercase tracking-widest hover:opacity-90 transition-opacity active:scale-95">Guardar cambios</button>
         </form>
