@@ -1,0 +1,41 @@
+{# Barra de navegación inferior para móviles del administrador #}
+<nav
+  class="md:hidden fixed bottom-0 w-full z-40 bg-surface/90 backdrop-blur-xl border-t border-outline-variant/15 flex justify-around items-center px-4 py-3"
+>
+  <a
+    class="flex flex-col items-center space-y-1 text-on-surface-variant p-2 {% if active == 'dashboard' %}text-primary{% endif %}"
+    href="{% url 'sena:admin_dashboard' %}"
+    ><span class="material-symbols-outlined">dashboard</span
+    ><span class="font-label text-[10px] uppercase tracking-wider"
+      >Inicio</span
+    > </a
+  ><a
+    class="flex flex-col items-center space-y-1 text-on-surface-variant p-2 {% if active == 'reservas' %}text-primary{% endif %}"
+    href="{% url 'sena:admin_reservas' %}"
+    ><span class="material-symbols-outlined">calendar_month</span
+    ><span class="font-label text-[10px] uppercase tracking-wider"
+      >Citas</span
+    > </a
+  ><a
+    class="flex flex-col items-center space-y-1 text-on-surface-variant p-2 {% if active == 'peluqueros' %}text-primary{% endif %}"
+    href="{% url 'sena:admin_peluqueros' %}"
+    ><span class="material-symbols-outlined">content_cut</span
+    ><span class="font-label text-[10px] uppercase tracking-wider"
+      >Barberos</span
+    > </a
+  ><a
+    class="flex flex-col items-center space-y-1 text-on-surface-variant p-2 {% if active == 'usuarios' %}text-primary{% endif %}"
+    href="{% url 'sena:admin_usuarios' %}"
+    ><span class="material-symbols-outlined">group</span
+    ><span class="font-label text-[10px] uppercase tracking-wider"
+      >Usuarios</span
+    > </a
+  ><a
+    class="flex flex-col items-center space-y-1 text-on-surface-variant p-2 {% if active == 'productos' %}text-primary{% endif %}"
+    href="{% url 'sena:admin_productos' %}"
+    ><span class="material-symbols-outlined">inventory_2</span
+    ><span class="font-label text-[10px] uppercase tracking-wider"
+      >Productos</span
+    > </a
+  >
+</nav>

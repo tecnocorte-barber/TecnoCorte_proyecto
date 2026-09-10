@@ -1,189 +1,184 @@
-{% extends "usuarios/dashboard_base.html" %}
-
-{% block content %}
+{# Formulario para crear o editar un usuario del sistema #}
+{% extends "usuarios/dashboard_base.html" %} {% block content %}
 <div class="w-full">
-    {% include "includes/admin_sidebar.html" with active="usuarios" %}
-    
-    <div class="lg:ml-64 p-4 lg:p-8 bg-gray-950">
-        <!-- Encabezado -->
-        <div>
-            <h1 class="text-3xl lg:text-4xl font-bold text-white mb-2">
-                {% if editar %}
-                    Editar Usuario
-                {% else %}
-                    Crear Usuario
-                {% endif %}
-            </h1>
-            <p class="text-gray-400 mb-8">
-                {% if editar %}
-                    Modifica los datos del usuario
-                {% else %}
-                    Crea un nuevo usuario en el sistema
-                {% endif %}
-            </p>
-        </div>
+  {% include "includes/admin_sidebar.html" with active="usuarios" %}
 
-        <!-- Formulario -->
-        <div class="bg-gray-800 border border-gray-700 rounded-lg p-6 lg:p-8 max-w-2xl">
-            {% if error %}
-            <div class="bg-red-900 border border-red-700 text-red-200 px-4 py-3 rounded-lg mb-6">
-                {{ error }}
-            </div>
-            {% endif %}
-
-            <form method="POST" enctype="multipart/form-data" class="space-y-6">
-                {% csrf_token %}
-
-                <!-- Nombre -->
-                <div>
-                    <label for="nombre" class="block text-sm font-medium text-gray-300 mb-2">
-                        Nombre <span class="text-red-500">*</span>
-                    </label>
-                    <input type="text" 
-                           id="nombre" 
-                           name="nombre" 
-                           value="{{ usuario.nombre|default:'' }}"
-                           class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none"
-                           placeholder="Juan"
-                           required>
-                </div>
-
-                <!-- Apellido -->
-                <div>
-                    <label for="apellido" class="block text-sm font-medium text-gray-300 mb-2">
-                        Apellido <span class="text-red-500">*</span>
-                    </label>
-                    <input type="text" 
-                           id="apellido" 
-                           name="apellido" 
-                           value="{{ usuario.apellido|default:'' }}"
-                           class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none"
-                           placeholder="Pérez"
-                           required>
-                </div>
-
-                <!-- Email -->
-                <div>
-                    <label for="email" class="block text-sm font-medium text-gray-300 mb-2">
-                        Email <span class="text-red-500">*</span>
-                    </label>
-                    <input type="email" 
-                           id="email" 
-                           name="email" 
-                           value="{{ usuario.email|default:'' }}"
-                           class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none"
-                           placeholder="juan@example.com"
-                           required>
-                </div>
-
-                <!-- Teléfono -->
-                <div>
-                    <label for="telefono" class="block text-sm font-medium text-gray-300 mb-2">
-                        Teléfono
-                    </label>
-                    <input type="tel" 
-                           id="telefono" 
-                           name="telefono" 
-                           value="{{ usuario.telefono|default:'' }}"
-                           class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none"
-                           placeholder="+57 123 456 7890">
-                </div>
-
-                <!-- Rol -->
-                <div>
-                    <label for="rol" class="block text-sm font-medium text-gray-300 mb-2">
-                        Rol <span class="text-red-500">*</span>
-                    </label>
-                    <select id="rol" 
-                            name="rol" 
-                            class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:border-blue-500 focus:outline-none {% if editar and usuario.rol == 'Admin' %}opacity-60 cursor-not-allowed{% endif %}"
-                            required
-                            {% if editar and usuario.rol == 'Admin' %}disabled{% endif %}
-                            onchange="document.getElementById('dim-peluqueria').classList.toggle('hidden', this.value !== 'Barbero');">
-                        <option value="">-- Selecciona un rol --</option>
-                        {% for value, label in roles %}
-                            <option value="{{ value }}" {% if usuario.rol == value %}selected{% endif %}>
-                                {{ label }}
-                            </option>
-                        {% endfor %}
-                    </select>
-                    {% if editar and usuario.rol == 'Admin' %}
-                    <input type="hidden" name="rol" value="Admin">
-                    <p class="mt-2 text-xs text-yellow-400">El rol de un administrador no se puede cambiar.</p>
-                    {% endif %}
-                </div>
-
-                <!-- Peluquería (solo barberos) -->
-                <div id="dim-peluqueria" class="{% if usuario.rol != 'Barbero' %}hidden{% endif %}">
-                    <label for="peluqueria" class="block text-sm font-medium text-gray-300 mb-2">
-                        Barbería de este barbero <span class="text-red-500">*</span>
-                    </label>
-                    <select id="peluqueria" name="peluqueria" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:border-blue-500 focus:outline-none">
-                        <option value="">-- Selecciona la barbería --</option>
-                        {% for peluqueria in peluquerias %}
-                            <option value="{{ peluqueria.id }}" {% if usuario.peluqueria_id == peluqueria.id %}selected{% endif %}>
-                                {{ peluqueria.nombre }}
-                            </option>
-                        {% endfor %}
-                    </select>
-                </div>
-
-                <!-- Foto de perfil -->
-                <div>
-                    <label for="foto" class="block text-sm font-medium text-gray-300 mb-2">
-                        Foto de perfil
-                    </label>
-                    {% if usuario.foto %}
-                    <div class="flex items-center gap-3 mb-2">
-                        <img src="{{ usuario.foto.url }}" alt="Foto actual" class="w-16 h-16 rounded-full object-cover border border-gray-600">
-                        <span class="text-xs text-gray-400">Foto actual</span>
-                    </div>
-                    {% endif %}
-                    <input type="file" id="foto" name="foto" accept="image/*"
-                           class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none">
-                </div>
-
-                <!-- Contraseña -->
-                <div>
-                    <label for="password" class="block text-sm font-medium text-gray-300 mb-2">
-                        Contraseña {% if not editar %}<span class="text-red-500">*</span>{% else %}<span class="text-gray-500">(dejar vacío para no cambiar)</span>{% endif %}
-                    </label>
-                    <input type="password" 
-                           id="password" 
-                           name="password" 
-                           class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none"
-                           placeholder="••••••••"
-                           {% if not editar %}required{% endif %}>
-                </div>
-
-                <!-- Botones -->
-                <div class="flex gap-4 pt-4">
-                    <button type="submit" 
-                            class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition duration-200">
-                        {% if editar %}
-                            Actualizar Usuario
-                        {% else %}
-                            Crear Usuario
-                        {% endif %}
-                    </button>
-                    <a href="{% url 'sena:admin_usuarios' %}" 
-                       class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-6 rounded-lg transition duration-200">
-                        Cancelar
-                    </a>
-                </div>
-            </form>
-
-            {% if editar %}
-            <div class="mt-8 pt-6 border-t border-gray-700">
-                <p class="text-sm text-gray-400 mb-3">
-                    <strong>ID de usuario:</strong> {{ usuario.id }}
-                </p>
-                <p class="text-sm text-gray-400 mb-3">
-                    <strong>Creado:</strong> {{ usuario.fecha_creacion|date:"d/m/Y H:i" }}
-                </p>
-            </div>
-            {% endif %}
-        </div>
+  <div class="md:ml-64 p-4 lg:p-8 bg-gray-950">
+    <!-- Encabezado -->
+    <div class="max-w-2xl mx-auto">
+      <h1 class="text-3xl lg:text-4xl font-bold text-white mb-2">
+        {% if editar %} Editar Usuario {% else %} Crear Usuario {% endif %}
+      </h1>
+      <p class="text-gray-400 mb-8">
+        {% if editar %} Modifica los datos del usuario {% else %} Crea un nuevo
+        usuario en el sistema {% endif %}
+      </p>
     </div>
+
+    <!-- Formulario -->
+    <div
+      class="bg-gray-800 border border-gray-700 rounded-lg p-6 lg:p-8 max-w-2xl mx-auto"
+    >
+      {% if error %}
+      <div
+        class="bg-red-900 border border-red-700 text-red-200 px-4 py-3 rounded-lg mb-6"
+      >
+        {{ error }}
+      </div>
+      {% endif %}
+
+      <form method="POST" class="space-y-6">
+        {% csrf_token %}
+
+        <!-- Nombre -->
+        <div>
+          <label
+            for="nombre"
+            class="block text-sm font-medium text-gray-300 mb-2"
+          >
+            Nombre <span class="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            id="nombre"
+            name="nombre"
+            value="{{ usuario.nombre|default:'' }}"
+            class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none"
+            placeholder="Juan"
+            required
+          />
+        </div>
+
+        <!-- Apellido -->
+        <div>
+          <label
+            for="apellido"
+            class="block text-sm font-medium text-gray-300 mb-2"
+          >
+            Apellido <span class="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            id="apellido"
+            name="apellido"
+            value="{{ usuario.apellido|default:'' }}"
+            class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none"
+            placeholder="Pérez"
+            required
+          />
+        </div>
+
+        <!-- Email -->
+        <div>
+          <label
+            for="email"
+            class="block text-sm font-medium text-gray-300 mb-2"
+          >
+            Email <span class="text-red-500">*</span>
+          </label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            value="{{ usuario.email|default:'' }}"
+            class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none"
+            placeholder="juan@example.com"
+            required
+          />
+        </div>
+
+        <!-- Teléfono -->
+        <div>
+          <label
+            for="telefono"
+            class="block text-sm font-medium text-gray-300 mb-2"
+          >
+            Teléfono
+          </label>
+          <input
+            type="tel"
+            id="telefono"
+            name="telefono"
+            value="{{ usuario.telefono|default:'' }}"
+            class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none"
+            placeholder="+57 123 456 7890"
+          />
+        </div>
+
+        <!-- Rol -->
+        <div>
+          <label for="rol" class="block text-sm font-medium text-gray-300 mb-2">
+            Rol <span class="text-red-500">*</span>
+          </label>
+          <select
+            id="rol"
+            name="rol"
+            class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:border-blue-500 focus:outline-none"
+            required
+          >
+            {# Selección del rol del usuario #}
+            <option value="">-- Selecciona un rol --</option>
+            {% for value, label in roles %}
+            <option
+              value="{{ value }}"
+              {% if usuario.rol == value %}selected{% endif %}
+            >
+              {{ label }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Contraseña -->
+        <div>
+          <label
+            for="password"
+            class="block text-sm font-medium text-gray-300 mb-2"
+          >
+            Contraseña {% if not editar %}<span class="text-red-500">*</span>{% else %}<span class="text-gray-500"
+              >(dejar vacío para no cambiar)</span
+            >{% endif %}
+          </label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none"
+            placeholder="••••••••"
+            {% if not editar %}required{% endif %}
+          />
+        </div>
+
+        <!-- Botones -->
+        <div class="flex gap-4 pt-4">
+          <button
+            type="submit"
+            class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition duration-200"
+          >
+            {% if editar %} Actualizar Usuario {% else %} Crear Usuario {% endif %}
+          </button>
+          <a
+            href="{% url 'sena:admin_usuarios' %}"
+            class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-6 rounded-lg transition duration-200"
+          >
+            Cancelar
+          </a>
+        </div>
+      </form>
+
+      {% if editar %}
+      {# Información adicional del usuario al editar #}
+      <div class="mt-8 pt-6 border-t border-gray-700">
+        <p class="text-sm text-gray-400 mb-3">
+          <strong>ID de usuario:</strong> {{ usuario.id }}
+        </p>
+        <p class="text-sm text-gray-400 mb-3">
+          <strong>Creado:</strong> {{ usuario.fecha_creacion|date:"d/m/Y H:i" }}
+        </p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
 </div>
+{% include "includes/admin_mobile_nav.html" with active="usuarios" %}
 {% endblock %}

@@ -1,124 +1,215 @@
-<!DOCTYPE html>
+<!doctype html>
+<!-- Página standalone para confirmar y finalizar el pedido del carrito -->
 <html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Finalizar Compra - TecnoCorte</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&amp;family=Noto+Serif:ital,wght@0,400;0,700;1,400&amp;display=swap"
+      rel="stylesheet"
+    />
+    {% include "includes/tema.html" %}
+    <style>
+      .glass-nav {
+        background: var(--glass-bg);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+      }
 
-<head>
-  <meta charset="utf-8" />
-  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-  <title>Finalizar Compra - TecnoCorte
-  </title>
-  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-  <link
-    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
-    rel="stylesheet" />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&amp;family=Noto+Serif:ital,wght@0,400;0,700;1,400&amp;display=swap"
-    rel="stylesheet" />
-  {% include "includes/tema.html" %}  <style>
-    .glass-nav {
-      background: var(--glass-bg);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-    }
+      .gold-gradient-bg {
+        background: linear-gradient(135deg, #f2ca50, #d4af37);
+      }
 
-    .gold-gradient-bg {
-      background: linear-gradient(135deg, #f2ca50, #d4af37);
-    }
+      .ambient-glow {
+        box-shadow: 0 20px 40px rgba(242, 202, 80, 0.06);
+      }
 
-    .ambient-glow {
-      box-shadow: 0 20px 40px rgba(242, 202, 80, 0.06);
-    }
+      .ghost-border {
+        border: 1px solid var(--c-outline-variant);
+      }
+    </style>
+  </head>
 
-    .ghost-border {
-      border: 1px solid var(--c-outline-variant);
-    }
-  </style>
-</head>
-
-<body class="bg-surface text-on-surface font-body antialiased">
-  {% include "includes/site_nav.html" with active="tienda" %}
-  <!-- TopNavBar -->
-  <nav class="hidden">
-    <div class="flex justify-between items-center w-full px-8 py-4 max-w-full mx-auto">
-      <a class="inline-flex" href="{% url 'sena:usuario_tienda' %}" aria-label="TecnoCorte">{% include "includes/logo.html" %}</a>
-      <div class="hidden md:flex space-x-8 items-center font-display text-on-surface uppercase tracking-widest text-sm">
-        <a class="text-on-surface-variant hover:text-primary transition-all duration-300"
-          href="{% url 'sena:usuario_servicios' %}">Servicios</a><a class="text-primary border-b-2 border-primary pb-1"
-          href="{% url 'sena:usuario_tienda' %}">Tienda</a><a
-          class="text-on-surface-variant hover:text-primary transition-all duration-300"
-          href="{% url 'sena:usuario_peluquerias' %}">Peluquerías</a><a
-          class="text-on-surface-variant hover:text-primary transition-all duration-300"
-          href="{% url 'sena:ayuda' %}">Contactos</a>
-      </div>
-      <div class="flex items-center space-x-6"><button data-theme-toggle onclick="toggleTheme()" class="text-primary transition-all duration-300 hover:text-primary-container active:scale-90" title="Activar tema claro" type="button"><span class="material-symbols-outlined theme-icon">light_mode</span></button>{% include "includes/notificaciones_indicator.html" %}{% if request.session.logueado %}<a
-          href="{% url 'sena:usuario_perfil' %}"
-          class="text-on-surface-variant hover:text-primary transition-colors font-bold uppercase tracking-widest">Perfil</a><a
-          href="{% url 'sena:logout' %}"
-          class="text-on-surface-variant hover:text-primary transition-colors font-bold uppercase tracking-widest">Salir</a>{% endif %}{% include "includes/carrito_indicator.html" %}
-      </div>
-    </div>
-  </nav>
-  <!-- Main -->
-  <main class="pt-32 pb-24 px-4 md:px-12 max-w-5xl mx-auto min-h-screen">
-    <header class="mb-12">
-      <h1 class="font-headline text-5xl md:text-6xl font-black tracking-tight text-on-surface mb-4">Finalizar
-        <span class="gold-gradient-bg bg-clip-text text-transparent">Compra</span>
-      </h1>
-      <p class="font-body text-on-surface-variant max-w-lg">Confirma los productos de tu pedido. El pago se realiza en
-        el local.
-      </p>
-    </header>
-    {% if error %}<div class="mb-8 flex items-center gap-3 rounded-xl border border-error/30 bg-error-container/15 p-4 text-error" role="alert"><span class="material-symbols-outlined">error</span>{{ error }}</div>{% endif %}
-    <div class="flex flex-col lg:flex-row gap-10">
-      <div class="flex-1 space-y-4">
-        <div class="mb-2 flex items-center justify-between gap-4">
-          <h2 class="font-headline text-2xl text-on-surface">Resumen de productos</h2>
-          <span class="rounded-full bg-surface-container-high px-3 py-1 text-xs font-bold uppercase tracking-wider text-on-surface-variant">{{ cantidad|default:0 }} unidades</span>
+  <body class="bg-surface text-on-surface font-body antialiased">
+    {% include "includes/site_nav.html" with active="tienda" %}
+    <!-- TopNavBar -->
+    <nav class="hidden">
+      <div
+        class="flex justify-between items-center w-full px-8 py-4 max-w-full mx-auto"
+      >
+        <a
+          class="inline-flex"
+          href="{% url 'sena:usuario_tienda' %}"
+          aria-label="TecnoCorte"
+          >{% include "includes/logo.html" %}</a
+        >
+        <div
+          class="hidden md:flex space-x-8 items-center font-display text-on-surface uppercase tracking-widest text-sm"
+        >
+          <a
+            class="text-on-surface-variant hover:text-primary transition-all duration-300"
+            href="{% url 'sena:usuario_servicios' %}"
+            >Servicios</a
+          ><a
+            class="text-primary border-b-2 border-primary pb-1"
+            href="{% url 'sena:usuario_tienda' %}"
+            >Tienda</a
+          ><a
+            class="text-on-surface-variant hover:text-primary transition-all duration-300"
+            href="{% url 'sena:usuario_peluquerias' %}"
+            >Peluquerías</a
+          ><a
+            class="text-on-surface-variant hover:text-primary transition-all duration-300"
+            href="{% url 'sena:ayuda' %}"
+            >Contactos</a
+          >
         </div>
-        {% for item in items %}
-        <article class="bg-surface-container-low rounded-xl p-5 ghost-border">
-          <div class="flex flex-wrap items-start justify-between gap-4">
-            <div class="min-w-0">
-              <h3 class="font-headline text-lg font-bold text-on-surface">{{ item.producto.nombre }}</h3>
-              <div class="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
-                <span class="text-on-surface-variant">Cantidad <strong class="ml-1 text-on-surface">{{ item.cantidad }}</strong></span>
-                <span class="text-on-surface-variant">Precio unitario <strong class="ml-1 text-on-surface">${{ item.producto.precio|floatformat:"0g" }}</strong></span>
+        <div class="flex items-center space-x-6">
+          <button
+            data-theme-toggle
+            onclick="toggleTheme()"
+            class="text-primary transition-all duration-300 hover:text-primary-container active:scale-90"
+            title="Activar tema claro"
+            type="button"
+          >
+            <span class="material-symbols-outlined theme-icon"
+              >light_mode</span
+            ></button
+          >{% include "includes/notificaciones_indicator.html" %}{% if request.session.logueado %}<a
+            href="{% url 'sena:usuario_perfil' %}"
+            class="text-on-surface-variant hover:text-primary transition-colors font-bold uppercase tracking-widest"
+            >Perfil</a
+          ><a
+            href="{% url 'sena:logout' %}"
+            class="text-on-surface-variant hover:text-primary transition-colors font-bold uppercase tracking-widest"
+            >Salir</a
+          >{% endif %}{% include "includes/carrito_indicator.html" %}
+        </div>
+      </div>
+    </nav>
+    <!-- Main -->
+    <main class="pt-32 pb-24 px-4 md:px-12 max-w-5xl mx-auto min-h-screen">
+      <header class="mb-12">
+        <h1
+          class="font-headline text-5xl md:text-6xl font-black tracking-tight text-on-surface mb-4"
+        >
+          Finalizar
+          <span class="gold-gradient-bg bg-clip-text text-transparent"
+            >Compra</span
+          >
+        </h1>
+        <p class="font-body text-on-surface-variant max-w-lg">
+          Confirma los productos de tu pedido. El pago se realiza en el local.
+        </p>
+      </header>
+      {# Resumen de los productos a comprar #}
+      {% if error %}
+      <div
+        class="mb-8 flex items-center gap-3 rounded-xl border border-error/30 bg-error-container/15 p-4 text-error"
+        role="alert"
+      >
+        <span class="material-symbols-outlined">error</span>{{ error }}
+      </div>
+      {% endif %}
+      <div class="flex flex-col lg:flex-row gap-10">
+      {# Lista de productos del pedido a revisar #}
+        <div class="flex-1 space-y-4">
+          <div class="mb-2 flex items-center justify-between gap-4">
+            <h2 class="font-headline text-2xl text-on-surface">
+              Resumen de productos
+            </h2>
+            <span
+              class="rounded-full bg-surface-container-high px-3 py-1 text-xs font-bold uppercase tracking-wider text-on-surface-variant"
+              >{{ cantidad|default:0 }} unidades</span
+            >
+          </div>
+          {% for item in items %}
+          <article class="bg-surface-container-low rounded-xl p-5 ghost-border">
+            <div class="flex flex-wrap items-start justify-between gap-4">
+              <div class="min-w-0">
+                <h3 class="font-headline text-lg font-bold text-on-surface">
+                  {{ item.producto.nombre }}
+                </h3>
+                <div
+                  class="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm"
+                >
+                  <span class="text-on-surface-variant"
+                    >Cantidad
+                    <strong class="ml-1 text-on-surface"
+                      >{{ item.cantidad }}</strong
+                    ></span
+                  >
+                  <span class="text-on-surface-variant"
+                    >Precio unitario
+                    <strong class="ml-1 text-on-surface"
+                      >${{ item.producto.precio|floatformat:"0g" }}</strong
+                    ></span
+                  >
+                </div>
+              </div>
+              <div
+                class="shrink-0 rounded-lg bg-surface-container-high px-4 py-3 text-right"
+              >
+                <span
+                  class="block text-[10px] font-bold uppercase tracking-wider text-on-surface-variant"
+                  >Subtotal</span
+                >
+                <strong class="font-headline text-xl text-primary"
+                  >${{ item.subtotal|floatformat:"0g" }}</strong
+                >
               </div>
             </div>
-            <div class="shrink-0 rounded-lg bg-surface-container-high px-4 py-3 text-right">
-              <span class="block text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">Subtotal</span>
-              <strong class="font-headline text-xl text-primary">${{ item.subtotal|floatformat:"0g" }}</strong>
-            </div>
+          </article>
+          {% empty %}
+          <div
+            class="rounded-xl bg-surface-container-low p-8 text-center text-on-surface-variant"
+          >
+            No hay productos en el pedido.
           </div>
-        </article>
-        {% empty %}
-        <div class="rounded-xl bg-surface-container-low p-8 text-center text-on-surface-variant">No hay productos en el pedido.</div>
-        {% endfor %}
-      </div>
-      <aside class="lg:w-80 shrink-0">
-        <div class="bg-surface-container-low rounded-xl p-8 ambient-glow sticky top-32 ghost-border">
-          <h3 class="font-headline text-2xl text-primary-container mb-6 border-b border-outline-variant/20 pb-4">Total a
-            pagar
-          </h3>
-          <div class="flex justify-between items-end mb-8"><span
-              class="text-on-surface-variant text-sm">Total</span><span class="font-headline text-3xl text-primary">${{ total|default:0|floatformat:"0g" }}
-            </span>
-          </div>
-          <form method="post">{% csrf_token %}
-            <button type="submit"
-              class="w-full inline-flex justify-center py-4 rounded-md gold-gradient-bg text-on-primary font-bold text-sm uppercase tracking-widest hover:opacity-90 transition-all active:scale-95">Confirmar
-              Pedido
-            </button>
-          </form>
-          <p class="text-xs text-on-surface-variant mt-4 text-center">Cliente:
-            {{ request.session.logueado.nombre }}
-          </p>
-          <a href="{% url 'sena:carrito' %}"
-            class="mt-4 w-full inline-flex justify-center py-3 rounded-md border border-outline-variant/30 text-primary hover:border-primary transition-colors text-sm font-semibold uppercase tracking-widest active:scale-95">Volver
-            al carrito</a>
+          {% endfor %}
         </div>
-      </aside>
-    </div>
-  </main>
-</body>
-
+        {# Total a pagar y formulario de confirmación del pedido #}
+        <aside class="lg:w-80 shrink-0">
+          <div
+            class="bg-surface-container-low rounded-xl p-8 ambient-glow sticky top-32 ghost-border"
+          >
+            <h3
+              class="font-headline text-2xl text-primary-container mb-6 border-b border-outline-variant/20 pb-4"
+            >
+              Total a pagar
+            </h3>
+            <div class="flex justify-between items-end mb-8">
+              <span class="text-on-surface-variant text-sm">Total</span
+              ><span class="font-headline text-3xl text-primary"
+                >${{ total|default:0|floatformat:"0g" }}
+              </span>
+            </div>
+            <form method="post">
+              {% csrf_token %}
+              <button
+                type="submit"
+                class="w-full inline-flex justify-center py-4 rounded-md gold-gradient-bg text-on-primary font-bold text-sm uppercase tracking-widest hover:opacity-90 transition-all active:scale-95"
+              >
+                Confirmar Pedido
+              </button>
+            </form>
+            <p class="text-xs text-on-surface-variant mt-4 text-center">
+              Cliente: {{ request.session.logueado.nombre }}
+            </p>
+            <a
+              href="{% url 'sena:carrito' %}"
+              class="mt-4 w-full inline-flex justify-center py-3 rounded-md border border-outline-variant/30 text-primary hover:border-primary transition-colors text-sm font-semibold uppercase tracking-widest active:scale-95"
+              >Volver al carrito</a
+            >
+          </div>
+        </aside>
+      </div>
+    </main>
+  </body>
 </html>

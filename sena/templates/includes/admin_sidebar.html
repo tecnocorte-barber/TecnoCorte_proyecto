@@ -1,66 +1,158 @@
-<nav class="admin-sidebar fixed left-0 top-0 z-40 flex h-screen w-64 flex-col overflow-hidden border-r border-primary/10 bg-surface-container-low p-4 shadow-2xl">
-  <div class="mb-5 flex shrink-0 flex-col items-center gap-2 rounded-2xl border border-primary/15 bg-gradient-to-br from-primary/15 to-surface-container-high/70 p-3 shadow-lg">
+<!-- Barra lateral del panel de administración: enlaces de navegación, acciones rápidas y cerrar sesión -->
+<nav
+  class="admin-sidebar hidden md:flex fixed left-0 top-0 z-40 flex-col overflow-hidden border-r border-primary/10 bg-surface-container-low p-4 shadow-2xl w-64 h-screen"
+>
+  {# Logo y título de la sección de administración #}
+  <div class="flex items-center gap-3">
     {% include "includes/logo.html" with logo_class="h-16 w-16" %}
-    <p class="truncate font-label text-[0.62rem] uppercase tracking-[0.16em] text-on-surface-variant">Administración</p>
+    <p
+      class="truncate font-label text-[0.62rem] uppercase tracking-[0.16em] text-on-surface-variant"
+    >
+      Administración
+    </p>
   </div>
-  <div class="admin-sidebar-scroll min-h-0 flex-1 space-y-1 overflow-y-auto pr-1">
-    <a class="flex items-center space-x-4 px-4 py-3 rounded-lg transition-all group {% if active == 'dashboard' %}bg-primary-container text-on-primary-container font-bold{% else %}text-on-surface-variant hover:bg-surface-container-high hover:bg-surface-container-highest{% endif %}"
-      href="{% url 'sena:admin_dashboard' %}">
-      <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">dashboard</span>
-      <span class="font-label uppercase text-xs tracking-widest">Dashboard</span>
+  {# Lista de enlaces de navegación del admin (resaltado según la página activa) #}
+  <div class="flex-1 space-y-1 overflow-y-auto">
+    <a
+      class="flex items-center space-x-4 px-4 py-3 rounded-lg transition-all group {% if active == 'dashboard' %}bg-primary-container text-on-primary-container font-bold{% else %}text-on-surface-variant hover:bg-surface-container-high hover:bg-surface-container-highest{% endif %}"
+      href="{% url 'sena:admin_dashboard' %}"
+    >
+      <span
+        class="material-symbols-outlined"
+        style="font-variation-settings: &quot;FILL&quot; 0"
+        >dashboard</span
+      >
+      <span class="font-label uppercase text-xs tracking-widest"
+        >Dashboard</span
+      >
     </a>
-    <a class="flex items-center space-x-4 px-4 py-3 rounded-lg transition-all group {% if active == 'reservas' %}bg-primary-container text-on-primary-container font-bold{% else %}text-on-surface-variant hover:bg-surface-container-high hover:bg-surface-container-highest{% endif %}"
-      href="{% url 'sena:admin_reservas' %}">
-      <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">calendar_month</span>
+    <a
+      class="flex items-center space-x-4 px-4 py-3 rounded-lg transition-all group {% if active == 'reservas' %}bg-primary-container text-on-primary-container font-bold{% else %}text-on-surface-variant hover:bg-surface-container-high hover:bg-surface-container-highest{% endif %}"
+      href="{% url 'sena:admin_reservas' %}"
+    >
+      <span
+        class="material-symbols-outlined"
+        style="font-variation-settings: &quot;FILL&quot; 1"
+        >calendar_month</span
+      >
       <span class="font-label uppercase text-xs tracking-widest">Citas</span>
     </a>
-    <a class="flex items-center space-x-4 px-4 py-3 rounded-lg transition-all group {% if active == 'peluqueros' %}bg-primary-container text-on-primary-container font-bold{% else %}text-on-surface-variant hover:bg-surface-container-high hover:bg-surface-container-highest{% endif %}"
-      href="{% url 'sena:admin_peluqueros' %}">
-      <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">content_cut</span>
+    <a
+      class="flex items-center space-x-4 px-4 py-3 rounded-lg transition-all group {% if active == 'peluqueros' %}bg-primary-container text-on-primary-container font-bold{% else %}text-on-surface-variant hover:bg-surface-container-high hover:bg-surface-container-highest{% endif %}"
+      href="{% url 'sena:admin_peluqueros' %}"
+    >
+      <span
+        class="material-symbols-outlined"
+        style="font-variation-settings: &quot;FILL&quot; 0"
+        >content_cut</span
+      >
       <span class="font-label uppercase text-xs tracking-widest">Barberos</span>
     </a>
-    <a class="flex items-center space-x-4 px-4 py-3 rounded-lg transition-all group {% if active == 'usuarios' %}bg-primary-container text-on-primary-container font-bold{% else %}text-on-surface-variant hover:bg-surface-container-high hover:bg-surface-container-highest{% endif %}"
-      href="{% url 'sena:admin_usuarios' %}">
-      <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">group</span>
+    <a
+      class="flex items-center space-x-4 px-4 py-3 rounded-lg transition-all group {% if active == 'usuarios' %}bg-primary-container text-on-primary-container font-bold{% else %}text-on-surface-variant hover:bg-surface-container-high hover:bg-surface-container-highest{% endif %}"
+      href="{% url 'sena:admin_usuarios' %}"
+    >
+      <span
+        class="material-symbols-outlined"
+        style="font-variation-settings: &quot;FILL&quot; 0"
+        >group</span
+      >
       <span class="font-label uppercase text-xs tracking-widest">Usuarios</span>
     </a>
-    <a class="flex items-center space-x-4 px-4 py-3 rounded-lg transition-all {% if active == 'peluquerias' %}bg-primary-container text-on-primary-container font-bold{% else %}text-on-surface-variant hover:bg-surface-container-high{% endif %}"
-      href="{% url 'sena:admin_peluquerias' %}"><span class="material-symbols-outlined">storefront</span><span
-        class="font-label uppercase text-xs tracking-widest">Barberías</span></a>
-    <a class="flex items-center space-x-4 px-4 py-3 rounded-lg transition-all {% if active == 'productos' %}bg-primary-container text-on-primary-container font-bold{% else %}text-on-surface-variant hover:bg-surface-container-high{% endif %}"
-      href="{% url 'sena:admin_productos' %}"><span class="material-symbols-outlined">inventory_2</span><span
-        class="font-label uppercase text-xs tracking-widest">Productos</span></a>
-    <a class="flex items-center space-x-4 px-4 py-3 rounded-lg transition-all {% if active == 'mensajes' %}bg-primary-container text-on-primary-container font-bold{% else %}text-on-surface-variant hover:bg-surface-container-high{% endif %}"
-      href="{% url 'sena:admin_mensajes' %}"><span class="material-symbols-outlined">mail</span><span
-        class="font-label uppercase text-xs tracking-widest">Mensajes</span>{% if mensajes_no_leidos %}<span class="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-error px-1 text-[10px] font-bold text-on-error">{{ mensajes_no_leidos }}</span>{% endif %}</a>
-    <a class="flex items-center space-x-4 px-4 py-3 rounded-lg transition-all {% if active == 'notificaciones' %}bg-primary-container text-on-primary-container font-bold{% else %}text-on-surface-variant hover:bg-surface-container-high{% endif %}"
-      href="{% url 'sena:admin_notificaciones' %}"><span class="material-symbols-outlined">notifications</span><span
-        class="font-label uppercase text-xs tracking-widest">Notificaciones</span>{% if notificaciones_no_leidas %}<span class="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-error px-1 text-[10px] font-bold text-on-error">{{ notificaciones_no_leidas }}</span>{% endif %}</a>
-    <a class="flex items-center space-x-4 px-4 py-3 rounded-lg transition-all group {% if active == 'ingresos' %}bg-primary-container text-on-primary-container font-bold{% else %}text-on-surface-variant hover:bg-surface-container-high hover:bg-surface-container-highest{% endif %}"
-      href="{% url 'sena:admin_ingresos' %}">
-      <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">login</span>
+    <a
+      class="flex items-center space-x-4 px-4 py-3 rounded-lg transition-all {% if active == 'peluquerias' %}bg-primary-container text-on-primary-container font-bold{% else %}text-on-surface-variant hover:bg-surface-container-high{% endif %}"
+      href="{% url 'sena:admin_peluquerias' %}"
+      ><span class="material-symbols-outlined">storefront</span
+      ><span class="font-label uppercase text-xs tracking-widest"
+        >Barberías</span
+      ></a
+    >
+    <a
+      class="flex items-center space-x-4 px-4 py-3 rounded-lg transition-all {% if active == 'productos' %}bg-primary-container text-on-primary-container font-bold{% else %}text-on-surface-variant hover:bg-surface-container-high{% endif %}"
+      href="{% url 'sena:admin_productos' %}"
+      ><span class="material-symbols-outlined">inventory_2</span
+      ><span class="font-label uppercase text-xs tracking-widest"
+        >Productos</span
+      ></a
+    >
+    <a
+      class="flex items-center space-x-4 px-4 py-3 rounded-lg transition-all {% if active == 'mensajes' %}bg-primary-container text-on-primary-container font-bold{% else %}text-on-surface-variant hover:bg-surface-container-high{% endif %}"
+      href="{% url 'sena:admin_mensajes' %}"
+      ><span class="material-symbols-outlined">mail</span
+      ><span class="font-label uppercase text-xs tracking-widest">Mensajes</span
+      {# Badge de mensajes no leídos #}
+  >{% if mensajes_no_leidos %}<span
+        class="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-error px-1 text-[10px] font-bold text-on-error"
+        >{{ mensajes_no_leidos }}</span
+      >{% endif %}</a
+    >
+    <a
+      class="flex items-center space-x-4 px-4 py-3 rounded-lg transition-all {% if active == 'notificaciones' %}bg-primary-container text-on-primary-container font-bold{% else %}text-on-surface-variant hover:bg-surface-container-high{% endif %}"
+      href="{% url 'sena:admin_notificaciones' %}"
+      ><span class="material-symbols-outlined">notifications</span
+      ><span class="font-label uppercase text-xs tracking-widest"
+        >Notificaciones</span
+      {# Badge de notificaciones no leídas #}
+  >{% if notificaciones_no_leidas %}<span
+        class="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-error px-1 text-[10px] font-bold text-on-error"
+        >{{ notificaciones_no_leidas }}</span
+      >{% endif %}</a
+    >
+    <a
+      class="flex items-center space-x-4 px-4 py-3 rounded-lg transition-all group {% if active == 'ingresos' %}bg-primary-container text-on-primary-container font-bold{% else %}text-on-surface-variant hover:bg-surface-container-high hover:bg-surface-container-highest{% endif %}"
+      href="{% url 'sena:admin_ingresos' %}"
+    >
+      <span
+        class="material-symbols-outlined"
+        style="font-variation-settings: &quot;FILL&quot; 0"
+        >login</span
+      >
       <span class="font-label uppercase text-xs tracking-widest">Ingresos</span>
     </a>
-    <a class="flex items-center space-x-4 px-4 py-3 rounded-lg transition-all group {% if active == 'horarios' %}bg-primary-container text-on-primary-container font-bold{% else %}text-on-surface-variant hover:bg-surface-container-high hover:bg-surface-container-highest{% endif %}"
-      href="{% url 'sena:admin_horarios' %}">
-      <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">settings</span>
+    <a
+      class="flex items-center space-x-4 px-4 py-3 rounded-lg transition-all group {% if active == 'horarios' %}bg-primary-container text-on-primary-container font-bold{% else %}text-on-surface-variant hover:bg-surface-container-high hover:bg-surface-container-highest{% endif %}"
+      href="{% url 'sena:admin_horarios' %}"
+    >
+      <span
+        class="material-symbols-outlined"
+        style="font-variation-settings: &quot;FILL&quot; 0"
+        >settings</span
+      >
       <span class="font-label uppercase text-xs tracking-widest">Horarios</span>
     </a>
   </div>
+  {# Acciones fijas: nueva cita, perfil, tema y cerrar sesión #}
   <div class="mt-4 shrink-0 space-y-1 border-t border-primary/10 pt-3">
-    <a href="{% url 'sena:admin_crear_reserva' %}"
-      class="flex w-full items-center justify-center gap-2 rounded-xl border border-primary/30 bg-primary/10 px-3 py-3 text-center font-label text-xs font-bold uppercase tracking-widest text-primary transition-all hover:bg-primary hover:text-on-primary active:scale-95">
+    <a
+      href="{% url 'sena:admin_crear_reserva' %}"
+      class="flex w-full items-center justify-center gap-2 rounded-xl border border-primary/30 bg-primary/10 px-3 py-3 text-center font-label text-xs font-bold uppercase tracking-widest text-primary transition-all hover:bg-primary hover:text-on-primary active:scale-95"
+    >
       <span class="material-symbols-outlined text-lg">add</span>
       Nueva cita
     </a>
-    <button data-theme-toggle onclick="toggleTheme()" type="button"
+    <a
+      href="{% url 'sena:admin_perfil' %}"
+      class="flex w-full items-center justify-center gap-2 rounded-lg px-3 py-2.5 font-label text-xs uppercase tracking-widest text-on-surface-variant transition-colors hover:bg-surface-container-high hover:text-primary {% if active == 'perfil' %}bg-primary-container text-on-primary-container font-bold{% endif %}"
+    >
+      <span class="material-symbols-outlined text-base">person</span>
+      Mi perfil
+    </a>
+    <button
+      data-theme-toggle
+      onclick="toggleTheme()"
+      type="button"
       class="flex w-full items-center justify-center gap-2 rounded-lg px-3 py-2.5 font-label text-xs uppercase tracking-widest text-on-surface-variant transition-colors hover:bg-surface-container-high hover:text-primary"
-      title="Activar tema claro">
-      <span class="material-symbols-outlined theme-icon text-base">dark_mode</span>
+      title="Activar tema claro"
+    >
+      <span class="material-symbols-outlined theme-icon text-base"
+        >dark_mode</span
+      >
       Tema
     </button>
-    <a href="{% url 'sena:logout' %}"
-      class="flex w-full items-center justify-center gap-2 rounded-lg px-3 py-2.5 font-label text-xs uppercase tracking-widest text-on-surface-variant transition-colors hover:bg-error/10 hover:text-error">
+    <a
+      href="{% url 'sena:logout' %}"
+      class="flex w-full items-center justify-center gap-2 rounded-lg px-3 py-2.5 font-label text-xs uppercase tracking-widest text-on-surface-variant transition-colors hover:bg-error/10 hover:text-error"
+    >
       <span class="material-symbols-outlined text-base">logout</span>
       Cerrar sesión
     </a>

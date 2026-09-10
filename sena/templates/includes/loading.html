@@ -1,0 +1,110 @@
+<!-- Sistema de carga: overlay global que se activa automáticamente al enviar formularios -->
+<div id="tc-loading" class="tc-loading-overlay" aria-hidden="true" role="status">
+  <div class="tc-loading-card">
+    <div class="tc-loading-spinner"></div>
+    <p class="tc-loading-text">Cargando...</p>
+  </div>
+</div>
+<style>
+  .tc-loading-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: grid;
+    place-items: center;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.25s ease, visibility 0.25s ease;
+  }
+  .tc-loading-overlay.is-active {
+    opacity: 1;
+    visibility: visible;
+  }
+  .tc-loading-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    padding: 2rem 2.5rem;
+    background: var(--c-surface-container, #1f1f1f);
+    border: 1px solid var(--glass-border, rgba(214,173,66,0.15));
+    border-radius: 1.25rem;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+  }
+  .tc-loading-spinner {
+    width: 2.5rem;
+    height: 2.5rem;
+    border: 3px solid var(--c-outline-variant, #4d4635);
+    border-top-color: var(--c-primary, #d6ad42);
+    border-radius: 50%;
+    animation: tc-spin 0.7s linear infinite;
+  }
+  .tc-loading-text {
+    margin: 0;
+    color: var(--c-on-surface-variant, #d0c5af);
+    font: 700 0.72rem/1 "Manrope", sans-serif;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  @keyframes tc-spin {
+    to { transform: rotate(360deg); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .tc-loading-spinner { animation-duration: 1.5s; }
+  }
+</style>
+<script>
+(function () {
+  var overlay = document.getElementById("tc-loading");
+  if (!overlay) return;
+  var hideTimer = null;
+
+  function showLoading(msg) {
+    var text = overlay.querySelector(".tc-loading-text");
+    if (text && msg) text.textContent = msg;
+    overlay.classList.add("is-active");
+    overlay.setAttribute("aria-hidden", "false");
+    document.body.style.pointerEvents = "none";
+    clearTimeout(hideTimer);
+    hideTimer = setTimeout(hideLoading, 15000);
+  }
+
+  function hideLoading() {
+    overlay.classList.remove("is-active");
+    overlay.setAttribute("aria-hidden", "true");
+    document.body.style.pointerEvents = "";
+    clearTimeout(hideTimer);
+  }
+
+  document.addEventListener("submit", function (e) {
+    var form = e.target;
+    if (form.method && form.method.toUpperCase() === "GET") return;
+    var btn = form.querySelector("[type=submit], button:not([type=button])");
+    var label = btn ? (btn.textContent || "Cargando...").trim() : "Cargando...";
+    showLoading(label);
+    if (btn) {
+      btn.disabled = true;
+      btn.dataset.loadingBackup = btn.innerHTML;
+      btn.innerHTML = '<span class="material-symbols-outlined" style="animation:tc-spin .7s linear infinite;font-size:1.1rem">progress_activity</span> Procesando...';
+    }
+  }, true);
+
+  document.addEventListener("click", function (e) {
+    var link = e.target.closest("a[href]");
+    if (!link) return;
+    var href = link.getAttribute("href");
+    if (!href || href === "#" || href.startsWith("javascript:") || href.startsWith("mailto:") || href.startsWith("tel:")) return;
+    if (link.target === "_blank" || link.hasAttribute("data-no-loading")) return;
+    if (link.closest(".tc-loading-overlay") || link.closest("[data-confirm]")) return;
+    if (link.closest("form")) return;
+    var label = (link.textContent || "Cargando...").trim();
+    showLoading(label.length > 30 ? "Cargando..." : label);
+  }, true);
+
+  window.tcShowLoading = showLoading;
+  window.tcHideLoading = hideLoading;
+})();
+</script>

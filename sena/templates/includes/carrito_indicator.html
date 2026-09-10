@@ -1,9 +1,16 @@
-<a href="{% url 'sena:carrito' %}"
+<!-- Indicador del carrito de compras: muestra icono y cantidad de productos -->
+<a
+  href="{% url 'sena:carrito' %}"
   class="cart-indicator relative inline-flex items-center justify-center text-primary transition-all duration-300 hover:scale-105 hover:text-primary-container"
-  title="Carrito de compras" aria-label="Carrito de compras, {{ cantidad|default:0 }} productos">
+  title="Carrito de compras"
+  aria-label="Carrito de compras, {{ cantidad|default:0 }} productos"
+>
+  {# Icono del carrito de compras #}
   <span class="material-symbols-outlined" aria-hidden="true">shopping_cart</span>
-  <span id="cart-count"
-    class="cart-count absolute -right-3 -top-3 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold leading-none text-on-primary shadow-sm">
+  {# Cantidad de productos en el carrito #}
+  <span
+    class="cart-count absolute -right-3 -top-3 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold leading-none text-on-primary shadow-sm"
+  >
     {{ cantidad|default:0 }}
   </span>
 </a>

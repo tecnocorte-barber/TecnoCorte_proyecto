@@ -1,1 +1,6 @@
-{% load static %}<img src="{% static 'sena/images/Logo.png' %}" alt="TecnoCorte" class="brand-logo {% if logo_class %}{{ logo_class }}{% else %}h-11 w-11{% endif %} shrink-0 rounded-xl object-cover">
+{# Logo de TecnoCorte: carga imagen estática con clase configurable #}
+{% load static %}<img
+  src="{% static 'sena/images/Logo.png' %}"
+  alt="TecnoCorte"
+  class="brand-logo {% if logo_class %}{{ logo_class }}{% else %}h-11 w-11{% endif %} shrink-0 rounded-xl object-cover"
+/>

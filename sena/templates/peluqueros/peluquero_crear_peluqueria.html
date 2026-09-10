@@ -1,0 +1,80 @@
+{# Creación de la peluquería del barbero (primera vez) #}
+{% extends "usuarios/dashboard_base.html" %}
+{% block title %}Crear mi peluquería - TecnoCorte{% endblock %}
+{% block body_class %}font-body antialiased flex bg-surface{% endblock %}
+{% block content %}
+{% include "includes/peluquero_sidebar.html" with active="peluqueria" %}
+<main class="md:ml-72 flex-1 min-h-screen p-6 md:p-12">
+  <div class="max-w-2xl mx-auto">
+    <header class="mb-10 text-center">
+      <h1 class="font-headline text-3xl md:text-4xl text-primary">Crea tu peluquería</h1>
+      <p class="mt-2 text-on-surface-variant">
+        Completa los datos de tu negocio para que los clientes puedan encontrarte.
+      </p>
+    </header>
+
+    {% if error %}
+    <div class="mb-6 rounded-lg border border-error/40 bg-error/10 p-4 text-error text-sm text-center">
+      {{ error }}
+    </div>
+    {% endif %}
+
+    <div class="bg-surface-container-low rounded-xl p-8 ambient-glow">
+      <form method="post" enctype="multipart/form-data" class="space-y-5">
+        {% csrf_token %}
+        <div>
+          <label class="block mb-1 text-[10px] uppercase tracking-[0.2em] text-primary font-bold">Nombre *</label>
+          <input
+            class="w-full bg-surface-container-high border border-outline-variant/30 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-primary"
+            name="nombre"
+            placeholder="Ej: Barbershop El Dorado"
+            required
+          />
+        </div>
+        <div>
+          <label class="block mb-1 text-[10px] uppercase tracking-[0.2em] text-primary font-bold">Ubicación *</label>
+          <input
+            class="w-full bg-surface-container-high border border-outline-variant/30 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-primary"
+            name="ubicacion"
+            placeholder="Ej: Centro comercial, local 12"
+            required
+          />
+        </div>
+        <div>
+          <label class="block mb-1 text-[10px] uppercase tracking-[0.2em] text-primary font-bold">Teléfono</label>
+          <input
+            class="w-full bg-surface-container-high border border-outline-variant/30 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-primary"
+            name="telefono"
+            placeholder="Ej: 300 123 4567"
+          />
+        </div>
+        <div>
+          <label class="block mb-1 text-[10px] uppercase tracking-[0.2em] text-primary font-bold">Descripción</label>
+          <textarea
+            class="w-full bg-surface-container-high border border-outline-variant/30 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-primary resize-none"
+            name="descripcion"
+            rows="3"
+            placeholder="Cuéntanos sobre tu barbería, tu equipo, servicios especiales..."
+          ></textarea>
+        </div>
+        <div>
+          <label class="block mb-1 text-[10px] uppercase tracking-[0.2em] text-primary font-bold">Foto de portada</label>
+          <input
+            class="w-full bg-surface-container-high border border-outline-variant/30 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-primary file:mr-3 file:rounded-md file:border-0 file:bg-primary/10 file:px-4 file:py-2 file:text-primary"
+            type="file"
+            name="imagen"
+            accept="image/*"
+          />
+        </div>
+        <button
+          type="submit"
+          class="w-full py-3 rounded-md gold-gradient-bg text-on-primary font-bold text-sm uppercase tracking-widest hover:opacity-90 transition-opacity active:scale-95"
+        >
+          Crear mi peluquería
+        </button>
+      </form>
+    </div>
+  </div>
+</main>
+{% include "includes/peluquero_mobile_nav.html" with active="peluqueria" %}
+{% endblock %}

@@ -1,74 +1,176 @@
+{# Gestión de horarios y bloqueos por peluquería #}
 {% extends "usuarios/dashboard_base.html" %}
 {% block title %}Horarios y bloqueos - TecnoCorte{% endblock %}
 {% block body_class %}font-body antialiased flex bg-surface{% endblock %}
 {% block content %}
 {% include "includes/admin_sidebar.html" with active="horarios" %}
-<main class="ml-64 flex-1 min-h-screen p-8 md:p-12 bg-surface">
+<main class="ml-0 md:ml-64 flex-1 min-h-screen p-8 md:p-12 bg-surface">
   <header class="mb-10">
     <h1 class="font-headline text-4xl text-primary">Horarios de atención</h1>
-    <p class="text-on-surface-variant mt-2">Elige los días laborales y el horario en el que se pueden agendar citas por peluquería.</p>
+    <p class="text-on-surface-variant mt-2">
+      Elige los días laborales y el horario en el que se pueden agendar citas
+      por peluquería.
+    </p>
   </header>
 
   <div class="mb-8 flex flex-wrap gap-3">
+    {# Selector de peluquería para configurar horarios #}
     {% for p in peluquerias %}
-    <a href="?peluqueria={{ p.id }}" class="px-5 py-2.5 rounded-full text-sm font-bold border border-outline-variant/20 transition-all duration-200 {% if peluqueria_actual.id == p.id %}bg-gradient-to-br from-primary to-primary-container text-on-primary border-transparent shadow-[0_0_20px_rgba(242,202,80,0.2)]{% else %}bg-surface-container-high text-on-surface-variant hover:border-primary hover:text-primary{% endif %}">{{ p.nombre }}</a>
+    <a
+      href="?peluqueria={{ p.id }}"
+      class="px-5 py-2.5 rounded-full text-sm font-bold border border-outline-variant/20 transition-all duration-200 {% if peluqueria_actual.id == p.id %}bg-gradient-to-br from-primary to-primary-container text-on-primary border-transparent shadow-[0_0_20px_rgba(242,202,80,0.2)]{% else %}bg-surface-container-high text-on-surface-variant hover:border-primary hover:text-primary{% endif %}"
+      >{{ p.nombre }}</a
+    >
     {% endfor %}
   </div>
 
   {% if peluqueria_actual %}
   <section class="bg-surface-container-low rounded-xl p-6 mb-8">
     <h2 class="font-headline text-2xl mb-5">Días de trabajo</h2>
-    <form method="post">{% csrf_token %}
-      <input type="hidden" name="accion" value="guardar_horarios">
-      <input type="hidden" name="peluqueria_seleccionada" value="{{ peluqueria_actual.id }}">
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="accion" value="guardar_horarios" />
+      <input
+        type="hidden"
+        name="peluqueria_seleccionada"
+        value="{{ peluqueria_actual.id }}"
+      />
       <div class="overflow-x-auto">
+        {# Tabla de horarios por día de la semana #}
         <table class="w-full text-sm">
-          <thead class="text-on-surface-variant uppercase text-xs"><tr><th class="text-left pb-3">Día</th><th class="text-left pb-3">Se trabaja</th><th class="text-left pb-3">Desde</th><th class="text-left pb-3">Hasta</th></tr></thead>
+          <thead class="text-on-surface-variant uppercase text-xs">
+            <tr>
+              <th class="text-left pb-3">Día</th>
+              <th class="text-left pb-3">Se trabaja</th>
+              <th class="text-left pb-3">Desde</th>
+              <th class="text-left pb-3">Hasta</th>
+            </tr>
+          </thead>
           <tbody>
             {% for horario in horarios %}
             <tr class="border-t border-outline-variant/20">
-              <td class="py-4 font-semibold">{{ horario.get_dia_semana_display }}</td>
-              <td><input type="checkbox" name="activo_{{ horario.dia_semana }}" {% if horario.activo %}checked{% endif %} class="rounded text-primary focus:ring-primary"></td>
-              <td><input type="time" name="inicio_{{ horario.dia_semana }}" value="{{ horario.hora_inicio|time:'H:i' }}" class="bg-surface-container-high border-0 rounded px-3 py-2 text-on-surface"></td>
-              <td><input type="time" name="fin_{{ horario.dia_semana }}" value="{{ horario.hora_fin|time:'H:i' }}" class="bg-surface-container-high border-0 rounded px-3 py-2 text-on-surface"></td>
+              <td class="py-4 font-semibold">
+                {{ horario.get_dia_semana_display }}
+              </td>
+              <td>
+                <input
+                  type="checkbox"
+                  name="activo_{{ horario.dia_semana }}"
+                  {% if horario.activo %}checked{% endif %}
+                  class="rounded text-primary focus:ring-primary"
+                />
+              </td>
+              <td>
+                <input
+                  type="time"
+                  name="inicio_{{ horario.dia_semana }}"
+                  value="{{ horario.hora_inicio|time:'H:i' }}"
+                  class="bg-surface-container-high border-0 rounded px-3 py-2 text-on-surface"
+                />
+              </td>
+              <td>
+                <input
+                  type="time"
+                  name="fin_{{ horario.dia_semana }}"
+                  value="{{ horario.hora_fin|time:'H:i' }}"
+                  class="bg-surface-container-high border-0 rounded px-3 py-2 text-on-surface"
+                />
+              </td>
             </tr>
             {% endfor %}
           </tbody>
         </table>
       </div>
-      <button class="mt-6 btn-gold-gradient font-bold px-5 py-3 rounded-md" type="submit">Guardar horarios</button>
+      <button
+        class="mt-6 btn-gold-gradient font-bold px-5 py-3 rounded-md"
+        type="submit"
+      >
+        Guardar horarios
+      </button>
     </form>
   </section>
 
   <section class="grid lg:grid-cols-2 gap-8">
     <div class="bg-surface-container-low rounded-xl p-6">
       <h2 class="font-headline text-2xl mb-2">Bloquear fecha u hora</h2>
-      <p class="text-on-surface-variant text-sm mb-5">Si dejas la hora vacía, se bloquea el día completo.</p>
-      <form method="post" class="space-y-4">{% csrf_token %}
-        <input type="hidden" name="accion" value="crear_bloqueo">
-        <input type="hidden" name="peluqueria_seleccionada" value="{{ peluqueria_actual.id }}">
-        <input required min="{{ hoy|date:'Y-m-d' }}" type="date" name="fecha" class="w-full bg-surface-container-high border-0 rounded px-3 py-3 text-on-surface">
-        <input type="time" name="hora" class="w-full bg-surface-container-high border-0 rounded px-3 py-3 text-on-surface">
-        <input type="text" name="motivo" placeholder="Motivo (opcional)" class="w-full bg-surface-container-high border-0 rounded px-3 py-3 text-on-surface">
-        <button class="border border-primary text-primary font-bold px-5 py-3 rounded-md hover:bg-primary hover:text-on-primary" type="submit">Bloquear</button>
+      {# Formulario para crear un nuevo bloqueo #}
+      <p class="text-on-surface-variant text-sm mb-5">
+        Si dejas la hora vacía, se bloquea el día completo.
+      </p>
+      <form method="post" class="space-y-4">
+        {% csrf_token %}
+        <input type="hidden" name="accion" value="crear_bloqueo" />
+        <input
+          type="hidden"
+          name="peluqueria_seleccionada"
+          value="{{ peluqueria_actual.id }}"
+        />
+        <input
+          required
+          min="{{ hoy|date:'Y-m-d' }}"
+          type="date"
+          name="fecha"
+          class="w-full bg-surface-container-high border-0 rounded px-3 py-3 text-on-surface"
+        />
+        <input
+          type="time"
+          name="hora"
+          class="w-full bg-surface-container-high border-0 rounded px-3 py-3 text-on-surface"
+        />
+        <input
+          type="text"
+          name="motivo"
+          placeholder="Motivo (opcional)"
+          class="w-full bg-surface-container-high border-0 rounded px-3 py-3 text-on-surface"
+        />
+        <button
+          class="border border-primary text-primary font-bold px-5 py-3 rounded-md hover:bg-primary hover:text-on-primary"
+          type="submit"
+        >
+          Bloquear
+        </button>
       </form>
     </div>
     <div class="bg-surface-container-low rounded-xl p-6">
       <h2 class="font-headline text-2xl mb-5">Bloqueos programados</h2>
+      {# Lista de bloqueos existentes #}
       <div class="space-y-3">
         {% for bloqueo in bloqueos %}
-        <div class="flex justify-between items-center bg-surface-container-high p-3 rounded">
-          <div><strong>{{ bloqueo.fecha|date:'d/m/Y' }}</strong>{% if bloqueo.hora %} · {{ bloqueo.hora|time:'H:i' }}{% else %} · Día completo{% endif %}<p class="text-xs text-on-surface-variant">{{ bloqueo.motivo|default:'Sin motivo' }}</p></div>
-          <form method="post" action="{% url 'sena:admin_eliminar_bloqueo' bloqueo.id %}">{% csrf_token %}<button type="submit" class="text-error text-sm" data-confirm="¿Quitar este bloqueo?">Quitar</button></form>
+        <div
+          class="flex justify-between items-center bg-surface-container-high p-3 rounded"
+        >
+          <div>
+            <strong>{{ bloqueo.fecha|date:'d/m/Y' }}</strong>{% if bloqueo.hora %} · {{ bloqueo.hora|time:'H:i' }}{% else %} · Día completo{% endif %}
+            <p class="text-xs text-on-surface-variant">
+              {{ bloqueo.motivo|default:'Sin motivo' }}
+            </p>
+          </div>
+          <form
+            method="post"
+            action="{% url 'sena:admin_eliminar_bloqueo' bloqueo.id %}"
+          >
+            {% csrf_token %}<button
+              type="submit"
+              class="text-error text-sm"
+              data-confirm="¿Quitar este bloqueo?"
+            >
+              Quitar
+            </button>
+          </form>
         </div>
-        {% empty %}<p class="text-on-surface-variant">No hay bloqueos registrados.</p>{% endfor %}
+        {% empty %}
+        <p class="text-on-surface-variant">No hay bloqueos registrados.</p>
+        {% endfor %}
       </div>
     </div>
   </section>
   {% else %}
   <div class="bg-surface-container-low rounded-xl p-12 text-center">
-    <p class="text-on-surface-variant text-lg">Selecciona una peluquería para configurar sus horarios.</p>
+    <p class="text-on-surface-variant text-lg">
+      Selecciona una peluquería para configurar sus horarios.
+    </p>
   </div>
   {% endif %}
 </main>
+{% include "includes/admin_mobile_nav.html" with active="horarios" %}
 {% endblock %}

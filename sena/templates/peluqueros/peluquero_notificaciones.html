@@ -1,39 +1,68 @@
-{% extends "usuarios/dashboard_base.html" %}
-{% block title %}TecnoCorte - Notificaciones{% endblock %}
-{% block body_class %}antialiased min-h-screen flex bg-background text-on-surface{% endblock %}
-{% block content %}
-{% include "includes/peluquero_sidebar.html" with active="notificaciones" %}
+{# Página de notificaciones del barbero #}
+{% extends "usuarios/dashboard_base.html" %} {% block title %}TecnoCorte -
+Notificaciones{% endblock %} {% block body_class %}antialiased min-h-screen flex
+bg-background text-on-surface{% endblock %} {% block content %} {% include "includes/peluquero_sidebar.html" with active="notificaciones" %}
 <main class="flex-1 md:ml-72 flex flex-col min-h-screen relative bg-background">
-  <header class="glass-header sticky top-0 z-40 flex justify-between items-center w-full px-6 md:px-12 py-4">
-    <a class="inline-flex md:hidden" href="{% url 'sena:peluquero_dashboard' %}" aria-label="TecnoCorte">{% include "includes/logo.html" %}</a>
+  <header
+    class="glass-header sticky top-0 z-40 flex justify-between items-center w-full px-6 md:px-12 py-4"
+  >
+    <a
+      class="inline-flex md:hidden"
+      href="{% url 'sena:peluquero_dashboard' %}"
+      aria-label="TecnoCorte"
+      >{% include "includes/logo.html" %}</a
+    >
     <div class="hidden md:block"></div>
-    <a href="{% url 'sena:peluquero_dashboard' %}" class="flex items-center gap-2 text-primary uppercase tracking-widest text-sm font-bold hover:text-primary-container transition-colors active:scale-95">
+    <a
+      href="{% url 'sena:peluquero_dashboard' %}"
+      class="flex items-center gap-2 text-primary uppercase tracking-widest text-sm font-bold hover:text-primary-container transition-colors active:scale-95"
+    >
       <span class="material-symbols-outlined text-base">arrow_back</span>Volver
     </a>
   </header>
 
   <div class="p-6 md:p-12 max-w-3xl mx-auto w-full">
-    <h2 class="font-headline text-4xl text-on-surface tracking-tight mb-2">Notificaciones</h2>
-    <p class="font-body text-on-surface-variant mb-10">Mensajes y avisos recientes.</p>
+    <h2 class="font-headline text-4xl text-on-surface tracking-tight mb-2">
+      Notificaciones
+    </h2>
+    <p class="font-body text-on-surface-variant mb-10">
+      Mensajes y avisos recientes.
+    </p>
 
+    {# Lista de notificaciones recibidas por el barbero #}
     <div class="space-y-4">
       {% for notificacion in notificaciones %}
-      <article class="bg-surface-container-low rounded-xl p-6 ambient-glow flex gap-4">
-        <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-          <span class="material-symbols-outlined text-primary text-lg">notifications</span>
+      <article
+        class="bg-surface-container-low rounded-xl p-6 ambient-glow flex gap-4"
+      >
+        <div
+          class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0"
+        >
+          <span class="material-symbols-outlined text-primary text-lg"
+            >notifications</span
+          >
         </div>
         <div class="flex-1">
           <p class="font-body text-on-surface">{{ notificacion.mensaje }}</p>
-          <p class="text-on-surface-variant text-xs mt-2">{{ notificacion.fecha|date:'d/m/Y H:i' }}</p>
+          <p class="text-on-surface-variant text-xs mt-2">
+            {{ notificacion.fecha|date:'d/m/Y H:i' }}
+          </p>
         </div>
       </article>
       {% empty %}
-      <div class="bg-surface-container-low rounded-xl p-12 text-center ambient-glow">
-        <span class="material-symbols-outlined text-5xl text-primary/30 mb-4">notifications_off</span>
-        <p class="font-body text-on-surface-variant text-lg">No tienes notificaciones nuevas.</p>
+      <div
+        class="bg-surface-container-low rounded-xl p-12 text-center ambient-glow"
+      >
+        <span class="material-symbols-outlined text-5xl text-primary/30 mb-4"
+          >notifications_off</span
+        >
+        <p class="font-body text-on-surface-variant text-lg">
+          No tienes notificaciones nuevas.
+        </p>
       </div>
       {% endfor %}
     </div>
   </div>
 </main>
+{% include "includes/peluquero_mobile_nav.html" with active="notificaciones" %}
 {% endblock %}

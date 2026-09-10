@@ -1,267 +1,286 @@
-import json
-import hmac
-import os
-from email.mime.image import MIMEImage
+# Vistas principales de TecnoCorte: toda la lógica de las páginas web
+# Incluye: autenticación, carrito, reservas, paneles de cliente/barbero/admin, y más
+import json  # Para serializar horarios y reservas a JSON para JavaScript
+import hmac  # Para comparar tokens de forma segura (recuperación de contraseña)
+import os  # Para rutas de archivos (logo del correo)
+from email.mime.image import MIMEImage  # Para adjuntar el logo en correos HTML
 
-from django.shortcuts import render, redirect, get_object_or_404
-from django.urls import reverse
-from django.http import JsonResponse
-from django.utils import timezone
-from django.db import IntegrityError, models, transaction
-from django.contrib.auth.hashers import check_password, make_password
-from django.contrib import messages
-from django.conf import settings
-from django.core.mail import EmailMultiAlternatives
-from django.core import signing
-from django.core.signing import salted_hmac
-from django.utils.http import url_has_allowed_host_and_scheme
-from django.core.cache import cache
-from django.core.validators import validate_email
-from django.core.exceptions import ValidationError
-from django.template.loader import render_to_string
-from datetime import datetime, time, timedelta
-from .models import Usuario, Peluqueria, Producto, Reserva, Pedido, PedidoProducto, RegistroIngreso, Notificacion, HorarioTrabajo, BloqueoHorario, MensajeContacto, Calificacion
-from .utilidades import autorizacion, validar_password
-from .context_processors import carrito_visible, guardar_carrito_activo, cargar_carrito_usuario
+from django.shortcuts import render, redirect, get_object_or_404  # Renderizar plantillas, redirigir, buscar objeto o 404
+from django.urls import reverse  # Generar URLs por nombre
+from django.http import JsonResponse  # Respuestas JSON para AJAX
+from django.utils import timezone  # Hora actual con zona horaria
+from django.db import IntegrityError, models, transaction  # Errores de BD, agregaciones y transacciones
+from django.contrib.auth.hashers import check_password, make_password  # Verificar y cifrar contraseñas
+from django.contrib import messages  # Mensajes flash para el usuario
+from django.conf import settings  # Configuración del proyecto (email, etc.)
+from django.core.mail import EmailMultiAlternatives  # Correos con versión texto y HTML
+from django.core import signing  # Firma encriptada para tokens de recuperación
+from django.core.signing import salted_hmac  # HMAC con sal para tokens seguros
+from django.utils.http import url_has_allowed_host_and_scheme  # Validar URLs de redirección (seguridad)
+from django.core.cache import cache  # Cache para rate limiting (anti fuerza bruta)
+from django.core.validators import validate_email  # Validar formato de correo
+from django.core.exceptions import ValidationError  # Excepciones de validación
+from django.template.loader import render_to_string  # Renderizar plantilla a string (para correos)
+from datetime import datetime, time, timedelta  # Manejo de fechas, horas y duraciones
+from .models import Usuario, Peluqueria, ImagenPeluqueria, Producto, Reserva, Pedido, PedidoProducto, RegistroIngreso, Notificacion, HorarioTrabajo, BloqueoHorario, MensajeContacto, Calificacion  # Todos los modelos
+from .utilidades import autorizacion, validar_password  # Decorador de permisos y validador de contraseñas
+from .context_processors import carrito_visible, guardar_carrito_activo, cargar_carrito_usuario  # Funciones del carrito por sesión
 
+# Lista de servicios disponibles: nombre, descripción, duración en minutos y precio
 SERVICIOS = [
     {"nombre": "Corte de Cabello", "descripcion": "Lavado, corte preciso con tijera y máquina, peinado con productos premium.", "duracion": "45 Minutos", "minutos": 45, "precio": 40000},
     {"nombre": "Arreglo de Barba", "descripcion": "Toalla caliente, perfilado exacto, hidratación con aceites esenciales.", "duracion": "30 Minutos", "minutos": 30, "precio": 30000},
     {"nombre": "Combo Completo", "descripcion": "Corte de cabello + arreglo de barba + limpieza facial.", "duracion": "1 Hora 15 Min", "minutos": 75, "precio": 60000},
 ]
 
+# Convierte los horarios de trabajo y bloqueos a JSON para que JavaScript los use en el calendario
 def _horarios_para_template(peluqueria_id=None):
-    horarios = {}
-    for h in HorarioTrabajo.objects.all():
-        pid = str(h.peluqueria_id)
+    horarios = {}  # Diccionario: {peluqueria_id: {dia: {activo, inicio, fin}}}
+    for h in HorarioTrabajo.objects.all():  # Recorre todos los horarios configurados
+        pid = str(h.peluqueria_id)  # ID de la peluquería como string
         if pid not in horarios:
-            horarios[pid] = {}
+            horarios[pid] = {}  # Inicializa el diccionario para esa peluquería
         horarios[pid][h.dia_semana] = {"activo": h.activo, "inicio": h.hora_inicio.strftime("%H:%M"), "fin": h.hora_fin.strftime("%H:%M")}
-    bloqueos = []
-    qs = BloqueoHorario.objects.all()
+    bloqueos = []  # Lista de fechas/horas bloqueadas
+    qs = BloqueoHorario.objects.all()  # Query de todos los bloqueos
     if peluqueria_id:
-        qs = qs.filter(peluqueria_id=peluqueria_id)
+        qs = qs.filter(peluqueria_id=peluqueria_id)  # Filtra por peluquería si se indica
     for b in qs:
         bloqueos.append({"fecha": b.fecha.strftime("%Y-%m-%d"), "hora": b.hora.strftime("%H:%M") if b.hora else None})
-    ahora = timezone.localtime()
+    ahora = timezone.localtime()  # Hora actual del servidor
     return {
-        "horarios_json": json.dumps(horarios),
-        "bloqueos_json": json.dumps(bloqueos),
-        "fecha_hoy": ahora.date().isoformat(),
-        "hora_actual": ahora.strftime("%H:%M"),
+        "horarios_json": json.dumps(horarios),  # Horarios como JSON para JavaScript
+        "bloqueos_json": json.dumps(bloqueos),  # Bloqueos como JSON para JavaScript
+        "fecha_hoy": ahora.date().isoformat(),  # Fecha de hoy en formato ISO
+        "hora_actual": ahora.strftime("%H:%M"),  # Hora actual en formato HH:MM
     }
 
 
+# Convierte las reservas existentes a JSON para que JavaScript evite mostrar horarios ocupados
 def _reservas_para_template():
     reservas = []
-    for reserva in Reserva.objects.exclude(estado="Cancelada").only("peluquero_id", "fecha", "hora", "servicio"):
+    for reserva in Reserva.objects.exclude(estado="Cancelada").only("peluquero_id", "fecha", "hora", "servicio"):  # Solo las no canceladas
         reservas.append({
-            "barbero": reserva.peluquero_id,
-            "fecha": reserva.fecha.isoformat(),
-            "hora": reserva.hora.strftime("%H:%M"),
-            "minutos": minutos_servicio(reserva.servicio),
+            "barbero": reserva.peluquero_id,  # ID del barbero
+            "fecha": reserva.fecha.isoformat(),  # Fecha en formato ISO
+            "hora": reserva.hora.strftime("%H:%M"),  # Hora en formato HH:MM
+            "minutos": minutos_servicio(reserva.servicio),  # Duración del servicio
         })
-    return {"reservas_json": json.dumps(reservas)}
+    return {"reservas_json": json.dumps(reservas)}  # Reservas como JSON
 
 
+# Convierte un valor a entero o devuelve None si no es válido (previene inyección)
 def _id_entero(valor):
     try:
-        valor = str(valor or "").strip()
-        return int(valor) if valor.isdigit() else None
+        valor = str(valor or "").strip()  # Convierte a string y limpia espacios
+        return int(valor) if valor.isdigit() else None  # Solo acepta dígitos puros
     except (TypeError, ValueError):
-        return None
+        return None  # Si falla, devuelve None
 
+# Construye el contexto del carrito: lista de items, total y cantidad
 def contexto_carrito(request):
-    carrito = request.session.get("carrito", {}) if carrito_visible(request) else {}
-    items = []
-    total = 0
-    cantidad = 0
-    for producto_id, cantidad_item in carrito.items():
+    carrito = request.session.get("carrito", {}) if carrito_visible(request) else {}  # Obtiene carrito de la sesión
+    items = []  # Lista de productos en el carrito
+    total = 0  # Suma total del carrito
+    cantidad = 0  # Total de unidades
+    for producto_id, cantidad_item in carrito.items():  # Recorre cada producto del carrito
         try:
-            producto = Producto.objects.get(id=producto_id)
+            producto = Producto.objects.get(id=producto_id)  # Busca el producto en la BD
         except Producto.DoesNotExist:
-            continue
-        subtotal = producto.precio * int(cantidad_item)
-        total += subtotal
-        cantidad += int(cantidad_item)
+            continue  # Si no existe, lo omite
+        subtotal = producto.precio * int(cantidad_item)  # Precio unitario * cantidad
+        total += subtotal  # Acumula al total
+        cantidad += int(cantidad_item)  # Acumula unidades
         items.append({
-            "producto": producto,
-            "cantidad": int(cantidad_item),
-            "subtotal": subtotal,
+            "producto": producto,  # Objeto producto completo
+            "cantidad": int(cantidad_item),  # Unidades de este producto
+            "subtotal": subtotal,  # Subtotal de este producto
         })
     return {
-        "items": items,
-        "total": total,
-        "cantidad": cantidad,
-        "carrito": carrito,
-        "mensaje_tienda": request.session.pop("mensaje_tienda", ""),
-        "mensaje_carrito": request.session.pop("mensaje_carrito", ""),
+        "items": items,  # Lista de items para el template
+        "total": total,  # Total del carrito
+        "cantidad": cantidad,  # Cantidad total de unidades
+        "carrito": carrito,  # Carrito crudo de la sesión
+        "mensaje_tienda": request.session.pop("mensaje_tienda", ""),  # Mensaje pendiente de la tienda (se borra al leer)
+        "mensaje_carrito": request.session.pop("mensaje_carrito", ""),  # Mensaje pendiente del carrito (se borra al leer)
     }
 
+# Registra cada inicio de sesión en la tabla de historial
 def registrar_ingreso(request, usuario):
-    ip = request.META.get("REMOTE_ADDR", "")
-    RegistroIngreso.objects.create(usuario=usuario, rol=usuario.rol, ip=ip)
+    ip = request.META.get("REMOTE_ADDR", "")  # IP del cliente (puede venir de proxy)
+    RegistroIngreso.objects.create(usuario=usuario, rol=usuario.rol, ip=ip)  # Guarda el registro
 
 
+# Verifica si una fecha/hora está disponible para agendar una cita
 def cita_disponible(fecha_texto, hora_texto, peluqueria_id=None, servicio=None):
-    """Revisa el horario de trabajo y los bloqueos antes de crear una cita."""
+    """Revisa horarios de trabajo, bloqueos y fecha/hora válida antes de crear una cita."""
     try:
-        fecha = datetime.strptime(fecha_texto, "%Y-%m-%d").date()
-        hora = datetime.strptime(hora_texto, "%H:%M").time()
+        fecha = datetime.strptime(fecha_texto, "%Y-%m-%d").date()  # Convierte texto a fecha
+        hora = datetime.strptime(hora_texto, "%H:%M").time()  # Convierte texto a hora
     except (TypeError, ValueError):
-        return False, "La fecha o la hora no son válidas."
+        return False, "La fecha o la hora no son válidas."  # Formato inválido
     if fecha < timezone.localdate():
-        return False, "No puedes reservar una fecha pasada."
-    ahora = timezone.localtime()
+        return False, "No puedes reservar una fecha pasada."  # No se puede reservar en el pasado
+    ahora = timezone.localtime()  # Hora actual del servidor
     if fecha == ahora.date() and hora <= ahora.time().replace(second=0, microsecond=0):
-        return False, "No puedes reservar una hora que ya pasó. Elige una hora posterior a la actual."
+        return False, "No puedes reservar una hora que ya pasó. Elige una hora posterior a la actual."  # No reservar hora pasada hoy
 
-    horarios = HorarioTrabajo.objects.filter(dia_semana=fecha.weekday())
+    horarios = HorarioTrabajo.objects.filter(dia_semana=fecha.weekday())  # Busca horarios para ese día de la semana
     if peluqueria_id:
-        horarios = horarios.filter(peluqueria_id=peluqueria_id)
-    horario = horarios.first()
+        horarios = horarios.filter(peluqueria_id=peluqueria_id)  # Filtra por peluquería
+    horario = horarios.first()  # Toma el primer horario encontrado
     if horario is None:
-        return False, "Esta barbería todavía no tiene horarios configurados."
+        return False, "Esta barbería todavía no tiene horarios configurados."  # Sin horarios configurados
     if not horario.activo:
-        return False, "Ese día no se trabaja. Elige otra fecha."
-    duracion = minutos_servicio(servicio)
-    hora_fin_servicio = (datetime.combine(fecha, hora) + timedelta(minutes=duracion)).time()
+        return False, "Ese día no se trabaja. Elige otra fecha."  # Día inactivo
+    duracion = minutos_servicio(servicio)  # Obtiene la duración del servicio
+    hora_fin_servicio = (datetime.combine(fecha, hora) + timedelta(minutes=duracion)).time()  # Calcula hora de fin
     if hora < horario.hora_inicio or hora_fin_servicio > horario.hora_fin:
-        return False, "La hora elegida está por fuera del horario de atención."
-    bloqueos = BloqueoHorario.objects.filter(fecha=fecha)
+        return False, "La hora elegida está por fuera del horario de atención."  # Fuera del horario
+    bloqueos = BloqueoHorario.objects.filter(fecha=fecha)  # Busca bloqueos para esa fecha
     if peluqueria_id:
-        bloqueos = bloqueos.filter(peluqueria_id=peluqueria_id)
+        bloqueos = bloqueos.filter(peluqueria_id=peluqueria_id)  # Filtra por peluquería
     if bloqueos.filter(hora__isnull=True).exists():
-        return False, "Ese día está bloqueado para citas."
-    inicio_bloqueo = datetime.combine(fecha, hora)
-    fin_bloqueo = inicio_bloqueo + timedelta(minutes=duracion)
-    for bloqueo in bloqueos.exclude(hora__isnull=True):
-        bloqueo_inicio = datetime.combine(fecha, bloqueo.hora)
+        return False, "Ese día está bloqueado para citas."  # Día completo bloqueado
+    inicio_bloqueo = datetime.combine(fecha, hora)  # Inicio de la cita
+    fin_bloqueo = inicio_bloqueo + timedelta(minutes=duracion)  # Fin de la cita
+    for bloqueo in bloqueos.exclude(hora__isnull=True):  # Revisa bloqueos por hora
+        bloqueo_inicio = datetime.combine(fecha, bloqueo.hora)  # Inicio del bloqueo
         if inicio_bloqueo < bloqueo_inicio + timedelta(minutes=30) and fin_bloqueo > bloqueo_inicio:
-            return False, "Ese horario está bloqueado. Elige otra hora."
-    return True, ""
+            return False, "Ese horario está bloqueado. Elige otra hora."  # Choca con un bloqueo
+    return True, ""  # Todo OK, la cita está disponible
 
 
+# Devuelve la duración en minutos de un servicio según su nombre
 def minutos_servicio(servicio):
     for item in SERVICIOS:
         if item["nombre"] == servicio:
-            return item["minutos"]
-    return 30
+            return item["minutos"]  # Duración del servicio encontrado
+    return 30  # Duración por defecto si no se encuentra
 
 
+# Formatea la fecha y hora de una reserva para mostrar en notificaciones y correos
 def formato_cita(reserva):
     """Mantiene una fecha y hora legibles y consistentes en todos los avisos."""
-    fecha = reserva.fecha if hasattr(reserva.fecha, "strftime") else datetime.strptime(str(reserva.fecha), "%Y-%m-%d").date()
-    hora = reserva.hora if hasattr(reserva.hora, "strftime") else datetime.strptime(str(reserva.hora), "%H:%M").time()
-    return f"{fecha.strftime('%d/%m/%Y')} a las {hora.strftime('%H:%M')}"
+    fecha = reserva.fecha if hasattr(reserva.fecha, "strftime") else datetime.strptime(str(reserva.fecha), "%Y-%m-%d").date()  # Asegura que sea objeto date
+    hora = reserva.hora if hasattr(reserva.hora, "strftime") else datetime.strptime(str(reserva.hora), "%H:%M").time()  # Asegura que sea objeto time
+    return f"{fecha.strftime('%d/%m/%Y')} a las {hora.strftime('%H:%M')}"  # Formato: "01/01/2026 a las 10:00"
 
 
+# Envía un correo HTML a un usuario registrado
 def enviar_correo(usuario, asunto, cuerpo, request=None, enlace=None, texto_enlace=None):
     """Envía una versión de texto y otra visual sin romper la operación si falla el proveedor."""
     if not usuario or not usuario.email:
-        return
+        return  # No envía si no hay usuario o email
     enviar_correo_destino(usuario.email, asunto, cuerpo, request=request, enlace=enlace, texto_enlace=texto_enlace)
 
 
+# Envía un correo HTML a una dirección cualquiera (no necesita ser usuario registrado)
 def enviar_correo_destino(destinatario, asunto, cuerpo, request=None, enlace=None, texto_enlace=None):
     """Envía un correo HTML a una dirección que no pertenece a un usuario registrado."""
     if not destinatario:
-        return
-    html = render_to_string(
+        return  # No envía si no hay destinatario
+    html = render_to_string(  # Renderiza la plantilla de correo con los datos
         "emails/notificacion.html",
         {
-            "asunto": asunto,
-            "cuerpo": cuerpo,
-            "enlace": enlace,
-            "texto_enlace": texto_enlace or "Ver en TecnoCorte",
-            "logo_url": "cid:tecnocorte-logo",
+            "asunto": asunto,  # Asunto del correo
+            "cuerpo": cuerpo,  # Cuerpo en texto plano
+            "enlace": enlace,  # Enlace opcional (botón)
+            "texto_enlace": texto_enlace or "Ver en TecnoCorte",  # Texto del botón
+            "logo_url": "cid:tecnocorte-logo",  # Referencia al logo embebido
         },
     )
-    correo = EmailMultiAlternatives(
-        asunto,
-        cuerpo,
-        settings.DEFAULT_FROM_EMAIL,
-        [destinatario],
+    correo = EmailMultiAlternatives(  # Crea el correo con versión texto y HTML
+        asunto,  # Asunto
+        cuerpo,  # Versión texto plano
+        settings.DEFAULT_FROM_EMAIL,  # Remitente
+        [destinatario],  # Destinatario
     )
-    correo.attach_alternative(html, "text/html")
-    logo_path = os.path.join(settings.BASE_DIR, "sena", "static", "sena", "images", "Logo.png")
+    correo.attach_alternative(html, "text/html")  # Adjunta la versión HTML
+    logo_path = os.path.join(settings.BASE_DIR, "sena", "static", "sena", "images", "Logo.png")  # Ruta del logo
     if os.path.exists(logo_path):
-        with open(logo_path, "rb") as archivo_logo:
-            imagen = MIMEImage(archivo_logo.read(), _subtype="png")
-        imagen.add_header("Content-ID", "<tecnocorte-logo>")
-        imagen.add_header("Content-Disposition", "inline", filename="Logo.png")
-        correo.attach(imagen)
-    correo.send(fail_silently=True)
+        with open(logo_path, "rb") as archivo_logo:  # Abre el logo en modo binario
+            imagen = MIMEImage(archivo_logo.read(), _subtype="png")  # Crea imagen MIME
+        imagen.add_header("Content-ID", "<tecnocorte-logo>")  # ID para referencia en HTML
+        imagen.add_header("Content-Disposition", "inline", filename="Logo.png")  # Muestra inline
+        correo.attach(imagen)  # Adjunta el logo al correo
+    correo.send(fail_silently=True)  # Envía sin lanzar excepciones si falla
 
 
+# Wrapper: envía correo de cita usando el template de notificación
 def enviar_correo_cita(request, usuario, asunto, cuerpo, enlace=None):
     enviar_correo(usuario, asunto, cuerpo, request=request, enlace=enlace, texto_enlace="Revisar mi cita" if enlace else None)
 
 
+# Salt para generar tokens de recuperación de contraseña (evita que se adivinen)
 RESET_SALT = "tecnocorte-password-reset"
 
 
+# Genera un token firmado para recuperar la contraseña (válido 1 hora)
 def token_recuperacion(usuario):
-    version = salted_hmac(RESET_SALT, usuario.password).hexdigest()
-    return signing.dumps({"id": usuario.id, "version": version}, salt=RESET_SALT, compress=True)
+    version = salted_hmac(RESET_SALT, usuario.password).hexdigest()  # Versión basada en la contraseña actual
+    return signing.dumps({"id": usuario.id, "version": version}, salt=RESET_SALT, compress=True)  # Token firmado y comprimido
 
 
+# Valida un token de recuperación y devuelve el usuario si es válido
 def usuario_desde_token(token):
     try:
-        datos = signing.loads(token, salt=RESET_SALT, max_age=3600)
+        datos = signing.loads(token, salt=RESET_SALT, max_age=3600)  # Descifra el token (máx 1 hora)
     except (signing.BadSignature, signing.SignatureExpired, TypeError, ValueError):
-        return None
-    usuario = Usuario.objects.filter(id=datos.get("id"), activo=True).first()
+        return None  # Token inválido o expirado
+    usuario = Usuario.objects.filter(id=datos.get("id"), activo=True).first()  # Busca el usuario
     if not usuario:
-        return None
-    version_actual = salted_hmac(RESET_SALT, usuario.password).hexdigest()
-    return usuario if hmac.compare_digest(datos.get("version", ""), version_actual) else None
+        return None  # Usuario no existe o está inactivo
+    version_actual = salted_hmac(RESET_SALT, usuario.password).hexdigest()  # Versión actual
+    return usuario if hmac.compare_digest(datos.get("version", ""), version_actual) else None  # Compara versiones de forma segura
 
 
+# Notifica a los clientes cuando se suspende un barbero, dejando sus citas pendientes para reagendar
 def notificar_suspension_barbero(request, barbero):
     """Deja las citas futuras pendientes para que el cliente pueda reasignarlas."""
-    ahora = timezone.localtime()
-    reservas = Reserva.objects.select_related("cliente").filter(
+    ahora = timezone.localtime()  # Hora actual
+    reservas = Reserva.objects.select_related("cliente").filter(  # Busca citas futuras del barbero
         peluquero=barbero,
-        fecha__gte=ahora.date(),
-    ).exclude(estado__in=["Cancelada", "Completada"])
+        fecha__gte=ahora.date(),  # Solo fechas de hoy en adelante
+    ).exclude(estado__in=["Cancelada", "Completada"])  # Excluye canceladas y completadas
     for reserva in reservas:
         if reserva.fecha == ahora.date() and reserva.hora <= ahora.time().replace(second=0, microsecond=0):
-            continue
+            continue  # Salta citas de hoy que ya pasaron
         if reserva.estado != "Pendiente":
-            reserva.estado = "Pendiente"
+            reserva.estado = "Pendiente"  # Pone la cita en pendiente
             reserva.save(update_fields=["estado"])
-        momento = formato_cita(reserva)
+        momento = formato_cita(reserva)  # Fecha/hora legible
         mensaje = (
             f"Tu barbero fue suspendido y no podrá atenderte el {momento}. "
             "Puedes reagendar la cita con otro barbero desde el enlace de modificación."
         )
-        Notificacion.objects.create(usuario=reserva.cliente, reserva=reserva, mensaje=mensaje)
-        enviar_correo_cita(
+        Notificacion.objects.create(usuario=reserva.cliente, reserva=reserva, mensaje=mensaje)  # Crea notificación
+        enviar_correo_cita(  # Envía correo al cliente
             request,
             reserva.cliente,
             "Necesitas reagendar tu cita en TecnoCorte",
             f"Hola {reserva.cliente.nombre},\n\n{mensaje}",
-            request.build_absolute_uri(reverse("sena:usuario_editar_reserva", args=[reserva.id])),
+            request.build_absolute_uri(reverse("sena:usuario_editar_reserva", args=[reserva.id])),  # Enlace para editar
         )
 
 
+# Verifica que el barbero no tenga otra cita que se cruce con el horario propuesto
 def barbero_esta_disponible(barbero_id, fecha_texto, hora_texto, servicio, reserva_actual=None):
     """Evita cruces de citas y reserva todo el tiempo que dura cada servicio."""
     try:
-        inicio = datetime.combine(datetime.strptime(fecha_texto, "%Y-%m-%d").date(), datetime.strptime(hora_texto, "%H:%M").time())
+        inicio = datetime.combine(datetime.strptime(fecha_texto, "%Y-%m-%d").date(), datetime.strptime(hora_texto, "%H:%M").time())  # Inicio propuesto
     except (TypeError, ValueError):
-        return False, "La fecha o la hora no son válidas."
-    fin = inicio + timedelta(minutes=minutos_servicio(servicio))
-    citas = Reserva.objects.filter(peluquero_id=barbero_id, fecha=fecha_texto).exclude(estado="Cancelada")
+        return False, "La fecha o la hora no son válidas."  # Formato inválido
+    fin = inicio + timedelta(minutes=minutos_servicio(servicio))  # Fin propuesto según duración del servicio
+    citas = Reserva.objects.filter(peluquero_id=barbero_id, fecha=fecha_texto).exclude(estado="Cancelada")  # Todas las citas del barbero ese día
     if reserva_actual:
-        citas = citas.exclude(id=reserva_actual.id)
+        citas = citas.exclude(id=reserva_actual.id)  # Excluye la reserva actual si se está editando
     for cita in citas:
-        inicio_existente = datetime.combine(cita.fecha, cita.hora)
-        fin_existente = inicio_existente + timedelta(minutes=minutos_servicio(cita.servicio))
+        inicio_existente = datetime.combine(cita.fecha, cita.hora)  # Inicio de la cita existente
+        fin_existente = inicio_existente + timedelta(minutes=minutos_servicio(cita.servicio))  # Fin de la cita existente
         if inicio < fin_existente and fin > inicio_existente:
-            return False, "El barbero ya tiene una cita que ocupa ese horario."
-    return True, ""
+            return False, "El barbero ya tiene una cita que ocupa ese horario."  # Hay cruce de horarios
+    return True, ""  # No hay conflicto, el barbero está disponible
 
 # INICIO - Sin login
 def inicio(request):
@@ -685,6 +704,13 @@ def usuario_peluquerias(request):
     contexto["peluquerias"] = Peluqueria.objects.all()
     return render(request, "usuarios/usuario_peluquerias.html", contexto)
 
+def usuario_peluqueria_detalle(request, id):
+    contexto = contexto_carrito(request)
+    peluqueria = get_object_or_404(Peluqueria, id=id)
+    contexto["peluqueria"] = peluqueria
+    contexto["fotos"] = peluqueria.galeria.all()
+    return render(request, "usuarios/usuario_peluqueria_detalle.html", contexto)
+
 def usuario_reservar_cita(request):
     contexto = contexto_carrito(request)
     contexto["peluqueros"] = Usuario.objects.filter(rol="Barbero", activo=True)
@@ -1006,31 +1032,32 @@ def cambiar_password(request):
 @autorizacion(["Barbero"])
 def peluquero_dashboard(request):
     barbero_id = request.session["logueado"]["id"]
-    citas = Reserva.objects.filter(peluquero_id=barbero_id).order_by("fecha", "hora")
+    peluqueria = _peluqueria_del_barbero(barbero_id)
     precios = {item["nombre"]: item["precio"] for item in SERVICIOS}
-    citas_completadas = citas.filter(estado="Completada")
-    citas_pendientes = citas.filter(estado="Pendiente")
-    citas_canceladas = citas.filter(estado="Cancelada")
-    citas_hoy = citas.filter(fecha=timezone.localdate())
-    ingresos_hoy = sum(precios.get(c.servicio, 0) for c in citas_hoy.filter(estado="Completada"))
-    ingresos_total = sum(precios.get(c.servicio, 0) for c in citas_completadas)
-    califs = Calificacion.objects.filter(barbero_id=barbero_id)
-    promedio = 0
-    if califs.exists():
-        promedio = round(califs.aggregate(models.Avg("puntuacion"))["puntuacion__avg"], 1)
-    contexto = {
-        "citas": citas,
-        "citas_completadas": citas_completadas,
-        "citas_pendientes": citas_pendientes,
-        "citas_canceladas": citas_canceladas,
-        "citas_hoy": citas_hoy,
-        "ingresos_hoy": ingresos_hoy,
-        "ingresos_total": ingresos_total,
-        "total_citas": citas.count(),
-        "promedio": promedio,
-        "total_calificaciones": califs.count(),
-        "calificaciones": califs[:5],
-    }
+    # Las métricas agregadas se cachean 20 s para no pagar la latencia en cada recarga.
+    clave_metricas = f"barbero_dashboard_metricas_{barbero_id}"
+    metricas = cache.get(clave_metricas)
+    if metricas is None:
+        citas = list(Reserva.objects.select_related("cliente", "peluqueria").filter(peluquero_id=barbero_id))
+        hoy = timezone.localdate()
+        citas_completadas = [c for c in citas if c.estado == "Completada"]
+        citas_pendientes = [c for c in citas if c.estado == "Pendiente"]
+        citas_canceladas = [c for c in citas if c.estado == "Cancelada"]
+        citas_hoy = [c for c in citas if c.fecha == hoy]
+        metricas = {"citas": citas, "citas_completadas": citas_completadas, "citas_pendientes": citas_pendientes,
+                    "citas_canceladas": citas_canceladas, "citas_hoy": citas_hoy,
+                    "ingresos_hoy": sum(precios.get(c.servicio, 0) for c in citas_hoy if c.estado == "Completada"),
+                    "ingresos_total": sum(precios.get(c.servicio, 0) for c in citas_completadas),
+                    "total_citas": len(citas)}
+        cache.set(clave_metricas, metricas, 20)
+    contexto = dict(metricas)
+    todas_califs = list(Calificacion.objects.select_related("cliente").filter(barbero_id=barbero_id))
+    todas_califs.sort(key=lambda c: c.fecha, reverse=True)
+    contexto["calificaciones"] = todas_califs[:5]
+    contexto["promedio"] = round(sum(c.puntuacion for c in todas_califs) / len(todas_califs), 1) if todas_califs else 0
+    contexto["total_calificaciones"] = len(todas_califs)
+    contexto["peluqueria"] = peluqueria
+    contexto["fotos"] = peluqueria.galeria.all() if peluqueria else []
     return render(request, "peluqueros/peluquero_dashboard.html", contexto)
 
 @autorizacion(["Barbero"])
@@ -1046,6 +1073,9 @@ def peluquero_cambiar_estado(request, cita_id):
         estado_anterior = cita.estado
         cita.estado = nuevo_estado
         cita.save()
+        # Las métricas del dashboard se recalculan con datos frescos (invalidar la caché corta).
+        cache.delete(f"barbero_dashboard_metricas_{cita.peluquero_id}")
+        cache.delete("admin_dashboard_metricas")
         if nuevo_estado != estado_anterior:
             mensajes_estado = {
                 "Confirmada": f"Tu cita de {cita.servicio} del {formato_cita(cita)} fue confirmada por el barbero.",
@@ -1078,17 +1108,17 @@ def peluquero_perfil(request):
         usuario.save()
         messages.success(request, "Perfil actualizado correctamente.")
         return redirect("sena:peluquero_perfil")
-    citas = Reserva.objects.filter(peluquero=usuario).order_by("-fecha", "-hora")
-    calificaciones = Calificacion.objects.filter(barbero=usuario)
-    promedio = 0
-    if calificaciones.exists():
-        promedio = round(calificaciones.aggregate(models.Avg("puntuacion"))["puntuacion__avg"], 1)
+    citas = Reserva.objects.select_related("cliente", "peluqueria").filter(peluquero=usuario).order_by("-fecha", "-hora")
+    calificaciones = Calificacion.objects.select_related("cliente").filter(barbero=usuario)
+    # Resumen en una sola consulta en lugar de dos.
+    resumen = calificaciones.aggregate(promedio=models.Avg("puntuacion"), totales=models.Count("id"))
+    promedio = round(resumen["promedio"], 1) if resumen["promedio"] is not None else 0
     contexto = {
         "usuario": usuario,
         "citas": citas,
         "calificaciones": calificaciones,
         "promedio": promedio,
-        "total_calificaciones": calificaciones.count(),
+        "total_calificaciones": resumen["totales"],
     }
     return render(request, "peluqueros/peluquero_perfil.html", contexto)
 
@@ -1152,19 +1182,131 @@ def peluquero_notificaciones(request):
     notificaciones.update(leida=True)
     return render(request, "peluqueros/peluquero_notificaciones.html", {"notificaciones": notificaciones})
 
+
+# ═══════════════════════════════════════════════════════════════════════════
+# PELUQUERÍA DEL BARBERO
+# ═══════════════════════════════════════════════════════════════════════════
+
+def _peluquero_tiene_peluqueria(usuario_id):
+    return Peluqueria.objects.filter(dueno_id=usuario_id).exists()
+
+
+def _peluqueria_del_barbero(usuario_id):
+    peluqueria = Peluqueria.objects.filter(dueno_id=usuario_id).first()
+    if peluqueria:
+        return peluqueria
+    primera_reserva = Reserva.objects.filter(peluquero_id=usuario_id, peluqueria__isnull=False).order_by("fecha").first()
+    if primera_reserva and primera_reserva.peluqueria:
+        primera_reserva.peluqueria.dueno_id = usuario_id
+        primera_reserva.peluqueria.save()
+        return primera_reserva.peluqueria
+    return None
+
+
+@autorizacion(["Barbero"])
+def peluquero_crear_peluqueria(request):
+    usuario = Usuario.objects.get(id=request.session["logueado"]["id"])
+    if _peluqueria_del_barbero(usuario.id):
+        return redirect("sena:peluquero_editar_peluqueria")
+    if request.method == "POST":
+        nombre = request.POST.get("nombre", "").strip()
+        ubicacion = request.POST.get("ubicacion", "").strip()
+        telefono = request.POST.get("telefono", "").strip()
+        descripcion = request.POST.get("descripcion", "").strip()
+        imagen = request.FILES.get("imagen")
+        if not nombre or not ubicacion:
+            return render(request, "peluqueros/peluquero_crear_peluqueria.html", {"error": "El nombre y la ubicación son obligatorios."})
+        peluqueria = Peluqueria.objects.create(
+            nombre=nombre, ubicacion=ubicacion, telefono=telefono,
+            descripcion=descripcion, dueno=usuario,
+        )
+        if imagen:
+            peluqueria.imagen = imagen
+            peluqueria.save()
+        messages.success(request, "Tu peluquería fue creada.")
+        return redirect("sena:peluquero_dashboard")
+    return render(request, "peluqueros/peluquero_crear_peluqueria.html")
+
+
+@autorizacion(["Barbero"])
+def peluquero_editar_peluqueria(request):
+    peluqueria = _peluqueria_del_barbero(request.session["logueado"]["id"])
+    if not peluqueria:
+        return redirect("sena:peluquero_crear_peluqueria")
+    if request.method == "POST":
+        peluqueria.nombre = request.POST.get("nombre", peluqueria.nombre).strip()
+        peluqueria.ubicacion = request.POST.get("ubicacion", peluqueria.ubicacion).strip()
+        peluqueria.telefono = request.POST.get("telefono", peluqueria.telefono).strip()
+        peluqueria.descripcion = request.POST.get("descripcion", peluqueria.descripcion).strip()
+        if request.FILES.get("imagen"):
+            peluqueria.imagen = request.FILES["imagen"]
+        peluqueria.save()
+        messages.success(request, "Peluquería actualizada.")
+        return redirect("sena:peluquero_editar_peluqueria")
+    return render(request, "peluqueros/peluquero_editar_peluqueria.html", {"peluqueria": peluqueria})
+
+
+@autorizacion(["Barbero"])
+def peluquero_galeria(request):
+    peluqueria = _peluqueria_del_barbero(request.session["logueado"]["id"])
+    if not peluqueria:
+        return redirect("sena:peluquero_crear_peluqueria")
+    fotos = peluqueria.galeria.all()
+    return render(request, "peluqueros/peluquero_galeria.html", {"peluqueria": peluqueria, "fotos": fotos})
+
+
+@autorizacion(["Barbero"])
+def peluquero_agregar_imagen(request):
+    peluqueria = _peluqueria_del_barbero(request.session["logueado"]["id"])
+    if not peluqueria:
+        return redirect("sena:peluquero_crear_peluqueria")
+    if request.method == "POST":
+        if peluqueria.galeria.count() >= 5:
+            messages.error(request, "La galería tiene un máximo de 5 fotos. Elimina una antes de subir otra.")
+            return redirect("sena:peluquero_galeria")
+        if request.FILES.get("imagen"):
+            ImagenPeluqueria.objects.create(
+                peluqueria=peluqueria,
+                imagen=request.FILES["imagen"],
+                descripcion=request.POST.get("descripcion", "").strip(),
+            )
+            messages.success(request, "Foto agregada a la galería.")
+    return redirect("sena:peluquero_galeria")
+
+
+@autorizacion(["Barbero"])
+def peluquero_eliminar_imagen(request, imagen_id):
+    foto = ImagenPeluqueria.objects.filter(id=imagen_id, peluqueria__dueno_id=request.session["logueado"]["id"]).first()
+    if foto:
+        if foto.imagen:
+            foto.imagen.delete(save=False)
+        foto.delete()
+        messages.success(request, "Foto eliminada.")
+    return redirect("sena:peluquero_galeria")
+
 # ═══════════════════════════════════════════════════════════════════════════
 # ADMIN
 # ═══════════════════════════════════════════════════════════════════════════
 
 @autorizacion(["Admin"])
 def admin_dashboard(request):
-    reservas = Reserva.objects.all()
-    ventas_servicios = sum(next((item["precio"] for item in SERVICIOS if item["nombre"] == reserva.servicio), 0) for reserva in reservas.filter(estado="Completada"))
-    ventas_productos = sum(pedido.total for pedido in Pedido.objects.exclude(estado="Cancelado"))
-    total = ventas_servicios + ventas_productos
-    estados = {estado[0]: reservas.filter(estado=estado[0]).count() for estado in Reserva.ESTADOS}
-    maximo = max(estados.values()) if any(estados.values()) else 1
-    return render(request, "administrador/admin_dashboard.html", {"total": total, "ventas_servicios": ventas_servicios, "ventas_productos": ventas_productos, "total_reservas": reservas.count(), "total_clientes": Usuario.objects.filter(rol="Cliente").count(), "estados": estados, "maximo": maximo, "ultimas_reservas": reservas.select_related("cliente", "peluquero").order_by("-fecha", "-hora")[:6]})
+    # Métricas agregadas con caché corta (20 s): la BD remota paga ~90 ms por consulta.
+    clave = "admin_dashboard_metricas"
+    metricas = cache.get(clave)
+    if metricas is None:
+        precios = {item["nombre"]: item["precio"] for item in SERVICIOS}
+        todas_reservas = list(Reserva.objects.select_related("cliente", "peluquero"))
+        total_reservas = len(todas_reservas)
+        estados = {estado[0]: sum(1 for r in todas_reservas if r.estado == estado[0]) for estado in Reserva.ESTADOS}
+        ventas_servicios = sum(precios.get(r.servicio, 0) for r in todas_reservas if r.estado == "Completada")
+        ventas_productos = sum(pedido.total for pedido in Pedido.objects.exclude(estado="Cancelado"))
+        total = ventas_servicios + ventas_productos
+        maximo = max(estados.values()) if any(estados.values()) else 1
+        total_clientes = Usuario.objects.filter(rol="Cliente").count()
+        ultimas = sorted(todas_reservas, key=lambda r: (r.fecha, r.hora, r.id), reverse=True)[:6]
+        metricas = {"total": total, "ventas_servicios": ventas_servicios, "ventas_productos": ventas_productos, "total_reservas": total_reservas, "total_clientes": total_clientes, "estados": estados, "maximo": maximo, "ultimas_reservas": ultimas}
+        cache.set(clave, metricas, 20)
+    return render(request, "administrador/admin_dashboard.html", metricas)
 
 @autorizacion(["Admin"])
 def admin_peluqueros(request):
@@ -1460,10 +1602,25 @@ def admin_peluquerias(request):
 @autorizacion(["Admin"])
 def admin_crear_peluqueria(request):
     if request.method == "POST":
-        Peluqueria.objects.create(nombre=request.POST.get("nombre"), ubicacion=request.POST.get("ubicacion"), telefono=request.POST.get("telefono"))
+        peluqueria = Peluqueria.objects.create(
+            nombre=request.POST.get("nombre"),
+            ubicacion=request.POST.get("ubicacion"),
+            telefono=request.POST.get("telefono"),
+            descripcion=request.POST.get("descripcion", "").strip(),
+        )
+        if request.FILES.get("imagen"):
+            peluqueria.imagen = request.FILES["imagen"]
+            peluqueria.save()
+        dueno_id = request.POST.get("dueno") or None
+        if dueno_id:
+            dueno = Usuario.objects.filter(id=dueno_id, rol="Barbero").first()
+            if dueno:
+                peluqueria.dueno = dueno
+                peluqueria.save()
         messages.success(request, "Barbería creada correctamente.")
         return redirect("sena:admin_peluquerias")
-    return render(request, "administrador/admin_formulario_peluqueria.html")
+    barberos = Usuario.objects.filter(rol="Barbero").order_by("nombre", "apellido")
+    return render(request, "administrador/admin_formulario_peluqueria.html", {"barberos": barberos})
 
 
 @autorizacion(["Admin"])
@@ -1473,10 +1630,20 @@ def admin_editar_peluqueria(request, id):
         peluqueria.nombre = request.POST.get("nombre")
         peluqueria.ubicacion = request.POST.get("ubicacion")
         peluqueria.telefono = request.POST.get("telefono")
+        peluqueria.descripcion = request.POST.get("descripcion", "").strip()
+        if request.FILES.get("imagen"):
+            peluqueria.imagen = request.FILES["imagen"]
+        dueno_id = request.POST.get("dueno") or None
+        if dueno_id:
+            dueno = Usuario.objects.filter(id=dueno_id, rol="Barbero").first()
+            if dueno:
+                peluqueria.dueno = dueno
+                peluqueria.save()
         peluqueria.save()
         messages.success(request, "Barbería actualizada correctamente.")
         return redirect("sena:admin_peluquerias")
-    return render(request, "administrador/admin_formulario_peluqueria.html", {"peluqueria": peluqueria})
+    barberos = Usuario.objects.filter(rol="Barbero").order_by("nombre", "apellido")
+    return render(request, "administrador/admin_formulario_peluqueria.html", {"peluqueria": peluqueria, "barberos": barberos})
 
 
 @autorizacion(["Admin"])
@@ -1581,7 +1748,7 @@ def admin_perfil(request):
     contexto["pedidos"] = Pedido.objects.none()
     contexto["calificaciones_reservas"] = set()
     contexto["notificaciones"] = Notificacion.objects.filter(usuario=usuario).order_by("-fecha")
-    return render(request, "usuarios/usuario_perfil.html", contexto)
+    return render(request, "administrador/admin_perfil.html", contexto)
 
 @autorizacion(["Admin"])
 def admin_ingresos(request):

@@ -1,35 +1,149 @@
-{% load static %}<!DOCTYPE html>
+{% load static %}
+<!-- Plantilla de correo electrónico de notificación con logo, asunto, cuerpo y enlace -->
+<!doctype html>
 <html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{ asunto }}</title>
-</head>
-<body style="margin:0; padding:0; background:#090909; color:#f5f1e8; font-family:Arial,Helvetica,sans-serif;">
-  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#090909; padding:32px 12px;">
-    <tr><td align="center">
-      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width:600px; background:#151515; border:1px solid #302b22; border-radius:16px; overflow:hidden;">
-        <tr><td style="height:5px; background:#d6a84f; font-size:0; line-height:0;">&nbsp;</td></tr>
-        <tr><td style="padding:28px 32px 22px; text-align:center;">
-          <img src="{{ logo_url }}" width="72" height="72" alt="TecnoCorte" style="display:inline-block; width:72px; height:72px; border-radius:16px; object-fit:cover;">
-          <p style="margin:14px 0 0; color:#d6a84f; font-size:12px; font-weight:bold; letter-spacing:3px; text-transform:uppercase;">TECNOCORTE</p>
-        </td></tr>
-        <tr><td style="padding:8px 32px 34px;">
-          <h1 style="margin:0 0 20px; color:#ffffff; font-size:25px; line-height:1.25; font-weight:700;">{{ asunto }}</h1>
-          <div style="color:#d5d0c7; font-size:16px; line-height:1.7;">{{ cuerpo|linebreaksbr }}</div>
-          {% if enlace %}
-          <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin:28px 0 8px;">
-            <tr><td style="border-radius:8px; background:#d6a84f;">
-              <a href="{{ enlace }}" style="display:inline-block; padding:14px 22px; color:#17130b; font-size:14px; font-weight:bold; text-decoration:none;">{{ texto_enlace }}</a>
-            </td></tr>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{ asunto }}</title>
+  </head>
+  <body
+    style="
+      margin: 0;
+      padding: 0;
+      background: #090909;
+      color: #f5f1e8;
+      font-family: Arial, Helvetica, sans-serif;
+    "
+  >
+    {# Encabezado del correo con el logo de TecnoCorte #}
+    <table
+      role="presentation"
+      width="100%"
+      cellspacing="0"
+      cellpadding="0"
+      border="0"
+      style="background: #090909; padding: 32px 12px"
+    >
+      <tr>
+        <td align="center">
+          <table
+            role="presentation"
+            width="100%"
+            cellspacing="0"
+            cellpadding="0"
+            border="0"
+            style="
+              max-width: 600px;
+              background: #151515;
+              border: 1px solid #302b22;
+              border-radius: 16px;
+              overflow: hidden;
+            "
+          >
+            <tr>
+              <td
+                style="
+                  height: 5px;
+                  background: #d6a84f;
+                  font-size: 0;
+                  line-height: 0;
+                "
+              >
+                &nbsp;
+              </td>
+            </tr>
+            <tr>
+              <td style="padding: 28px 32px 22px; text-align: center">
+                <img
+                  src="{{ logo_url }}"
+                  width="72"
+                  height="72"
+                  alt="TecnoCorte"
+                  style="
+                    display: inline-block;
+                    width: 72px;
+                    height: 72px;
+                    border-radius: 16px;
+                    object-fit: cover;
+                  "
+                />
+                <p
+                  style="
+                    margin: 14px 0 0;
+                    color: #d6a84f;
+                    font-size: 12px;
+                    font-weight: bold;
+                    letter-spacing: 3px;
+                    text-transform: uppercase;
+                  "
+                >
+                  TECNOCORTE
+                </p>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding: 8px 32px 34px">
+                <h1
+                  style="
+                    margin: 0 0 20px;
+                    color: #ffffff;
+                    font-size: 25px;
+                    line-height: 1.25;
+                    font-weight: 700;
+                  "
+                >
+                  {{ asunto }}
+                </h1>
+                {# Cuerpo del mensaje y enlace de acción opcional #}
+                <div style="color: #d5d0c7; font-size: 16px; line-height: 1.7">
+                  {{ cuerpo|linebreaksbr }}
+                </div>
+                {% if enlace %}
+                <table
+                  role="presentation"
+                  cellspacing="0"
+                  cellpadding="0"
+                  border="0"
+                  style="margin: 28px 0 8px"
+                >
+                  <tr>
+                    <td style="border-radius: 8px; background: #d6a84f">
+                      <a
+                        href="{{ enlace }}"
+                        style="
+                          display: inline-block;
+                          padding: 14px 22px;
+                          color: #17130b;
+                          font-size: 14px;
+                          font-weight: bold;
+                          text-decoration: none;
+                        "
+                        >{{ texto_enlace }}</a
+                      >
+                    </td>
+                  </tr>
+                </table>
+                {% endif %}
+              </td>
+            </tr>
+            <tr>
+              <td
+                style="
+                  padding: 20px 32px;
+                  border-top: 1px solid #302b22;
+                  color: #817b70;
+                  font-size: 12px;
+                  line-height: 1.6;
+                "
+              >
+                Este mensaje fue enviado automáticamente por TecnoCorte.<br />Si
+                necesitas ayuda, responde a este correo.
+              </td>
+            </tr>
           </table>
-          {% endif %}
-        </td></tr>
-        <tr><td style="padding:20px 32px; border-top:1px solid #302b22; color:#817b70; font-size:12px; line-height:1.6;">
-          Este mensaje fue enviado automáticamente por TecnoCorte.<br>Si necesitas ayuda, responde a este correo.
-        </td></tr>
-      </table>
-    </td></tr>
-  </table>
-</body>
+        </td>
+      </tr>
+    </table>
+  </body>
 </html>

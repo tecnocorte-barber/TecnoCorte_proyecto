@@ -1,0 +1,91 @@
+{# Perfil del administrador con sidebar, datos personales y notificaciones #}
+{% extends "usuarios/dashboard_base.html" %}
+{% block title %}Mi Perfil - Admin TecnoCorte{% endblock %}
+{% block body_class %}font-body antialiased flex bg-surface{% endblock %}
+{% block content %}
+{% include "includes/admin_sidebar.html" with active="perfil" %}
+<main class="ml-0 md:ml-64 flex-1 min-h-screen p-8 md:p-12">
+  <header class="mb-10">
+    <h1 class="font-headline text-4xl text-primary">Mi Perfil</h1>
+    <p class="mt-2 text-on-surface-variant">Gestiona tu información personal.</p>
+  </header>
+
+  <div class="grid md:grid-cols-2 gap-8 max-w-5xl">
+    {# Tarjeta de info del usuario #}
+    <div class="bg-surface-container-low rounded-xl p-8 ambient-glow flex flex-col items-center text-center relative overflow-hidden">
+      <div class="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
+      <div class="w-28 h-28 rounded-full mb-6 bg-surface-container-highest border border-outline-variant/30 flex items-center justify-center">
+        <span class="material-symbols-outlined text-primary text-6xl">person</span>
+      </div>
+      <h2 class="font-headline text-2xl font-bold tracking-tight mb-1">
+        {{ usuario.nombre }} {{ usuario.apellido }}
+      </h2>
+      <p class="text-primary text-xs uppercase tracking-widest font-bold mb-1">Administrador</p>
+      <p class="text-on-surface-variant text-sm mb-6">Miembro desde {{ usuario.fecha_creacion|date:"F Y" }}</p>
+      <div class="w-full space-y-3 text-left text-sm">
+        <p class="flex items-center gap-3 text-on-surface-variant">
+          <span class="material-symbols-outlined text-primary text-base">mail</span>{{ usuario.email }}
+        </p>
+        <p class="flex items-center gap-3 text-on-surface-variant">
+          <span class="material-symbols-outlined text-primary text-base">call</span>{{ usuario.telefono|default:"Sin registrar" }}
+        </p>
+      </div>
+      <div class="flex gap-3 w-full mt-6">
+        <button type="button" data-profile-edit="editar" class="flex-1 gold-gradient text-on-primary font-bold py-3 rounded-md hover:opacity-90 transition-opacity active:scale-95 text-sm tracking-wide">
+          EDITAR PERFIL
+        </button>
+      </div>
+    </div>
+
+    {# Formulario de edición + acciones #}
+    <div class="flex flex-col gap-6">
+      {# Formulario editar datos #}
+      <div id="editar" class="bg-surface-container-low rounded-xl p-8 ambient-glow scroll-mt-28">
+        <h3 class="font-headline text-xl text-primary mb-6">Editar mis datos</h3>
+        <form method="post" class="space-y-5">
+          {% csrf_token %}
+          <div>
+            <label class="text-[10px] uppercase tracking-[0.2em] text-primary font-bold block mb-1">Nombre</label>
+            <input class="w-full bg-transparent border-b border-outline-variant/30 py-2 focus:outline-none focus:border-primary text-on-surface text-sm" name="nombre" value="{{ usuario.nombre }}" required />
+          </div>
+          <div>
+            <label class="text-[10px] uppercase tracking-[0.2em] text-primary font-bold block mb-1">Apellido</label>
+            <input class="w-full bg-transparent border-b border-outline-variant/30 py-2 focus:outline-none focus:border-primary text-on-surface text-sm" name="apellido" value="{{ usuario.apellido }}" required />
+          </div>
+          <div>
+            <label class="text-[10px] uppercase tracking-[0.2em] text-primary font-bold block mb-1">Teléfono</label>
+            <input class="w-full bg-transparent border-b border-outline-variant/30 py-2 focus:outline-none focus:border-primary text-on-surface text-sm" name="telefono" value="{{ usuario.telefono }}" />
+          </div>
+          <button type="submit" class="w-full py-3 rounded-md border border-primary/40 text-primary hover:bg-primary/5 transition-colors text-sm font-semibold uppercase tracking-widest active:scale-95">
+            Guardar cambios
+          </button>
+        </form>
+        <a href="{% url 'sena:cambiar_password' %}" class="mt-4 flex w-full items-center justify-center gap-2 rounded-md border border-outline-variant/30 py-3 text-sm font-semibold uppercase tracking-widest text-primary transition-colors hover:border-primary">
+          <span class="material-symbols-outlined text-base">lock_reset</span>Cambiar contraseña
+        </a>
+      </div>
+
+      {# Notificaciones recientes #}
+      <div class="bg-surface-container-low rounded-xl p-8 ambient-glow">
+        <h3 class="font-headline text-xl text-primary mb-6">Notificaciones recientes</h3>
+        {% if notificaciones %}
+        <div class="space-y-3 max-h-64 overflow-y-auto scrollbar-hide">
+          {% for notif in notificaciones|slice:":5" %}
+          <div class="flex items-start gap-3 p-3 rounded-lg bg-surface-container-high">
+            <span class="material-symbols-outlined text-primary text-base mt-0.5">notifications</span>
+            <div class="min-w-0 flex-1">
+              <p class="text-sm text-on-surface">{{ notif.mensaje }}</p>
+              <p class="text-[10px] text-on-surface-variant mt-1">{{ notif.fecha|date:"d M Y H:i" }}</p>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-on-surface-variant text-sm text-center py-4">No tienes notificaciones.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</main>
+{% include "includes/admin_mobile_nav.html" with active="perfil" %}
+{% endblock %}

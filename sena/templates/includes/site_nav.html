@@ -1,47 +1,130 @@
+<!-- Navegación principal tipo pill: menú responsivo con logo, enlaces, tema, notificaciones y sesión -->
 <header class="site-header fixed left-0 right-0 top-4 z-50 px-4">
-  <nav class="pill-nav mx-auto flex w-full max-w-7xl items-center gap-3 rounded-[999px] px-4 py-3">
-    <a class="pill-brand inline-flex shrink-0 items-center rounded-full p-1" href="{% url 'sena:inicio' %}" aria-label="TecnoCorte">
+  <nav
+    class="pill-nav mx-auto flex w-full max-w-7xl items-center gap-3 rounded-[999px] px-4 py-3"
+  >
+    {# Enlace al logo/marca #}
+    <a
+      href="{% url 'sena:inicio' %}"
+      aria-label="TecnoCorte"
+    >
       {% include "includes/logo.html" with logo_class="h-10 w-10" %}
     </a>
 
-    <button class="pill-menu-toggle" type="button" aria-label="Abrir menú" aria-expanded="false" aria-controls="pill-mobile-menu" onclick="togglePillMenu(this)">
+    {# Botón hamburguesa para menú móvil (solo visible en pantallas pequeñas) #}
+    <button
+      type="button"
+      class="pill-menu-toggle"
+      aria-label="Abrir menú"
+      aria-expanded="false"
+      aria-controls="pill-mobile-menu"
+      onclick="togglePillMenu(this)"
+    >
       <span class="material-symbols-outlined">menu</span>
     </button>
 
-    <div id="pill-mobile-menu" class="pill-nav-menu hidden min-w-0 flex-1 items-center justify-center gap-1 md:flex" data-pill-nav>
+    {# Enlaces de navegación principales (resaltado según la página activa) #}
+    <div
+      id="pill-mobile-menu"
+      class="pill-nav-menu hidden min-w-0 flex-1 items-center justify-center gap-1 md:flex"
+      data-pill-nav
+    >
       <span class="pill-nav-highlight" aria-hidden="true"></span>
-      <a data-pill-link class="pill-nav-link {% if active == 'inicio' %}is-active{% endif %}" href="{% url 'sena:inicio' %}">Inicio</a>
-      <a data-pill-link class="pill-nav-link {% if active == 'servicios' %}is-active{% endif %}" href="{% url 'sena:usuario_servicios' %}">Servicios</a>
-      <a data-pill-link class="pill-nav-link {% if active == 'tienda' %}is-active{% endif %}" href="{% url 'sena:usuario_tienda' %}">Tienda</a>
-      <a data-pill-link class="pill-nav-link {% if active == 'barberias' %}is-active{% endif %}" href="{% url 'sena:usuario_peluquerias' %}">Barberías</a>
-      <a data-pill-link class="pill-nav-link {% if active == 'contactos' %}is-active{% endif %}" href="{% url 'sena:ayuda' %}">Contactos</a>
+      <a
+        data-pill-link
+        class="pill-nav-link {% if active == 'inicio' %}is-active{% endif %}"
+        href="{% url 'sena:inicio' %}"
+        >Inicio</a
+      >
+      <a
+        data-pill-link
+        class="pill-nav-link {% if active == 'servicios' %}is-active{% endif %}"
+        href="{% url 'sena:usuario_servicios' %}"
+        >Servicios</a
+      >
+      <a
+        data-pill-link
+        class="pill-nav-link {% if active == 'tienda' %}is-active{% endif %}"
+        href="{% url 'sena:usuario_tienda' %}"
+        >Tienda</a
+      >
+      <a
+        data-pill-link
+        class="pill-nav-link {% if active == 'barberias' %}is-active{% endif %}"
+        href="{% url 'sena:usuario_peluquerias' %}"
+        >Barberías</a
+      >
+      <a
+        data-pill-link
+        class="pill-nav-link {% if active == 'contactos' %}is-active{% endif %}"
+        href="{% url 'sena:ayuda' %}"
+        >Contactos</a
+      >
     </div>
 
-    <div class="pill-actions ml-auto flex shrink-0 items-center gap-2 text-primary">
-      <button data-theme-toggle onclick="toggleTheme()" class="pill-action" title="Activar tema claro" type="button" aria-label="Activar tema claro">
+    {# Acciones: tema, notificaciones, carrito y sesión #}
+    <div class="flex items-center gap-1"
+    >
+      <button
+        data-theme-toggle
+        onclick="toggleTheme()"
+        class="pill-action"
+        title="Activar tema claro"
+        type="button"
+        aria-label="Activar tema claro"
+      >
         <span class="material-symbols-outlined theme-icon">light_mode</span>
       </button>
-      {% include "includes/notificaciones_indicator.html" %}
-      {% include "includes/carrito_indicator.html" %}
+      {% include "includes/notificaciones_indicator.html" %} {% include "includes/carrito_indicator.html" %} {# Muestra perfil y salir si está logueado, o ingresar si no #}
       {% if request.session.logueado %}
-      <a class="pill-text-action hidden sm:inline-flex" href="{% url 'sena:usuario_perfil' %}">Perfil</a>
-      <a class="pill-text-action hidden sm:inline-flex" href="{% url 'sena:logout' %}">Salir</a>
+      {% if request.session.logueado.rol == 'Admin' %}
+      <a
+        class="pill-text-action hidden sm:inline-flex"
+        href="{% url 'sena:admin_perfil' %}"
+        >Perfil</a
+      >
+      {% elif request.session.logueado.rol == 'Barbero' %}
+      <a
+        class="pill-text-action hidden sm:inline-flex"
+        href="{% url 'sena:peluquero_perfil' %}"
+        >Perfil</a
+      >
       {% else %}
-      <a class="pill-text-action hidden sm:inline-flex" href="{% url 'sena:login' %}">Ingresar</a>
+      <a
+        class="pill-text-action hidden sm:inline-flex"
+        href="{% url 'sena:usuario_perfil' %}"
+        >Perfil</a
+      >
+      {% endif %}
+      <a
+        class="pill-text-action hidden sm:inline-flex"
+        href="{% url 'sena:logout' %}"
+        >Salir</a
+      >
+      {% else %}
+      <a
+        class="pill-text-action hidden sm:inline-flex"
+        href="{% url 'sena:login' %}"
+        >Ingresar</a
+      >
       {% endif %}
     </div>
   </nav>
 </header>
 
+{# Incluye el sistema de notificaciones toast #}
 {% include "includes/toast_notifications.html" %}
 {% include "includes/cargando.html" %}
 
+{# Script para abrir/cerrar el menú móvil #}
 <script>
   function togglePillMenu(button) {
-    var menu = document.getElementById(button.getAttribute('aria-controls'));
-    var isOpen = menu.classList.toggle('is-open');
-    button.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-    button.setAttribute('aria-label', isOpen ? 'Cerrar menú' : 'Abrir menú');
-    button.querySelector('.material-symbols-outlined').textContent = isOpen ? 'close' : 'menu';
+    var menu = document.getElementById(button.getAttribute("aria-controls"));
+    var isOpen = menu.classList.toggle("is-open");
+    button.setAttribute("aria-expanded", isOpen ? "true" : "false");
+    button.setAttribute("aria-label", isOpen ? "Cerrar menú" : "Abrir menú");
+    button.querySelector(".material-symbols-outlined").textContent = isOpen
+      ? "close"
+      : "menu";
   }
 </script>

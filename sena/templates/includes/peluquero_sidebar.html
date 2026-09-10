@@ -1,42 +1,114 @@
+<!-- Barra lateral del barbero: perfil, enlaces de navegación, nueva cita y cerrar sesión -->
 <nav
-  class="hidden md:flex flex-col fixed left-0 top-0 h-screen w-72 bg-surface p-6 shadow-[0_0_40px_rgba(242,202,80,0.06)] z-50 border-r border-surface-container-low">
+  class="hidden md:flex flex-col fixed left-0 top-0 h-screen w-72 bg-surface p-6 shadow-[0_0_40px_rgba(242,202,80,0.06)] z-50 border-r border-surface-container-low"
+>
+  {# Encabezado con nombre del barbero #}
   <div class="mb-12 flex items-center gap-4">
-    <div class="w-12 h-12 rounded-full overflow-hidden border-2 border-primary-container bg-surface-container-high flex items-center justify-center">
-      {% if usuario_actual.foto %}<img src="{{ usuario_actual.foto.url }}" alt="{{ request.session.logueado.nombre }}" class="w-full h-full object-cover">{% else %}<span class="material-symbols-outlined text-primary">person</span>{% endif %}
+    <div
+      class="w-12 h-12 rounded-full overflow-hidden border-2 border-primary-container bg-surface-container-high flex items-center justify-center"
+    >
+      <span class="material-symbols-outlined text-primary">person</span>
     </div>
     <div>
-      <h2 class="font-headline text-xl font-bold text-primary-container">{{ request.session.logueado.nombre }}</h2>
-      <p class="font-label uppercase tracking-widest text-[0.65rem] text-on-surface-variant mt-1">Barbero</p>
+      <h2 class="font-headline text-xl font-bold text-primary-container">
+        {{ request.session.logueado.nombre }}
+      </h2>
+      <p
+        class="font-label uppercase tracking-widest text-[0.65rem] text-on-surface-variant mt-1"
+      >
+        Barbero
+      </p>
     </div>
   </div>
 
+  {# Enlaces de navegación del barbero (resaltado según la página activa) #}
   <div class="flex-1 space-y-2">
-    <a class="flex items-center gap-4 p-3 rounded-lg {% if active == 'inicio' %}text-primary font-bold bg-surface-container-high{% else %}text-on-surface-variant font-medium hover:bg-surface-container-highest{% endif %} transition-colors duration-300 active:scale-95" href="{% url 'sena:peluquero_dashboard' %}">
-      <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+    <a
+      class="flex items-center gap-4 p-3 rounded-lg {% if active == 'inicio' %}text-primary font-bold bg-surface-container-high{% else %}text-on-surface-variant font-medium hover:bg-surface-container-highest{% endif %} transition-colors duration-300 active:scale-95"
+      href="{% url 'sena:peluquero_dashboard' %}"
+    >
+      <span
+        class="material-symbols-outlined"
+        style="font-variation-settings: &quot;FILL&quot; 1"
+        >dashboard</span
+      >
       <span class="font-label uppercase tracking-widest text-sm">Inicio</span>
     </a>
-    <a class="flex items-center gap-4 p-3 rounded-lg {% if active == 'perfil' %}text-primary font-bold bg-surface-container-high{% else %}text-on-surface-variant font-medium hover:bg-surface-container-highest{% endif %} transition-colors duration-300 active:scale-95" href="{% url 'sena:peluquero_perfil' %}">
-      <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">settings</span>
-      <span class="font-label uppercase tracking-widest text-sm">Configuración</span>
+    <a
+      class="flex items-center gap-4 p-3 rounded-lg {% if active == 'peluqueria' %}text-primary font-bold bg-surface-container-high{% else %}text-on-surface-variant font-medium hover:bg-surface-container-highest{% endif %} transition-colors duration-300 active:scale-95"
+      href="{% url 'sena:peluquero_editar_peluqueria' %}"
+    >
+      <span
+        class="material-symbols-outlined"
+        style="font-variation-settings: &quot;FILL&quot; 1"
+        >storefront</span
+      >
+      <span class="font-label uppercase tracking-widest text-sm"
+        >Mi Peluquería</span
+      >
     </a>
-    <a class="flex items-center gap-4 p-3 rounded-lg {% if active == 'notificaciones' %}text-primary font-bold bg-surface-container-high{% else %}text-on-surface-variant font-medium hover:bg-surface-container-highest{% endif %} transition-colors" href="{% url 'sena:peluquero_notificaciones' %}">
+    <a
+      class="flex items-center gap-4 p-3 rounded-lg {% if active == 'galeria' %}text-primary font-bold bg-surface-container-high{% else %}text-on-surface-variant font-medium hover:bg-surface-container-highest{% endif %} transition-colors duration-300 active:scale-95"
+      href="{% url 'sena:peluquero_galeria' %}"
+    >
+      <span class="material-symbols-outlined">photo_library</span>
+      <span class="font-label uppercase tracking-widest text-sm">Galería</span>
+    </a>
+    <a
+      class="flex items-center gap-4 p-3 rounded-lg {% if active == 'perfil' %}text-primary font-bold bg-surface-container-high{% else %}text-on-surface-variant font-medium hover:bg-surface-container-highest{% endif %} transition-colors duration-300 active:scale-95"
+      href="{% url 'sena:peluquero_perfil' %}"
+    >
+      <span
+        class="material-symbols-outlined"
+        style="font-variation-settings: &quot;FILL&quot; 1"
+        >settings</span
+      >
+      <span class="font-label uppercase tracking-widest text-sm"
+        >Configuración</span
+      >
+    </a>
+    <a
+      class="flex items-center gap-4 p-3 rounded-lg {% if active == 'notificaciones' %}text-primary font-bold bg-surface-container-high{% else %}text-on-surface-variant font-medium hover:bg-surface-container-highest{% endif %} transition-colors"
+      href="{% url 'sena:peluquero_notificaciones' %}"
+    >
       <span class="material-symbols-outlined">notifications</span>
-      <span class="font-label uppercase tracking-widest text-sm">Notificaciones</span>{% if notificaciones_no_leidas %}<span class="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-error px-1 text-[10px] font-bold text-on-error">{{ notificaciones_no_leidas }}</span>{% endif %}
+      <span class="font-label uppercase tracking-widest text-sm"
+        >Notificaciones</span
+      {# Badge de notificaciones no leídas #}
+  >{% if notificaciones_no_leidas %}<span
+        class="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-error px-1 text-[10px] font-bold text-on-error"
+        >{{ notificaciones_no_leidas }}</span
+      >{% endif %}
     </a>
   </div>
 
-  <a href="{% url 'sena:peluquero_crear_cita' %}" class="w-full gold-gradient-bg text-on-primary font-label uppercase tracking-widest text-sm font-bold py-4 rounded-md mb-8 hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
+  <a
+    href="{% url 'sena:peluquero_crear_cita' %}"
+    class="w-full gold-gradient-bg text-on-primary font-label uppercase tracking-widest text-sm font-bold py-4 rounded-md mb-8 hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+  >
     <span class="material-symbols-outlined text-base">add</span>Nueva Cita
   </a>
 
+  {# Botón de tema y cerrar sesión #}
   <div class="mt-auto space-y-2 pt-6 border-t border-surface-container-low">
-    <button data-theme-toggle onclick="toggleTheme()" type="button" class="flex items-center gap-4 p-3 rounded-lg text-on-surface-variant font-medium hover:bg-surface-container-highest transition-colors duration-300 active:scale-95 w-full" title="Activar tema claro">
+    <button
+      data-theme-toggle
+      onclick="toggleTheme()"
+      type="button"
+      class="flex items-center gap-4 p-3 rounded-lg text-on-surface-variant font-medium hover:bg-surface-container-highest transition-colors duration-300 active:scale-95 w-full"
+      title="Activar tema claro"
+    >
       <span class="material-symbols-outlined theme-icon">dark_mode</span>
       <span class="font-label uppercase tracking-widest text-sm">Tema</span>
     </button>
-    <a class="flex items-center gap-4 p-3 rounded-lg text-on-surface-variant font-medium hover:bg-surface-container-highest transition-colors duration-300 active:scale-95" href="{% url 'sena:logout' %}">
+    <a
+      class="flex items-center gap-4 p-3 rounded-lg text-on-surface-variant font-medium hover:bg-surface-container-highest transition-colors duration-300 active:scale-95"
+      href="{% url 'sena:logout' %}"
+    >
       <span class="material-symbols-outlined">logout</span>
-      <span class="font-label uppercase tracking-widest text-sm">Cerrar Sesión</span>
+      <span class="font-label uppercase tracking-widest text-sm"
+        >Cerrar Sesión</span
+      >
     </a>
   </div>
 </nav>

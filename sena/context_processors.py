@@ -1,6 +1,8 @@
 # Procesadores de contexto compartidos para las plantillas.
 
-from .models import Notificacion, MensajeContacto, Usuario
+from django.core.cache import cache
+
+from .models import Notificacion, MensajeContacto
 
 
 def carrito_visible(request):
@@ -56,12 +58,21 @@ def notificaciones_contexto(request):
     sesion = request.session.get("logueado") or {}
     usuario_id = sesion.get("id")
     if not usuario_id:
-        return {"notificaciones_no_leidas": 0, "mensajes_no_leidos": 0, "usuario_actual": None}
-    return {
-        "notificaciones_no_leidas": Notificacion.objects.filter(usuario_id=usuario_id, leida=False).count(),
-        "mensajes_no_leidos": MensajeContacto.objects.filter(leido=False).count() if sesion.get("rol") == "Admin" else 0,
-        "usuario_actual": Usuario.objects.filter(id=usuario_id).first(),
-    }
+        return {"notificaciones_no_leidas": 0, "mensajes_no_leidos": 0}
+    # Los contadores se guardan en caché 20 s para no pagar la latencia de la BD remota en cada página.
+    clave_notif = f"contador_notificaciones_{usuario_id}"
+    no_leidas = cache.get(clave_notif)
+    if no_leidas is None:
+        no_leidas = Notificacion.objects.filter(usuario_id=usuario_id, leida=False).count()
+        cache.set(clave_notif, no_leidas, 20)
+    mensajes_no_leidos = 0
+    if sesion.get("rol") == "Admin":
+        clave_mensajes = "contador_mensajes_admin"
+        mensajes_no_leidos = cache.get(clave_mensajes)
+        if mensajes_no_leidos is None:
+            mensajes_no_leidos = MensajeContacto.objects.filter(leido=False).count()
+            cache.set(clave_mensajes, mensajes_no_leidos, 20)
+    return {"notificaciones_no_leidas": no_leidas, "mensajes_no_leidos": mensajes_no_leidos}
 
 
 def formulario_contexto(request):

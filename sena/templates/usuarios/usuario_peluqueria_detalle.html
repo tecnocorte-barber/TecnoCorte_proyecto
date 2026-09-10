@@ -1,0 +1,226 @@
+{% load static %}
+<!-- Página de detalle de una peluquería con su galería -->
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>TecnoCorte - {{ peluqueria.nombre }}</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Noto+Serif:wght@400;700;900&display=swap"
+      rel="stylesheet"
+    />
+    {% include "includes/tema.html" %}
+    <style>
+      body {
+        background-color: var(--fondo);
+        color: var(--c-on-surface);
+        font-family: "Manrope", sans-serif;
+      }
+
+      h1,
+      h2,
+      h3,
+      h4,
+      h5,
+      h6,
+      .font-headline {
+        font-family: "Noto Serif", serif;
+      }
+
+      .gold-gradient {
+        background: linear-gradient(135deg, #f2ca50 0%, #d4af37 100%);
+      }
+
+      .ambient-glow {
+        box-shadow: 0 20px 40px rgba(242, 202, 80, 0.06);
+      }
+
+      .signature-divider {
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .signature-divider::after {
+        content: "";
+        width: 4px;
+        height: 4px;
+        background-color: #d4af37;
+        border-radius: 50%;
+      }
+    </style>
+  </head>
+
+  <body
+    class="relative min-h-screen flex flex-col overflow-x-hidden antialiased"
+  >
+    <div
+      class="pointer-events-none fixed left-0 top-0 -z-10 h-[512px] w-full bg-gradient-to-b from-primary/5 to-transparent"
+    ></div>
+
+    {% include "includes/site_nav.html" with active="barberias" %}
+
+    <main
+      class="relative z-10 mx-auto w-full max-w-screen-xl flex-grow px-4 pb-24 pt-32 md:px-8"
+    >
+      <a
+        href="{% url 'sena:usuario_peluquerias' %}"
+        class="inline-flex items-center gap-2 text-sm text-on-surface-variant transition-colors hover:text-primary"
+      >
+        <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+        Volver a Barberías
+      </a>
+
+      {# Encabezado con datos principales #}
+      <header class="mt-8 overflow-hidden rounded-[28px] border border-outline-variant/10 bg-surface-container-low ambient-glow">
+        <div class="relative h-72 md:h-96">
+          {% if peluqueria.imagen %}
+          <img
+            src="{{ peluqueria.imagen.url }}"
+            alt="{{ peluqueria.nombre }}"
+            class="h-full w-full object-cover"
+          />
+          {% else %}
+          <img
+            src="{% static 'sena/images/corte_cabello.jpeg' %}"
+            alt="{{ peluqueria.nombre }}"
+            class="h-full w-full object-cover"
+          />
+          {% endif %}
+          <div
+            class="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent"
+          ></div>
+          <div class="absolute bottom-0 left-0 right-0 p-8">
+            <span
+              class="mb-3 inline-block rounded-sm bg-surface-container-highest/80 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-primary backdrop-blur-sm"
+              >Barbería</span
+            >
+            <h1
+              class="font-headline text-4xl font-bold tracking-tight text-on-surface md:text-6xl"
+            >
+              {{ peluqueria.nombre }}
+            </h1>
+          </div>
+        </div>
+
+        <div
+          class="flex flex-col gap-6 border-t border-outline-variant/10 p-8 md:flex-row md:items-center md:justify-between"
+        >
+          <div class="grid gap-3 text-sm text-on-surface-variant sm:grid-cols-2">
+            <p class="flex items-center gap-3">
+              <span class="material-symbols-outlined text-primary">location_on</span>
+              {{ peluqueria.ubicacion }}
+            </p>
+            <p class="flex items-center gap-3">
+              <span class="material-symbols-outlined text-primary">call</span>
+              {{ peluqueria.telefono|default:"Sin teléfono" }}
+            </p>
+          </div>
+          <div class="flex gap-3">
+            <a
+              href="{% url 'sena:usuario_reservar_cita' %}"
+              class="gold-gradient whitespace-nowrap rounded-md px-6 py-3 text-center text-sm font-bold uppercase tracking-wider text-on-primary transition-all hover:brightness-110 active:scale-95"
+              >Reservar</a
+            >
+            {% if not request.session.logueado %}
+            <a
+              href="{% url 'sena:login' %}"
+              class="whitespace-nowrap rounded-md border border-outline-variant bg-transparent px-6 py-3 text-center text-sm font-bold uppercase tracking-wider text-primary transition-all hover:border-primary active:scale-95"
+              >Ingresar</a
+            >
+            {% endif %}
+          </div>
+        </div>
+      </header>
+
+      {# Descripción #}
+      {% if peluqueria.descripcion %}
+      <section class="mt-12 max-w-3xl">
+        <h2 class="mb-4 font-headline text-2xl text-primary-container">
+          Sobre esta barbería
+        </h2>
+        <p class="text-lg leading-relaxed text-on-surface-variant">
+          {{ peluqueria.descripcion }}
+        </p>
+      </section>
+      {% endif %}
+
+      {# Galería de fotos reales #}
+      <section class="mt-12">
+        <div class="flex items-end justify-between border-b border-outline-variant/20 pb-4">
+          <h2 class="font-headline text-2xl text-on-surface">Galería</h2>
+          <span class="text-sm uppercase tracking-widest text-on-surface-variant"
+            >{{ fotos|length }} foto{{ fotos|length|pluralize }}</span
+          >
+        </div>
+
+        {% if fotos %}
+        <div class="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {% for foto in fotos %}
+          <figure
+            class="group overflow-hidden rounded-2xl border border-outline-variant/10 bg-surface-container-low ambient-glow"
+          >
+            <div class="aspect-[4/3] overflow-hidden">
+              <img
+                src="{{ foto.imagen.url }}"
+                alt="{{ foto.descripcion|default:peluqueria.nombre }}"
+                class="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+              />
+            </div>
+            {% if foto.descripcion %}
+            <figcaption class="p-4 text-sm text-on-surface-variant">
+              {{ foto.descripcion }}
+            </figcaption>
+            {% endif %}
+          </figure>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="mt-8 py-16 text-center text-on-surface-variant">
+          Esta barbería aún no ha subido fotos de su trabajo.
+        </div>
+        {% endif %}
+      </section>
+    </main>
+
+    <footer
+      class="relative z-10 flex w-full flex-col items-center gap-8 border-t border-outline-variant/10 bg-surface-container-lowest px-8 pb-8 pt-16"
+    >
+      <div class="font-headline text-xl text-primary">TecnoCorte</div>
+      <nav
+        class="flex flex-wrap justify-center gap-6 text-sm text-on-surface-variant"
+      >
+        <a
+          class="opacity-80 transition-colors hover:text-primary hover:opacity-100"
+          href="{% url 'sena:ayuda' %}"
+          >Privacidad</a
+        >
+        <a
+          class="opacity-80 transition-colors hover:text-primary hover:opacity-100"
+          href="{% url 'sena:ayuda' %}"
+          >Términos</a
+        >
+        <a
+          class="opacity-80 transition-colors hover:text-primary hover:opacity-100"
+          href="{% url 'sena:ayuda' %}"
+          >Soporte</a
+        >
+        <a
+          class="opacity-80 transition-colors hover:text-primary hover:opacity-100"
+          href="{% url 'sena:ayuda' %}"
+          >Franquicias</a
+        >
+      </nav>
+      <p class="text-center text-sm text-on-surface-variant opacity-70">
+        © 2026 TecnoCorte. Precios en COP. Todos los derechos reservados.
+      </p>
+    </footer>
+  </body>
+</html>

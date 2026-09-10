@@ -1,0 +1,141 @@
+{# Galería de fotos de la peluquería del barbero #}
+{% extends "usuarios/dashboard_base.html" %}
+{% block title %}Galería - TecnoCorte{% endblock %}
+{% block body_class %}font-body antialiased flex bg-surface{% endblock %}
+{% block content %}
+{% include "includes/peluquero_sidebar.html" with active="galeria" %}
+<main class="md:ml-72 flex-1 min-h-screen p-6 md:p-12">
+  <div class="max-w-3xl mx-auto">
+    <header class="mb-10 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+      <div>
+        <h1 class="font-headline text-3xl md:text-4xl text-primary">Galería</h1>
+        <p class="mt-2 text-on-surface-variant">
+          Muestra a los clientes tu trabajo con fotos reales. Máximo 5 fotos.
+        </p>
+      </div>
+      <div class="flex items-center gap-4">
+        <span class="text-2xl font-headline text-primary">{{ fotos|length }}/5</span>
+        <a
+          href="{% url 'sena:peluquero_editar_peluqueria' %}"
+          class="inline-flex items-center gap-2 text-primary font-bold text-sm uppercase tracking-widest hover:opacity-80"
+        >
+          <span class="material-symbols-outlined text-base">storefront</span>
+          Datos de mi peluquería
+        </a>
+      </div>
+    </header>
+
+    {% if fotos|length < 5 %}
+    <div class="bg-surface-container-low rounded-xl p-8 ambient-glow mb-10">
+      <form method="post" action="{% url 'sena:peluquero_agregar_imagen' %}" enctype="multipart/form-data" class="space-y-4">
+        {% csrf_token %}
+        <h2 class="font-headline text-xl text-primary-container">Agregar foto</h2>
+        <div id="foto-preview" class="hidden aspect-[16/9] w-full overflow-hidden rounded-lg border-2 border-dashed border-outline-variant/30 bg-surface-container-high">
+          <img id="foto-preview-img" src="" alt="Vista previa" class="h-full w-full object-cover" />
+        </div>
+        <label class="flex cursor-pointer flex-col items-center justify-center gap-3 border-2 border-dashed border-outline-variant/30 rounded-lg bg-surface-container-high px-6 py-10 text-center transition-colors hover:border-primary/50">
+          <span class="material-symbols-outlined text-4xl text-primary/50">add_photo_alternate</span>
+          <span id="foto-label" class="text-sm font-bold text-primary uppercase tracking-widest">Haz clic para elegir una foto</span>
+          <span class="text-xs text-on-surface-variant">JPG, PNG o WEBP</span>
+          <input
+            type="file"
+            name="imagen"
+            accept="image/*"
+            class="hidden"
+            id="foto-input"
+            required
+          />
+          <span class="material-symbols-outlined text-on-surface-variant/50 cursor-pointer">upload</span>
+        </label>
+        <div>
+          <label class="block mb-1 text-[10px] uppercase tracking-[0.2em] text-primary font-bold">Descripción</label>
+          <input
+            class="w-full bg-surface-container-high border border-outline-variant/30 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-primary"
+            type="text"
+            name="descripcion"
+            placeholder="Ej: Corte degradado, elegante"
+          />
+        </div>
+        <button
+          type="submit"
+          class="w-full py-3 rounded-md gold-gradient-bg text-on-primary font-bold text-sm uppercase tracking-widest hover:opacity-90 transition-opacity active:scale-95"
+        >
+          Subir foto
+        </button>
+      </form>
+    </div>
+    {% else %}
+    <div class="rounded-xl border border-tertiary/20 bg-tertiary/10 p-6 mb-10 text-sm text-tertiary">
+      Alcanzaste el máximo de 5 fotos. Elimina una para poder subir otra.
+    </div>
+    {% endif %}
+
+    {% if fotos %}
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+      {% for foto in fotos %}
+      <article class="group bg-surface-container-low rounded-xl overflow-hidden ambient-glow">
+        <div class="aspect-[4/3] overflow-hidden">
+          <img
+            src="{{ foto.imagen.url }}"
+            alt="{{ foto.descripcion|default:peluqueria.nombre }}"
+            class="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+          />
+        </div>
+        <div class="p-4">
+          <p class="text-sm text-on-surface-variant line-clamp-2">
+            {{ foto.descripcion|default:"Sin descripción" }}
+          </p>
+          <div class="mt-3 flex items-center justify-between">
+            <span class="text-xs text-on-surface-variant">{{ foto.fecha|date:"d/m/Y" }}</span>
+            <form method="post" action="{% url 'sena:peluquero_eliminar_imagen' foto.id %}">
+              {% csrf_token %}
+              <button
+                type="submit"
+                class="text-xs font-bold uppercase tracking-widest text-error hover:opacity-80 active:scale-95"
+                data-confirm="¿Eliminar esta foto?"
+              >
+                Eliminar
+              </button>
+            </form>
+          </div>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="bg-surface-container-low rounded-xl p-12 text-center ambient-glow">
+      <span class="material-symbols-outlined text-5xl text-primary/30 mb-4">photo_library</span>
+      <p class="font-body text-on-surface-variant text-lg">
+        Aún no tienes fotos en tu galería.
+      </p>
+      <p class="text-sm text-on-surface-variant mt-1">
+        Sube las primeras fotos de tus cortes para que los clientes te conozcan.
+      </p>
+    </div>
+    {% endif %}
+  </div>
+</main>
+{% include "includes/peluquero_mobile_nav.html" with active="galeria" %}
+{% endblock %}
+{% block extra_js %}
+<script>
+  const fotoInput = document.getElementById("foto-input");
+  const fotoPreview = document.getElementById("foto-preview");
+  const fotoPreviewImg = document.getElementById("foto-preview-img");
+  const fotoLabel = document.getElementById("foto-label");
+  if (fotoInput && fotoPreview && fotoPreviewImg && fotoLabel) {
+    fotoInput.addEventListener("change", function () {
+      const archivo = this.files && this.files[0];
+      if (archivo) {
+        const lector = new FileReader();
+        lector.onload = function (e) {
+          fotoPreviewImg.src = e.target.result;
+          fotoPreview.classList.remove("hidden");
+          fotoLabel.textContent = archivo.name;
+        };
+        lector.readAsDataURL(archivo);
+      }
+    });
+  }
+</script>
+{% endblock %}

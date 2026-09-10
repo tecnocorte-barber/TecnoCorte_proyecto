@@ -37,9 +37,26 @@ class Peluqueria(models.Model):
     nombre = models.CharField(max_length=100)
     ubicacion = models.CharField(max_length=200)
     telefono = models.CharField(max_length=20)
+    dueno = models.ForeignKey("Usuario", on_delete=models.SET_NULL, null=True, blank=True, related_name="peluquerias_dueno")
+    descripcion = models.TextField(blank=True, default="")
+    imagen = models.ImageField(upload_to="peluquerias/", blank=True)
     
     def __str__(self):
         return self.nombre
+
+
+# Fotos de la galería de cada peluquería
+class ImagenPeluqueria(models.Model):
+    peluqueria = models.ForeignKey(Peluqueria, on_delete=models.CASCADE, related_name="galeria")
+    imagen = models.ImageField(upload_to="galeria/")
+    descripcion = models.CharField(max_length=200, blank=True, default="")
+    fecha = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-fecha"]
+
+    def __str__(self):
+        return f"Foto {self.id} - {self.peluqueria.nombre}"
 
 # Producto de la tienda con precio, stock y categoría
 class Producto(models.Model):

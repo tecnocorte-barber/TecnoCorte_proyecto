@@ -1,350 +1,684 @@
 {% load static %}
-<!DOCTYPE html>
+<!-- Página standalone que muestra los servicios ofrecidos con tarjetas interactivas -->
+<!doctype html>
 <html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>TecnoCorte - Servicios</title>
+    <!-- Material Symbols -->
+    <!-- Google Fonts: Noto Serif (Headline/Display) & Manrope (Body/Label) -->
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&amp;family=Noto+Serif:ital,wght@0,400;0,700;0,900;1,400&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <!-- Tailwind Config -->
+    {% include "includes/tema.html" %}
+    <style>
+      /* Custom Utilities */
+      .ambient-glow {
+        box-shadow: 0 20px 40px rgba(242, 202, 80, 0.06);
+      }
 
-<head>
-  <meta charset="utf-8" />
-  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-  <title>TecnoCorte - Servicios
-  </title>
-  <!-- Material Symbols -->
-  <!-- Google Fonts: Noto Serif (Headline/Display) & Manrope (Body/Label) -->
-  <link href="https://fonts.googleapis.com" rel="preconnect" />
-  <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&amp;family=Noto+Serif:ital,wght@0,400;0,700;0,900;1,400&amp;display=swap"
-    rel="stylesheet" />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
-    rel="stylesheet" />
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-  <!-- Tailwind Config -->
-  {% include "includes/tema.html" %}<style>
-    /* Custom Utilities */
-    .ambient-glow {
-      box-shadow: 0 20px 40px rgba(242, 202, 80, 0.06);
-    }
+      #servicio-corte,
+      #servicio-barba {
+        scroll-margin-top: 7rem;
+      }
+      #servicio-corte:target,
+      #servicio-barba:target {
+        border-color: var(--c-primary);
+        box-shadow:
+          0 0 0 3px rgba(242, 202, 80, 0.14),
+          0 20px 45px rgba(0, 0, 0, 0.08);
+      }
 
-    #servicio-corte, #servicio-barba { scroll-margin-top: 7rem; }
-    #servicio-corte:target, #servicio-barba:target {
-      border-color: var(--c-primary);
-      box-shadow: 0 0 0 3px rgba(242, 202, 80, .14), 0 20px 45px rgba(0, 0, 0, .08);
-    }
+      .service-flip-card {
+        perspective: 1400px;
+        overflow: hidden;
+        cursor: pointer;
+        min-height: 35rem;
+      }
+      .service-flip-inner {
+        position: relative;
+        height: 100%;
+        min-height: 35rem;
+        transform-style: preserve-3d;
+        transition: transform 0.8s cubic-bezier(0.2, 0.75, 0.2, 1);
+      }
+      .service-flip-card:hover .service-flip-inner,
+      .service-flip-card:focus-within .service-flip-inner,
+      .service-flip-card.is-flipped .service-flip-inner {
+        transform: rotateY(180deg);
+      }
+      .service-flip-face {
+        width: 100%;
+        backface-visibility: hidden;
+        -webkit-backface-visibility: hidden;
+      }
+      .service-flip-front {
+        position: relative;
+        z-index: 1;
+      }
+      .service-flip-back {
+        position: absolute;
+        inset: 0;
+        z-index: 2;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 1.5rem;
+        color: var(--c-on-surface);
+        background:
+          radial-gradient(
+            circle at 100% 0%,
+            rgba(214, 173, 66, 0.2),
+            transparent 40%
+          ),
+          var(--c-surface-container-high);
+        transform: rotateY(180deg);
+      }
+      .service-flip-back__icon {
+        margin-bottom: 1rem;
+        color: var(--c-primary);
+        font-size: 2.5rem;
+      }
+      .service-flip-back__eyebrow {
+        margin-bottom: 0.65rem;
+        color: var(--c-primary);
+        font-size: 0.65rem;
+        font-weight: 800;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+      }
+      .service-flip-back h2 {
+        margin: 0 0 0.7rem;
+      }
+      .service-flip-back p {
+        max-width: 36rem;
+        margin: 0;
+        color: var(--c-on-surface-variant);
+        line-height: 1.6;
+      }
+      .service-flip-back ul {
+        display: grid;
+        gap: 0.6rem;
+        margin: 1.25rem 0 1.5rem;
+        padding: 0;
+        list-style: none;
+        color: var(--c-on-surface-variant);
+        font-size: 0.85rem;
+      }
+      .service-flip-back li {
+        display: flex;
+        align-items: center;
+        gap: 0.55rem;
+      }
+      .service-flip-back li .material-symbols-outlined {
+        color: var(--c-primary);
+        font-size: 1rem;
+      }
+      .service-flip-back__action {
+        display: inline-flex;
+        width: fit-content;
+        align-items: center;
+        gap: 0.55rem;
+        padding: 0.75rem 1rem;
+        color: var(--c-on-primary);
+        background: var(--c-primary);
+        border-radius: 0.45rem;
+        font-size: 0.72rem;
+        font-weight: 800;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+      .service-flip-back__action:hover {
+        color: var(--c-on-primary);
+        opacity: 0.88;
+        text-decoration: none;
+      }
+      @media (hover: none) {
+        .service-flip-card {
+          cursor: pointer;
+        }
+      }
+      @media (max-width: 1279px) {
+        .service-flip-card,
+        .service-flip-inner {
+          min-height: 34rem;
+        }
+      }
+      @media (max-width: 767px) {
+        .service-flip-card,
+        .service-flip-inner {
+          min-height: 36rem;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .service-flip-inner {
+          transition: none;
+        }
+      }
+    </style>
+  </head>
 
-    .service-flip-card {
-      perspective: 1400px;
-      overflow: hidden;
-      cursor: pointer;
-      min-height: 35rem;
-    }
-    .service-flip-inner {
-      position: relative;
-      height: 100%;
-      min-height: 35rem;
-      transform-style: preserve-3d;
-      transition: transform .8s cubic-bezier(.2, .75, .2, 1);
-    }
-    .service-flip-card:hover .service-flip-inner,
-    .service-flip-card:focus-within .service-flip-inner,
-    .service-flip-card.is-flipped .service-flip-inner {
-      transform: rotateY(180deg);
-    }
-    .service-flip-face {
-      width: 100%;
-      backface-visibility: hidden;
-      -webkit-backface-visibility: hidden;
-    }
-    .service-flip-front {
-      position: relative;
-      z-index: 1;
-    }
-    .service-flip-back {
-      position: absolute;
-      inset: 0;
-      z-index: 2;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      padding: 1.5rem;
-      color: var(--c-on-surface);
-      background: radial-gradient(circle at 100% 0%, rgba(214,173,66,.2), transparent 40%), var(--c-surface-container-high);
-      transform: rotateY(180deg);
-    }
-    .service-flip-back__icon { margin-bottom: 1rem; color: var(--c-primary); font-size: 2.5rem; }
-    .service-flip-back__eyebrow { margin-bottom: .65rem; color: var(--c-primary); font-size: .65rem; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; }
-    .service-flip-back h2 { margin: 0 0 .7rem; }
-    .service-flip-back p { max-width: 36rem; margin: 0; color: var(--c-on-surface-variant); line-height: 1.6; }
-    .service-flip-back ul { display: grid; gap: .6rem; margin: 1.25rem 0 1.5rem; padding: 0; list-style: none; color: var(--c-on-surface-variant); font-size: .85rem; }
-    .service-flip-back li { display: flex; align-items: center; gap: .55rem; }
-    .service-flip-back li .material-symbols-outlined { color: var(--c-primary); font-size: 1rem; }
-    .service-flip-back__action { display: inline-flex; width: fit-content; align-items: center; gap: .55rem; padding: .75rem 1rem; color: var(--c-on-primary); background: var(--c-primary); border-radius: .45rem; font-size: .72rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
-    .service-flip-back__action:hover { color: var(--c-on-primary); opacity: .88; text-decoration: none; }
-    @media (hover: none) {
-      .service-flip-card { cursor: pointer; }
-    }
-    @media (max-width: 1279px) {
-      .service-flip-card, .service-flip-inner { min-height: 34rem; }
-    }
-    @media (max-width: 767px) {
-      .service-flip-card, .service-flip-inner { min-height: 36rem; }
-    }
-    @media (prefers-reduced-motion: reduce) {
-      .service-flip-inner { transition: none; }
-    }
-  </style>
-</head>
-
-<body class="bg-surface text-on-surface font-body antialiased">
-  {% include "includes/site_nav.html" with active="servicios" %}
-  <!-- Main Content Canvas -->
-  <main class="pt-28 pb-24 px-5 sm:px-6 md:px-10 xl:px-12 max-w-7xl mx-auto flex flex-col gap-12 md:gap-16">
-    <!-- Hero Section -->
-    <section class="mt-4 grid items-center gap-8 md:grid-cols-2 md:gap-12">
-      <div class="flex flex-col gap-6">
-        <div
-          class="inline-flex w-fit items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-primary">
-          <span class="material-symbols-outlined text-base">cut</span>
-          Servicios premium
-        </div>
-        <h1
-          class="font-display text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight text-on-surface leading-[0.95]">
-          Nuestros
-           <span class="heading-accent italic block">Servicios</span>
-        </h1>
-        <p class="max-w-lg text-base md:text-lg text-on-surface-variant leading-relaxed">
-          Cortes de cabello, arreglo de barba y cuidado personal ejecutados por profesionales para que siempre luzcas
-          impecable.
-        </p>
-        <div class="flex flex-wrap gap-4 pt-2 text-sm text-on-surface-variant">
-          <span class="inline-flex items-center gap-2 rounded-full bg-surface-container-high px-3 py-2">
-            <span class="material-symbols-outlined text-base text-primary">verified</span>
-            Atención moderna
-          </span>
-          <span class="inline-flex items-center gap-2 rounded-full bg-surface-container-high px-3 py-2">
-            <span class="material-symbols-outlined text-base text-primary">schedule</span>
-            Citas rápidas
-          </span>
-        </div>
-      </div>
-
-      <div
-        class="relative overflow-hidden rounded-[28px] shadow-[0_35px_80px_rgba(0,0,0,0.18)] bg-surface-container-low">
-        <img class="h-[420px] w-full object-cover md:h-[520px]" alt="Barbería masculina profesional"
-          src="{% static 'sena/images/corte_masculino.jpg' %}" />
-        <div class="absolute inset-0 bg-gradient-to-t from-surface via-surface/15 to-transparent"></div>
-      </div>
-    </section>
-
-    <div class="flex items-center justify-center py-2">
-      <div class="h-1.5 w-1.5 rounded-full bg-primary-container"></div>
-    </div>
-
-    <!-- Services List -->
-    <section class="grid items-stretch gap-6 md:grid-cols-2 xl:grid-cols-3">
-      <article id="servicio-corte" data-flip-card
-        class="service-flip-card group overflow-hidden rounded-[28px] border border-outline-variant/20 bg-surface-container-low shadow-[0_20px_45px_rgba(0,0,0,0.08)] transition-transform duration-300 hover:-translate-y-1">
-        <div class="service-flip-inner">
-        <div class="service-flip-face service-flip-front">
-        <div class="relative">
-          <img class="h-56 w-full object-cover transition-transform duration-700 group-hover:scale-105 md:h-64"
-            alt="Corte de cabello masculino profesional" src="{% static 'sena/images/corte_cabello.jpeg' %}" />
-          <div class="absolute inset-0 bg-gradient-to-t from-surface-container-low via-surface-container-low/70 to-surface-container-low/10"></div>
-        </div>
-        <div class="relative z-10 -mt-8 px-5 pb-6 pt-2 sm:px-6 md:px-7 md:pb-7">
-          <div class="mb-6 flex justify-center">
-            <span class="rounded-full border border-primary/30 bg-primary/10 px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-primary">Cabello</span>
-          </div>
-          <div class="text-center">
-            <h2 class="mb-4 font-display text-3xl font-bold tracking-tight text-on-surface">Corte de Cabello</h2>
-            <div class="mb-6 flex flex-wrap items-center justify-center gap-3 text-base text-on-surface font-label md:text-lg">
-              <span class="inline-flex items-center gap-2"><span class="material-symbols-outlined text-primary">schedule</span>45 Min</span>
-              <span class="text-outline-variant">•</span>
-              <span class="font-headline text-2xl text-on-surface md:text-3xl">$40.000 <span class="ml-1 text-sm text-on-surface-variant">COP</span></span>
-            </div>
-            <p class="mx-auto max-w-2xl text-base leading-relaxed text-on-surface-variant md:text-lg">Corte moderno con lavado incluido y asesoría personalizada para encontrar el estilo que mejor se adapte a tu rostro y rutina.</p>
-          </div>
-          <div class="mt-8 flex justify-center">
-            {% if request.session.logueado %}<a href="{% url 'sena:usuario_reservar_cita' %}?servicio={{ 'Corte de Cabello'|urlencode }}" class="btn-brand inline-flex items-center gap-3 rounded-md px-8 py-4 text-sm font-bold uppercase tracking-[0.14em] transition-transform duration-300 hover:scale-[1.02] active:scale-95"><span>Reservar Cita</span><span class="material-symbols-outlined text-xl">workspace_premium</span></a>{% else %}<a href="{% url 'sena:login' %}?next={% filter urlencode %}{% url 'sena:usuario_reservar_cita' %}?servicio=Corte de Cabello{% endfilter %}" class="btn-brand inline-flex items-center gap-3 rounded-md px-8 py-4 text-sm font-bold uppercase tracking-[0.14em] transition-transform duration-300 hover:scale-[1.02] active:scale-95"><span>Reservar Cita</span><span class="material-symbols-outlined text-xl">workspace_premium</span></a>{% endif %}
-          </div>
-        </div>
-        </div>
-        <div class="service-flip-face service-flip-back">
-          <span class="material-symbols-outlined service-flip-back__icon">content_cut</span>
-          <span class="service-flip-back__eyebrow">Detalle del servicio</span>
-          <h2 class="font-display text-3xl font-bold">Corte de Cabello</h2>
-          <p>Un corte diseñado según tus facciones, tipo de cabello y estilo personal.</p>
-          <ul>
-            <li><span class="material-symbols-outlined">check</span>Lavado y preparación</li>
-            <li><span class="material-symbols-outlined">check</span>Tijera y máquina con precisión</li>
-            <li><span class="material-symbols-outlined">check</span>Peinado y acabado profesional</li>
-            <li><span class="material-symbols-outlined">check</span>Asesoría para mantener el look</li>
-          </ul>
-          {% if request.session.logueado %}<a href="{% url 'sena:usuario_reservar_cita' %}?servicio={{ 'Corte de Cabello'|urlencode }}" class="service-flip-back__action">Agendar cita <span class="material-symbols-outlined">arrow_forward</span></a>{% else %}<a href="{% url 'sena:login' %}?next={% filter urlencode %}{% url 'sena:usuario_reservar_cita' %}?servicio=Corte de Cabello{% endfilter %}" class="service-flip-back__action">Iniciar sesión para reservar <span class="material-symbols-outlined">arrow_forward</span></a>{% endif %}
-        </div>
-        </div>
-      </article>
-
-      <article id="servicio-barba" data-flip-card
-        class="service-flip-card group overflow-hidden rounded-[28px] border border-outline-variant/20 bg-surface-container-low shadow-[0_20px_45px_rgba(0,0,0,0.08)] transition-transform duration-300 hover:-translate-y-1">
-        <div class="service-flip-inner">
-        <div class="service-flip-face service-flip-front">
-        <div class="relative">
-          <img class="h-56 w-full object-cover transition-transform duration-700 group-hover:scale-105 md:h-64"
-            alt="Arreglo de barba masculino profesional" src="{% static 'sena/images/arreglo_barba.jpeg' %}" />
-          <div class="absolute inset-0 bg-gradient-to-t from-surface-container-low via-surface-container-low/70 to-surface-container-low/10"></div>
-        </div>
-        <div class="relative z-10 -mt-8 px-5 pb-6 pt-2 sm:px-6 md:px-7 md:pb-7">
-          <div class="mb-6 flex justify-center">
-            <span class="rounded-full border border-primary/30 bg-primary/10 px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-primary">Barba</span>
-          </div>
-          <div class="text-center">
-            <h2 class="mb-4 font-display text-3xl font-bold tracking-tight text-on-surface">Arreglo de Barba</h2>
-            <div class="mb-6 flex flex-wrap items-center justify-center gap-3 text-base text-on-surface font-label md:text-lg">
-              <span class="inline-flex items-center gap-2"><span class="material-symbols-outlined text-primary">schedule</span>30 Min</span>
-              <span class="text-outline-variant">•</span>
-              <span class="font-headline text-2xl text-on-surface md:text-3xl">$30.000 <span class="ml-1 text-sm text-on-surface-variant">COP</span></span>
-            </div>
-            <p class="mx-auto max-w-2xl text-base leading-relaxed text-on-surface-variant md:text-lg">Perfilado preciso, toalla caliente, hidratación y cuidado de la barba para dejarla con una forma limpia y bien definida.</p>
-          </div>
-          <div class="mt-8 flex justify-center">
-            {% if request.session.logueado %}<a href="{% url 'sena:usuario_reservar_cita' %}?servicio={{ 'Arreglo de Barba'|urlencode }}" class="btn-brand inline-flex items-center gap-3 rounded-md px-8 py-4 text-sm font-bold uppercase tracking-[0.14em] transition-transform duration-300 hover:scale-[1.02] active:scale-95"><span>Reservar Cita</span><span class="material-symbols-outlined text-xl">workspace_premium</span></a>{% else %}<a href="{% url 'sena:login' %}?next={% filter urlencode %}{% url 'sena:usuario_reservar_cita' %}?servicio=Arreglo de Barba{% endfilter %}" class="btn-brand inline-flex items-center gap-3 rounded-md px-8 py-4 text-sm font-bold uppercase tracking-[0.14em] transition-transform duration-300 hover:scale-[1.02] active:scale-95"><span>Reservar Cita</span><span class="material-symbols-outlined text-xl">workspace_premium</span></a>{% endif %}
-          </div>
-        </div>
-        </div>
-        <div class="service-flip-face service-flip-back">
-          <span class="material-symbols-outlined service-flip-back__icon">face_3</span>
-          <span class="service-flip-back__eyebrow">Detalle del servicio</span>
-          <h2 class="font-display text-3xl font-bold">Arreglo de Barba</h2>
-          <p>Perfilado y cuidado completo para una barba definida, hidratada y equilibrada.</p>
-          <ul>
-            <li><span class="material-symbols-outlined">check</span>Toalla caliente relajante</li>
-            <li><span class="material-symbols-outlined">check</span>Perfilado de contornos</li>
-            <li><span class="material-symbols-outlined">check</span>Hidratación y nutrición</li>
-            <li><span class="material-symbols-outlined">check</span>Definición adaptada a tu rostro</li>
-          </ul>
-          {% if request.session.logueado %}<a href="{% url 'sena:usuario_reservar_cita' %}?servicio={{ 'Arreglo de Barba'|urlencode }}" class="service-flip-back__action">Agendar cita <span class="material-symbols-outlined">arrow_forward</span></a>{% else %}<a href="{% url 'sena:login' %}?next={% filter urlencode %}{% url 'sena:usuario_reservar_cita' %}?servicio=Arreglo de Barba{% endfilter %}" class="service-flip-back__action">Iniciar sesión para reservar <span class="material-symbols-outlined">arrow_forward</span></a>{% endif %}
-        </div>
-        </div>
-      </article>
-
-      <article id="servicio-combo" data-flip-card
-        class="service-flip-card overflow-hidden rounded-[28px] border border-primary/20 bg-surface-container-high shadow-[0_20px_55px_rgba(242,202,80,0.14)]">
-        <div class="service-flip-inner">
-        <div class="service-flip-face service-flip-front">
-        <div class="relative">
-          <img class="h-56 w-full object-cover opacity-80 md:h-64" alt="Combo de corte y barba"
-            src="{% static 'sena/images/servicio_completo.jpeg' %}" />
+  <body class="bg-surface text-on-surface font-body antialiased">
+    {% include "includes/site_nav.html" with active="servicios" %}
+    <!-- Main Content Canvas -->
+    <main
+      class="pt-28 pb-24 px-5 sm:px-6 md:px-10 xl:px-12 max-w-7xl mx-auto flex flex-col gap-12 md:gap-16"
+    >
+      {# Sección hero con titular y resumen de servicios #}
+      <!-- Hero Section -->
+      <section class="mt-4 grid items-center gap-8 md:grid-cols-2 md:gap-12">
+        <div class="flex flex-col gap-6">
           <div
-            class="absolute inset-0 bg-gradient-to-t from-surface-container-high via-surface-container-high/75 to-surface-container-high/25">
+            class="inline-flex w-fit items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-primary"
+          >
+            <span class="material-symbols-outlined text-base">cut</span>
+            Servicios premium
+          </div>
+          <h1
+            class="font-display text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight text-on-surface leading-[0.95]"
+          >
+            Nuestros
+            <span class="heading-accent italic block">Servicios</span>
+          </h1>
+          <p
+            class="max-w-lg text-base md:text-lg text-on-surface-variant leading-relaxed"
+          >
+            Cortes de cabello, arreglo de barba y cuidado personal ejecutados
+            por profesionales para que siempre luzcas impecable.
+          </p>
+          <div
+            class="flex flex-wrap gap-4 pt-2 text-sm text-on-surface-variant"
+          >
+            <span
+              class="inline-flex items-center gap-2 rounded-full bg-surface-container-high px-3 py-2"
+            >
+              <span class="material-symbols-outlined text-base text-primary"
+                >verified</span
+              >
+              Atención moderna
+            </span>
+            <span
+              class="inline-flex items-center gap-2 rounded-full bg-surface-container-high px-3 py-2"
+            >
+              <span class="material-symbols-outlined text-base text-primary"
+                >schedule</span
+              >
+              Citas rápidas
+            </span>
           </div>
         </div>
 
-        <div class="relative z-10 -mt-8 px-5 pb-6 pt-2 sm:px-6 md:px-7 md:pb-7">
-          <div class="mb-6 flex justify-center">
-            <span class="rounded-full border border-primary/30 bg-primary/10 px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-primary">Combo</span>
-          </div>
-          <div class="text-center">
-            <h2 class="mb-4 font-display text-3xl font-bold tracking-tight text-on-surface">Combo Completo
-            </h2>
-            <div
-              class="mb-6 flex flex-wrap items-center justify-center gap-3 text-base text-on-surface font-label md:text-lg">
-              <span class="inline-flex items-center gap-2">
-                <span class="material-symbols-outlined text-primary">schedule</span>
-                1 Hora 15 Min
-              </span>
-              <span class="text-outline-variant">•</span>
-              <span class="font-headline text-2xl text-on-surface md:text-3xl">
-                $60.000
-                <span class="ml-1 text-sm text-on-surface-variant">COP</span>
-              </span>
+        <div
+          class="relative overflow-hidden rounded-[28px] shadow-[0_35px_80px_rgba(0,0,0,0.18)] bg-surface-container-low"
+        >
+          <img
+            class="h-[420px] w-full object-cover md:h-[520px]"
+            alt="Barbería masculina profesional"
+            src="{% static 'sena/images/corte_masculino.jpg' %}"
+          />
+          <div
+            class="absolute inset-0 bg-gradient-to-t from-surface via-surface/15 to-transparent"
+          ></div>
+        </div>
+      </section>
+
+      <div class="flex items-center justify-center py-2">
+        <div class="h-1.5 w-1.5 rounded-full bg-primary-container"></div>
+      </div>
+
+      {# Tarjetas de servicios con efecto flip y botón de reserva #}
+      <!-- Services List -->
+      <section class="grid items-stretch gap-6 md:grid-cols-2 xl:grid-cols-3">
+        <article
+          id="servicio-corte"
+          data-flip-card
+          class="service-flip-card group overflow-hidden rounded-[28px] border border-outline-variant/20 bg-surface-container-low shadow-[0_20px_45px_rgba(0,0,0,0.08)] transition-transform duration-300 hover:-translate-y-1"
+        >
+          <div class="service-flip-inner">
+            <div class="service-flip-face service-flip-front">
+              <div class="relative">
+                <img
+                  class="h-56 w-full object-cover transition-transform duration-700 group-hover:scale-105 md:h-64"
+                  alt="Corte de cabello masculino profesional"
+                  src="{% static 'sena/images/corte_cabello.jpeg' %}"
+                />
+                <div
+                  class="absolute inset-0 bg-gradient-to-t from-surface-container-low via-surface-container-low/70 to-surface-container-low/10"
+                ></div>
+              </div>
+              <div
+                class="relative z-10 -mt-8 px-5 pb-6 pt-2 sm:px-6 md:px-7 md:pb-7"
+              >
+                <div class="mb-6 flex justify-center">
+                  <span
+                    class="rounded-full border border-primary/30 bg-primary/10 px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-primary"
+                    >Cabello</span
+                  >
+                </div>
+                <div class="text-center">
+                  <h2
+                    class="mb-4 font-display text-3xl font-bold tracking-tight text-on-surface"
+                  >
+                    Corte de Cabello
+                  </h2>
+                  <div
+                    class="mb-6 flex flex-wrap items-center justify-center gap-3 text-base text-on-surface font-label md:text-lg"
+                  >
+                    <span class="inline-flex items-center gap-2"
+                      ><span class="material-symbols-outlined text-primary"
+                        >schedule</span
+                      >45 Min</span
+                    >
+                    <span class="text-outline-variant">•</span>
+                    <span
+                      class="font-headline text-2xl text-on-surface md:text-3xl"
+                      >$40.000
+                      <span class="ml-1 text-sm text-on-surface-variant"
+                        >COP</span
+                      ></span
+                    >
+                  </div>
+                  <p
+                    class="mx-auto max-w-2xl text-base leading-relaxed text-on-surface-variant md:text-lg"
+                  >
+                    Corte moderno con lavado incluido y asesoría personalizada
+                    para encontrar el estilo que mejor se adapte a tu rostro y
+                    rutina.
+                  </p>
+                </div>
+                <div class="mt-8 flex justify-center">
+                  {% if request.session.logueado %}<a
+                    href="{% url 'sena:usuario_reservar_cita' %}"
+                    class="btn-brand inline-flex items-center gap-3 rounded-md px-8 py-4 text-sm font-bold uppercase tracking-[0.14em] transition-transform duration-300 hover:scale-[1.02] active:scale-95"
+                    ><span>Reservar Cita</span
+                    ><span class="material-symbols-outlined text-xl"
+                      >workspace_premium</span
+                    ></a
+                  >{% else %}<a
+                    href="{% url 'sena:login' %}?next={% url 'sena:usuario_reservar_cita' %}"
+                    class="btn-brand inline-flex items-center gap-3 rounded-md px-8 py-4 text-sm font-bold uppercase tracking-[0.14em] transition-transform duration-300 hover:scale-[1.02] active:scale-95"
+                    ><span>Reservar Cita</span
+                    ><span class="material-symbols-outlined text-xl"
+                      >workspace_premium</span
+                    ></a
+                  >{% endif %}
+                </div>
+              </div>
             </div>
-
-            <p class="mx-auto max-w-2xl text-base leading-relaxed text-on-surface-variant md:text-lg">
-              Corte de cabello + arreglo de barba + limpieza facial para que salgas renovado y listo para cualquier
-              ocasión.
-            </p>
-
+            <div class="service-flip-face service-flip-back">
+              <span class="material-symbols-outlined service-flip-back__icon"
+                >content_cut</span
+              >
+              <span class="service-flip-back__eyebrow"
+                >Detalle del servicio</span
+              >
+              <h2 class="font-display text-3xl font-bold">Corte de Cabello</h2>
+              <p>
+                Un corte diseñado según tus facciones, tipo de cabello y estilo
+                personal.
+              </p>
+              <ul>
+                <li>
+                  <span class="material-symbols-outlined">check</span>Lavado y
+                  preparación
+                </li>
+                <li>
+                  <span class="material-symbols-outlined">check</span>Tijera y
+                  máquina con precisión
+                </li>
+                <li>
+                  <span class="material-symbols-outlined">check</span>Peinado y
+                  acabado profesional
+                </li>
+                <li>
+                  <span class="material-symbols-outlined">check</span>Asesoría
+                  para mantener el look
+                </li>
+              </ul>
+              {% if request.session.logueado %}<a
+                href="{% url 'sena:usuario_reservar_cita' %}"
+                class="service-flip-back__action"
+                >Agendar cita
+                <span class="material-symbols-outlined">arrow_forward</span></a
+              >{% else %}<a
+                href="{% url 'sena:login' %}?next={% url 'sena:usuario_reservar_cita' %}"
+                class="service-flip-back__action"
+                >Iniciar sesión para reservar
+                <span class="material-symbols-outlined">arrow_forward</span></a
+              >{% endif %}
+            </div>
           </div>
+        </article>
 
-          <div class="mt-8 flex justify-center">
-            {% if request.session.logueado %}
-            <a href="{% url 'sena:usuario_reservar_cita' %}?servicio={{ 'Combo Completo'|urlencode }}"
-              class="btn-brand inline-flex items-center gap-3 rounded-md px-8 py-4 text-sm font-bold uppercase tracking-[0.14em] transition-transform duration-300 hover:scale-[1.02] active:scale-95">
-              <span>Reservar Cita</span>
-              <span class="material-symbols-outlined text-xl">workspace_premium</span>
-            </a>
-            {% else %}
-            <a href="{% url 'sena:login' %}?next={% filter urlencode %}{% url 'sena:usuario_reservar_cita' %}?servicio=Combo Completo{% endfilter %}"
-              class="btn-brand inline-flex items-center gap-3 rounded-md px-8 py-4 text-sm font-bold uppercase tracking-[0.14em] transition-transform duration-300 hover:scale-[1.02] active:scale-95">
-              <span>Reservar Cita</span>
-              <span class="material-symbols-outlined text-xl">workspace_premium</span>
-            </a>
-            {% endif %}
+        <article
+          id="servicio-barba"
+          data-flip-card
+          class="service-flip-card group overflow-hidden rounded-[28px] border border-outline-variant/20 bg-surface-container-low shadow-[0_20px_45px_rgba(0,0,0,0.08)] transition-transform duration-300 hover:-translate-y-1"
+        >
+          <div class="service-flip-inner">
+            <div class="service-flip-face service-flip-front">
+              <div class="relative">
+                <img
+                  class="h-56 w-full object-cover transition-transform duration-700 group-hover:scale-105 md:h-64"
+                  alt="Arreglo de barba masculino profesional"
+                  src="{% static 'sena/images/arreglo_barba.jpeg' %}"
+                />
+                <div
+                  class="absolute inset-0 bg-gradient-to-t from-surface-container-low via-surface-container-low/70 to-surface-container-low/10"
+                ></div>
+              </div>
+              <div
+                class="relative z-10 -mt-8 px-5 pb-6 pt-2 sm:px-6 md:px-7 md:pb-7"
+              >
+                <div class="mb-6 flex justify-center">
+                  <span
+                    class="rounded-full border border-primary/30 bg-primary/10 px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-primary"
+                    >Barba</span
+                  >
+                </div>
+                <div class="text-center">
+                  <h2
+                    class="mb-4 font-display text-3xl font-bold tracking-tight text-on-surface"
+                  >
+                    Arreglo de Barba
+                  </h2>
+                  <div
+                    class="mb-6 flex flex-wrap items-center justify-center gap-3 text-base text-on-surface font-label md:text-lg"
+                  >
+                    <span class="inline-flex items-center gap-2"
+                      ><span class="material-symbols-outlined text-primary"
+                        >schedule</span
+                      >30 Min</span
+                    >
+                    <span class="text-outline-variant">•</span>
+                    <span
+                      class="font-headline text-2xl text-on-surface md:text-3xl"
+                      >$30.000
+                      <span class="ml-1 text-sm text-on-surface-variant"
+                        >COP</span
+                      ></span
+                    >
+                  </div>
+                  <p
+                    class="mx-auto max-w-2xl text-base leading-relaxed text-on-surface-variant md:text-lg"
+                  >
+                    Perfilado preciso, toalla caliente, hidratación y cuidado de
+                    la barba para dejarla con una forma limpia y bien definida.
+                  </p>
+                </div>
+                <div class="mt-8 flex justify-center">
+                  {% if request.session.logueado %}<a
+                    href="{% url 'sena:usuario_reservar_cita' %}"
+                    class="btn-brand inline-flex items-center gap-3 rounded-md px-8 py-4 text-sm font-bold uppercase tracking-[0.14em] transition-transform duration-300 hover:scale-[1.02] active:scale-95"
+                    ><span>Reservar Cita</span
+                    ><span class="material-symbols-outlined text-xl"
+                      >workspace_premium</span
+                    ></a
+                  >{% else %}<a
+                    href="{% url 'sena:login' %}?next={% url 'sena:usuario_reservar_cita' %}"
+                    class="btn-brand inline-flex items-center gap-3 rounded-md px-8 py-4 text-sm font-bold uppercase tracking-[0.14em] transition-transform duration-300 hover:scale-[1.02] active:scale-95"
+                    ><span>Reservar Cita</span
+                    ><span class="material-symbols-outlined text-xl"
+                      >workspace_premium</span
+                    ></a
+                  >{% endif %}
+                </div>
+              </div>
+            </div>
+            <div class="service-flip-face service-flip-back">
+              <span class="material-symbols-outlined service-flip-back__icon"
+                >face_3</span
+              >
+              <span class="service-flip-back__eyebrow"
+                >Detalle del servicio</span
+              >
+              <h2 class="font-display text-3xl font-bold">Arreglo de Barba</h2>
+              <p>
+                Perfilado y cuidado completo para una barba definida, hidratada
+                y equilibrada.
+              </p>
+              <ul>
+                <li>
+                  <span class="material-symbols-outlined">check</span>Toalla
+                  caliente relajante
+                </li>
+                <li>
+                  <span class="material-symbols-outlined">check</span>Perfilado
+                  de contornos
+                </li>
+                <li>
+                  <span class="material-symbols-outlined">check</span
+                  >Hidratación y nutrición
+                </li>
+                <li>
+                  <span class="material-symbols-outlined">check</span>Definición
+                  adaptada a tu rostro
+                </li>
+              </ul>
+              {% if request.session.logueado %}<a
+                href="{% url 'sena:usuario_reservar_cita' %}"
+                class="service-flip-back__action"
+                >Agendar cita
+                <span class="material-symbols-outlined">arrow_forward</span></a
+              >{% else %}<a
+                href="{% url 'sena:login' %}?next={% url 'sena:usuario_reservar_cita' %}"
+                class="service-flip-back__action"
+                >Iniciar sesión para reservar
+                <span class="material-symbols-outlined">arrow_forward</span></a
+              >{% endif %}
+            </div>
           </div>
-        </div>
-        </div>
-        <div class="service-flip-face service-flip-back">
-          <span class="material-symbols-outlined service-flip-back__icon">workspace_premium</span>
-          <span class="service-flip-back__eyebrow">Detalle del servicio</span>
-          <h2 class="font-display text-3xl font-bold">Combo Completo</h2>
-          <p>La experiencia integral de TecnoCorte para salir renovado de pies a cabeza.</p>
-          <ul>
-            <li><span class="material-symbols-outlined">check</span>Corte de cabello personalizado</li>
-            <li><span class="material-symbols-outlined">check</span>Arreglo y perfilado de barba</li>
-            <li><span class="material-symbols-outlined">check</span>Limpieza facial revitalizante</li>
-            <li><span class="material-symbols-outlined">check</span>Peinado y acabado final</li>
-          </ul>
-          {% if request.session.logueado %}<a href="{% url 'sena:usuario_reservar_cita' %}?servicio={{ 'Combo Completo'|urlencode }}" class="service-flip-back__action">Reservar combo <span class="material-symbols-outlined">arrow_forward</span></a>{% else %}<a href="{% url 'sena:login' %}?next={% filter urlencode %}{% url 'sena:usuario_reservar_cita' %}?servicio=Combo Completo{% endfilter %}" class="service-flip-back__action">Iniciar sesión para reservar <span class="material-symbols-outlined">arrow_forward</span></a>{% endif %}
-        </div>
-        </div>
-      </article>
-    </section>
-  </main>
-  <!-- Footer Shared Component -->
-  <footer
-    class="bg-surface-container-lowest w-full pt-16 pb-8 flex flex-col items-center gap-8 px-8 border-t border-outline-variant/10">
-    <div class="flex flex-col items-center gap-6"><span
-        class="font-headline text-xl text-primary font-bold tracking-widest uppercase">TecnoCorte</span>
-      <nav class="flex flex-wrap justify-center gap-8 font-body text-on-surface-variant text-sm"><a
-          class="hover:text-primary transition-colors opacity-80 hover:opacity-100"
-          href="{% url 'sena:ayuda' %}">Privacidad</a><a
-          class="hover:text-primary transition-colors opacity-80 hover:opacity-100"
-          href="{% url 'sena:ayuda' %}">Términos</a><a
-          class="hover:text-primary transition-colors opacity-80 hover:opacity-100"
-          href="{% url 'sena:ayuda' %}">Soporte</a><a
-          class="hover:text-primary transition-colors opacity-80 hover:opacity-100"
-          href="{% url 'sena:ayuda' %}">Franquicias</a>
-      </nav>
-    </div>
-    <div class="text-center">
-      <p class="font-body text-on-surface-variant text-sm opacity-60">
-        © 2026 TecnoCorte. Precios en COP. Todos los derechos reservados.
+        </article>
 
-      </p>
-    </div>
-  </footer>
-  <script>
-    (function () {
-      var touchDevice = window.matchMedia && window.matchMedia("(hover: none)").matches;
-      document.querySelectorAll("[data-flip-card]").forEach(function (card) {
-        card.setAttribute("tabindex", "0");
-        card.setAttribute("aria-label", "Ver detalles de " + (card.id === "servicio-corte" ? "Corte de Cabello" : card.id === "servicio-barba" ? "Arreglo de Barba" : "Combo Completo"));
-        if (touchDevice) {
-          card.addEventListener("click", function (event) {
-            if (event.target.closest("a, button")) return;
+        <article
+          id="servicio-combo"
+          data-flip-card
+          class="service-flip-card overflow-hidden rounded-[28px] border border-primary/20 bg-surface-container-high shadow-[0_20px_55px_rgba(242,202,80,0.14)]"
+        >
+          <div class="service-flip-inner">
+            <div class="service-flip-face service-flip-front">
+              <div class="relative">
+                <img
+                  class="h-56 w-full object-cover opacity-80 md:h-64"
+                  alt="Combo de corte y barba"
+                  src="{% static 'sena/images/servicio_completo.jpeg' %}"
+                />
+                <div
+                  class="absolute inset-0 bg-gradient-to-t from-surface-container-high via-surface-container-high/75 to-surface-container-high/25"
+                ></div>
+              </div>
+
+              <div
+                class="relative z-10 -mt-8 px-5 pb-6 pt-2 sm:px-6 md:px-7 md:pb-7"
+              >
+                <div class="mb-6 flex justify-center">
+                  <span
+                    class="rounded-full border border-primary/30 bg-primary/10 px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-primary"
+                    >Combo</span
+                  >
+                </div>
+                <div class="text-center">
+                  <h2
+                    class="mb-4 font-display text-3xl font-bold tracking-tight text-on-surface"
+                  >
+                    Combo Completo
+                  </h2>
+                  <div
+                    class="mb-6 flex flex-wrap items-center justify-center gap-3 text-base text-on-surface font-label md:text-lg"
+                  >
+                    <span class="inline-flex items-center gap-2">
+                      <span class="material-symbols-outlined text-primary"
+                        >schedule</span
+                      >
+                      1 Hora 15 Min
+                    </span>
+                    <span class="text-outline-variant">•</span>
+                    <span
+                      class="font-headline text-2xl text-on-surface md:text-3xl"
+                    >
+                      $60.000
+                      <span class="ml-1 text-sm text-on-surface-variant"
+                        >COP</span
+                      >
+                    </span>
+                  </div>
+
+                  <p
+                    class="mx-auto max-w-2xl text-base leading-relaxed text-on-surface-variant md:text-lg"
+                  >
+                    Corte de cabello + arreglo de barba + limpieza facial para
+                    que salgas renovado y listo para cualquier ocasión.
+                  </p>
+                </div>
+
+                <div class="mt-8 flex justify-center">
+                  {% if request.session.logueado %}
+                  <a
+                    href="{% url 'sena:usuario_reservar_cita' %}"
+                    class="btn-brand inline-flex items-center gap-3 rounded-md px-8 py-4 text-sm font-bold uppercase tracking-[0.14em] transition-transform duration-300 hover:scale-[1.02] active:scale-95"
+                  >
+                    <span>Reservar Cita</span>
+                    <span class="material-symbols-outlined text-xl"
+                      >workspace_premium</span
+                    >
+                  </a>
+                  {% else %}
+                  <a
+                    href="{% url 'sena:login' %}?next={% url 'sena:usuario_reservar_cita' %}"
+                    class="btn-brand inline-flex items-center gap-3 rounded-md px-8 py-4 text-sm font-bold uppercase tracking-[0.14em] transition-transform duration-300 hover:scale-[1.02] active:scale-95"
+                  >
+                    <span>Reservar Cita</span>
+                    <span class="material-symbols-outlined text-xl"
+                      >workspace_premium</span
+                    >
+                  </a>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+            <div class="service-flip-face service-flip-back">
+              <span class="material-symbols-outlined service-flip-back__icon"
+                >workspace_premium</span
+              >
+              <span class="service-flip-back__eyebrow"
+                >Detalle del servicio</span
+              >
+              <h2 class="font-display text-3xl font-bold">Combo Completo</h2>
+              <p>
+                La experiencia integral de TecnoCorte para salir renovado de
+                pies a cabeza.
+              </p>
+              <ul>
+                <li>
+                  <span class="material-symbols-outlined">check</span>Corte de
+                  cabello personalizado
+                </li>
+                <li>
+                  <span class="material-symbols-outlined">check</span>Arreglo y
+                  perfilado de barba
+                </li>
+                <li>
+                  <span class="material-symbols-outlined">check</span>Limpieza
+                  facial revitalizante
+                </li>
+                <li>
+                  <span class="material-symbols-outlined">check</span>Peinado y
+                  acabado final
+                </li>
+              </ul>
+              {% if request.session.logueado %}<a
+                href="{% url 'sena:usuario_reservar_cita' %}"
+                class="service-flip-back__action"
+                >Reservar combo
+                <span class="material-symbols-outlined">arrow_forward</span></a
+              >{% else %}<a
+                href="{% url 'sena:login' %}?next={% url 'sena:usuario_reservar_cita' %}"
+                class="service-flip-back__action"
+                >Iniciar sesión para reservar
+                <span class="material-symbols-outlined">arrow_forward</span></a
+              >{% endif %}
+            </div>
+          </div>
+        </article>
+      </section>
+    </main>
+    <!-- Footer Shared Component -->
+    <footer
+      class="bg-surface-container-lowest w-full pt-16 pb-8 flex flex-col items-center gap-8 px-8 border-t border-outline-variant/10"
+    >
+      <div class="flex flex-col items-center gap-6">
+        <span
+          class="font-headline text-xl text-primary font-bold tracking-widest uppercase"
+          >TecnoCorte</span
+        >
+        <nav
+          class="flex flex-wrap justify-center gap-8 font-body text-on-surface-variant text-sm"
+        >
+          <a
+            class="hover:text-primary transition-colors opacity-80 hover:opacity-100"
+            href="{% url 'sena:ayuda' %}"
+            >Privacidad</a
+          ><a
+            class="hover:text-primary transition-colors opacity-80 hover:opacity-100"
+            href="{% url 'sena:ayuda' %}"
+            >Términos</a
+          ><a
+            class="hover:text-primary transition-colors opacity-80 hover:opacity-100"
+            href="{% url 'sena:ayuda' %}"
+            >Soporte</a
+          ><a
+            class="hover:text-primary transition-colors opacity-80 hover:opacity-100"
+            href="{% url 'sena:ayuda' %}"
+            >Franquicias</a
+          >
+        </nav>
+      </div>
+      <div class="text-center">
+        <p class="font-body text-on-surface-variant text-sm opacity-60">
+          © 2026 TecnoCorte. Precios en COP. Todos los derechos reservados.
+        </p>
+      </div>
+    </footer>
+    <script>
+      (function () {
+        var touchDevice =
+          window.matchMedia && window.matchMedia("(hover: none)").matches;
+        document.querySelectorAll("[data-flip-card]").forEach(function (card) {
+          card.setAttribute("tabindex", "0");
+          card.setAttribute(
+            "aria-label",
+            "Ver detalles de " +
+              (card.id === "servicio-corte"
+                ? "Corte de Cabello"
+                : card.id === "servicio-barba"
+                  ? "Arreglo de Barba"
+                  : "Combo Completo"),
+          );
+          if (touchDevice) {
+            card.addEventListener("click", function (event) {
+              if (event.target.closest("a, button")) return;
+              card.classList.toggle("is-flipped");
+            });
+          }
+          card.addEventListener("keydown", function (event) {
+            if (event.key !== "Enter" && event.key !== " ") return;
+            if (event.target !== card) return;
+            event.preventDefault();
             card.classList.toggle("is-flipped");
           });
-        }
-        card.addEventListener("keydown", function (event) {
-          if (event.key !== "Enter" && event.key !== " ") return;
-          if (event.target !== card) return;
-          event.preventDefault();
-          card.classList.toggle("is-flipped");
         });
-      });
-    })();
-  </script>
-</body>
-
+      })();
+    </script>
+  </body>
 </html>
