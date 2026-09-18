@@ -418,6 +418,13 @@
       body:has(.admin-sidebar) .theme-fab {
         display: none;
       }
+
+      /* Reserva espacio inferior en móvil para no tapar contenido con la barra de navegación fija */
+      @media (max-width: 767px) {
+        main {
+          padding-bottom: 6.5rem;
+        }
+      }
     </style>
     {# Bloque para contenido de las plantillas hijas #}
     {% block extra_head %}{% endblock %}

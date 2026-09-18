@@ -505,8 +505,18 @@ def carrito(request):
     contexto = contexto_carrito(request)
     return render(request, "carrito/carrito.html", contexto)
 
+def _cliente_o_invitado(request):
+    """True si la sesión no está logueada o pertenece a un Cliente (los demás roles solo pueden ver la tienda/carrito)."""
+    logueado = request.session.get("logueado")
+    return not logueado or logueado.get("rol") == "Cliente"
+
 def agregar_carrito(request, producto_id):
     es_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
+    if not _cliente_o_invitado(request):
+        if es_ajax:
+            return JsonResponse({"error": "Solo los clientes pueden agregar productos al carrito."}, status=403)
+        request.session["mensaje_carrito"] = "Solo los clientes pueden agregar productos al carrito."
+        return redirect("sena:carrito")
     if not carrito_visible(request):
         if request.session.get("logueado"):
             cargar_carrito_usuario(request, request.session["logueado"]["id"])
@@ -550,6 +560,10 @@ def agregar_carrito(request, producto_id):
 
 def actualizar_carrito(request, producto_id):
     es_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
+    if not _cliente_o_invitado(request):
+        if es_ajax:
+            return JsonResponse({"error": "Solo los clientes pueden modificar el carrito."}, status=403)
+        return redirect("sena:carrito")
     if not carrito_visible(request):
         if es_ajax:
             return JsonResponse({"error": "Este carrito no pertenece a la sesión actual."}, status=403)
@@ -590,6 +604,10 @@ def actualizar_carrito(request, producto_id):
 
 def eliminar_carrito(request, producto_id):
     es_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
+    if not _cliente_o_invitado(request):
+        if es_ajax:
+            return JsonResponse({"error": "Solo los clientes pueden modificar el carrito."}, status=403)
+        return redirect("sena:carrito")
     if not carrito_visible(request):
         if es_ajax:
             return JsonResponse({"error": "Este carrito no pertenece a la sesión actual."}, status=403)
@@ -749,7 +767,7 @@ def usuario_pre_confirmar(request):
         disponible, mensaje = barbero_esta_disponible(peluquero_id, fecha, hora, servicio)
     if not disponible:
         contexto = contexto_carrito(request)
-        contexto.update({"error": mensaje, "peluqueros": Usuario.objects.filter(rol="Barbero", activo=True), "peluquerias": Peluqueria.objects.all(), "servicios": SERVICIOS})
+        contexto.update({"error": mensaje, "peluqueros": Usuario.objects.filter(rol="Barbero", activo=True), "peluquerias": Peluqueria.objects.all(), "servicios": SERVICIOS, "servicio_inicial": servicio})
         contexto.update(_horarios_para_template())
         contexto.update(_reservas_para_template())
         return render(request, "usuarios/usuario_reservar_cita.html", contexto)
@@ -791,7 +809,7 @@ def usuario_confirmar_reserva(request):
         disponible, mensaje = barbero_esta_disponible(peluquero_id, fecha, hora, servicio)
     if not disponible:
         contexto = contexto_carrito(request)
-        contexto.update({"error": mensaje, "peluqueros": Usuario.objects.filter(rol="Barbero", activo=True), "peluquerias": Peluqueria.objects.all(), "servicios": SERVICIOS})
+        contexto.update({"error": mensaje, "peluqueros": Usuario.objects.filter(rol="Barbero", activo=True), "peluquerias": Peluqueria.objects.all(), "servicios": SERVICIOS, "servicio_inicial": servicio})
         contexto.update(_horarios_para_template())
         contexto.update(_reservas_para_template())
         return render(request, "usuarios/usuario_reservar_cita.html", contexto)
@@ -802,7 +820,7 @@ def usuario_confirmar_reserva(request):
             disponible, mensaje = barbero_esta_disponible(peluquero_id, fecha, hora, servicio)
         if not disponible:
             contexto = contexto_carrito(request)
-            contexto.update({"error": mensaje, "peluqueros": Usuario.objects.filter(rol="Barbero", activo=True), "peluquerias": Peluqueria.objects.all(), "servicios": SERVICIOS})
+            contexto.update({"error": mensaje, "peluqueros": Usuario.objects.filter(rol="Barbero", activo=True), "peluquerias": Peluqueria.objects.all(), "servicios": SERVICIOS, "servicio_inicial": servicio})
             contexto.update(_horarios_para_template())
             contexto.update(_reservas_para_template())
             return render(request, "usuarios/usuario_reservar_cita.html", contexto)
@@ -937,6 +955,9 @@ def usuario_notificaciones(request):
     contexto["notificaciones"] = Notificacion.objects.filter(
         usuario_id=request.session["logueado"]["id"]
     ).order_by("-fecha")
+    contexto["calificaciones_reservas"] = set(
+        Calificacion.objects.filter(cliente_id=request.session["logueado"]["id"]).values_list("reserva_id", flat=True)
+    )
     return render(request, "usuarios/usuario_notificaciones.html", contexto)
 
 
@@ -1142,7 +1163,7 @@ def peluquero_crear_cita(request):
         if disponible:
             disponible, mensaje = barbero_esta_disponible(request.session["logueado"]["id"], request.POST.get("fecha"), request.POST.get("hora"), request.POST.get("servicio"))
         if not disponible:
-            contexto = {"clientes": Usuario.objects.filter(rol="Cliente"), "peluquerias": Peluqueria.objects.all(), "servicios": SERVICIOS, "error": mensaje}
+            contexto = {"clientes": Usuario.objects.filter(rol="Cliente"), "peluquerias": Peluqueria.objects.all(), "servicios": SERVICIOS, "reserva_estados": Reserva.ESTADOS, "error": mensaje}
             return render(request, "peluqueros/peluquero_crear_cita.html", contexto)
         reserva = Reserva.objects.create(
             cliente=cliente,
@@ -1795,6 +1816,7 @@ def admin_crear_usuario(request):
             return render(request, "administrador/admin_formulario_usuario.html", {
                 "error": "Todos los campos son obligatorios",
                 "roles": Usuario.ROLES,
+                "peluquerias": Peluqueria.objects.all(),
             })
 
         try:
@@ -1803,6 +1825,7 @@ def admin_crear_usuario(request):
             return render(request, "administrador/admin_formulario_usuario.html", {
                 "error": "Ese correo no tiene un formato válido",
                 "roles": Usuario.ROLES,
+                "peluquerias": Peluqueria.objects.all(),
             })
 
         error_password = validar_password(password)
@@ -1810,12 +1833,14 @@ def admin_crear_usuario(request):
             return render(request, "administrador/admin_formulario_usuario.html", {
                 "error": error_password,
                 "roles": Usuario.ROLES,
+                "peluquerias": Peluqueria.objects.all(),
             })
 
         if Usuario.objects.filter(email=email).exists():
             return render(request, "administrador/admin_formulario_usuario.html", {
                 "error": f"Ya existe un usuario con el email {email}",
                 "roles": Usuario.ROLES,
+                "peluquerias": Peluqueria.objects.all(),
             })
 
         peluqueria_id = _id_entero(request.POST.get("peluqueria"))
@@ -1858,9 +1883,9 @@ def admin_editar_usuario(request, id):
         try:
             validate_email(email)
         except ValidationError:
-            return render(request, "administrador/admin_formulario_usuario.html", {"usuario": usuario, "roles": Usuario.ROLES, "editar": True, "error": "Ese correo no tiene un formato válido."})
+            return render(request, "administrador/admin_formulario_usuario.html", {"usuario": usuario, "roles": Usuario.ROLES, "editar": True, "error": "Ese correo no tiene un formato válido.", "peluquerias": Peluqueria.objects.all()})
         if Usuario.objects.exclude(id=id).filter(email=email).exists():
-            return render(request, "administrador/admin_formulario_usuario.html", {"usuario": usuario, "roles": Usuario.ROLES, "editar": True, "error": "Ese correo ya está registrado por otro usuario."})
+            return render(request, "administrador/admin_formulario_usuario.html", {"usuario": usuario, "roles": Usuario.ROLES, "editar": True, "error": "Ese correo ya está registrado por otro usuario.", "peluquerias": Peluqueria.objects.all()})
         usuario.nombre = request.POST.get("nombre", usuario.nombre).strip()
         usuario.apellido = request.POST.get("apellido", usuario.apellido).strip()
         usuario.email = email
@@ -1898,7 +1923,8 @@ def admin_editar_usuario(request, id):
     return render(request, "administrador/admin_formulario_usuario.html", {
         "usuario": usuario,
         "roles": Usuario.ROLES,
-        "editar": True
+        "editar": True,
+        "peluquerias": Peluqueria.objects.all(),
     })
 
 @autorizacion(["Admin"])

@@ -1,7 +1,7 @@
 {# Formulario para crear o editar una barbería #}
 {% extends 'usuarios/dashboard_base.html' %} {% block body_class %} font-body
 antialiased flex bg-surface {% endblock %} {% block content %} {% include 'includes/admin_sidebar.html' with active='peluquerias' %}
-<main class="ml-0 md:ml-64 flex-1 p-12">
+<main class="ml-0 md:ml-64 flex-1 p-6 md:p-12 pb-24 md:pb-12">
   <div class="max-w-xl mx-auto">
     <a href="{% url 'sena:admin_peluquerias' %}" class="text-primary inline-flex items-center gap-1"
       >← Volver a barberías</a

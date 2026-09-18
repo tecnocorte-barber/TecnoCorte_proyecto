@@ -216,44 +216,7 @@ flex bg-surface{% endblock %} {% block content %} {% include "includes/admin_sid
   </div>
 </main>
 <!-- Bottom Navigation Bar (Mobile Only) -->
-<nav
-  class="md:hidden fixed bottom-0 w-full z-40 bg-surface/90 backdrop-blur-xl border-t border-outline-variant/15 flex justify-around items-center px-4 py-3"
->
-  <a
-    class="flex flex-col items-center space-y-1 text-on-surface-variant p-2"
-    href="{% url 'sena:admin_dashboard' %}"
-    ><span class="material-symbols-outlined">dashboard</span
-    ><span class="font-label text-[10px] uppercase tracking-wider"
-      >Inicio</span
-    > </a
-  ><a
-    class="flex flex-col items-center space-y-1 text-on-surface-variant p-2"
-    href="{% url 'sena:admin_reservas' %}"
-    ><span class="material-symbols-outlined">calendar_month</span
-    ><span class="font-label text-[10px] uppercase tracking-wider"
-      >Citas</span
-    > </a
-  ><a
-    class="flex flex-col items-center space-y-1 text-primary p-2 relative"
-    href="{% url 'sena:admin_peluqueros' %}"
-  >
-    <div class="absolute -top-1 w-8 h-1 bg-primary rounded-b-md"></div>
-    <span
-      class="material-symbols-outlined"
-      style="font-variation-settings: &quot;FILL&quot; 1"
-      >content_cut</span
-    ><span class="font-label text-[10px] uppercase tracking-wider font-bold"
-      >Barberos</span
-    > </a
-  ><a
-    class="flex flex-col items-center space-y-1 text-on-surface-variant p-2"
-    href="{% url 'sena:admin_crear_reserva' %}"
-    ><span class="material-symbols-outlined">group</span
-    ><span class="font-label text-[10px] uppercase tracking-wider"
-      >Clientes</span
-    >
-  </a>
-</nav>
+{% include "includes/admin_mobile_nav.html" with active="peluqueros" %}
 <script>
   (function () {
     var search = document.getElementById("search-barbero");

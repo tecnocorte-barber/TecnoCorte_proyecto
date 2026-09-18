@@ -1,6 +1,5 @@
 {# Plantilla para editar una reserva existente del usuario #}
-{% extends "usuarios/dashboard_base.html" %} {% block body_class %}font-body
-antialiased bg-surface{% endblock %} {% block content %}
+{% extends "usuarios/dashboard_base.html" %} {% block body_class %}font-body antialiased bg-surface{% endblock %} {% block content %}
 <main class="max-w-2xl mx-auto p-8 md:p-12">
   <a class="text-primary" href="{% url 'sena:usuario_perfil' %}"
     >← Volver a mi perfil</a
@@ -59,7 +58,7 @@ antialiased bg-surface{% endblock %} {% block content %}
         </option>
         {% endfor %}
       </select>
-      <div class="grid grid-cols-2 gap-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <input
           required
           type="date"

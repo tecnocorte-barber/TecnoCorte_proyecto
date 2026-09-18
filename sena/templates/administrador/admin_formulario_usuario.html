@@ -3,7 +3,7 @@
 <div class="w-full">
   {% include "includes/admin_sidebar.html" with active="usuarios" %}
 
-  <div class="md:ml-64 p-4 lg:p-8 bg-gray-950">
+  <div class="md:ml-64 p-4 lg:p-8 bg-gray-950 pb-24">
     <!-- Encabezado -->
     <div class="max-w-2xl mx-auto">
       <h1 class="text-3xl lg:text-4xl font-bold text-white mb-2">
@@ -113,6 +113,7 @@
           <select
             id="rol"
             name="rol"
+            onchange="togglePeluqueriaField()"
             class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:border-blue-500 focus:outline-none"
             required
           >
@@ -124,6 +125,31 @@
               {% if usuario.rol == value %}selected{% endif %}
             >
               {{ label }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Barbería (solo para rol Barbero) -->
+        <div id="campo-peluqueria" style="display: none">
+          <label
+            for="peluqueria"
+            class="block text-sm font-medium text-gray-300 mb-2"
+          >
+            Barbería <span class="text-red-500">*</span>
+          </label>
+          <select
+            id="peluqueria"
+            name="peluqueria"
+            class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:border-blue-500 focus:outline-none"
+          >
+            <option value="">-- Selecciona una barbería --</option>
+            {% for peluqueria in peluquerias %}
+            <option
+              value="{{ peluqueria.id }}"
+              {% if usuario.peluqueria_id == peluqueria.id %}selected{% endif %}
+            >
+              {{ peluqueria.nombre }}
             </option>
             {% endfor %}
           </select>
@@ -150,7 +176,7 @@
         </div>
 
         <!-- Botones -->
-        <div class="flex gap-4 pt-4">
+        <div class="flex flex-col sm:flex-row gap-4 pt-4">
           <button
             type="submit"
             class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition duration-200"
@@ -181,4 +207,14 @@
   </div>
 </div>
 {% include "includes/admin_mobile_nav.html" with active="usuarios" %}
+<script>
+  function togglePeluqueriaField() {
+    var rol = document.getElementById("rol");
+    var campo = document.getElementById("campo-peluqueria");
+    if (rol && campo) {
+      campo.style.display = rol.value === "Barbero" ? "block" : "none";
+    }
+  }
+  document.addEventListener("DOMContentLoaded", togglePeluqueriaField);
+</script>
 {% endblock %}

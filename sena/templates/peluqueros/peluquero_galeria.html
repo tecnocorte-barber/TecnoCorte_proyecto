@@ -4,7 +4,28 @@
 {% block body_class %}font-body antialiased flex bg-surface{% endblock %}
 {% block content %}
 {% include "includes/peluquero_sidebar.html" with active="galeria" %}
-<main class="md:ml-72 flex-1 min-h-screen p-6 md:p-12">
+<main class="md:ml-72 flex-1 min-h-screen p-6 md:p-12"><script>
+  var fotoInput = document.getElementById("foto-input");
+  var fotoPreview = document.getElementById("foto-preview");
+  var fotoPreviewImg = document.getElementById("foto-preview-img");
+  var fotoLabel = document.getElementById("foto-label");
+  document.addEventListener("DOMContentLoaded", function () {
+    if (fotoInput && fotoPreview && fotoPreviewImg && fotoLabel) {
+      fotoInput.addEventListener("change", function () {
+        var archivo = this.files && this.files[0];
+        if (archivo) {
+          var lector = new FileReader();
+          lector.onload = function (e) {
+            fotoPreviewImg.src = e.target.result;
+            fotoPreview.classList.remove("hidden");
+            fotoLabel.textContent = archivo.name;
+          };
+          lector.readAsDataURL(archivo);
+        }
+      });
+    }
+  });
+</script>
   <div class="max-w-3xl mx-auto">
     <header class="mb-10 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
       <div>
@@ -116,26 +137,4 @@
   </div>
 </main>
 {% include "includes/peluquero_mobile_nav.html" with active="galeria" %}
-{% endblock %}
-{% block extra_js %}
-<script>
-  const fotoInput = document.getElementById("foto-input");
-  const fotoPreview = document.getElementById("foto-preview");
-  const fotoPreviewImg = document.getElementById("foto-preview-img");
-  const fotoLabel = document.getElementById("foto-label");
-  if (fotoInput && fotoPreview && fotoPreviewImg && fotoLabel) {
-    fotoInput.addEventListener("change", function () {
-      const archivo = this.files && this.files[0];
-      if (archivo) {
-        const lector = new FileReader();
-        lector.onload = function (e) {
-          fotoPreviewImg.src = e.target.result;
-          fotoPreview.classList.remove("hidden");
-          fotoLabel.textContent = archivo.name;
-        };
-        lector.readAsDataURL(archivo);
-      }
-    });
-  }
-</script>
 {% endblock %}

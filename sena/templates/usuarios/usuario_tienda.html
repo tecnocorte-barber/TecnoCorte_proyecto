@@ -374,6 +374,7 @@
                     ></span
                   >
                   {% if producto.disponible and producto.stock > 0 %}
+                  {% if not request.session.logueado or request.session.logueado.rol == 'Cliente' %}
                   <form
                     method="post"
                     action="{% url 'sena:agregar_carrito' producto.id %}"
@@ -391,6 +392,11 @@
                       >
                     </button>
                   </form>
+                  {% else %}
+                  <span class="text-sm font-medium text-on-surface-variant/60"
+                    >Solo clientes pueden comprar</span
+                  >
+                  {% endif %}
                   {% else %}
                   <button
                     class="cursor-not-allowed text-left text-sm font-medium text-error"
@@ -496,7 +502,7 @@
         var etiquetas = [];
         if (filtroActual !== "") etiquetas.push(filtroActual);
         if (filtroBusqueda) etiquetas.push('"' + filtroBusqueda + '"');
-        if (min || max !== Infinity)
+        if (min !== 0 || max !== Infinity)
           etiquetas.push(
             "$" +
               min.toLocaleString("es-CO") +

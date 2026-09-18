@@ -155,7 +155,7 @@
         <div class="flex-1 space-y-6" id="cart-items">
           {% for item in items %}
           <div
-            class="bg-surface-container-low rounded-xl p-6 flex items-center gap-6 ghost-border group"
+            class="bg-surface-container-low rounded-xl p-6 flex flex-col sm:flex-row sm:items-center gap-6 ghost-border group"
             data-cart-item="{{ item.producto.id }}"
           >
             <div
@@ -279,11 +279,17 @@
                 >${{ total|default:0|floatformat:"0g" }}
               </span>
             </div>
-            {% if request.session.logueado %}<a
+            {% if request.session.logueado.rol == 'Cliente' %}<a
               href="{% url 'sena:finalizar_pedido' %}"
               class="w-full inline-flex justify-center py-4 rounded-md gold-gradient-bg text-on-primary font-bold text-sm uppercase tracking-widest hover:opacity-90 transition-all active:scale-95"
               >Finalizar Compra</a
-            >{% else %}<a
+            >{% elif request.session.logueado %}<p
+              class="text-xs text-on-surface-variant mt-4 text-center"
+            >
+              Solo los clientes pueden finalizar compras. Puedes consultar este
+              espacio libremente.
+            </p>
+            {% else %}<a
               href="{% url 'sena:login' %}?next=/carrito/"
               class="w-full inline-flex justify-center py-4 rounded-md gold-gradient-bg text-on-primary font-bold text-sm uppercase tracking-widest hover:opacity-90 transition-all active:scale-95"
               >Iniciar Sesión para Comprar</a

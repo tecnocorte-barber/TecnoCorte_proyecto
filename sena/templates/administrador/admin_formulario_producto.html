@@ -1,12 +1,12 @@
 {# Formulario para crear o editar un producto de la tienda #}
 {% extends "usuarios/dashboard_base.html" %}{% block body_class %}font-body
 antialiased flex bg-surface{% endblock %}{% block content %}{% include "includes/admin_sidebar.html" with active="productos" %}
-<main class="ml-0 md:ml-64 flex-1 p-12">
+<main class="ml-0 md:ml-64 flex-1 p-6 md:p-12 pb-24 md:pb-12">
   <div class="max-w-xl mx-auto">
     <a href="{% url 'sena:admin_productos' %}" class="text-primary"
       >← Volver a productos</a
     >
-    <div class="bg-surface-container-low p-8 rounded-xl mt-6">
+    <div class="bg-surface-container-low p-6 md:p-8 rounded-xl mt-6">
     <h1 class="font-headline text-3xl mb-6">
       {% if producto %}Editar{% else %}Nuevo{% endif %} producto
     </h1>
@@ -21,9 +21,8 @@ antialiased flex bg-surface{% endblock %}{% block content %}{% include "includes
         name="descripcion"
         placeholder="Descripción"
         class="w-full rounded bg-surface-container-high border-0 p-3"
-      >
-{{ producto.descripcion|default:'' }}</textarea>
-      <div class="grid grid-cols-2 gap-4">
+      >{{ producto.descripcion|default:'' }}</textarea>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <input
           required
           type="number"

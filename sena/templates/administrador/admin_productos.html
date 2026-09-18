@@ -3,10 +3,10 @@
 {% block body_class %}font-body antialiased flex bg-surface{% endblock %}
 {% block content %}
 {% include "includes/admin_sidebar.html" with active="productos" %}
-<main class="ml-0 md:ml-64 flex-1 p-12">
-  <div class="flex justify-between items-center mb-10">
+<main class="ml-0 md:ml-64 flex-1 p-6 md:p-12 pb-24 md:pb-12">
+  <div class="flex flex-wrap justify-between items-center gap-4 mb-10">
     <div>
-      <h1 class="font-headline text-4xl text-primary">Productos</h1>
+      <h1 class="font-headline text-3xl md:text-4xl text-primary">Productos</h1>
       <p class="text-on-surface-variant mt-2">
         Productos que se muestran en la tienda.
       </p>
@@ -18,7 +18,8 @@
     >
   </div>
   <div class="bg-surface-container-low rounded-xl overflow-hidden">
-    <table class="w-full text-left">
+    <div class="overflow-x-auto">
+    <table class="w-full text-left min-w-[720px]">
       {# Tabla de productos con su información de venta #}
       <thead
         class="bg-surface-container-high text-on-surface-variant text-xs uppercase"
@@ -71,6 +72,7 @@
         {% endfor %}
       </tbody>
     </table>
+    </div>
   </div>
 </main>
 {% include "includes/admin_mobile_nav.html" with active="productos" %}

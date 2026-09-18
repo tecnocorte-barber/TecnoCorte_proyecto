@@ -99,7 +99,7 @@ bg-background text-on-surface{% endblock %} {% block content %} {% include "incl
           {% endfor %}
         </select>
       </div>
-      <div class="grid grid-cols-2 gap-6">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
         <div class="grid gap-2">
           <label
             class="font-label text-xs uppercase tracking-widest text-on-surface-variant"
@@ -138,7 +138,7 @@ bg-background text-on-surface{% endblock %} {% block content %} {% include "incl
           <option
             value="{{ estado.0 }}"
             class="bg-surface-container-high"
-            {% if estado.0 == Pendiente %}selected{% endif %}
+            {% if estado.0 == 'Pendiente' %}selected{% endif %}
           >
             {{ estado.1 }}
           </option>

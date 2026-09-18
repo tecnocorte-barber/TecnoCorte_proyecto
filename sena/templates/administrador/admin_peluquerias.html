@@ -1,8 +1,8 @@
 {# Listado de barberías con acciones de editar y eliminar #}
 {% extends "usuarios/dashboard_base.html" %}{% block body_class %}font-body
 antialiased flex bg-surface{% endblock %}{% block content %}{% include "includes/admin_sidebar.html" with active="peluquerias" %}
-<main class="ml-0 md:ml-64 flex-1 p-12">
-  <div class="flex justify-between items-center mb-10">
+<main class="ml-0 md:ml-64 flex-1 p-6 md:p-12 pb-24 md:pb-12">
+  <div class="flex flex-wrap justify-between items-center gap-4 mb-10">
     <div>
       <h1 class="font-headline text-4xl text-primary">Barberías</h1>
       <p class="text-on-surface-variant mt-2">

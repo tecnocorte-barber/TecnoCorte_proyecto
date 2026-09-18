@@ -2,9 +2,9 @@
 {% extends "usuarios/dashboard_base.html" %} {% block title %}Crear / Editar
 Reserva - TecnoCorte{% endblock %} {% block body_class %}font-body antialiased
 flex bg-surface{% endblock %} {% block content %} {% include "includes/admin_sidebar.html" with active="reservas" %}
-<main class="ml-0 md:ml-64 flex-1 min-h-screen p-12 bg-surface">
+<main class="ml-0 md:ml-64 flex-1 min-h-screen p-6 md:p-12 pb-24 md:pb-12 bg-surface">
   <!-- Header -->
-  <header class="max-w-2xl mx-auto flex justify-between items-end mb-16">
+  <header class="max-w-2xl mx-auto flex flex-wrap justify-between items-end gap-4 mb-8 md:mb-16">
     <div>
       <h2 class="font-headline text-4xl text-on-background tracking-tight">
         {% if datos %}Editar{% else %}Crear{% endif %} Reserva
@@ -22,7 +22,7 @@ flex bg-surface{% endblock %} {% block content %} {% include "includes/admin_sid
   </header>
   <!-- Form Card -->
   <div
-    class="bg-surface-container-low rounded-lg ambient-shadow p-10 max-w-2xl mx-auto"
+    class="bg-surface-container-low rounded-lg ambient-shadow p-6 md:p-10 max-w-2xl mx-auto"
   >
     <form method="post" class="grid gap-6">
       {% csrf_token %} {% if error %}
@@ -127,7 +127,7 @@ flex bg-surface{% endblock %} {% block content %} {% include "includes/admin_sid
           {% endfor %}
         </select>
       </div>
-      <div class="grid grid-cols-2 gap-6">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
         <div class="grid gap-2">
           <label
             class="font-label text-xs uppercase tracking-widest text-on-surface-variant"
