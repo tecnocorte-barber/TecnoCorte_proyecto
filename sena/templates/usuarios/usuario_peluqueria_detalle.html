@@ -87,11 +87,17 @@
             alt="{{ peluqueria.nombre }}"
             class="h-full w-full object-cover"
           />
-          {% else %}
+          {% elif peluqueria.galeria.first %}
           <img
-            src="{% static 'sena/images/corte_cabello.jpeg' %}"
+            src="{{ peluqueria.galeria.first.imagen.url }}"
             alt="{{ peluqueria.nombre }}"
             class="h-full w-full object-cover"
+          />
+          {% else %}
+          <img
+            src="{% static 'sena/images/Logo.png' %}"
+            alt="{{ peluqueria.nombre }}"
+            class="h-full w-full object-contain bg-surface-container-highest p-8"
           />
           {% endif %}
           <div

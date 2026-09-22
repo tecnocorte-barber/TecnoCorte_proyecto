@@ -314,7 +314,15 @@
                     >Agotado</span
                   >
                 </div>
-                {% endif %} {% if 'Máquina' in producto.nombre or 'máquina' in producto.nombre %}
+                {% endif %}
+
+                {% if producto.imagen %}
+                <img
+                  src="{{ producto.imagen }}"
+                  alt="{{ producto.nombre }}"
+                  class="h-full w-full object-cover"
+                />
+                {% elif 'Máquina' in producto.nombre or 'máquina' in producto.nombre %}
                 <img
                   src="{% static 'sena/images/maquina_motilar.jpg' %}"
                   alt="{{ producto.nombre }}"
@@ -340,9 +348,9 @@
                 />
                 {% else %}
                 <img
-                  src="{% static 'sena/images/corte_cabello.jpeg' %}"
+                  src="{% static 'sena/images/Logo.png' %}"
                   alt="{{ producto.nombre }}"
-                  class="h-full w-full object-cover"
+                  class="h-full w-full object-contain bg-surface-container-highest p-8"
                 />
                 {% endif %}
               </div>

@@ -115,10 +115,16 @@
               alt="{{ peluquerias.0.nombre }}"
               class="h-full w-full object-cover opacity-35"
             />
+            {% elif peluquerias.0.galeria.first %}
+            <img
+              src="{{ peluquerias.0.galeria.first.imagen.url }}"
+              alt="{{ peluquerias.0.nombre }}"
+              class="h-full w-full object-cover opacity-35"
+            />
             {% else %}
             <img
-              src="{% static 'sena/images/corte_cabello.jpeg' %}"
-              alt="Barbería"
+              src="{% static 'sena/images/Logo.png' %}"
+              alt="TecnoCorte"
               class="h-full w-full object-cover opacity-35"
             />
             {% endif %}
@@ -184,11 +190,17 @@
                 alt="{{ peluqueria.nombre }}"
                 class="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
               />
-              {% else %}
+              {% elif peluqueria.galeria.first %}
               <img
-                src="{% static 'sena/images/corte_cabello.jpeg' %}"
+                src="{{ peluqueria.galeria.first.imagen.url }}"
                 alt="{{ peluqueria.nombre }}"
                 class="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+              />
+              {% else %}
+              <img
+                src="{% static 'sena/images/Logo.png' %}"
+                alt="{{ peluqueria.nombre }}"
+                class="h-full w-full object-cover object-contain bg-surface-container-highest p-8 transition-transform duration-700 group-hover:scale-105"
               />
               {% endif %}
               <div
@@ -235,13 +247,6 @@
                   class="gold-gradient w-full rounded-md px-6 py-3 text-center text-sm font-bold uppercase tracking-wider text-on-primary transition-all hover:brightness-110 active:scale-95"
                   >Reservar</a
                 >
-                {% if not request.session.logueado %}
-                <a
-                  href="{% url 'sena:login' %}"
-                  class="w-full rounded-md border border-outline-variant bg-transparent px-6 py-3 text-center text-sm font-bold uppercase tracking-wider text-primary transition-all hover:border-primary active:scale-95"
-                  >Ingresar</a
-                >
-                {% endif %}
               </div>
             </div>
           </article>

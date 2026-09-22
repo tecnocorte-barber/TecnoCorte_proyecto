@@ -45,6 +45,12 @@ class TecnoCorteTests(TestCase):
         self.assertEqual(response.status_code, 200)  # Debe responder 200 OK
         self.assertTemplateUsed(response, "publicos/index.html")  # Debe usar la plantilla de inicio
 
+    def test_peluquerias_sin_imagen_muestran_logo(self):
+        response = self.client.get(reverse("sena:usuario_peluquerias"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "sena/images/Logo.png")
+
     # Verifica que el login funciona con contraseña hasheada
     def test_login_usa_password_hasheada(self):
         response = self.client.post(reverse("sena:login"), {  # Envía formulario de login

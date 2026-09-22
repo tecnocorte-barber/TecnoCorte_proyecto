@@ -72,6 +72,9 @@ DATABASES = {
         'CONN_MAX_AGE': int(os.environ.get('DB_CONN_MAX_AGE', '60')),
         'OPTIONS': {
             'sslmode': 'require',
+            # El modo transaccional de Supavisor no soporta declaraciones preparadas
+            # en el servidor; se desactiva la preparación automática del driver.
+            'prepare_threshold': None,
         },
     }
 }
