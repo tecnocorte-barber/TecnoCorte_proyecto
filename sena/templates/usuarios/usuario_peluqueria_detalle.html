@@ -16,46 +16,7 @@
       rel="stylesheet"
     />
     {% include "includes/tema.html" %}
-    <style>
-      body {
-        background-color: var(--fondo);
-        color: var(--c-on-surface);
-        font-family: "Manrope", sans-serif;
-      }
-
-      h1,
-      h2,
-      h3,
-      h4,
-      h5,
-      h6,
-      .font-headline {
-        font-family: "Noto Serif", serif;
-      }
-
-      .gold-gradient {
-        background: linear-gradient(135deg, #f2ca50 0%, #d4af37 100%);
-      }
-
-      .ambient-glow {
-        box-shadow: 0 20px 40px rgba(242, 202, 80, 0.06);
-      }
-
-      .signature-divider {
-        height: 48px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-
-      .signature-divider::after {
-        content: "";
-        width: 4px;
-        height: 4px;
-        background-color: #d4af37;
-        border-radius: 50%;
-      }
-    </style>
+    <link rel="stylesheet" href="{% static 'css/usuarios/usuario_peluqueria_detalle.css' %}" />
   </head>
 
   <body
@@ -120,14 +81,19 @@
           class="flex flex-col gap-6 border-t border-outline-variant/10 p-8 md:flex-row md:items-center md:justify-between"
         >
           <div class="grid gap-3 text-sm text-on-surface-variant sm:grid-cols-2">
+            {# La privacidad puede ocultar ubicación y teléfono #}
+            {% if config.mostrar_ubicaciones %}
             <p class="flex items-center gap-3">
               <span class="material-symbols-outlined text-primary">location_on</span>
               {{ peluqueria.ubicacion }}
             </p>
+            {% endif %}
+            {% if config.mostrar_telefonos %}
             <p class="flex items-center gap-3">
               <span class="material-symbols-outlined text-primary">call</span>
               {{ peluqueria.telefono|default:"Sin teléfono" }}
             </p>
+            {% endif %}
           </div>
           <div class="flex gap-3">
             <a
@@ -159,6 +125,8 @@
       {% endif %}
 
       {# Galería de fotos reales #}
+      {# Galería de fotos reales (según la configuración de privacidad) #}
+      {% if config.mostrar_galeria %}
       <section class="mt-12">
         <div class="flex items-end justify-between border-b border-outline-variant/20 pb-4">
           <h2 class="font-headline text-2xl text-on-surface">Galería</h2>
@@ -194,6 +162,7 @@
         </div>
         {% endif %}
       </section>
+      {% endif %}
     </main>
 
     <footer

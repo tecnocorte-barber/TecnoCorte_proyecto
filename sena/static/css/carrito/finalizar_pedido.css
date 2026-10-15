@@ -1,0 +1,17 @@
+.glass-nav {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.gold-gradient-bg {
+  background: linear-gradient(135deg, #f2ca50, #d4af37);
+}
+
+.ambient-glow {
+  box-shadow: 0 20px 40px rgba(242, 202, 80, 0.06);
+}
+
+.ghost-border {
+  border: 1px solid var(--c-outline-variant);
+}

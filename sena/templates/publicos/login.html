@@ -1,3 +1,4 @@
+{% load static %}
 <!-- Formulario de inicio de sesión para clientes y administradores -->
 <!doctype html>
 <html lang="es">
@@ -15,25 +16,7 @@
       rel="stylesheet"
     />
     {% include "includes/tema.html" %}
-    <style>
-      body {
-        background-color: var(--fondo);
-        color: var(--c-on-surface);
-      }
-
-      .gold-gradient {
-        background: linear-gradient(135deg, #f2ca50 0%, #d4af37 100%);
-      }
-
-      .glass-nav {
-        background: var(--glass-bg);
-        backdrop-filter: blur(20px);
-      }
-
-      .ambient-glow {
-        box-shadow: 0 20px 40px rgba(242, 202, 80, 0.06);
-      }
-    </style>
+    <link rel="stylesheet" href="{% static 'css/publicos/login.css' %}" />
   </head>
 
   <body
@@ -223,6 +206,7 @@
           btn.querySelector("span").textContent = "visibility";
         }
       }
+
     </script>
   </body>
 </html>

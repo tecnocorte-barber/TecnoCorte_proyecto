@@ -1,3 +1,4 @@
+{% load static %}
 <!-- Formulario de registro para nuevos clientes de TecnoCorte -->
 <!doctype html>
 <html lang="es">
@@ -15,25 +16,7 @@
       rel="stylesheet"
     />
     {% include "includes/tema.html" %}
-    <style>
-      body {
-        background-color: var(--fondo);
-        color: var(--c-on-surface);
-      }
-
-      .gold-gradient {
-        background: linear-gradient(135deg, #f2ca50 0%, #d4af37 100%);
-      }
-
-      .glass-nav {
-        background: var(--glass-bg);
-        backdrop-filter: blur(20px);
-      }
-
-      .ambient-glow {
-        box-shadow: 0 20px 40px rgba(242, 202, 80, 0.06);
-      }
-    </style>
+    <link rel="stylesheet" href="{% static 'css/publicos/registro.css' %}" />
   </head>
 
   <body
@@ -129,6 +112,15 @@
         </div>
         {% endif %}
 
+        {% if registro_cerrado %}
+        <!-- El registro está desactivado por el administrador -->
+        <p class="text-sm text-on-surface-variant">
+          Si ya tienes una cuenta puedes
+          <a class="text-primary font-bold" href="{% url 'sena:login' %}"
+            >iniciar sesión</a
+          >.
+        </p>
+        {% else %}
         <form class="space-y-8" method="post">
           {# Campo oculto de redirección y token CSRF #}
           {% if proximo %}<input
@@ -225,6 +217,7 @@
             </button>
           </div>
         </form>
+        {% endif %}
 
         <footer class="mt-10 text-center">
           <!-- Enlace para usuarios que ya tienen cuenta -->

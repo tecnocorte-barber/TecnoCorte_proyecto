@@ -75,7 +75,7 @@ class TecnoCorteTests(TestCase):
         self.assertEqual(len(mail.outbox), 1)  # Debe haber enviado 1 correo
         self.assertEqual(len(mail.outbox[0].alternatives), 1)  # Debe tener versión HTML
         html = mail.outbox[0].alternatives[0][0]  # Extrae el contenido HTML
-        self.assertIn("background:#090909", html)  # Verifica estilo del diseño
+        self.assertIn("background: #090909", html)  # Verifica estilo del diseño
         self.assertIn("cid:tecnocorte-logo", html)  # Verifica que el logo está embebido
         self.assertEqual(mail.outbox[0].attachments[0].get("Content-ID"), "<tecnocorte-logo>")  # Verifica el Content-ID del logo
 

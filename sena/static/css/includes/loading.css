@@ -1,0 +1,49 @@
+.tc-loading-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: grid;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
+}
+.tc-loading-overlay.is-active {
+  opacity: 1;
+  visibility: visible;
+}
+.tc-loading-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 2rem 2.5rem;
+  background: var(--c-surface-container, #1f1f1f);
+  border: 1px solid var(--glass-border, rgba(214,173,66,0.15));
+  border-radius: 1.25rem;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+}
+.tc-loading-spinner {
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 3px solid var(--c-outline-variant, #4d4635);
+  border-top-color: var(--c-primary, #d6ad42);
+  border-radius: 50%;
+  animation: tc-spin 0.7s linear infinite;
+}
+.tc-loading-text {
+  margin: 0;
+  color: var(--c-on-surface-variant, #d0c5af);
+  font: 700 0.72rem/1 "Manrope", sans-serif;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+@keyframes tc-spin {
+  to { transform: rotate(360deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tc-loading-spinner { animation-duration: 1.5s; }
+}

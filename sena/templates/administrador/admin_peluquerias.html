@@ -14,6 +14,11 @@ antialiased flex bg-surface{% endblock %}{% block content %}{% include "includes
       href="{% url 'sena:admin_crear_peluqueria' %}"
       >+ Nueva barbería</a
     >
+    <a
+      class="py-3 px-5 rounded font-bold border border-primary/30 text-primary hover:bg-primary/10"
+      href="{% url 'sena:admin_galeria' %}"
+      >Moderar galería</a
+    >
   </div>
   <div class="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
     {# Tarjeta de cada barbería registrada #}
@@ -21,20 +26,42 @@ antialiased flex bg-surface{% endblock %}{% block content %}{% include "includes
     <article
       class="bg-surface-container-low p-6 rounded-xl border border-outline-variant/20"
     >
+      {# Foto principal de la barbería (o ícono si no tiene) #}
+      {% if peluqueria.imagen %}
+      <img
+        src="{{ peluqueria.imagen.url }}"
+        alt="{{ peluqueria.nombre }}"
+        class="h-40 w-full rounded-lg object-cover"
+      />
+      {% else %}
       <span class="material-symbols-outlined text-primary text-4xl"
         >storefront</span
       >
+      {% endif %}
       <h2 class="font-headline text-2xl mt-4">{{ peluqueria.nombre }}</h2>
       <p class="text-on-surface-variant mt-2">{{ peluqueria.ubicacion }}</p>
       <p class="text-on-surface-variant text-sm mt-1">
         {{ peluqueria.telefono }}
       </p>
-      <div class="flex gap-4 mt-6">
+      <div class="flex flex-wrap gap-4 mt-6">
         <a
           class="text-primary"
           href="{% url 'sena:admin_editar_peluqueria' peluqueria.id %}"
           >Editar</a
         >
+        {% if peluqueria.imagen %}
+        <form
+          method="post"
+          action="{% url 'sena:admin_quitar_foto_peluqueria' peluqueria.id %}"
+        >
+          {% csrf_token %}<button
+            class="text-error"
+            data-confirm="¿Quitar la foto principal de esta barbería?"
+          >
+            Quitar foto
+          </button>
+        </form>
+        {% endif %}
         <form
           method="post"
           action="{% url 'sena:admin_eliminar_peluqueria' peluqueria.id %}"

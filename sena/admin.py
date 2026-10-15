@@ -5,6 +5,7 @@ from .models import (
     Usuario, Peluqueria, Producto, Reserva, Pedido,
     PedidoProducto, RegistroIngreso, Notificacion,
     HorarioTrabajo, BloqueoHorario, MensajeContacto, Calificacion,
+    Configuracion,
 )
 
 
@@ -92,3 +93,16 @@ class MensajeContactoAdmin(admin.ModelAdmin):
 class CalificacionAdmin(admin.ModelAdmin):
     list_display = ("cliente", "barbero", "puntuacion", "fecha")
     list_filter = ("puntuacion",)
+
+
+# Admin de la configuración del sitio: privacidad, datos generales y mantenimiento
+@admin.register(Configuracion)
+class ConfiguracionAdmin(admin.ModelAdmin):
+    list_display = ("sitio_nombre", "registro_abierto", "mostrar_telefonos", "modo_mantenimiento", "actualizado")
+
+    def has_add_permission(self, request):
+        # Solo existe una configuración: se edita, no se agrega otra.
+        return not Configuracion.objects.exists()
+
+    def has_delete_permission(self, request, obj=None):
+        return False

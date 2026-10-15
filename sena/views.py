@@ -10,6 +10,7 @@ from django.urls import reverse  # Generar URLs por nombre
 from django.http import JsonResponse  # Respuestas JSON para AJAX
 from django.utils import timezone  # Hora actual con zona horaria
 from django.db import IntegrityError, models, transaction  # Errores de BD, agregaciones y transacciones
+from django.db.models import Count, Q  # Agregaciones y filtros condicionales (Consultas optimizadas)
 from django.contrib.auth.hashers import check_password, make_password  # Verificar y cifrar contraseñas
 from django.contrib import messages  # Mensajes flash para el usuario
 from django.conf import settings  # Configuración del proyecto (email, etc.)
@@ -22,7 +23,7 @@ from django.core.validators import validate_email  # Validar formato de correo
 from django.core.exceptions import ValidationError  # Excepciones de validación
 from django.template.loader import render_to_string  # Renderizar plantilla a string (para correos)
 from datetime import datetime, time, timedelta  # Manejo de fechas, horas y duraciones
-from .models import Usuario, Peluqueria, ImagenPeluqueria, Producto, Reserva, Pedido, PedidoProducto, RegistroIngreso, Notificacion, HorarioTrabajo, BloqueoHorario, MensajeContacto, Calificacion  # Todos los modelos
+from .models import Usuario, Peluqueria, ImagenPeluqueria, Producto, Reserva, Pedido, PedidoProducto, RegistroIngreso, Notificacion, HorarioTrabajo, BloqueoHorario, MensajeContacto, Calificacion, Configuracion  # Todos los modelos
 from .utilidades import autorizacion, validar_password  # Decorador de permisos y validador de contraseñas
 from .context_processors import carrito_visible, guardar_carrito_activo, cargar_carrito_usuario  # Funciones del carrito por sesión
 
@@ -35,38 +36,66 @@ SERVICIOS = [
 
 # Convierte los horarios de trabajo y bloqueos a JSON para que JavaScript los use en el calendario
 def _horarios_para_template(peluqueria_id=None):
-    horarios = {}  # Diccionario: {peluqueria_id: {dia: {activo, inicio, fin}}}
-    for h in HorarioTrabajo.objects.all():  # Recorre todos los horarios configurados
-        pid = str(h.peluqueria_id)  # ID de la peluquería como string
-        if pid not in horarios:
-            horarios[pid] = {}  # Inicializa el diccionario para esa peluquería
-        horarios[pid][h.dia_semana] = {"activo": h.activo, "inicio": h.hora_inicio.strftime("%H:%M"), "fin": h.hora_fin.strftime("%H:%M")}
-    bloqueos = []  # Lista de fechas/horas bloqueadas
-    qs = BloqueoHorario.objects.all()  # Query de todos los bloqueos
-    if peluqueria_id:
-        qs = qs.filter(peluqueria_id=peluqueria_id)  # Filtra por peluquería si se indica
-    for b in qs:
-        bloqueos.append({"fecha": b.fecha.strftime("%Y-%m-%d"), "hora": b.hora.strftime("%H:%M") if b.hora else None})
-    ahora = timezone.localtime()  # Hora actual del servidor
+    clave = f"horarios_json_{peluqueria_id or 'todas'}"  # Clave de caché por peluquería
+    datos = cache.get(clave)
+    if datos is None:
+        horarios = {}  # Diccionario: {peluqueria_id: {dia: {activo, inicio, fin}}}
+        for h in HorarioTrabajo.objects.all().only("peluqueria_id", "dia_semana", "activo", "hora_inicio", "hora_fin"):  # Recorre todos los horarios configurados
+            pid = str(h.peluqueria_id)  # ID de la peluquería como string
+            if pid not in horarios:
+                horarios[pid] = {}  # Inicializa el diccionario para esa peluquería
+            horarios[pid][h.dia_semana] = {"activo": h.activo, "inicio": h.hora_inicio.strftime("%H:%M"), "fin": h.hora_fin.strftime("%H:%M")}
+        bloqueos = []  # Lista de fechas/horas bloqueadas
+        qs = BloqueoHorario.objects.all()  # Query de todos los bloqueos
+        if peluqueria_id:
+            qs = qs.filter(peluqueria_id=peluqueria_id)  # Filtra por peluquería si se indica
+        for b in qs:
+            bloqueos.append({"fecha": b.fecha.strftime("%Y-%m-%d"), "hora": b.hora.strftime("%H:%M") if b.hora else None})
+        datos = {
+            "horarios_json": json.dumps(horarios),  # Horarios como JSON para JavaScript
+            "bloqueos_json": json.dumps(bloqueos),  # Bloqueos como JSON para JavaScript
+        }
+        cache.set(clave, datos, 15)  # TTL corto: los horarios cambian poco
+    ahora = timezone.localtime()  # Hora actual del servidor (siempre fresca)
     return {
-        "horarios_json": json.dumps(horarios),  # Horarios como JSON para JavaScript
-        "bloqueos_json": json.dumps(bloqueos),  # Bloqueos como JSON para JavaScript
+        **datos,
         "fecha_hoy": ahora.date().isoformat(),  # Fecha de hoy en formato ISO
         "hora_actual": ahora.strftime("%H:%M"),  # Hora actual en formato HH:MM
     }
 
 
+# Invalida las cachés cortas de disponibilidad cuando cambian horarios, bloqueos o citas
+def _invalidar_cache_disponibilidad():
+    for clave in ("reservas_json", "horarios_json_todas"):
+        cache.delete(clave)
+
+
+# Borra el archivo de un ImageField sin tocar el registro. Tolera valores antiguos
+# que eran URLs (antes de que los productos usaran archivos subidos).
+def _borrar_archivo(campo):
+    if not campo:
+        return
+    try:
+        campo.delete(save=False)
+    except Exception:
+        pass
+
+
 # Convierte las reservas existentes a JSON para que JavaScript evite mostrar horarios ocupados
 def _reservas_para_template():
-    reservas = []
-    for reserva in Reserva.objects.exclude(estado="Cancelada").only("peluquero_id", "fecha", "hora", "servicio"):  # Solo las no canceladas
-        reservas.append({
-            "barbero": reserva.peluquero_id,  # ID del barbero
-            "fecha": reserva.fecha.isoformat(),  # Fecha en formato ISO
-            "hora": reserva.hora.strftime("%H:%M"),  # Hora en formato HH:MM
-            "minutos": minutos_servicio(reserva.servicio),  # Duración del servicio
-        })
-    return {"reservas_json": json.dumps(reservas)}  # Reservas como JSON
+    datos = cache.get("reservas_json")
+    if datos is None:
+        reservas = []
+        for reserva in Reserva.objects.exclude(estado="Cancelada").only("peluquero_id", "fecha", "hora", "servicio"):  # Solo las no canceladas
+            reservas.append({
+                "barbero": reserva.peluquero_id,  # ID del barbero
+                "fecha": reserva.fecha.isoformat(),  # Fecha en formato ISO
+                "hora": reserva.hora.strftime("%H:%M"),  # Hora en formato HH:MM
+                "minutos": minutos_servicio(reserva.servicio),  # Duración del servicio
+            })
+        datos = {"reservas_json": json.dumps(reservas)}  # Reservas como JSON
+        cache.set("reservas_json", datos, 10)  # TTL corto: refleja citas nuevas con rapidez
+    return datos
 
 
 # Convierte un valor a entero o devuelve None si no es válido (previene inyección)
@@ -83,17 +112,25 @@ def contexto_carrito(request):
     items = []  # Lista de productos en el carrito
     total = 0  # Suma total del carrito
     cantidad = 0  # Total de unidades
+    # Una sola consulta para todos los productos del carrito (evita N+1 con la BD remota)
+    ids = [int(pid) for pid in carrito if str(pid).isdigit()]
+    productos = Producto.objects.in_bulk(ids) if ids else {}
     for producto_id, cantidad_item in carrito.items():  # Recorre cada producto del carrito
-        try:
-            producto = Producto.objects.get(id=producto_id)  # Busca el producto en la BD
-        except Producto.DoesNotExist:
+        if not str(producto_id).isdigit():
+            continue
+        producto = productos.get(int(producto_id))  # Producto ya cargado en memoria
+        if producto is None:
             continue  # Si no existe, lo omite
-        subtotal = producto.precio * int(cantidad_item)  # Precio unitario * cantidad
+        try:
+            cantidad_item = int(cantidad_item)
+        except (TypeError, ValueError):
+            continue
+        subtotal = producto.precio * cantidad_item  # Precio unitario * cantidad
         total += subtotal  # Acumula al total
-        cantidad += int(cantidad_item)  # Acumula unidades
+        cantidad += cantidad_item  # Acumula unidades
         items.append({
             "producto": producto,  # Objeto producto completo
-            "cantidad": int(cantidad_item),  # Unidades de este producto
+            "cantidad": cantidad_item,  # Unidades de este producto
             "subtotal": subtotal,  # Subtotal de este producto
         })
     return {
@@ -409,6 +446,12 @@ def logout(request):
 
 # REGISTRO DE CLIENTES
 def registro(request):
+    # La política de privacidad puede desactivar el registro de nuevos clientes.
+    if not Configuracion.cargar().registro_abierto:
+        return render(request, "publicos/registro.html", {
+            "error": "El registro de nuevas cuentas está desactivado por el administrador.",
+            "registro_cerrado": True,
+        })
     if request.method == "POST":
         nombre = request.POST.get("nombre", "").strip()
         apellido = request.POST.get("apellido", "").strip()
@@ -442,8 +485,12 @@ def registro(request):
             password=make_password(password),
             rol="Cliente"
         )
-        for admin in Usuario.objects.filter(rol="Admin", activo=True):
-            Notificacion.objects.create(usuario=admin, mensaje=f"Nuevo cliente registrado: {usuario.nombre} {usuario.apellido}.")
+        admins = list(Usuario.objects.filter(rol="Admin", activo=True).only("id"))  # Una sola consulta
+        if admins:
+            Notificacion.objects.bulk_create([  # Una sola inserción para todos los admins
+                Notificacion(usuario=admin, mensaje=f"Nuevo cliente registrado: {usuario.nombre} {usuario.apellido}.")
+                for admin in admins
+            ])
         enviar_correo(
             usuario,
             "Bienvenido a TecnoCorte",
@@ -483,8 +530,12 @@ def ayuda(request):
         mensaje = request.POST.get("mensaje", "").strip()
         if nombre and email and asunto and mensaje:
             MensajeContacto.objects.create(nombre=nombre, email=email, asunto=asunto, mensaje=mensaje)
-            for admin in Usuario.objects.filter(rol="Admin", activo=True):
-                Notificacion.objects.create(usuario=admin, mensaje=f"Nuevo mensaje de contacto: {asunto}.")
+            admins = list(Usuario.objects.filter(rol="Admin", activo=True).only("id"))  # Una sola consulta
+            if admins:
+                Notificacion.objects.bulk_create([  # Una sola inserción para todos los admins
+                    Notificacion(usuario=admin, mensaje=f"Nuevo mensaje de contacto: {asunto}.")
+                    for admin in admins
+                ])
             asunto_correo = asunto.replace("\r", " ").replace("\n", " ")
             enviar_correo_destino(
                 settings.CONTACT_EMAIL,
@@ -856,6 +907,7 @@ def usuario_confirmar_reserva(request):
         f"Tienes una nueva cita con {reserva.cliente.nombre} {reserva.cliente.apellido} para el {formato_cita(reserva)} en {reserva.peluqueria.nombre}.",
         request.build_absolute_uri(reverse("sena:peluquero_dashboard")),
     )
+    _invalidar_cache_disponibilidad()
     messages.success(request, "Cita reservada correctamente. El barbero ya fue notificado.")
     return redirect("sena:inicio")
 
@@ -872,8 +924,8 @@ def usuario_perfil(request):
         usuario.save()
         messages.success(request, "Perfil actualizado correctamente.")
         return redirect("sena:usuario_perfil")
-    citas = Reserva.objects.filter(cliente=usuario).order_by("-fecha", "-hora")
-    pedidos = Pedido.objects.filter(cliente=usuario).order_by("-fecha")
+    citas = Reserva.objects.select_related("peluquero", "peluqueria").filter(cliente=usuario).order_by("-fecha", "-hora")
+    pedidos = Pedido.objects.filter(cliente=usuario).prefetch_related("productos__producto").order_by("-fecha")
     calificaciones_reservas = set(Calificacion.objects.filter(cliente=usuario).values_list("reserva_id", flat=True))
     contexto = contexto_carrito(request)
     contexto["usuario"] = usuario
@@ -901,6 +953,7 @@ def usuario_cancelar_reserva(request, reserva_id):
     else:
         Notificacion.objects.create(usuario=reserva.cliente, reserva=reserva, mensaje=f"La cita está muy próxima para cancelarla en línea. Contacta al barbero: {reserva.peluquero.telefono or 'teléfono no registrado'}.")
         messages.warning(request, "La cita está muy próxima para cancelarla en línea.")
+    _invalidar_cache_disponibilidad()
     return redirect("sena:usuario_perfil")
 
 
@@ -944,6 +997,7 @@ def usuario_editar_reserva(request, reserva_id):
             enviar_correo_cita(request, barbero, "Cita modificada en TecnoCorte", f"La cita de {reserva.cliente.nombre} fue modificada para el {formato_cita(reserva)}.")
             if barbero_anterior.id != barbero.id:
                 Notificacion.objects.create(usuario=barbero_anterior, reserva=reserva, mensaje=f"La cita del {formato_cita(reserva)} fue reasignada a otro barbero.")
+            _invalidar_cache_disponibilidad()
             messages.success(request, "La cita fue modificada correctamente.")
             return redirect("sena:usuario_perfil")
         return render(request, "usuarios/usuario_editar_reserva.html", {"reserva": reserva, "peluqueros": Usuario.objects.filter(rol="Barbero", activo=True), "peluquerias": Peluqueria.objects.all(), "servicios": SERVICIOS, "error": mensaje or "Datos inválidos."})
@@ -1097,6 +1151,7 @@ def peluquero_cambiar_estado(request, cita_id):
         # Las métricas del dashboard se recalculan con datos frescos (invalidar la caché corta).
         cache.delete(f"barbero_dashboard_metricas_{cita.peluquero_id}")
         cache.delete("admin_dashboard_metricas")
+        _invalidar_cache_disponibilidad()
         if nuevo_estado != estado_anterior:
             mensajes_estado = {
                 "Confirmada": f"Tu cita de {cita.servicio} del {formato_cita(cita)} fue confirmada por el barbero.",
@@ -1453,6 +1508,7 @@ def admin_crear_reserva(request):
         enviar_correo_cita(request, cliente, "Cita agendada en TecnoCorte", f"El administrador agendó tu cita de {reserva.servicio} para el {formato_cita(reserva)} en {reserva.peluqueria.nombre}.", request.build_absolute_uri(reverse("sena:usuario_editar_reserva", args=[reserva.id])))
         enviar_correo_cita(request, peluquero, "Nueva cita agendada en TecnoCorte", f"Tienes una nueva cita con {cliente.nombre} {cliente.apellido} para el {formato_cita(reserva)} en {reserva.peluqueria.nombre}.", request.build_absolute_uri(reverse("sena:peluquero_dashboard")))
         messages.success(request, "La cita fue creada y ambas partes recibieron una notificación.")
+        _invalidar_cache_disponibilidad()
         return redirect("sena:admin_reservas")
     clientes = Usuario.objects.filter(rol="Cliente")
     peluqueros = Usuario.objects.filter(rol="Barbero", activo=True)
@@ -1503,6 +1559,7 @@ def admin_editar_reserva(request, id):
         else:
             enviar_correo_cita(request, reserva.peluquero, "Cita modificada en TecnoCorte", f"La cita de {reserva.cliente.nombre} fue modificada para el {formato_cita(reserva)}.", request.build_absolute_uri(reverse("sena:peluquero_dashboard")))
         messages.success(request, "La cita fue actualizada y se notificó a cliente y barbero.")
+        _invalidar_cache_disponibilidad()
         return redirect("sena:admin_reservas")
     clientes = Usuario.objects.filter(rol="Cliente")
     peluqueros = Usuario.objects.filter(rol="Barbero", activo=True)
@@ -1527,6 +1584,7 @@ def admin_eliminar_reserva(request, id):
             enviar_correo_cita(request, reserva.peluquero, "Reserva eliminada en TecnoCorte", f"La reserva #{reserva.id} del {formato_cita(reserva)} fue eliminada por el administrador.")
             reserva.delete()
             messages.info(request, "La reserva fue eliminada y se notificó a sus participantes.")
+    _invalidar_cache_disponibilidad()
     return redirect("sena:admin_reservas")
 
 @autorizacion(["Admin"])
@@ -1541,6 +1599,7 @@ def admin_cancelar_reserva(request, id):
             enviar_correo_cita(request, reserva.cliente, "Cita cancelada en TecnoCorte", f"Tu cita de {reserva.servicio} del {formato_cita(reserva)} fue cancelada por el administrador.")
             enviar_correo_cita(request, reserva.peluquero, "Cita cancelada en TecnoCorte", f"La cita de {reserva.cliente.nombre} del {formato_cita(reserva)} fue cancelada por el administrador.")
             messages.success(request, "La cita fue cancelada y se notificó a cliente y barbero.")
+    _invalidar_cache_disponibilidad()
     return redirect("sena:admin_reservas")
 
 @autorizacion(["Admin"])
@@ -1551,20 +1610,28 @@ def admin_horarios(request):
     peluqueria_id = _id_entero(peluqueria_id_raw)
     peluqueria_actual = Peluqueria.objects.filter(id=peluqueria_id).first() if peluqueria_id else None
     if peluqueria_actual:
-        for numero in range(7):
-            HorarioTrabajo.objects.get_or_create(
-                peluqueria=peluqueria_actual,
-                dia_semana=numero,
-                defaults={"activo": numero < 6, "hora_inicio": time(9, 0), "hora_fin": time(18, 0)},
-            )
+        # Crea en una sola operación los días que falten, en vez de 7 get_or_create
+        dias_existentes = set(
+            HorarioTrabajo.objects.filter(peluqueria=peluqueria_actual).values_list("dia_semana", flat=True)
+        )
+        faltantes = [numero for numero in range(7) if numero not in dias_existentes]
+        if faltantes:
+            HorarioTrabajo.objects.bulk_create([
+                HorarioTrabajo(
+                    peluqueria=peluqueria_actual, dia_semana=numero,
+                    activo=numero < 6, hora_inicio=time(9, 0), hora_fin=time(18, 0),
+                )
+                for numero in faltantes
+            ])
     if request.method == "POST":
         accion = request.POST.get("accion")
         if accion == "guardar_horarios" and peluqueria_actual:
+            horarios_actuales = {h.dia_semana: h for h in HorarioTrabajo.objects.filter(peluqueria=peluqueria_actual)}
+            a_guardar = []
             for numero in range(7):
-                horario, _ = HorarioTrabajo.objects.get_or_create(
-                    peluqueria=peluqueria_actual, dia_semana=numero,
-                    defaults={"activo": numero < 6, "hora_inicio": time(9, 0), "hora_fin": time(18, 0)},
-                )
+                horario = horarios_actuales.get(numero)
+                if horario is None:
+                    continue
                 horario.activo = request.POST.get(f"activo_{numero}") == "on"
                 inicio_str = request.POST.get(f"inicio_{numero}", "09:00")
                 fin_str = request.POST.get(f"fin_{numero}", "18:00")
@@ -1576,7 +1643,10 @@ def admin_horarios(request):
                     horario.hora_fin = datetime.strptime(fin_str, "%H:%M").time()
                 except (ValueError, TypeError):
                     horario.hora_fin = time(18, 0)
-                horario.save()
+                a_guardar.append(horario)
+            if a_guardar:
+                HorarioTrabajo.objects.bulk_update(a_guardar, ["activo", "hora_inicio", "hora_fin"])
+            _invalidar_cache_disponibilidad()
             messages.success(request, "Los horarios fueron guardados correctamente.")
         elif accion == "crear_bloqueo":
             fecha = request.POST.get("fecha")
@@ -1592,6 +1662,7 @@ def admin_horarios(request):
                 hora_valida = None
             if fecha_valida and peluqueria_actual:
                 BloqueoHorario.objects.create(fecha=fecha_valida, hora=hora_valida, motivo=request.POST.get("motivo", ""), peluqueria=peluqueria_actual)
+                _invalidar_cache_disponibilidad()
                 messages.success(request, "El bloqueo fue programado correctamente.")
             else:
                 return render(request, "administrador/admin_horarios.html", {
@@ -1611,6 +1682,7 @@ def admin_horarios(request):
 def admin_eliminar_bloqueo(request, id):
     if request.method == "POST":
         BloqueoHorario.objects.filter(id=id).delete()
+        _invalidar_cache_disponibilidad()
         messages.info(request, "El bloqueo fue eliminado.")
     return redirect("sena:admin_horarios")
 
@@ -1680,14 +1752,51 @@ def admin_eliminar_peluqueria(request, id):
 
 
 @autorizacion(["Admin"])
+def admin_quitar_foto_peluqueria(request, id):
+    """Quita la foto principal de una barbería que no cumple con las normas."""
+    if request.method == "POST":
+        peluqueria = get_object_or_404(Peluqueria, id=id)
+        if peluqueria.imagen:
+            _borrar_archivo(peluqueria.imagen)
+            peluqueria.imagen = ""
+            peluqueria.save(update_fields=["imagen"])
+            messages.success(request, f"Foto principal de «{peluqueria.nombre}» eliminada.")
+        else:
+            messages.info(request, "Esa barbería no tiene foto principal.")
+    return redirect("sena:admin_peluquerias")
+
+
+@autorizacion(["Admin"])
+def admin_galeria(request):
+    """Listado de todas las fotos de galería para moderar su contenido."""
+    fotos = ImagenPeluqueria.objects.select_related("peluqueria").order_by("-fecha")
+    return render(request, "administrador/admin_galeria.html", {"fotos": fotos})
+
+
+@autorizacion(["Admin"])
+def admin_eliminar_imagen_galeria(request, id):
+    """Elimina una foto de galería de cualquier barbería."""
+    if request.method == "POST":
+        foto = get_object_or_404(ImagenPeluqueria, id=id)
+        nombre = foto.peluqueria.nombre
+        _borrar_archivo(foto.imagen)
+        foto.delete()
+        messages.success(request, f"Foto eliminada de la galería de «{nombre}».")
+    return redirect("sena:admin_galeria")
+
+
+@autorizacion(["Admin"])
 def admin_productos(request):
     return render(request, "administrador/admin_productos.html", {"productos": Producto.objects.all().order_by("nombre")})
 
 
 def notificar_producto_agotado(producto):
     mensaje = f"Stock agotado: {producto.nombre}."
-    for admin in Usuario.objects.filter(rol="Admin", activo=True):
-        Notificacion.objects.create(usuario=admin, mensaje=mensaje)
+    admins = list(Usuario.objects.filter(rol="Admin", activo=True).only("id"))  # Una sola consulta
+    if admins:
+        Notificacion.objects.bulk_create(  # Una sola inserción para todos los admins
+            [Notificacion(usuario=admin, mensaje=mensaje, fecha=timezone.now()) for admin in admins]
+        )
 
 
 def datos_producto(request, producto=None):
@@ -1705,6 +1814,14 @@ def datos_producto(request, producto=None):
     except (TypeError, ValueError):
         producto.stock = 0
     producto.disponible = request.POST.get("disponible") == "on" and producto.stock > 0
+    # El Admin puede quitar la foto actual o reemplazarla por una nueva.
+    if request.POST.get("quitar_imagen") and producto.imagen:
+        _borrar_archivo(producto.imagen)
+        producto.imagen = ""
+    if request.FILES.get("imagen"):
+        if producto.imagen:
+            _borrar_archivo(producto.imagen)
+        producto.imagen = request.FILES["imagen"]
     producto.save()
     if stock_anterior and stock_anterior > 0 and producto.stock == 0:
         notificar_producto_agotado(producto)
@@ -1734,6 +1851,21 @@ def admin_eliminar_producto(request, id):
     if request.method == "POST":
         Producto.objects.filter(id=id).update(stock=0, disponible=False)
         messages.info(request, "Producto retirado de la tienda.")
+    return redirect("sena:admin_productos")
+
+
+@autorizacion(["Admin"])
+def admin_quitar_imagen_producto(request, id):
+    """Quita la foto de un producto cuando el Admin considera que no cumple."""
+    if request.method == "POST":
+        producto = get_object_or_404(Producto, id=id)
+        if producto.imagen:
+            _borrar_archivo(producto.imagen)
+            producto.imagen = ""
+            producto.save(update_fields=["imagen"])
+            messages.success(request, f"Foto de «{producto.nombre}» eliminada.")
+        else:
+            messages.info(request, "Ese producto no tiene foto.")
     return redirect("sena:admin_productos")
 
 
@@ -1791,12 +1923,19 @@ def admin_ingresos(request):
 def admin_usuarios(request):
     """Listar todos los usuarios del sistema"""
     usuarios = Usuario.objects.all().order_by("-fecha_creacion")
+    # Un solo SELECT con agregaciones en lugar de cuatro COUNT separados
+    resumen = Usuario.objects.aggregate(
+        total=Count("id"),
+        total_admin=Count("id", filter=Q(rol="Admin")),
+        total_clientes=Count("id", filter=Q(rol="Cliente")),
+        total_peluqueros=Count("id", filter=Q(rol="Barbero")),
+    )
     contexto = {
         "usuarios": usuarios,
-        "total_usuarios": usuarios.count(),
-        "total_admin": Usuario.objects.filter(rol="Admin").count(),
-        "total_clientes": Usuario.objects.filter(rol="Cliente").count(),
-        "total_peluqueros": Usuario.objects.filter(rol="Barbero").count(),
+        "total_usuarios": resumen["total"],
+        "total_admin": resumen["total_admin"],
+        "total_clientes": resumen["total_clientes"],
+        "total_peluqueros": resumen["total_peluqueros"],
     }
     return render(request, "administrador/admin_usuarios.html", contexto)
 
@@ -1953,3 +2092,50 @@ def admin_suspender_usuario(request, id):
                 notificar_suspension_barbero(request, usuario)
             messages.success(request, f"Usuario {'reactivado' if usuario.activo else 'suspendido'} correctamente.")
     return redirect("sena:admin_usuarios")
+
+
+@autorizacion(["Admin"])
+def admin_quitar_foto_usuario(request, id):
+    """Quita la foto de perfil de un usuario cuya imagen no cumple."""
+    if request.method == "POST":
+        usuario = get_object_or_404(Usuario, id=id)
+        if usuario.foto:
+            _borrar_archivo(usuario.foto)
+            usuario.foto = None
+            usuario.save(update_fields=["foto"])
+            messages.success(request, f"Foto de {usuario.nombre} {usuario.apellido} eliminada.")
+        else:
+            messages.info(request, "Ese usuario no tiene foto de perfil.")
+    return redirect("sena:admin_usuarios")
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# CONFIGURACIÓN GENERAL DEL SITIO - SOLO ADMIN
+# ═══════════════════════════════════════════════════════════════════════════
+
+@autorizacion(["Admin"])
+def admin_configuracion(request):
+    """Permite al Admin ajustar privacidad, datos generales y mantenimiento."""
+    config = Configuracion.cargar()
+    if request.method == "POST":
+        config.sitio_nombre = request.POST.get("sitio_nombre", config.sitio_nombre).strip() or "TecnoCorte"
+        correo = request.POST.get("correo_contacto", config.correo_contacto).strip()
+        # El correo de contacto debe tener un formato válido.
+        try:
+            validate_email(correo)
+            config.correo_contacto = correo
+        except ValidationError:
+            messages.error(request, "El correo de contacto no tiene un formato válido.")
+            return redirect("sena:admin_configuracion")
+        config.texto_aviso = request.POST.get("texto_aviso", "").strip()
+        config.registro_abierto = request.POST.get("registro_abierto") == "on"
+        config.mostrar_telefonos = request.POST.get("mostrar_telefonos") == "on"
+        config.mostrar_ubicaciones = request.POST.get("mostrar_ubicaciones") == "on"
+        config.mostrar_galeria = request.POST.get("mostrar_galeria") == "on"
+        config.mostrar_calificaciones = request.POST.get("mostrar_calificaciones") == "on"
+        config.modo_mantenimiento = request.POST.get("modo_mantenimiento") == "on"
+        config.mensaje_mantenimiento = request.POST.get("mensaje_mantenimiento", "").strip()
+        config.save()
+        messages.success(request, "Configuración guardada correctamente.")
+        return redirect("sena:admin_configuracion")
+    return render(request, "administrador/admin_configuracion.html", {"config": config})

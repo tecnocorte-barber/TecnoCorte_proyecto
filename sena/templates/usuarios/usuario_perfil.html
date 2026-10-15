@@ -1,3 +1,4 @@
+{% load static %}
 <!doctype html>
 <!-- Página standalone del perfil de usuario con citas, pedidos y calificaciones -->
 <html lang="es">
@@ -15,40 +16,7 @@
       rel="stylesheet"
     />
     {% include "includes/tema.html" %}
-    <style>
-      body {
-        background-color: var(--fondo);
-        color: var(--c-on-surface);
-        font-family: "Manrope", sans-serif;
-      }
-
-      h1,
-      h2,
-      h3,
-      h4,
-      h5,
-      h6,
-      .font-headline {
-        font-family: "Noto Serif", serif;
-      }
-
-      .glass-nav {
-        background: var(--glass-bg);
-        backdrop-filter: blur(20px);
-      }
-
-      .gold-gradient {
-        background: linear-gradient(135deg, #f2ca50 0%, #d4af37 100%);
-      }
-
-      .ambient-glow {
-        box-shadow: 0 20px 40px rgba(242, 202, 80, 0.06);
-      }
-
-      .ghost-border {
-        border: 1px solid var(--c-outline-variant);
-      }
-    </style>
+    <link rel="stylesheet" href="{% static 'css/usuarios/usuario_perfil.css' %}" />
   </head>
 
   <body

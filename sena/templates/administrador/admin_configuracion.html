@@ -1,0 +1,130 @@
+{# Configuración general del sitio: privacidad, datos y mantenimiento #}
+{% extends "usuarios/dashboard_base.html" %}
+{% block body_class %}font-body antialiased flex bg-surface{% endblock %}
+{% block content %}
+{% include "includes/admin_sidebar.html" with active="configuracion" %}
+<main class="ml-0 md:ml-64 flex-1 p-6 md:p-12 pb-24 md:pb-12">
+  <div class="max-w-3xl mx-auto">
+    <div class="mb-10">
+      <h1 class="font-headline text-3xl md:text-4xl text-primary">
+        Configuración
+      </h1>
+      <p class="text-on-surface-variant mt-2">
+        Ajusta la privacidad, los datos generales y el modo mantenimiento del sitio.
+      </p>
+    </div>
+
+    <form method="post" class="space-y-8">
+      {% csrf_token %}
+
+      {# Datos generales del sitio #}
+      <section class="bg-surface-container-low p-6 md:p-8 rounded-xl">
+        <h2 class="font-headline text-xl text-primary mb-4">Datos generales</h2>
+        <div class="space-y-4">
+          <label class="block">
+            <span class="font-label uppercase text-xs tracking-widest text-on-surface-variant"
+              >Nombre del sitio</span
+            >
+            <input
+              name="sitio_nombre"
+              value="{{ config.sitio_nombre }}"
+              class="w-full mt-1 rounded bg-surface-container-high border-0 p-3"
+            />
+          </label>
+          <label class="block">
+            <span class="font-label uppercase text-xs tracking-widest text-on-surface-variant"
+              >Correo de contacto</span
+            >
+            <input
+              type="email"
+              name="correo_contacto"
+              value="{{ config.correo_contacto }}"
+              class="w-full mt-1 rounded bg-surface-container-high border-0 p-3"
+            />
+          </label>
+          <label class="block">
+            <span class="font-label uppercase text-xs tracking-widest text-on-surface-variant"
+              >Aviso para visitantes</span
+            >
+            <input
+              name="texto_aviso"
+              value="{{ config.texto_aviso }}"
+              placeholder="Opcional"
+              class="w-full mt-1 rounded bg-surface-container-high border-0 p-3"
+            />
+          </label>
+        </div>
+      </section>
+
+      {# Privacidad #}
+      <section class="bg-surface-container-low p-6 md:p-8 rounded-xl">
+        <h2 class="font-headline text-xl text-primary mb-4">Privacidad</h2>
+        <div class="space-y-3">
+          <label class="flex items-start gap-3">
+            <input type="checkbox" name="registro_abierto" class="mt-1" {% if config.registro_abierto %}checked{% endif %} />
+            <span>
+              <span class="block text-on-surface font-semibold">Permitir registro de clientes</span>
+              <span class="block text-sm text-on-surface-variant">Si se desactiva, nadie podrá crear una cuenta nueva.</span>
+            </span>
+          </label>
+          <label class="flex items-start gap-3">
+            <input type="checkbox" name="mostrar_telefonos" class="mt-1" {% if config.mostrar_telefonos %}checked{% endif %} />
+            <span>
+              <span class="block text-on-surface font-semibold">Mostrar teléfonos</span>
+              <span class="block text-sm text-on-surface-variant">Muestra el teléfono de las barberías al público.</span>
+            </span>
+          </label>
+          <label class="flex items-start gap-3">
+            <input type="checkbox" name="mostrar_ubicaciones" class="mt-1" {% if config.mostrar_ubicaciones %}checked{% endif %} />
+            <span>
+              <span class="block text-on-surface font-semibold">Mostrar ubicaciones</span>
+              <span class="block text-sm text-on-surface-variant">Muestra la dirección de las barberías al público.</span>
+            </span>
+          </label>
+          <label class="flex items-start gap-3">
+            <input type="checkbox" name="mostrar_galeria" class="mt-1" {% if config.mostrar_galeria %}checked{% endif %} />
+            <span>
+              <span class="block text-on-surface font-semibold">Mostrar galería de fotos</span>
+              <span class="block text-sm text-on-surface-variant">Publica las fotos de las barberías a los visitantes.</span>
+            </span>
+          </label>
+          <label class="flex items-start gap-3">
+            <input type="checkbox" name="mostrar_calificaciones" class="mt-1" {% if config.mostrar_calificaciones %}checked{% endif %} />
+            <span>
+              <span class="block text-on-surface font-semibold">Mostrar calificaciones</span>
+              <span class="block text-sm text-on-surface-variant">Publica las estrellas y comentarios de los barberos.</span>
+            </span>
+          </label>
+        </div>
+      </section>
+
+      {# Mantenimiento #}
+      <section class="bg-surface-container-low p-6 md:p-8 rounded-xl">
+        <h2 class="font-headline text-xl text-primary mb-4">Mantenimiento</h2>
+        <label class="flex items-start gap-3">
+          <input type="checkbox" name="modo_mantenimiento" class="mt-1" {% if config.modo_mantenimiento %}checked{% endif %} />
+          <span>
+            <span class="block text-on-surface font-semibold">Activar modo mantenimiento</span>
+            <span class="block text-sm text-on-surface-variant">Solo el Admin podrá navegar el sitio; el resto verá un aviso.</span>
+          </span>
+        </label>
+        <label class="block mt-4">
+          <span class="font-label uppercase text-xs tracking-widest text-on-surface-variant"
+            >Mensaje de mantenimiento</span
+          >
+          <input
+            name="mensaje_mantenimiento"
+            value="{{ config.mensaje_mantenimiento }}"
+            class="w-full mt-1 rounded bg-surface-container-high border-0 p-3"
+          />
+        </label>
+      </section>
+
+      <button class="btn-gold-gradient px-6 py-3 rounded font-bold">
+        Guardar configuración
+      </button>
+    </form>
+  </div>
+</main>
+{% include "includes/admin_mobile_nav.html" with active="configuracion" %}
+{% endblock %}

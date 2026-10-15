@@ -1,0 +1,23 @@
+{# Aviso mostrado cuando el sitio está en modo mantenimiento #}
+{% extends 'base/base.html' %}
+{% block title %}Mantenimiento - TecnoCorte{% endblock %}
+{% block content %}
+<section class="mx-auto max-w-xl rounded-xl bg-surface-container-low p-8 text-center">
+  <span class="material-symbols-outlined text-primary text-6xl">construction</span>
+  <h2 class="font-headline text-3xl text-primary mt-4">Sitio en mantenimiento</h2>
+  <p class="text-on-surface-variant mt-4">
+    {{ config.mensaje_mantenimiento|default:"Estamos realizando mejoras. Volvemos pronto." }}
+  </p>
+  {% if config.correo_contacto %}
+  <p class="text-on-surface-variant mt-4 text-sm">
+    ¿Necesitas ayuda? Escríbenos a
+    <a class="text-primary" href="mailto:{{ config.correo_contacto }}">{{ config.correo_contacto }}</a>.
+  </p>
+  {% endif %}
+  <a
+    class="btn-gold-gradient inline-block mt-6 px-5 py-3 rounded font-bold"
+    href="{% url 'sena:login' %}"
+    >Acceso administrador</a
+  >
+</section>
+{% endblock %}

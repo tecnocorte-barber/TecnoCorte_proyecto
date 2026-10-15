@@ -164,12 +164,27 @@ flex bg-surface{% endblock %} {% block content %} {% include "includes/admin_sid
               class="fila-usuario hover:bg-surface-container-highest/30 transition-colors border-t border-outline-variant/20"
             >
               <td class="p-6">
-                <div class="flex flex-col">
-                  <span class="font-bold text-on-background text-base"
-                    >{{ usuario.nombre }} {{ usuario.apellido }}</span
-                  ><span class="text-on-surface-variant text-xs"
-                    >ID: USR-{{ usuario.id }}</span
+                <div class="flex items-center gap-3">
+                  {# Foto de perfil del usuario (o inicial como respaldo) #}
+                  {% if usuario.foto %}
+                  <img
+                    src="{{ usuario.foto.url }}"
+                    alt="{{ usuario.nombre }}"
+                    class="h-10 w-10 rounded-full object-cover border border-outline-variant/30"
+                  />
+                  {% else %}
+                  <span
+                    class="flex h-10 w-10 items-center justify-center rounded-full bg-surface-container-high text-on-surface-variant font-bold"
+                    >{{ usuario.nombre|first|upper }}</span
                   >
+                  {% endif %}
+                  <div class="flex flex-col">
+                    <span class="font-bold text-on-background text-base"
+                      >{{ usuario.nombre }} {{ usuario.apellido }}</span
+                    ><span class="text-on-surface-variant text-xs"
+                      >ID: USR-{{ usuario.id }}</span
+                    >
+                  </div>
                 </div>
               </td>
               <td class="p-6 text-on-surface-variant">{{ usuario.email }}</td>
@@ -212,6 +227,26 @@ flex bg-surface{% endblock %} {% block content %} {% include "includes/admin_sid
                       >edit</span
                     ></a
                   >
+                  {% if usuario.foto %}
+                  {# Quitar la foto de perfil del usuario #}
+                  <form
+                    method="post"
+                    action="{% url 'sena:admin_quitar_foto_usuario' usuario.id %}"
+                    class="inline"
+                  >
+                    {% csrf_token %}
+                    <button
+                      class="text-on-surface-variant hover:text-error transition-colors"
+                      type="submit"
+                      data-confirm="¿Quitar la foto de perfil de este usuario?"
+                      title="Quitar foto"
+                    >
+                      <span class="material-symbols-outlined text-[20px]"
+                        >hide_image</span
+                      >
+                    </button>
+                  </form>
+                  {% endif %}
                   {% if usuario.rol != 'Admin' %}
                   <form
                     method="post"

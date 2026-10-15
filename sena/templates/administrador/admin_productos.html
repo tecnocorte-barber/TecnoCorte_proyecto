@@ -26,6 +26,7 @@
       >
         <tr>
           <th class="p-4">Producto</th>
+          <th class="p-4">Foto</th>
           <th class="p-4">Categoría</th>
           <th class="p-4">Precio</th>
           <th class="p-4">Stock</th>
@@ -37,6 +38,20 @@
         {% for producto in productos %}
         <tr class="border-t border-outline-variant/20">
           <td class="p-4 font-semibold">{{ producto.nombre }}</td>
+          <td class="p-4">
+            {# Miniatura de la foto y botón para quitarla #}
+            {% if producto.imagen %}
+            <img
+              src="{{ producto.imagen.url }}"
+              alt="{{ producto.nombre }}"
+              class="h-14 w-14 rounded-lg object-cover"
+            />
+            {% else %}
+            <span class="material-symbols-outlined text-on-surface-variant/50"
+              >image</span
+            >
+            {% endif %}
+          </td>
           <td class="p-4">{{ producto.get_categoria_display }}</td>
           <td class="p-4">${{ producto.precio }}</td>
           <td class="p-4">{{ producto.stock }}</td>
@@ -49,6 +64,20 @@
               href="{% url 'sena:admin_editar_producto' producto.id %}"
               >Editar</a
             >
+            {% if producto.imagen %}
+            <form
+              class="inline"
+              method="post"
+              action="{% url 'sena:admin_quitar_imagen_producto' producto.id %}"
+            >
+              {% csrf_token %}<button
+                class="text-error mr-3"
+                data-confirm="¿Quitar la foto de este producto?"
+              >
+                Quitar foto
+              </button>
+            </form>
+            {% endif %}
             <form
               class="inline"
               method="post"
@@ -65,7 +94,7 @@
         </tr>
         {% empty %}
         <tr>
-          <td class="p-8 text-on-surface-variant" colspan="6">
+          <td class="p-8 text-on-surface-variant" colspan="7">
             No hay productos.
           </td>
         </tr>

@@ -169,9 +169,9 @@ bg-background text-on-surface{% endblock %} {% block content %} {% include "incl
       </div>
     </div>
 
-    {# Reseñas de clientes sobre el barbero #}
+    {# Reseñas de clientes sobre el barbero (según configuración de privacidad) #}
     <!-- Reseñas de clientes -->
-    {% if calificaciones %}
+    {% if calificaciones and config.mostrar_calificaciones %}
     <section>
       <div
         class="flex justify-between items-end mb-8 border-b border-outline-variant/10 pb-4"

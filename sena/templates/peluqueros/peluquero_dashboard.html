@@ -344,9 +344,9 @@ bg-background text-on-surface{% endblock %} {% block content %} {% include "incl
       <div class="w-1 h-1 rounded-full bg-primary-container"></div>
     </div>
 
-    {# Sección de reseñas de clientes #}
+    {# Sección de reseñas de clientes (según configuración de privacidad) #}
     <!-- Reseñas recientes -->
-    {% if calificaciones %}
+    {% if calificaciones and config.mostrar_calificaciones %}
     <section>
       <div class="flex justify-between items-end mb-8">
         <div>

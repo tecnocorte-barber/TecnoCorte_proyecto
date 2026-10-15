@@ -70,11 +70,18 @@ class Producto(models.Model):
     nombre = models.CharField(max_length=100)
     descripcion = models.TextField(blank=True)
     precio = models.IntegerField()
-    imagen = models.URLField(blank=True, default="")
+    # Foto del producto: la sube el Admin desde el panel y queda ligada a la base.
+    # max_length amplio para no romper valores antiguos que eran URLs.
+    imagen = models.ImageField(upload_to="productos/", blank=True, default="", max_length=500)
     categoria = models.CharField(max_length=20, choices=CATEGORIAS, default="Herramientas")
     stock = models.IntegerField(default=0)
     disponible = models.BooleanField(default=True)
     fecha_creacion = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["disponible"]),
+        ]
 
     def __str__(self):
         return self.nombre
@@ -95,6 +102,13 @@ class Reserva(models.Model):
     hora = models.TimeField()
     servicio = models.CharField(max_length=100, blank=True, default="Corte de Cabello")
     estado = models.CharField(max_length=20, choices=ESTADOS, default="Pendiente")
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["peluquero", "fecha"]),
+            models.Index(fields=["cliente", "fecha"]),
+            models.Index(fields=["estado"]),
+        ]
     
     def __str__(self):
         return f"Reserva {self.id}"
@@ -133,6 +147,11 @@ class RegistroIngreso(models.Model):
     fecha = models.DateTimeField(auto_now_add=True)
     ip = models.CharField(max_length=45, blank=True)
 
+    class Meta:
+        indexes = [
+            models.Index(fields=["usuario", "fecha"]),
+        ]
+
     def __str__(self):
         return f"{self.usuario.nombre} ({self.rol}) - {self.fecha}"
 
@@ -143,6 +162,11 @@ class Notificacion(models.Model):
     mensaje = models.CharField(max_length=255)
     leida = models.BooleanField(default=False)
     fecha = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["usuario", "leida"]),
+        ]
 
     def __str__(self):
         return f"Notificacion {self.id} - {self.usuario.nombre}"
@@ -180,6 +204,9 @@ class BloqueoHorario(models.Model):
 
     class Meta:
         ordering = ["fecha", "hora"]
+        indexes = [
+            models.Index(fields=["peluqueria", "fecha"]),
+        ]
 
     def __str__(self):
         if self.hora:
@@ -198,6 +225,9 @@ class MensajeContacto(models.Model):
 
     class Meta:
         ordering = ["-fecha"]
+        indexes = [
+            models.Index(fields=["leido"]),
+        ]
 
     def __str__(self):
         return f"{self.asunto} - {self.nombre}"
@@ -217,3 +247,79 @@ class Calificacion(models.Model):
 
     def __str__(self):
         return f"{self.cliente.nombre} → {self.barbero.nombre} ({self.puntuacion}/5)"
+
+
+# Configuración general del sitio: privacidad, datos de contacto y mantenimiento.
+# Es un registro único (siempre pk=1) que administra el Admin desde su panel.
+class Configuracion(models.Model):
+    # ── Datos generales ──
+    sitio_nombre = models.CharField(max_length=100, default="TecnoCorte")
+    correo_contacto = models.EmailField(default="tecnocorte083@gmail.com")
+    texto_aviso = models.CharField(
+        max_length=200,
+        blank=True,
+        default="",
+        help_text="Aviso corto que se muestra a los visitantes (opcional).",
+    )
+
+    # ── Privacidad ──
+    registro_abierto = models.BooleanField(
+        default=True,
+        help_text="Permite que cualquier persona cree una cuenta de cliente.",
+    )
+    mostrar_telefonos = models.BooleanField(
+        default=True,
+        help_text="Muestra el teléfono de las barberías a los visitantes.",
+    )
+    mostrar_ubicaciones = models.BooleanField(
+        default=True,
+        help_text="Muestra la ubicación de las barberías a los visitantes.",
+    )
+    mostrar_galeria = models.BooleanField(
+        default=True,
+        help_text="Muestra la galería de fotos de las barberías al público.",
+    )
+    mostrar_calificaciones = models.BooleanField(
+        default=True,
+        help_text="Muestra las calificaciones de los barberos.",
+    )
+
+    # ── Mantenimiento ──
+    modo_mantenimiento = models.BooleanField(
+        default=False,
+        help_text="Si se activa, solo el Admin puede navegar el sitio.",
+    )
+    mensaje_mantenimiento = models.CharField(
+        max_length=200,
+        blank=True,
+        default="Estamos realizando mejoras. Volvemos pronto.",
+    )
+
+    actualizado = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Configuración"
+        verbose_name_plural = "Configuración"
+
+    def __str__(self):
+        return "Configuración del sitio"
+
+    def save(self, *args, **kwargs):
+        # Solo existe una fila de configuración: siempre se guarda con pk=1.
+        self.pk = 1
+        super().save(*args, **kwargs)
+        # Se limpia la caché para que el cambio se vea de inmediato.
+        from django.core.cache import cache
+
+        cache.delete("configuracion_sitio")
+
+    @classmethod
+    def cargar(cls):
+        """Devuelve la configuración (creando la fila si no existe) usando caché corta."""
+        from django.core.cache import cache
+
+        config = cache.get("configuracion_sitio")
+        if config is None:
+            config, _ = cls.objects.get_or_create(pk=1)
+            cache.set("configuracion_sitio", config, 300)
+        return config

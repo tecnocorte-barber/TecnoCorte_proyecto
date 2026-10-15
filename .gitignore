@@ -2,8 +2,12 @@ __pycache__/
 *.pyc
 node_modules/
 *.sqlite3
+.venv/
 venv/
 .env
 .DS_Store
+.pytest_cache/
+staticfiles/
+media/
 DOCUMENTACION_PROYECTO.md
 .idea/

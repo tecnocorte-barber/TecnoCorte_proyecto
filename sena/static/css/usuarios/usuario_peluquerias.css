@@ -1,0 +1,38 @@
+body {
+  background-color: var(--fondo);
+  color: var(--c-on-surface);
+  font-family: "Manrope", sans-serif;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.font-headline {
+  font-family: "Noto Serif", serif;
+}
+
+.gold-gradient {
+  background: linear-gradient(135deg, #f2ca50 0%, #d4af37 100%);
+}
+
+.ambient-glow {
+  box-shadow: 0 20px 40px rgba(242, 202, 80, 0.06);
+}
+
+.signature-divider {
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.signature-divider::after {
+  content: "";
+  width: 4px;
+  height: 4px;
+  background-color: #d4af37;
+  border-radius: 50%;
+}

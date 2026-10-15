@@ -2,7 +2,7 @@
 
 from django.core.cache import cache
 
-from .models import Notificacion, MensajeContacto
+from .models import Notificacion, MensajeContacto, Configuracion
 
 
 def carrito_visible(request):
@@ -83,3 +83,12 @@ def formulario_contexto(request):
     for campo in ("password", "password_confirm", "password_confirmation"):
         datos.pop(campo, None)
     return {"form_post": datos.urlencode()}
+
+
+def configuracion_contexto(request):
+    """Expone la configuración del sitio (privacidad, aviso, etc.) a todas las plantillas."""
+    try:
+        return {"config": Configuracion.cargar()}
+    except Exception:
+        # Si la base de datos no está disponible, se usan los valores por defecto del modelo.
+        return {"config": Configuracion()}

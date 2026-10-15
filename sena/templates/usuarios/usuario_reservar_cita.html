@@ -1,3 +1,4 @@
+{% load static %}
 <!doctype html>
 <!-- Página standalone para reservar cita en 4 pasos: servicio, barbero, peluquería, fecha/hora -->
 <html lang="es">
@@ -15,72 +16,7 @@
       rel="stylesheet"
     />
     {% include "includes/tema.html" %}
-    <style>
-      .glass-nav {
-        background: var(--glass-bg);
-        backdrop-filter: blur(20px);
-      }
-
-      .hide-scrollbar::-webkit-scrollbar {
-        display: none;
-      }
-
-      .hide-scrollbar {
-        -ms-overflow-style: none;
-        scrollbar-width: none;
-      }
-
-      .opt {
-        cursor: pointer;
-        transition: all 0.3s;
-      }
-
-      .opt-selected {
-        background: linear-gradient(135deg, #f2ca50, #d4af37);
-        color: #241a00 !important;
-        border-color: transparent;
-        box-shadow: 0 0 20px rgba(242, 202, 80, 0.2);
-      }
-
-      .opt-selected h3,
-      .opt-selected span,
-      .opt-selected p,
-      .opt-selected .text-on-surface,
-      .opt-selected .text-on-surface-variant,
-      .opt-selected .text-primary,
-      .opt-selected .text-primary-container,
-      .opt-selected .icon-muted {
-        color: #241a00 !important;
-      }
-
-      #fechas .opt-selected,
-      #horas button.hora-selected {
-        background: linear-gradient(135deg, #f2ca50, #d4af37) !important;
-        color: #241a00 !important;
-        border-color: transparent !important;
-        font-weight: 800;
-      }
-
-      #horas button {
-        min-height: 3rem;
-        color: var(--c-on-surface) !important;
-        font-variant-numeric: tabular-nums;
-      }
-
-      #horas button.hora-selected {
-        box-shadow: 0 0 18px rgba(242, 202, 80, 0.2);
-      }
-
-      #horas button:disabled {
-        color: var(--c-on-surface-variant) !important;
-      }
-
-      .opt:focus-visible,
-      #horas button:focus-visible {
-        outline: 3px solid var(--c-primary);
-        outline-offset: 3px;
-      }
-    </style>
+    <link rel="stylesheet" href="{% static 'css/usuarios/usuario_reservar_cita.css' %}" />
   </head>
 
   <body

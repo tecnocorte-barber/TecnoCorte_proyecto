@@ -91,6 +91,12 @@ urlpatterns = [
     path('admin/productos/nuevo/', views.admin_crear_producto, name="admin_crear_producto"),  # Crear producto nuevo
     path('admin/productos/<int:id>/editar/', views.admin_editar_producto, name="admin_editar_producto"),  # Editar producto
     path('admin/productos/<int:id>/eliminar/', views.admin_eliminar_producto, name="admin_eliminar_producto"),  # Retirar producto de la tienda
+    path('admin/productos/<int:id>/quitar_imagen/', views.admin_quitar_imagen_producto, name="admin_quitar_imagen_producto"),  # Quitar foto de un producto
+    path('admin/galeria/', views.admin_galeria, name="admin_galeria"),  # Moderar fotos de galería de barberías
+    path('admin/galeria/<int:id>/eliminar/', views.admin_eliminar_imagen_galeria, name="admin_eliminar_imagen_galeria"),  # Eliminar una foto de galería
+    path('admin/peluquerias/<int:id>/quitar_foto/', views.admin_quitar_foto_peluqueria, name="admin_quitar_foto_peluqueria"),  # Quitar foto principal de una barbería
+    path('admin/usuarios/<int:id>/quitar_foto/', views.admin_quitar_foto_usuario, name="admin_quitar_foto_usuario"),  # Quitar foto de perfil de un usuario
+    path('admin/configuracion/', views.admin_configuracion, name="admin_configuracion"),  # Configuración general y privacidad
     path('admin/mensajes/', views.admin_mensajes, name="admin_mensajes"),  # Ver mensajes de contacto
     path('admin/notificaciones/', views.admin_notificaciones, name="admin_notificaciones"),  # Ver notificaciones del admin
 

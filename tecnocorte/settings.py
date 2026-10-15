@@ -37,6 +37,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    # Aplica el modo mantenimiento configurado por el Admin (debe ir al final).
+    'sena.middleware.MantenimientoMiddleware',
 ]
 
 ROOT_URLCONF = 'tecnocorte.urls'
@@ -54,6 +56,7 @@ TEMPLATES = [{
             'sena.context_processors.carrito_contexto',
             'sena.context_processors.notificaciones_contexto',
             'sena.context_processors.formulario_contexto',
+            'sena.context_processors.configuracion_contexto',
         ],
     },
 }]
@@ -78,6 +81,23 @@ DATABASES = {
         },
     }
 }
+
+# ── Rendimiento ─────────────────────────────────────────────────────────────
+# Caché en memoria del proceso: contadores, métricas y listados con TTL corto.
+# Evita repetir consultas costosas contra la BD remota (Supabase) en cada petición.
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'tecnocorte-cache',
+        'TIMEOUT': 300,
+        'OPTIONS': {'MAX_ENTRIES': 5000},
+    }
+}
+# La sesión se lee de la caché y se respalda en la BD: ahorra una consulta remota
+# por petición sin perder persistencia entre reinicios.
+SESSION_ENGINE = 'django.contrib.sessions.backends.cached_db'
+# Los mensajes flash viajan en una cookie firmada, evitando escrituras de sesión en la BD.
+MESSAGE_STORAGE = 'django.contrib.messages.storage.cookie.CookieStorage'
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
@@ -136,7 +156,7 @@ REST_FRAMEWORK = {
 
 
 SPECTACULAR_SETTINGS = {
-    "TITLE": "Mi API",
-    "DESCRIPTION": "Documentación de la API",
+    "TITLE": "TecnoCorte API",
+    "DESCRIPTION": "Documentación de la API de TecnoCorte (usuarios, peluquerías, productos y reservas).",
     "VERSION": "1.0.0",
 }

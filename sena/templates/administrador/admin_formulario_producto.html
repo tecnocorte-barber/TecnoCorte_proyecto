@@ -10,7 +10,7 @@ antialiased flex bg-surface{% endblock %}{% block content %}{% include "includes
     <h1 class="font-headline text-3xl mb-6">
       {% if producto %}Editar{% else %}Nuevo{% endif %} producto
     </h1>
-    <form method="post" class="space-y-5">
+    <form method="post" enctype="multipart/form-data" class="space-y-5">
       {% csrf_token %}<input
         required
         name="nombre"
@@ -22,6 +22,32 @@ antialiased flex bg-surface{% endblock %}{% block content %}{% include "includes
         placeholder="Descripción"
         class="w-full rounded bg-surface-container-high border-0 p-3"
       >{{ producto.descripcion|default:'' }}</textarea>
+      {# Imagen del producto: el Admin puede subirla o quitarla #}
+      <div class="space-y-3">
+        <p class="font-label uppercase text-xs tracking-widest text-on-surface-variant">
+          Foto del producto
+        </p>
+        {% if producto.imagen %}
+        <img
+          src="{{ producto.imagen.url }}"
+          alt="{{ producto.nombre }}"
+          class="h-40 w-full rounded-lg object-cover border border-outline-variant/20"
+        />
+        <label class="flex items-center gap-2 text-sm text-error">
+          <input type="checkbox" name="quitar_imagen" />
+          Quitar la foto actual
+        </label>
+        {% endif %}
+        <input
+          type="file"
+          name="imagen"
+          accept="image/*"
+          class="w-full rounded bg-surface-container-high border-0 p-3 text-sm"
+        />
+        <p class="text-xs text-on-surface-variant">
+          Formatos permitidos: JPG, PNG o WEBP. Si subes una nueva imagen se guarda en la base de datos.
+        </p>
+      </div>
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <input
           required

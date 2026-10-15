@@ -1,0 +1,16 @@
+body {
+  background-color: var(--fondo);
+  color: var(--c-on-surface);
+}
+
+.shadow-ambient {
+  box-shadow: 0 20px 40px rgba(242, 202, 80, 0.06);
+}
+
+.divider-dot {
+  width: 4px;
+  height: 4px;
+  background-color: var(--c-primary);
+  border-radius: 50%;
+  margin: 0 auto;
+}

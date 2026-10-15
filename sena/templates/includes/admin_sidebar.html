@@ -120,6 +120,30 @@
       >
       <span class="font-label uppercase text-xs tracking-widest">Horarios</span>
     </a>
+    <a
+      class="flex items-center space-x-4 px-4 py-3 rounded-lg transition-all group {% if active == 'galeria' %}bg-primary-container text-on-primary-container font-bold{% else %}text-on-surface-variant hover:bg-surface-container-high hover:bg-surface-container-highest{% endif %}"
+      href="{% url 'sena:admin_galeria' %}"
+    >
+      <span
+        class="material-symbols-outlined"
+        style="font-variation-settings: &quot;FILL&quot; 0"
+        >photo_library</span
+      >
+      <span class="font-label uppercase text-xs tracking-widest">Galería</span>
+    </a>
+    <a
+      class="flex items-center space-x-4 px-4 py-3 rounded-lg transition-all group {% if active == 'configuracion' %}bg-primary-container text-on-primary-container font-bold{% else %}text-on-surface-variant hover:bg-surface-container-high hover:bg-surface-container-highest{% endif %}"
+      href="{% url 'sena:admin_configuracion' %}"
+    >
+      <span
+        class="material-symbols-outlined"
+        style="font-variation-settings: &quot;FILL&quot; 0"
+        >tune</span
+      >
+      <span class="font-label uppercase text-xs tracking-widest"
+        >Configuración</span
+      >
+    </a>
   </div>
   {# Acciones fijas: nueva cita, perfil, tema y cerrar sesión #}
   <div class="mt-4 shrink-0 space-y-1 border-t border-primary/10 pt-3">
