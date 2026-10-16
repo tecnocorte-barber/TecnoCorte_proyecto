@@ -60,6 +60,23 @@ class TecnoCorteTests(TestCase):
         })
         self.assertRedirects(response, reverse("sena:inicio"))  # Debe redirigir al inicio
 
+    def test_registro_rechaza_telefono_invalido(self):
+        response = self.client.post(reverse("sena:registro"), {
+            "nombre": "Nuevo", "apellido": "Cliente", "email": "telefono@test.com",
+            "telefono": "abc-123", "password": "Cliente123!",
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "teléfono")
+        self.assertFalse(Usuario.objects.filter(email="telefono@test.com").exists())
+
+    def test_ayuda_rechaza_correo_invalido(self):
+        response = self.client.post(reverse("sena:ayuda"), {
+            "nombre": "Visitante", "email": "correo-invalido",
+            "asunto": "Consulta", "mensaje": "Mensaje de prueba",
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "correo válido")
+
     # Verifica que el registro envía un correo con diseño HTML y logo embebido
     @override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
     def test_registro_envia_correo_con_diseno_html(self):

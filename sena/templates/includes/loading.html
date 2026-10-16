@@ -12,6 +12,18 @@
   var overlay = document.getElementById("tc-loading");
   if (!overlay) return;
   var hideTimer = null;
+  var activeButton = null;
+
+  function restoreButton() {
+    if (!activeButton) return;
+    activeButton.disabled = false;
+    if (activeButton.dataset.loadingBackup !== undefined) {
+      activeButton.innerHTML = activeButton.dataset.loadingBackup;
+      delete activeButton.dataset.loadingBackup;
+    }
+    activeButton.removeAttribute("aria-busy");
+    activeButton = null;
+  }
 
   function showLoading(msg) {
     var text = overlay.querySelector(".tc-loading-text");
@@ -24,6 +36,7 @@
   }
 
   function hideLoading() {
+    restoreButton();
     overlay.classList.remove("is-active");
     overlay.setAttribute("aria-hidden", "true");
     document.body.style.pointerEvents = "";
@@ -35,13 +48,25 @@
     // Los formularios AJAX gestionan su propio estado de carga y notifican
     // el resultado; no deben dejar bloqueado el overlay global.
     if (form.hasAttribute("data-sin-cargando")) return;
+    // La reserva tiene validación propia: solo muestra carga si todos sus
+    // campos ocultos están completos; así un formulario inválido no se queda
+    // bloqueado mostrando "Procesando...".
+    if (form.id === "form-reserva") {
+      var reservaIncompleta = Array.from(form.querySelectorAll("input[type=hidden][name]:not([name=csrfmiddlewaretoken])")).some(function (input) {
+        return !input.value;
+      });
+      if (reservaIncompleta) return;
+    }
     if (form.method && form.method.toUpperCase() === "GET") return;
     var btn = form.querySelector("[type=submit], button:not([type=button])");
     var label = btn ? (btn.textContent || "Cargando...").trim() : "Cargando...";
     showLoading(label);
     if (btn) {
+      restoreButton();
       btn.disabled = true;
       btn.dataset.loadingBackup = btn.innerHTML;
+      btn.setAttribute("aria-busy", "true");
+      activeButton = btn;
       btn.innerHTML = '<span class="material-symbols-outlined" style="animation:tc-spin .7s linear infinite;font-size:1.1rem">progress_activity</span> Procesando...';
     }
   }, true);
@@ -60,5 +85,6 @@
 
   window.tcShowLoading = showLoading;
   window.tcHideLoading = hideLoading;
+  window.tcRestoreLoadingButton = restoreButton;
 })();
 </script>

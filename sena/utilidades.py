@@ -4,6 +4,11 @@ from django.urls import reverse
 from functools import wraps
 import re
 
+from PIL import Image, UnidentifiedImageError
+
+MAX_IMAGEN_BYTES = 5 * 1024 * 1024
+FORMATOS_IMAGEN_PERMITIDOS = {"JPEG", "PNG", "WEBP"}
+
 # Reglas de contraseña: mínimo 8 caracteres, una mayúscula, un número y un símbolo
 def validar_password(password):
     """Devuelve un mensaje de error si la contraseña no cumple las reglas, o "" si es válida."""
@@ -15,6 +20,40 @@ def validar_password(password):
         return "La contraseña debe tener al menos un número."
     if not re.search(r"[^A-Za-z0-9]", password):
         return "La contraseña debe tener al menos un símbolo (ej: !@#$%)."
+    return ""
+
+
+def validar_telefono(telefono, obligatorio=False):
+    """Valida teléfonos nacionales o internacionales sin aceptar contenido arbitrario."""
+    telefono = (telefono or "").strip()
+    if not telefono:
+        return "El teléfono es obligatorio." if obligatorio else ""
+    if not re.fullmatch(r"\+?[0-9 ()-]{7,20}", telefono):
+        return "El teléfono solo puede contener números, espacios, paréntesis y guiones."
+    if len(re.sub(r"\D", "", telefono)) < 7:
+        return "El teléfono debe tener al menos 7 dígitos."
+    return ""
+
+
+def validar_imagen(archivo):
+    """Valida tamaño, contenido real y formato antes de guardar una imagen subida."""
+    if not archivo:
+        return ""
+    if getattr(archivo, "size", 0) > MAX_IMAGEN_BYTES:
+        return "La imagen no puede superar los 5 MB."
+    try:
+        archivo.seek(0)
+        with Image.open(archivo) as imagen:
+            imagen.verify()
+            if imagen.format not in FORMATOS_IMAGEN_PERMITIDOS:
+                return "Solo se permiten imágenes JPG, PNG o WEBP."
+        archivo.seek(0)
+    except (UnidentifiedImageError, OSError, ValueError):
+        try:
+            archivo.seek(0)
+        except (OSError, ValueError):
+            pass
+        return "El archivo seleccionado no es una imagen válida."
     return ""
 
 # Decorador que protege vistas: exige sesión iniciada y, opcionalmente, un rol permitido

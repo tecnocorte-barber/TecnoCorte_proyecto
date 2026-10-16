@@ -46,6 +46,9 @@
   document.addEventListener('submit', function (evento) {
     if (evento.defaultPrevented) return;
     if (evento.target.matches('form[data-sin-cargando]')) return;
+    // Cuando existe el overlay global, ese sistema controla el botón y el
+    // estado de carga. Evita que ambos scripts compitan por el mismo formulario.
+    if (document.getElementById('tc-loading')) return;
     var boton = botonDeFormulario(evento.target, evento.submitter);
     if (!boton) return;
     if (boton.dataset.cargando === 'true' || boton.disabled) {

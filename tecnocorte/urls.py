@@ -1,5 +1,7 @@
 # Archivo de rutas URL principales del proyecto TecnoCorte
 # Conecta la app "sena", el panel de administración y la documentación de la API
+import os
+
 from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
@@ -11,7 +13,12 @@ urlpatterns = [
     path('', include('sena.urls')),
     path('api/auth/', include('rest_framework.urls')),
     path('admin/', admin.site.urls),
-    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
-    path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
-    path('api/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+# La documentación interactiva no se publica por defecto en producción.
+if settings.DEBUG or os.environ.get('API_DOCS_PUBLIC', '').lower() == 'true':
+    urlpatterns += [
+        path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
+        path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+        path('api/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
+    ]

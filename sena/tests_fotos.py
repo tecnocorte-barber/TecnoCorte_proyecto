@@ -1,9 +1,11 @@
 # Pruebas de las funciones de fotos de productos, moderación de imágenes y configuración.
 import tempfile
+from io import BytesIO
 
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 from django.urls import reverse, NoReverseMatch
+from PIL import Image
 
 from .models import Configuracion, ImagenPeluqueria, Peluqueria, Producto, Usuario
 
@@ -29,7 +31,9 @@ class FotosYConfiguracionTests(TestCase):
         cache.clear()
 
     def img(self, nombre="f.png"):
-        return SimpleUploadedFile(nombre, b"contenido-imagen", content_type="image/png")
+        buffer = BytesIO()
+        Image.new("RGB", (2, 2), "white").save(buffer, format="PNG")
+        return SimpleUploadedFile(nombre, buffer.getvalue(), content_type="image/png")
 
     def test_crear_producto_con_imagen_y_quitarla(self):
         self.login()
@@ -51,6 +55,25 @@ class FotosYConfiguracionTests(TestCase):
         self.assertEqual(r.status_code, 302)
         p.refresh_from_db()
         self.assertFalse(p.imagen)
+
+    def test_producto_rechaza_imagen_invalida_y_stock_negativo(self):
+        self.login()
+        archivo_invalido = SimpleUploadedFile("falso.png", b"no es una imagen", content_type="image/png")
+        respuesta = self.client.post(reverse("sena:admin_crear_producto"), {
+            "nombre": "Producto inválido", "descripcion": "d", "precio": "1000", "stock": "5",
+            "categoria": "Cuidado", "disponible": "on", "imagen": archivo_invalido,
+        })
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertContains(respuesta, "imagen válida")
+        self.assertFalse(Producto.objects.filter(nombre="Producto inválido").exists())
+
+        respuesta = self.client.post(reverse("sena:admin_crear_producto"), {
+            "nombre": "Stock inválido", "descripcion": "d", "precio": "1000", "stock": "-1",
+            "categoria": "Cuidado", "disponible": "on",
+        })
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertContains(respuesta, "no pueden ser negativos")
+        self.assertFalse(Producto.objects.filter(nombre="Stock inválido").exists())
 
     def test_editar_producto_permite_quitar_imagen(self):
         self.login()
