@@ -57,7 +57,6 @@ urlpatterns = [
     path('peluquero/crear_cita/', views.peluquero_crear_cita, name="peluquero_crear_cita"),  # Agendar cita para un cliente
     path('peluquero/cita/<int:cita_id>/estado/', views.peluquero_cambiar_estado, name="peluquero_cambiar_estado"),  # Cambiar estado de una cita
     path('peluquero/notificaciones/', views.peluquero_notificaciones, name="peluquero_notificaciones"),  # Ver notificaciones del barbero
-    path('peluquero/peluqueria/crear/', views.peluquero_crear_peluqueria, name="peluquero_crear_peluqueria"),  # Crear peluquería (primera vez)
     path('peluquero/peluqueria/editar/', views.peluquero_editar_peluqueria, name="peluquero_editar_peluqueria"),  # Editar mi peluquería
     path('peluquero/galeria/', views.peluquero_galeria, name="peluquero_galeria"),  # Ver galería de fotos
     path('peluquero/galeria/agregar/', views.peluquero_agregar_imagen, name="peluquero_agregar_imagen"),  # Subir foto

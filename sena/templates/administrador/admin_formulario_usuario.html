@@ -27,7 +27,7 @@
       </div>
       {% endif %}
 
-      <form method="POST" class="space-y-6">
+      <form method="POST" enctype="multipart/form-data" class="space-y-6">
         {% csrf_token %}
 
         <!-- Nombre -->
@@ -103,6 +103,38 @@
             class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none"
             placeholder="+57 123 456 7890"
           />
+        </div>
+
+        <!-- Foto de perfil -->
+        <div>
+          <label
+            for="foto"
+            class="block text-sm font-medium text-gray-300 mb-2"
+          >
+            Foto de perfil
+          </label>
+          {% if usuario.foto %}
+          {# Foto actual del usuario #}
+          <img
+            src="{{ usuario.foto.url }}"
+            alt="{{ usuario.nombre }}"
+            class="mb-3 h-24 w-24 rounded-full object-cover border border-gray-600"
+          />
+          <label class="flex items-center gap-2 text-sm text-red-400 mb-3">
+            <input type="checkbox" name="quitar_foto" />
+            Quitar la foto actual
+          </label>
+          {% endif %}
+          <input
+            type="file"
+            id="foto"
+            name="foto"
+            accept="image/*"
+            class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:border-blue-500 focus:outline-none"
+          />
+          <p class="mt-1 text-xs text-gray-400">
+            Formatos permitidos: JPG, PNG o WEBP.
+          </p>
         </div>
 
         <!-- Rol -->
@@ -211,9 +243,12 @@
   function togglePeluqueriaField() {
     var rol = document.getElementById("rol");
     var campo = document.getElementById("campo-peluqueria");
-    if (rol && campo) {
-      campo.style.display = rol.value === "Barbero" ? "block" : "none";
-    }
+    if (!rol || !campo) return;
+    var esBarbero = rol.value === "Barbero";
+    campo.style.display = esBarbero ? "block" : "none";
+    // La barbería es obligatoria cuando el rol es Barbero.
+    var select = campo.querySelector("select[name='peluqueria']");
+    if (select) select.required = esBarbero;
   }
   document.addEventListener("DOMContentLoaded", togglePeluqueriaField);
 </script>

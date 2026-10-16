@@ -238,7 +238,7 @@ flex bg-surface{% endblock %} {% block content %} {% include "includes/admin_sid
                     <button
                       class="text-on-surface-variant hover:text-error transition-colors"
                       type="submit"
-                      data-confirm="¿Quitar la foto de perfil de este usuario?"
+                      data-motivo="Estás a punto de quitar la foto de perfil de {{ usuario.nombre }} {{ usuario.apellido }}. Se le avisará por correo."
                       title="Quitar foto"
                     >
                       <span class="material-symbols-outlined text-[20px]"

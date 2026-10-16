@@ -114,12 +114,27 @@ flex bg-surface{% endblock %} {% block content %} {% include "includes/admin_sid
               class="fila-barbero hover:bg-surface-container-highest/30 transition-colors"
             >
               <td class="p-6">
-                <div class="flex flex-col">
-                  <span class="font-bold text-on-background text-base"
-                    >{{ peluquero.nombre }} {{ peluquero.apellido }} </span
-                  ><span class="text-on-surface-variant text-xs"
-                    >ID: BAR-{{ peluquero.id }}
-                  </span>
+                <div class="flex items-center gap-3">
+                  {# Foto de perfil del barbero (o inicial como respaldo) #}
+                  {% if peluquero.foto %}
+                  <img
+                    src="{{ peluquero.foto.url }}"
+                    alt="{{ peluquero.nombre }}"
+                    class="h-10 w-10 shrink-0 rounded-full object-cover border border-outline-variant/20"
+                  />
+                  {% else %}
+                  <span
+                    class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-surface-container-highest text-primary font-bold"
+                    >{{ peluquero.nombre|first|upper }}</span
+                  >
+                  {% endif %}
+                  <div class="flex flex-col">
+                    <span class="font-bold text-on-background text-base"
+                      >{{ peluquero.nombre }} {{ peluquero.apellido }} </span
+                    ><span class="text-on-surface-variant text-xs"
+                      >ID: BAR-{{ peluquero.id }}
+                    </span>
+                  </div>
                 </div>
               </td>
               <td class="p-6 text-on-surface-variant">
@@ -153,6 +168,27 @@ flex bg-surface{% endblock %} {% block content %} {% include "includes/admin_sid
                       >edit</span
                     >
                   </a>
+                  {% if peluquero.foto %}
+                  {# Quitar la foto de perfil del barbero (con motivo y aviso por correo) #}
+                  <form
+                    method="post"
+                    action="{% url 'sena:admin_quitar_foto_usuario' peluquero.id %}"
+                    class="inline"
+                  >
+                    {% csrf_token %}
+                    <input type="hidden" name="origen" value="peluqueros" />
+                    <button
+                      class="text-on-surface-variant hover:text-error transition-colors"
+                      type="submit"
+                      data-motivo="Estás a punto de quitar la foto de perfil de {{ peluquero.nombre }} {{ peluquero.apellido }}. Se le avisará por correo."
+                      title="Quitar foto"
+                    >
+                      <span class="material-symbols-outlined text-[20px]"
+                        >hide_image</span
+                      >
+                    </button>
+                  </form>
+                  {% endif %}
                   <form
                     method="post"
                     action="{% url 'sena:admin_suspender_usuario' peluquero.id %}"

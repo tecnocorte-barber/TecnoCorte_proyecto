@@ -24,7 +24,7 @@ flex bg-surface{% endblock %} {% block content %} {% include "includes/admin_sid
   <div
     class="bg-surface-container-low rounded-lg ambient-shadow p-6 md:p-10 max-w-2xl mx-auto"
   >
-    <form method="post" class="grid gap-6">
+    <form method="post" enctype="multipart/form-data" class="grid gap-6">
       {% csrf_token %} {% if error %}
       {# Mensaje de error si existe #}
       <p
@@ -113,6 +113,33 @@ flex bg-surface{% endblock %} {% block content %} {% include "includes/admin_sid
           </option>
           {% endfor %}
         </select>
+      </div>
+      <div class="grid gap-2">
+        <label
+          class="font-label text-xs uppercase tracking-widest text-on-surface-variant"
+          >Foto de perfil</label
+        >
+        {% if datos.foto %}
+        {# Foto actual del barbero #}
+        <img
+          src="{{ datos.foto.url }}"
+          alt="{{ datos.nombre }}"
+          class="h-24 w-24 rounded-full object-cover border border-outline-variant/20"
+        />
+        <label class="flex items-center gap-2 text-sm text-error">
+          <input type="checkbox" name="quitar_foto" />
+          Quitar la foto actual
+        </label>
+        {% endif %}
+        <input
+          type="file"
+          name="foto"
+          accept="image/*"
+          class="w-full bg-surface-container-highest border border-outline-variant/20 text-on-surface rounded-lg px-4 py-3 text-sm file:mr-3 file:rounded-md file:border-0 file:bg-primary/10 file:px-3 file:py-2 file:text-primary"
+        />
+        <p class="text-xs text-on-surface-variant">
+          Formatos permitidos: JPG, PNG o WEBP.
+        </p>
       </div>
       <div class="grid gap-2">
         <label

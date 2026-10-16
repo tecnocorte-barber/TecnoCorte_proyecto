@@ -84,7 +84,8 @@
       ></div>
     </div>
 
-    <main class="relative z-10 w-full max-w-md px-6 py-24">
+    <main class="relative z-10 w-full max-w-md px-6 py-24 lg:max-w-4xl">
+      <div class="grid items-start gap-8 lg:grid-cols-2">
       <div
         class="rounded-[28px] border border-outline-variant/10 bg-surface-container-low p-10 ambient-glow"
       >
@@ -185,6 +186,92 @@
         </footer>
       </div>
 
+      <aside
+        class="rounded-[28px] border border-dashed border-primary/40 bg-surface-container-low p-8"
+      >
+        <div class="mb-6 flex items-center gap-3">
+          <span class="material-symbols-outlined text-primary">key</span>
+          <div>
+            <h2 class="font-headline text-xl text-primary">Accesos de prueba</h2>
+            <p class="text-xs text-on-surface-variant">
+              Usuarios temporales para probar la aplicación.
+            </p>
+          </div>
+        </div>
+
+        <p class="mb-4 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
+          Administrador
+        </p>
+        <button
+          type="button"
+          onclick="rellenarLogin('admin@tecnocorte.com', 'Admin123!')"
+          class="mb-6 flex w-full items-center justify-between rounded-lg bg-surface-container-high px-4 py-3 text-left transition-colors hover:bg-surface-container-highest"
+        >
+          <span class="flex flex-col">
+            <span class="text-sm text-on-surface">admin@tecnocorte.com</span>
+            <span class="text-xs text-on-surface-variant">Admin123!</span>
+          </span>
+          <span class="material-symbols-outlined text-primary text-lg">login</span>
+        </button>
+
+        <p class="mb-4 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
+          Clientes
+        </p>
+        <button
+          type="button"
+          onclick="rellenarLogin('cliente1@tecnocorte.com', 'Cliente1!')"
+          class="mb-3 flex w-full items-center justify-between rounded-lg bg-surface-container-high px-4 py-3 text-left transition-colors hover:bg-surface-container-highest"
+        >
+          <span class="flex flex-col">
+            <span class="text-sm text-on-surface">cliente1@tecnocorte.com</span>
+            <span class="text-xs text-on-surface-variant">Cliente1!</span>
+          </span>
+          <span class="material-symbols-outlined text-primary text-lg">login</span>
+        </button>
+        <button
+          type="button"
+          onclick="rellenarLogin('cliente2@tecnocorte.com', 'Cliente2!')"
+          class="mb-6 flex w-full items-center justify-between rounded-lg bg-surface-container-high px-4 py-3 text-left transition-colors hover:bg-surface-container-highest"
+        >
+          <span class="flex flex-col">
+            <span class="text-sm text-on-surface">cliente2@tecnocorte.com</span>
+            <span class="text-xs text-on-surface-variant">Cliente2!</span>
+          </span>
+          <span class="material-symbols-outlined text-primary text-lg">login</span>
+        </button>
+
+        <p class="mb-4 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
+          Barberos
+        </p>
+        <button
+          type="button"
+          onclick="rellenarLogin('barbero1@tecnocorte.com', 'Barbero1!')"
+          class="mb-3 flex w-full items-center justify-between rounded-lg bg-surface-container-high px-4 py-3 text-left transition-colors hover:bg-surface-container-highest"
+        >
+          <span class="flex flex-col">
+            <span class="text-sm text-on-surface">barbero1@tecnocorte.com</span>
+            <span class="text-xs text-on-surface-variant">Barbero1!</span>
+          </span>
+          <span class="material-symbols-outlined text-primary text-lg">login</span>
+        </button>
+        <button
+          type="button"
+          onclick="rellenarLogin('barbero2@tecnocorte.com', 'Barbero2!')"
+          class="flex w-full items-center justify-between rounded-lg bg-surface-container-high px-4 py-3 text-left transition-colors hover:bg-surface-container-highest"
+        >
+          <span class="flex flex-col">
+            <span class="text-sm text-on-surface">barbero2@tecnocorte.com</span>
+            <span class="text-xs text-on-surface-variant">Barbero2!</span>
+          </span>
+          <span class="material-symbols-outlined text-primary text-lg">login</span>
+        </button>
+
+        <p class="mt-6 text-xs text-on-surface-variant">
+          Toca un acceso para rellenar el formulario automáticamente.
+        </p>
+      </aside>
+      </div>
+
       <div class="mt-8 flex h-12 items-center justify-center">
         <div class="h-1 w-1 rounded-full bg-primary-container opacity-50"></div>
       </div>
@@ -208,6 +295,12 @@
         }
       }
 
+      function rellenarLogin(email, password) {
+        var campoEmail = document.querySelector('input[name="user"]');
+        var campoPassword = document.getElementById("password-field");
+        if (campoEmail) campoEmail.value = email;
+        if (campoPassword) campoPassword.value = password;
+      }
     </script>
   </body>
 </html>

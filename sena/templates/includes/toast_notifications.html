@@ -159,8 +159,64 @@
       accept.focus();
     }
 
-    window.TecnoCorteNotify = {
-      show: show,
+    function closeMotivo(backdrop, accepted) {
+      if (!backdrop) return;
+      var control = backdrop._tcControl;
+      var input = backdrop.querySelector("#tc-motivo-input");
+      var texto = input ? input.value.trim() : "";
+      if (accepted && !texto) return; // Sin motivo no se elimina nada
+      backdrop.remove();
+      if (!accepted || !control || !control.form) return;
+      var hidden = control.form.querySelector('input[name="motivo"]');
+      if (!hidden) {
+        hidden = document.createElement("input");
+        hidden.type = "hidden";
+        hidden.name = "motivo";
+        control.form.appendChild(hidden);
+      }
+      hidden.value = texto;
+      control.dataset.confirming = "true";
+      if (control.form.requestSubmit) control.form.requestSubmit(control);
+      else control.form.submit();
+    }
+
+    function openMotivo(control) {
+      var backdrop = document.createElement("div");
+      backdrop.className = "tc-confirm-backdrop tc-motivo-backdrop";
+      backdrop.innerHTML =
+        '<section class="tc-confirm" role="alertdialog" aria-modal="true" aria-labelledby="tc-motivo-title" aria-describedby="tc-motivo-message">' +
+        '<div class="tc-confirm__icon"><span class="material-symbols-outlined">delete</span></div>' +
+        '<h2 id="tc-motivo-title">Eliminar foto</h2>' +
+        '<p id="tc-motivo-message"></p>' +
+        '<label class="tc-motivo__label" for="tc-motivo-input">Motivo de la eliminación</label>' +
+        '<textarea id="tc-motivo-input" class="tc-motivo__input" maxlength="500" placeholder="Escribe por qué eliminas esta foto..."></textarea>' +
+        '<p class="tc-motivo__hint">El motivo se enviará por correo a quien subió la foto.</p>' +
+        '<div class="tc-confirm__actions"><button type="button" class="tc-confirm__cancel">Cancelar</button><button type="button" class="tc-confirm__accept" disabled>Eliminar</button></div>' +
+        "</section>";
+      backdrop._tcControl = control;
+      backdrop.querySelector("#tc-motivo-message").textContent =
+        control.dataset.motivo;
+      var input = backdrop.querySelector("#tc-motivo-input");
+      var cancel = backdrop.querySelector(".tc-confirm__cancel");
+      var accept = backdrop.querySelector(".tc-confirm__accept");
+      accept.textContent = control.dataset.motivoLabel || "Eliminar";
+      input.addEventListener("input", function () {
+        accept.disabled = input.value.trim().length === 0;
+      });
+      cancel.addEventListener("click", function () {
+        closeMotivo(backdrop, false);
+      });
+      accept.addEventListener("click", function () {
+        closeMotivo(backdrop, true);
+      });
+      backdrop.addEventListener("click", function (event) {
+        if (event.target === backdrop) closeMotivo(backdrop, false);
+      });
+      document.body.appendChild(backdrop);
+      input.focus();
+    }
+
+    window.TecnoCorteNotify = {      show: show,
       success: function (text) {
         show(text, "success");
       },
@@ -227,6 +283,12 @@
         seed.remove();
       });
       document.addEventListener("click", function (event) {
+        var conMotivo = event.target.closest("[data-motivo]");
+        if (conMotivo && conMotivo.dataset.confirming !== "true") {
+          event.preventDefault();
+          openMotivo(conMotivo);
+          return;
+        }
         var control = event.target.closest("[data-confirm]");
         if (!control || control.dataset.confirming === "true") return;
         event.preventDefault();
@@ -234,8 +296,12 @@
       });
       document.addEventListener("keydown", function (event) {
         if (event.key !== "Escape") return;
-        var backdrop = document.querySelector(".tc-confirm-backdrop");
-        closeConfirm(backdrop, false);
+        var motivo = document.querySelector(".tc-motivo-backdrop");
+        if (motivo) {
+          closeMotivo(motivo, false);
+          return;
+        }
+        closeConfirm(document.querySelector(".tc-confirm-backdrop"), false);
       });
     }
     if (document.readyState === "loading")

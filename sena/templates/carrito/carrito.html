@@ -337,10 +337,13 @@
         }
 
         function updateSummary(data) {
-          var count = document.getElementById("cart-count");
+          // El indicador del carrito usa la clase .cart-count (no un id).
+          var counts = document.querySelectorAll(".cart-count");
           var quantity = document.getElementById("cart-total-quantity");
           var total = document.getElementById("cart-total-price");
-          if (count) count.textContent = data.cantidad;
+          counts.forEach(function (count) {
+            count.textContent = data.cantidad;
+          });
           if (quantity) quantity.textContent = data.cantidad;
           if (total) total.textContent = money(data.total);
         }

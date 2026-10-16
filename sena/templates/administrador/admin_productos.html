@@ -72,7 +72,8 @@
             >
               {% csrf_token %}<button
                 class="text-error mr-3"
-                data-confirm="¿Quitar la foto de este producto?"
+                type="submit"
+                data-motivo="Estás a punto de quitar la foto de «{{ producto.nombre }}»."
               >
                 Quitar foto
               </button>

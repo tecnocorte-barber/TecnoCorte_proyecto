@@ -1263,14 +1263,19 @@ def peluquero_notificaciones(request):
 # PELUQUERÍA DEL BARBERO
 # ═══════════════════════════════════════════════════════════════════════════
 
-def _peluquero_tiene_peluqueria(usuario_id):
-    return Peluqueria.objects.filter(dueno_id=usuario_id).exists()
-
-
 def _peluqueria_del_barbero(usuario_id):
+    """Devuelve la peluquería del barbero.
+
+    La peluquería la crea o asigna siempre el Admin (el barbero ya no puede
+    crear la suya), así que se respeta primero al dueño y luego la peluquería
+    asignada en el perfil del barbero.
+    """
     peluqueria = Peluqueria.objects.filter(dueno_id=usuario_id).first()
     if peluqueria:
         return peluqueria
+    usuario = Usuario.objects.select_related("peluqueria").filter(id=usuario_id).first()
+    if usuario and usuario.peluqueria_id:
+        return usuario.peluqueria
     primera_reserva = Reserva.objects.filter(peluquero_id=usuario_id, peluqueria__isnull=False).order_by("fecha").first()
     if primera_reserva and primera_reserva.peluqueria:
         primera_reserva.peluqueria.dueno_id = usuario_id
@@ -1279,36 +1284,16 @@ def _peluqueria_del_barbero(usuario_id):
     return None
 
 
-@autorizacion(["Barbero"])
-def peluquero_crear_peluqueria(request):
-    usuario = Usuario.objects.get(id=request.session["logueado"]["id"])
-    if _peluqueria_del_barbero(usuario.id):
-        return redirect("sena:peluquero_editar_peluqueria")
-    if request.method == "POST":
-        nombre = request.POST.get("nombre", "").strip()
-        ubicacion = request.POST.get("ubicacion", "").strip()
-        telefono = request.POST.get("telefono", "").strip()
-        descripcion = request.POST.get("descripcion", "").strip()
-        imagen = request.FILES.get("imagen")
-        if not nombre or not ubicacion:
-            return render(request, "peluqueros/peluquero_crear_peluqueria.html", {"error": "El nombre y la ubicación son obligatorios."})
-        peluqueria = Peluqueria.objects.create(
-            nombre=nombre, ubicacion=ubicacion, telefono=telefono,
-            descripcion=descripcion, dueno=usuario,
-        )
-        if imagen:
-            peluqueria.imagen = imagen
-            peluqueria.save()
-        messages.success(request, "Tu peluquería fue creada.")
-        return redirect("sena:peluquero_dashboard")
-    return render(request, "peluqueros/peluquero_crear_peluqueria.html")
+# Aviso para el barbero al que el Admin todavía no le ha asignado una peluquería
+SIN_PELUQUERIA = "Tu barbería aún no está asignada. Pídele al administrador que te cree una o te asigne a una existente."
 
 
 @autorizacion(["Barbero"])
 def peluquero_editar_peluqueria(request):
     peluqueria = _peluqueria_del_barbero(request.session["logueado"]["id"])
     if not peluqueria:
-        return redirect("sena:peluquero_crear_peluqueria")
+        messages.info(request, SIN_PELUQUERIA)
+        return redirect("sena:peluquero_dashboard")
     if request.method == "POST":
         peluqueria.nombre = request.POST.get("nombre", peluqueria.nombre).strip()
         peluqueria.ubicacion = request.POST.get("ubicacion", peluqueria.ubicacion).strip()
@@ -1326,7 +1311,8 @@ def peluquero_editar_peluqueria(request):
 def peluquero_galeria(request):
     peluqueria = _peluqueria_del_barbero(request.session["logueado"]["id"])
     if not peluqueria:
-        return redirect("sena:peluquero_crear_peluqueria")
+        messages.info(request, SIN_PELUQUERIA)
+        return redirect("sena:peluquero_dashboard")
     fotos = peluqueria.galeria.all()
     return render(request, "peluqueros/peluquero_galeria.html", {"peluqueria": peluqueria, "fotos": fotos})
 
@@ -1335,7 +1321,8 @@ def peluquero_galeria(request):
 def peluquero_agregar_imagen(request):
     peluqueria = _peluqueria_del_barbero(request.session["logueado"]["id"])
     if not peluqueria:
-        return redirect("sena:peluquero_crear_peluqueria")
+        messages.info(request, SIN_PELUQUERIA)
+        return redirect("sena:peluquero_dashboard")
     if request.method == "POST":
         if peluqueria.galeria.count() >= 5:
             messages.error(request, "La galería tiene un máximo de 5 fotos. Elimina una antes de subir otra.")
@@ -1440,6 +1427,10 @@ def admin_editar_peluquero(request, id):
         foto = request.FILES.get("foto")
         if foto:
             peluquero.foto = foto
+        elif request.POST.get("quitar_foto") and peluquero.foto:
+            # El Admin puede quitar la foto actual desde el formulario.
+            _borrar_archivo(peluquero.foto)
+            peluquero.foto = None
         if request.POST.get("password"):
             # Solo se actualiza si la nueva contraseña cumple las reglas
             error_password = validar_password(request.POST.get("password"))
@@ -1751,15 +1742,41 @@ def admin_eliminar_peluqueria(request, id):
     return redirect("sena:admin_peluquerias")
 
 
+# Motivo que el Admin debe escribir al eliminar una foto (obligatorio)
+def _motivo_eliminacion(request):
+    """Devuelve el motivo escrito al borrar una foto, o None si está vacío.
+
+    Es obligatorio para que el autor de la foto reciba una explicación.
+    """
+    return request.POST.get("motivo", "").strip() or None
+
+
+# Avisa por correo al autor de una foto que el Admin la eliminó y por qué
+def avisar_foto_eliminada(usuario, descripcion_foto, motivo, request=None):
+    """Envía al autor de la foto el motivo por el que el Admin la eliminó."""
+    if not usuario:
+        return
+    cuerpo = (
+        f"Un administrador de TecnoCorte eliminó {descripcion_foto}.\n\n"
+        f"Motivo: {motivo}\n\n"
+        "Si crees que fue un error, responde a este correo o contacta con soporte."
+    )
+    enviar_correo(usuario, "Una de tus fotos fue eliminada", cuerpo, request=request)
+
+
 @autorizacion(["Admin"])
 def admin_quitar_foto_peluqueria(request, id):
     """Quita la foto principal de una barbería que no cumple con las normas."""
     if request.method == "POST":
         peluqueria = get_object_or_404(Peluqueria, id=id)
-        if peluqueria.imagen:
+        motivo = _motivo_eliminacion(request)
+        if not motivo:
+            messages.error(request, "Debes escribir el motivo por el que eliminas la foto.")
+        elif peluqueria.imagen:
             _borrar_archivo(peluqueria.imagen)
             peluqueria.imagen = ""
             peluqueria.save(update_fields=["imagen"])
+            avisar_foto_eliminada(peluqueria.dueno, f"la foto principal de «{peluqueria.nombre}»", motivo, request)
             messages.success(request, f"Foto principal de «{peluqueria.nombre}» eliminada.")
         else:
             messages.info(request, "Esa barbería no tiene foto principal.")
@@ -1778,9 +1795,15 @@ def admin_eliminar_imagen_galeria(request, id):
     """Elimina una foto de galería de cualquier barbería."""
     if request.method == "POST":
         foto = get_object_or_404(ImagenPeluqueria, id=id)
+        motivo = _motivo_eliminacion(request)
+        if not motivo:
+            messages.error(request, "Debes escribir el motivo por el que eliminas la foto.")
+            return redirect("sena:admin_galeria")
         nombre = foto.peluqueria.nombre
+        dueno = foto.peluqueria.dueno
         _borrar_archivo(foto.imagen)
         foto.delete()
+        avisar_foto_eliminada(dueno, f"una foto de la galería de «{nombre}»", motivo, request)
         messages.success(request, f"Foto eliminada de la galería de «{nombre}».")
     return redirect("sena:admin_galeria")
 
@@ -1859,7 +1882,10 @@ def admin_quitar_imagen_producto(request, id):
     """Quita la foto de un producto cuando el Admin considera que no cumple."""
     if request.method == "POST":
         producto = get_object_or_404(Producto, id=id)
-        if producto.imagen:
+        motivo = _motivo_eliminacion(request)
+        if not motivo:
+            messages.error(request, "Debes escribir el motivo por el que eliminas la foto.")
+        elif producto.imagen:
             _borrar_archivo(producto.imagen)
             producto.imagen = ""
             producto.save(update_fields=["imagen"])
@@ -2046,7 +2072,11 @@ def admin_editar_usuario(request, id):
         foto = request.FILES.get("foto")
         if foto:
             usuario.foto = foto
-        
+        elif request.POST.get("quitar_foto") and usuario.foto:
+            # El Admin puede quitar la foto actual desde el formulario.
+            _borrar_archivo(usuario.foto)
+            usuario.foto = None
+
         # Actualizar contraseña si se proporciona y cumple las reglas
         password = request.POST.get("password", "").strip()
         if password:
@@ -2097,16 +2127,22 @@ def admin_suspender_usuario(request, id):
 @autorizacion(["Admin"])
 def admin_quitar_foto_usuario(request, id):
     """Quita la foto de perfil de un usuario cuya imagen no cumple."""
+    origen = request.POST.get("origen", "usuarios")
+    destino = "sena:admin_peluqueros" if origen == "peluqueros" else "sena:admin_usuarios"
     if request.method == "POST":
         usuario = get_object_or_404(Usuario, id=id)
-        if usuario.foto:
+        motivo = _motivo_eliminacion(request)
+        if not motivo:
+            messages.error(request, "Debes escribir el motivo por el que eliminas la foto.")
+        elif usuario.foto:
             _borrar_archivo(usuario.foto)
             usuario.foto = None
             usuario.save(update_fields=["foto"])
+            avisar_foto_eliminada(usuario, "tu foto de perfil", motivo, request)
             messages.success(request, f"Foto de {usuario.nombre} {usuario.apellido} eliminada.")
         else:
             messages.info(request, "Ese usuario no tiene foto de perfil.")
-    return redirect("sena:admin_usuarios")
+    return redirect(destino)
 
 
 # ═══════════════════════════════════════════════════════════════════════════

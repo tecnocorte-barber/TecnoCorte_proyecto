@@ -14,8 +14,13 @@
     {# Tarjeta de info del usuario #}
     <div class="bg-surface-container-low rounded-xl p-8 ambient-glow flex flex-col items-center text-center relative overflow-hidden">
       <div class="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
-      <div class="w-28 h-28 rounded-full mb-6 bg-surface-container-highest border border-outline-variant/30 flex items-center justify-center">
+      <div class="w-28 h-28 rounded-full mb-6 bg-surface-container-highest border border-outline-variant/30 flex items-center justify-center overflow-hidden">
+        {# Foto de perfil del administrador (o ícono si no tiene) #}
+        {% if usuario.foto %}
+        <img src="{{ usuario.foto.url }}" alt="{{ usuario.nombre }}" class="h-full w-full object-cover" />
+        {% else %}
         <span class="material-symbols-outlined text-primary text-6xl">person</span>
+        {% endif %}
       </div>
       <h2 class="font-headline text-2xl font-bold tracking-tight mb-1">
         {{ usuario.nombre }} {{ usuario.apellido }}
@@ -42,7 +47,7 @@
       {# Formulario editar datos #}
       <div id="editar" class="bg-surface-container-low rounded-xl p-8 ambient-glow scroll-mt-28">
         <h3 class="font-headline text-xl text-primary mb-6">Editar mis datos</h3>
-        <form method="post" class="space-y-5">
+        <form method="post" enctype="multipart/form-data" class="space-y-5">
           {% csrf_token %}
           <div>
             <label class="text-[10px] uppercase tracking-[0.2em] text-primary font-bold block mb-1">Nombre</label>
@@ -55,6 +60,11 @@
           <div>
             <label class="text-[10px] uppercase tracking-[0.2em] text-primary font-bold block mb-1">Teléfono</label>
             <input class="w-full bg-transparent border-b border-outline-variant/30 py-2 focus:outline-none focus:border-primary text-on-surface text-sm" name="telefono" value="{{ usuario.telefono }}" />
+          </div>
+          <div>
+            <label class="text-[10px] uppercase tracking-[0.2em] text-primary font-bold block mb-1">Foto de perfil</label>
+            <input type="file" name="foto" accept="image/*" class="w-full text-on-surface-variant text-sm file:mr-3 file:rounded-md file:border-0 file:bg-primary/10 file:px-3 file:py-2 file:text-primary" />
+            <p class="mt-1 text-[10px] text-on-surface-variant">JPG, PNG o WEBP.</p>
           </div>
           <button type="submit" class="w-full py-3 rounded-md border border-primary/40 text-primary hover:bg-primary/5 transition-colors text-sm font-semibold uppercase tracking-widest active:scale-95">
             Guardar cambios

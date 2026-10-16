@@ -1,6 +1,6 @@
 <!-- Barra lateral del barbero: perfil, enlaces de navegación, nueva cita y cerrar sesión -->
 <nav
-  class="hidden md:flex flex-col fixed left-0 top-0 h-screen w-72 bg-surface p-6 shadow-[0_0_40px_rgba(242,202,80,0.06)] z-50 border-r border-surface-container-low"
+  class="peluquero-sidebar panel-glass hidden md:flex flex-col fixed left-0 top-0 h-screen w-72 p-6 z-50"
 >
   {# Encabezado con nombre del barbero #}
   <div class="mb-12 flex items-center gap-4">
@@ -24,7 +24,7 @@
   {# Enlaces de navegación del barbero (resaltado según la página activa) #}
   <div class="flex-1 space-y-2">
     <a
-      class="flex items-center gap-4 p-3 rounded-lg {% if active == 'inicio' %}text-primary font-bold bg-surface-container-high{% else %}text-on-surface-variant font-medium hover:bg-surface-container-highest{% endif %} transition-colors duration-300 active:scale-95"
+      class="panel-glass-link flex items-center gap-4 p-3 {% if active == 'inicio' %}panel-glass-link--active{% else %}text-on-surface-variant font-medium{% endif %}"
       href="{% url 'sena:peluquero_dashboard' %}"
     >
       <span
@@ -35,7 +35,7 @@
       <span class="font-label uppercase tracking-widest text-sm">Inicio</span>
     </a>
     <a
-      class="flex items-center gap-4 p-3 rounded-lg {% if active == 'peluqueria' %}text-primary font-bold bg-surface-container-high{% else %}text-on-surface-variant font-medium hover:bg-surface-container-highest{% endif %} transition-colors duration-300 active:scale-95"
+      class="panel-glass-link flex items-center gap-4 p-3 {% if active == 'peluqueria' %}panel-glass-link--active{% else %}text-on-surface-variant font-medium{% endif %}"
       href="{% url 'sena:peluquero_editar_peluqueria' %}"
     >
       <span
@@ -48,14 +48,14 @@
       >
     </a>
     <a
-      class="flex items-center gap-4 p-3 rounded-lg {% if active == 'galeria' %}text-primary font-bold bg-surface-container-high{% else %}text-on-surface-variant font-medium hover:bg-surface-container-highest{% endif %} transition-colors duration-300 active:scale-95"
+      class="panel-glass-link flex items-center gap-4 p-3 {% if active == 'galeria' %}panel-glass-link--active{% else %}text-on-surface-variant font-medium{% endif %}"
       href="{% url 'sena:peluquero_galeria' %}"
     >
       <span class="material-symbols-outlined">photo_library</span>
       <span class="font-label uppercase tracking-widest text-sm">Galería</span>
     </a>
     <a
-      class="flex items-center gap-4 p-3 rounded-lg {% if active == 'perfil' %}text-primary font-bold bg-surface-container-high{% else %}text-on-surface-variant font-medium hover:bg-surface-container-highest{% endif %} transition-colors duration-300 active:scale-95"
+      class="panel-glass-link flex items-center gap-4 p-3 {% if active == 'perfil' %}panel-glass-link--active{% else %}text-on-surface-variant font-medium{% endif %}"
       href="{% url 'sena:peluquero_perfil' %}"
     >
       <span
@@ -68,7 +68,7 @@
       >
     </a>
     <a
-      class="flex items-center gap-4 p-3 rounded-lg {% if active == 'notificaciones' %}text-primary font-bold bg-surface-container-high{% else %}text-on-surface-variant font-medium hover:bg-surface-container-highest{% endif %} transition-colors"
+      class="panel-glass-link flex items-center gap-4 p-3 {% if active == 'notificaciones' %}panel-glass-link--active{% else %}text-on-surface-variant font-medium{% endif %}"
       href="{% url 'sena:peluquero_notificaciones' %}"
     >
       <span class="material-symbols-outlined">notifications</span>
@@ -84,7 +84,7 @@
 
   <a
     href="{% url 'sena:peluquero_crear_cita' %}"
-    class="w-full gold-gradient-bg text-on-primary font-label uppercase tracking-widest text-sm font-bold py-4 rounded-md mb-8 hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+    class="panel-glass-cta w-full font-label uppercase tracking-widest text-sm font-bold py-4 rounded-xl mb-8 flex items-center justify-center gap-2 active:scale-95"
   >
     <span class="material-symbols-outlined text-base">add</span>Nueva Cita
   </a>
@@ -95,14 +95,14 @@
       data-theme-toggle
       onclick="toggleTheme()"
       type="button"
-      class="flex items-center gap-4 p-3 rounded-lg text-on-surface-variant font-medium hover:bg-surface-container-highest transition-colors duration-300 active:scale-95 w-full"
+      class="panel-glass-link flex items-center gap-4 p-3 w-full text-on-surface-variant font-medium"
       title="Activar tema claro"
     >
       <span class="material-symbols-outlined theme-icon">dark_mode</span>
       <span class="font-label uppercase tracking-widest text-sm">Tema</span>
     </button>
     <a
-      class="flex items-center gap-4 p-3 rounded-lg text-on-surface-variant font-medium hover:bg-surface-container-highest transition-colors duration-300 active:scale-95"
+      class="panel-glass-link flex items-center gap-4 p-3 text-on-surface-variant font-medium hover:text-error"
       href="{% url 'sena:logout' %}"
     >
       <span class="material-symbols-outlined">logout</span>

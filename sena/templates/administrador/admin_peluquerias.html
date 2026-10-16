@@ -56,7 +56,8 @@ antialiased flex bg-surface{% endblock %}{% block content %}{% include "includes
         >
           {% csrf_token %}<button
             class="text-error"
-            data-confirm="¿Quitar la foto principal de esta barbería?"
+            type="submit"
+            data-motivo="Estás a punto de quitar la foto principal de «{{ peluqueria.nombre }}». Se avisará por correo a quien la subió."
           >
             Quitar foto
           </button>
