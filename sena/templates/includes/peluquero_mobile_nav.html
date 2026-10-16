@@ -1,37 +1,37 @@
 {# Barra de navegación inferior para móviles del barbero #}
 <nav
-  class="md:hidden fixed bottom-0 w-full z-40 bg-surface/90 backdrop-blur-xl border-t border-outline-variant/15 flex justify-around items-center px-4 py-3"
+  class="panel-glass-mobile md:hidden fixed bottom-0 w-full z-40 flex justify-around items-center px-4 py-3"
 >
   <a
-    class="flex flex-col items-center space-y-1 text-on-surface-variant p-2 {% if active == 'inicio' %}text-primary{% endif %}"
+    class="flex flex-col items-center space-y-1 text-on-surface-variant p-2 {% if active == 'inicio' %}panel-glass-link--active{% endif %}"
     href="{% url 'sena:peluquero_dashboard' %}"
     ><span class="material-symbols-outlined">dashboard</span
     ><span class="font-label text-[10px] uppercase tracking-wider"
       >Inicio</span
     > </a
   ><a
-    class="flex flex-col items-center space-y-1 text-on-surface-variant p-2 {% if active == 'citas' %}text-primary{% endif %}"
+    class="flex flex-col items-center space-y-1 text-on-surface-variant p-2 {% if active == 'citas' %}panel-glass-link--active{% endif %}"
     href="{% url 'sena:peluquero_crear_cita' %}"
     ><span class="material-symbols-outlined">calendar_month</span
     ><span class="font-label text-[10px] uppercase tracking-wider"
       >Citas</span
     > </a
   ><a
-    class="flex flex-col items-center space-y-1 text-on-surface-variant p-2 {% if active == 'peluqueria' %}text-primary{% endif %}"
+    class="flex flex-col items-center space-y-1 text-on-surface-variant p-2 {% if active == 'peluqueria' %}panel-glass-link--active{% endif %}"
     href="{% url 'sena:peluquero_editar_peluqueria' %}"
     ><span class="material-symbols-outlined">storefront</span
     ><span class="font-label text-[10px] uppercase tracking-wider"
       >Mi Peluquería</span
     > </a
   ><a
-    class="flex flex-col items-center space-y-1 text-on-surface-variant p-2 {% if active == 'perfil' %}text-primary{% endif %}"
+    class="flex flex-col items-center space-y-1 text-on-surface-variant p-2 {% if active == 'perfil' %}panel-glass-link--active{% endif %}"
     href="{% url 'sena:peluquero_perfil' %}"
     ><span class="material-symbols-outlined">person</span
     ><span class="font-label text-[10px] uppercase tracking-wider"
       >Perfil</span
     > </a
   ><a
-    class="flex flex-col items-center space-y-1 text-on-surface-variant p-2 {% if active == 'notificaciones' %}text-primary{% endif %}"
+    class="flex flex-col items-center space-y-1 text-on-surface-variant p-2 {% if active == 'notificaciones' %}panel-glass-link--active{% endif %}"
     href="{% url 'sena:peluquero_notificaciones' %}"
     ><span class="material-symbols-outlined">notifications</span
     ><span class="font-label text-[10px] uppercase tracking-wider"

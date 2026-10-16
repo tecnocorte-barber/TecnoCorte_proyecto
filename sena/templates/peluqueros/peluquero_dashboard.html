@@ -30,7 +30,7 @@ bg-background text-on-surface{% endblock %} {% block content %} {% include "incl
   </header>
 
   <div class="p-6 md:p-12 space-y-12 max-w-7xl mx-auto w-full">
-    {# Aviso cuando el barbero aún no tiene peluquería (el dashboard sigue funcionando) #}
+    {# Aviso cuando el barbero aún no tiene peluquería: el Admin es quien la crea o asigna #}
     {% if not peluqueria %}
     <div
       class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 bg-primary-container/10 border border-primary/30 rounded-xl p-5"
@@ -45,22 +45,15 @@ bg-background text-on-surface{% endblock %} {% block content %} {% include "incl
           <p
             class="font-label uppercase tracking-widest text-primary text-sm font-bold mb-1"
           >
-            Aún no tienes una peluquería
+            Aún no tienes una peluquería asignada
           </p>
           <p class="font-body text-on-surface-variant text-sm">
-            Crea tu peluquería para aparecer en el directorio público y que los
-            clientes puedan verte y agendar contigo. Mientras tanto, aquí puedes
-            gestionar tus citas y datos.
+            Tu barbería la crea o asigna el administrador. Pídele que te cree
+            una o que te agregue a una existente para aparecer en el directorio
+            y poder publicar tus fotos.
           </p>
         </div>
       </div>
-      <a
-        href="{% url 'sena:peluquero_crear_peluqueria' %}"
-        class="shrink-0 inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-on-primary font-label uppercase tracking-widest text-xs font-bold hover:opacity-90 transition-opacity gold-gradient-bg"
-      >
-        <span class="material-symbols-outlined text-base">add</span>
-        Crear mi peluquería
-      </a>
     </div>
     {% endif %}
 

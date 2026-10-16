@@ -45,8 +45,9 @@
           class="mt-auto"
         >
           {% csrf_token %}<button
+            type="submit"
             class="text-error text-sm font-semibold"
-            data-confirm="¿Eliminar esta foto de la galería?"
+            data-motivo="Estás a punto de eliminar esta foto de la galería de «{{ foto.peluqueria.nombre }}». Se avisará por correo a quien la subió."
           >
             Eliminar foto
           </button>

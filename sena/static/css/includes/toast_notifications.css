@@ -157,6 +157,42 @@
   background: var(--c-primary, #d6ad42);
   border: 1px solid var(--c-primary, #d6ad42);
 }
+.tc-confirm__accept[disabled] {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.tc-motivo__label {
+  display: block;
+  margin: 1.1rem 0 0.4rem;
+  color: var(--c-on-surface-variant, #d0c5af);
+  font:
+    800 0.68rem/1 "Manrope",
+    sans-serif;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.tc-motivo__input {
+  width: 100%;
+  min-height: 5.5rem;
+  padding: 0.7rem 0.8rem;
+  color: var(--c-on-surface, #e2e2e2);
+  background: var(--c-surface-container-high, #2a2a2a);
+  border: 1px solid var(--c-outline-variant, #4d4635);
+  border-radius: 0.55rem;
+  font:
+    400 0.9rem/1.45 "Manrope",
+    sans-serif;
+  resize: vertical;
+}
+.tc-motivo__input:focus {
+  outline: none;
+  border-color: var(--c-primary, #d6ad42);
+}
+.tc-motivo__hint {
+  margin: 0.45rem 0 0;
+  color: var(--c-on-surface-variant, #d0c5af);
+  font-size: 0.72rem;
+}
 @keyframes tc-toast-in {
   from {
     opacity: 0;

@@ -414,7 +414,9 @@ La duración se usa para bloquear el tiempo del barbero y para validar que la ci
 - **`notificar_suspension_barbero(request, barbero)`** → al suspender un barbero, pone sus citas futuras (no pasadas, no canceladas/completadas) en estado `Pendiente` y notifica + envía correo a cada cliente con el enlace para reagendar.
 - **`barbero_esta_disponible(barbero_id, fecha, hora, servicio, reserva_actual=None)`** → `(bool, mensaje)`; comprueba que el barbero no tenga otra cita que se cruce con la ventana propuesta (considerando la duración del servicio); puede excluir la reserva que se está editando.
 - **`_cliente_o_invitado(request)`** → `True` si no hay login o el rol es `Cliente` (barberos y admins no pueden comprar).
-- **`_peluquero_tiene_peluqueria(usuario_id)`** / **`_peluqueria_del_barbero(usuario_id)`** → devuelven la peluquería **dueña** del barbero; si no existe, la "heredan" de la primera reserva que el barbero tenga (asignando `dueno`).
+- **`_peluqueria_del_barbero(usuario_id)`** → devuelve la peluquería del barbero: primero la que es **dueño** (`Peluqueria.dueno`), luego la que el Admin le **asignó** (`Usuario.peluqueria`) y, en último caso, la hereda de la primera reserva. El barbero **ya no crea** su propia peluquería: la crea o asigna el Admin.
+- **`_motivo_eliminacion(request)`** → devuelve el texto (recortado) del campo `motivo` del POST, o `None` si viene vacío. Lo usan las vistas de borrado de fotos: **sin motivo no se borra nada**.
+- **`avisar_foto_eliminada(usuario, descripcion_foto, motivo, request=None)`** → envía un correo a quien subió la foto explicando **por qué** se eliminó (usando `enviar_correo`).
 - **`notificar_producto_agotado(producto)`** → notifica a todos los admins activos cuando un producto llega a stock 0.
 - **`_borrar_archivo(campo)`** → borra el archivo de un `ImageField` sin tocar el registro; tolera errores (por ejemplo, valores antiguos que eran URLs).
 - **`datos_producto(request, producto)`** → aplica el POST al modelo `Producto`: precio y stock se enteran y nunca quedan negativos; `disponible` solo es `True` si el checkbox está activo **y** `stock > 0`; gestiona la **foto** (si llega `imagen` la reemplaza, si llega `quitar_imagen` la borra); si el stock pasa de >0 a 0, notifica el agotamiento.
@@ -433,6 +435,7 @@ La duración se usa para bloquear el tiempo del barbero y para validar que la ci
 - **Recuperación de contraseña:** token firmado de 1 hora atado a la contraseña actual (ver §7.3).
 - **Cambio de contraseña:** vista propia (`cambiar_password`) que exige la contraseña actual y aplica `validar_password`.
 - **Registro:** solo crea clientes (`rol="Cliente"`), con validación de email único y contraseña segura; inicia sesión automáticamente.
+- **Alta de barberos:** solo el Admin crea/edita barberos y **debe asignarles una peluquería** (`Usuario.peluqueria`), que es obligatoria. El barbero **no** se registra solo ni crea su propia peluquería; si aún no tiene una asignada, su panel se lo indica con un aviso (`SIN_PELUQUERIA`).
 - **Carrito por usuario:** los carritos se guardan por cuenta en la sesión (`carritos_usuario`), evitando fugas entre cuentas (ver §7.2).
 
 ---
@@ -496,7 +499,6 @@ Todas las rutas están en `sena/urls.py` con `app_name = "sena"`. API de DRF mon
 | `/peluquero/crear_cita/` | `peluquero_crear_cita` | `peluquero_crear_cita` |
 | `/peluquero/cita/<cita_id>/estado/` | `peluquero_cambiar_estado` | `peluquero_cambiar_estado` |
 | `/peluquero/notificaciones/` | `peluquero_notificaciones` | `peluquero_notificaciones` |
-| `/peluquero/peluqueria/crear/` | `peluquero_crear_peluqueria` | `peluquero_crear_peluqueria` |
 | `/peluquero/peluqueria/editar/` | `peluquero_editar_peluqueria` | `peluquero_editar_peluqueria` |
 | `/peluquero/galeria/` | `peluquero_galeria` | `peluquero_galeria` |
 | `/peluquero/galeria/agregar/` | `peluquero_agregar_imagen` | `peluquero_agregar_imagen` |
@@ -673,8 +675,18 @@ Se crean automáticamente en estos eventos:
 ### 11.2 Correos (plantilla `emails/notificacion.html`)
 
 - **Formato:** `EmailMultiAlternatives` con versión texto + HTML; **logo embebido** por `Content-ID <tecnocorte-logo>`; `fail_silently=True`.
-- **Eventos que envían correo:** bienvenida (registro), recuperación de contraseña, cita agendada (cliente y barbero), cita modificada (cliente, barbero y barbero anterior), cita cancelada (por cliente, barbero o admin), reserva eliminada, cita agendada por barbero/admin, y mensaje de contacto al correo oficial.
+- **Eventos que envían correo:** bienvenida (registro), recuperación de contraseña, cita agendada (cliente y barbero), cita modificada (cliente, barbero y barbero anterior), cita cancelada (por cliente, barbero o admin), reserva eliminada, cita agendada por barbero/admin, mensaje de contacto al correo oficial, y **foto eliminada por el Admin** (se avisa a quien la subió con el motivo escrito).
 - **En desarrollo** los correos se imprimen en la consola (backend `console`).
+
+### 11.3 Moderación de fotos (motivo obligatorio)
+
+Cuando el Admin elimina una **foto** (de producto, de perfil o de galería) el sistema:
+
+1. Exige que se escriba un **motivo** en un modal (campo `motivo`); sin motivo no borra nada y muestra un aviso.
+2. Borra el archivo del `ImageField` con `_borrar_archivo` (tolera valores antiguos que eran URLs).
+3. Si la foto es de un perfil o de una peluquería, envía un **correo a quien la subió** (`avisar_foto_eliminada`) explicando el motivo.
+
+> El motivo **solo** se exige para fotos; borrar usuarios, barberos, peluquerías o productos sigue usando la confirmación normal.
 
 ---
 
@@ -732,26 +744,28 @@ Autenticación común: **`TokenAuthentication` + `SessionAuthentication`**. Perm
 
 ## 14. Frontend: plantillas, includes y estáticos
 
-**Enfoque:** sin framework CSS ni build; cada plantilla lleva sus estilos en un bloque `<style>`. Fuentes de Google Fonts cargadas con `preconnect` desde `base/base.html`. **59 plantillas, ~10.100 líneas.**
+**Enfoque:** sin framework CSS ni build; cada plantilla lleva sus estilos en un bloque `<style>`. Fuentes de Google Fonts cargadas con `preconnect` desde `base/base.html`. **Los menús de Admin y Barbero usan Glassmorphism** (`sena/static/css/includes/panel_glass.css`); el menú del cliente (`site_nav.html`) se mantiene sin cambios. **58 plantillas, ~10.100 líneas.**
 
 ### 14.1 Base e includes (14)
 
 | Plantilla | Líneas | Función |
 |---|---|---|
 | `base/base.html` | 96 | Esqueleto: head con fuentes, bloque `<style>`, bloques `{% block %}` |
-| `includes/site_nav.html` | 130 | Navegación del sitio público |
-| `includes/admin_sidebar.html` | 160 | Menú lateral del admin |
-| `includes/admin_mobile_nav.html` | 40 | Navegación móvil del admin |
-| `includes/peluquero_sidebar.html` | 114 | Menú lateral del barbero |
-| `includes/peluquero_mobile_nav.html` | 40 | Navegación móvil del barbero |
+| `includes/site_nav.html` | 130 | Navegación del sitio público (cliente) |
+| `includes/admin_sidebar.html` | ~215 | Menú lateral del admin (**cristal**) |
+| `includes/admin_mobile_nav.html` | ~55 | Navegación móvil del admin (**cristal**) |
+| `includes/peluquero_sidebar.html` | ~120 | Menú lateral del barbero (**cristal**) |
+| `includes/peluquero_mobile_nav.html` | ~50 | Navegación móvil del barbero (**cristal**) |
 | `includes/carrito_indicator.html` | 15 | Contador del carrito (usa `cantidad` del context processor) |
 | `includes/notificaciones_indicator.html` | 20 | Campana de notificaciones (usa `notificaciones_no_leidas`) |
-| `includes/toast_notifications.html` | 245 | Mensajes flash tipo toast |
+| `includes/toast_notifications.html` | ~300 | Mensajes flash tipo toast + modal de **motivo** al borrar fotos |
 | `includes/tema.html` | 161 | Selector de tema claro/oscuro |
 | `includes/logo.html` | 6 | Logo reutilizable |
 | `includes/loading.html` | 61 | Pantalla de carga |
 | `includes/cargando.html` | 57 | Variante de carga |
 | `emails/notificacion.html` | 149 | Plantilla de correos (diseño oscuro con logo embebido) |
+
+**Hojas de estilo compartidas (`sena/static/css/includes/`):** `panel_glass.css` (Glassmorphism de los paneles Admin/Barbero), `toast_notifications.css` (toasts + modal de motivo), `tema.css`, `loading.css`.
 
 ### 14.2 Públicas (8) — `templates/publicos/`
 
@@ -765,9 +779,9 @@ Autenticación común: **`TokenAuthentication` + `SessionAuthentication`**. Perm
 
 `usuario_tienda.html` (617), `usuario_servicios.html` (540), `usuario_reservar_cita.html` (636, con calendario JS), `usuario_confirmar_reserva.html` (221), `usuario_perfil.html` (506), `usuario_peluquerias.html` (273), `usuario_peluqueria_detalle.html` (192), `usuario_notificaciones.html` (208), `usuario_editar_reserva.html` (82), `cambiar_password.html` (98), `dashboard_base.html` (179, base del panel de cliente).
 
-### 14.5 Barbero (7) — `templates/peluqueros/`
+### 14.5 Barbero (6) — `templates/peluqueros/`
 
-`peluquero_dashboard.html` (475), `peluquero_perfil.html` (301), `peluquero_crear_cita.html` (160), `peluquero_galeria.html` (139), `peluquero_editar_peluqueria.html` (96), `peluquero_crear_peluqueria.html` (79), `peluquero_notificaciones.html` (68).
+`peluquero_dashboard.html` (475), `peluquero_perfil.html` (301), `peluquero_crear_cita.html` (160), `peluquero_galeria.html` (139), `peluquero_editar_peluqueria.html` (96), `peluquero_notificaciones.html` (68). *(Se eliminó `peluquero_crear_peluqueria.html`: el barbero ya no crea su propia peluquería.)*
 
 ### 14.6 Admin (17) — `templates/administrador/`
 
@@ -810,6 +824,9 @@ Autenticación común: **`TokenAuthentication` + `SessionAuthentication`**. Perm
 | 0021 | `usuario_foto_usuario_peluqueria` | Foto de perfil y campos de peluquería |
 | 0021 | `agregar_peluqueria_dueno_galeria` | Dueño de peluquería e ImagenPeluqueria |
 | 0022 | `merge_20260921_1502` | Segundo merge de ramas |
+| 0023 | `bloqueohorario_sena_bloque_peluque_6274c6_idx_and_more` | Índices de bloqueos y otros |
+| 0024 | `configuracion_alter_producto_imagen` | **`Producto.imagen` pasa a `ImageField`** y modelo `Configuracion` |
+| 0025 | `configuracion_inicial` | Datos iniciales de `Configuracion` (singleton) |
 
 - **Nota:** existen **dos ramas de migraciones paralelas** (dos `0013`, dos `0021`) resueltas con merges `0017` y `0022`.
 - **Base local:** `db_temporal.sqlite3` (282 KB, ignorada por Git).
@@ -832,6 +849,12 @@ Autenticación común: **`TokenAuthentication` + `SessionAuthentication`**. Perm
 | 7 | `test_cambio_password_usa_la_cuenta_de_la_sesion` | Cambio de contraseña: muestra el email correcto, redirige al perfil y actualiza el hash |
 | 8 | `test_mensaje_de_ayuda_llega_al_correo_oficial_y_al_panel` | El formulario de ayuda envía correo a `tecnocorte083@gmail.com` con el asunto y crea notificación para el admin |
 | 9 | `test_serializer_incluye_y_valida_servicio` | `ReservaSerializer` incluye el campo `servicio` y rechaza un servicio inexistente |
+
+**`sena/tests_fotos.py` — `FotosYConfiguracionTests(TestCase)`, 21 pruebas** (fotos de producto, moderación de imágenes, configuración, motivo de borrado + correo, alta de barberos y render de los paneles de cristal). Incluyen un `tearDown` que limpia la caché de `Configuracion` (se cachea 300 s) para no filtrar estado entre pruebas. Ejecutar todo con:
+
+```bash
+DJANGO_SETTINGS_MODULE=tecnocorte.settings_local python manage.py test sena --noinput
+```
 
 ---
 

@@ -571,7 +571,9 @@
         if (!form.classList.contains("add-to-cart-form")) return;
         e.preventDefault();
         var button = form.querySelector('button[type="submit"]');
-        var badge = document.getElementById("cart-count");
+        // El indicador del carrito usa la clase .cart-count (no un id) y puede
+        // repetirse en la navegación de escritorio y móvil.
+        var badges = document.querySelectorAll(".cart-count");
         button.disabled = true;
         fetch(form.action, {
           method: "POST",
@@ -593,8 +595,10 @@
           })
           .then(function (data) {
             if (data && data.cantidad !== undefined) {
-              badge.textContent = data.cantidad;
-              badge.classList.remove("hidden");
+              badges.forEach(function (badge) {
+                badge.textContent = data.cantidad;
+                badge.classList.remove("hidden");
+              });
             }
             button.disabled = false;
             if (window.TecnoCorteNotify)
@@ -604,9 +608,11 @@
           })
           .catch(function (error) {
             var feedback = document.getElementById("tienda-feedback");
-            feedback.textContent = error.message;
-            feedback.classList.remove("hidden");
-            feedback.classList.add("flex");
+            if (feedback) {
+              feedback.textContent = error.message;
+              feedback.classList.remove("hidden");
+              feedback.classList.add("flex");
+            }
             if (window.TecnoCorteNotify)
               window.TecnoCorteNotify.error(error.message);
             button.disabled = false;
