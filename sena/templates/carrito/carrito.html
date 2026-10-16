@@ -6,6 +6,7 @@
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <title>Carrito - TecnoCorte</title>
+    {% include "includes/favicon.html" %}
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link
       href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
@@ -156,13 +157,13 @@
                   method="post"
                   action="{% url 'sena:actualizar_carrito' item.producto.id %}"
                   class="cart-update-form"
+                  data-sin-cargando
                 >
                   {% csrf_token %}
                   <input type="hidden" name="accion" value="decrementar" />
+                  <input type="hidden" name="cantidad" value="{{ item.cantidad|add:-1 }}" />
                   <button
                     class="text-primary hover:text-primary-container transition-colors active:scale-90 p-1"
-                    name="cantidad"
-                    value="{{ item.cantidad|add:-1 }}"
                     type="submit"
                     title="Menos"
                   >
@@ -180,13 +181,13 @@
                   method="post"
                   action="{% url 'sena:actualizar_carrito' item.producto.id %}"
                   class="cart-update-form"
+                  data-sin-cargando
                 >
                   {% csrf_token %}
                   <input type="hidden" name="accion" value="incrementar" />
+                  <input type="hidden" name="cantidad" value="{{ item.cantidad|add:1 }}" />
                   <button
                     class="text-primary hover:text-primary-container transition-colors active:scale-90 p-1"
-                    name="cantidad"
-                    value="{{ item.cantidad|add:1 }}"
                     type="submit"
                     title="Más"
                   >
@@ -203,6 +204,7 @@
                 method="post"
                 action="{% url 'sena:eliminar_carrito' item.producto.id %}"
                 class="cart-remove-form"
+                data-sin-cargando
               >
                 {% csrf_token %}
                 <button
@@ -397,10 +399,10 @@
                 if (quantity) quantity.textContent = data.item_cantidad;
                 if (subtotal) subtotal.textContent = money(data.subtotal);
                 if (updateForms[0])
-                  updateForms[0].querySelector("button[name=cantidad]").value =
+                  updateForms[0].querySelector("input[name=cantidad]").value =
                     Math.max(data.item_cantidad - 1, 0);
                 if (updateForms[1])
-                  updateForms[1].querySelector("button[name=cantidad]").value =
+                  updateForms[1].querySelector("input[name=cantidad]").value =
                     data.item_cantidad + 1;
               }
               if (window.TecnoCorteNotify) {

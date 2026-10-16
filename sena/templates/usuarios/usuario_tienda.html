@@ -6,6 +6,7 @@
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <title>TecnoCorte - Tienda</title>
+    {% include "includes/favicon.html" %}
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link
       href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Noto+Serif:wght@400;700;900&display=swap"
@@ -358,6 +359,7 @@
                     method="post"
                     action="{% url 'sena:agregar_carrito' producto.id %}"
                     class="add-to-cart-form inline-flex"
+                    data-sin-cargando
                     data-nombre="{{ producto.nombre }}"
                   >
                     {% csrf_token %}

@@ -32,6 +32,9 @@
 
   document.addEventListener("submit", function (e) {
     var form = e.target;
+    // Los formularios AJAX gestionan su propio estado de carga y notifican
+    // el resultado; no deben dejar bloqueado el overlay global.
+    if (form.hasAttribute("data-sin-cargando")) return;
     if (form.method && form.method.toUpperCase() === "GET") return;
     var btn = form.querySelector("[type=submit], button:not([type=button])");
     var label = btn ? (btn.textContent || "Cargando...").trim() : "Cargando...";
