@@ -4,6 +4,7 @@
 {% block content %}
 {% include "includes/admin_sidebar.html" with active="galeria" %}
 <main class="ml-0 md:ml-64 flex-1 p-6 md:p-12 pb-24 md:pb-12">
+  {% include "includes/panel_header.html" %}
   <div class="flex flex-wrap justify-between items-center gap-4 mb-10">
     <div>
       <h1 class="font-headline text-3xl md:text-4xl text-primary">Galería</h1>
@@ -18,11 +19,41 @@
     >
   </div>
 
+  {# Filtros: "Todas" + un botón dinámico por cada peluquería con fotos #}
+  <div class="mb-8 flex flex-wrap items-center gap-2" id="galeria-filtros">
+    <button
+      type="button"
+      class="galeria-filtro is-active rounded-full border border-primary/40 bg-primary/15 px-4 py-2 text-sm font-semibold text-primary transition-colors hover:bg-primary/25"
+      data-peluqueria=""
+    >
+      Todas
+      <span class="ml-1 text-xs opacity-70">({{ fotos|length }})</span>
+    </button>
+    {% for peluqueria in peluquerias %}
+    <button
+      type="button"
+      class="galeria-filtro rounded-full border border-outline-variant/40 bg-surface-container-high px-4 py-2 text-sm font-medium text-on-surface-variant transition-colors hover:border-primary/40 hover:text-primary"
+      data-peluqueria="{{ peluqueria.id }}"
+    >
+      {{ peluqueria.nombre }}
+      <span class="ml-1 text-xs opacity-70"
+        >({{ peluqueria.galeria.count }})</span
+      >
+    </button>
+    {% endfor %}
+    <span
+      id="galeria-vacio"
+      class="hidden text-sm text-on-surface-variant"
+      >Esta barbería aún no tiene fotos.</span
+    >
+  </div>
+
   {% if fotos %}
-  <div class="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+  <div class="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" id="galeria-grid">
     {% for foto in fotos %}
     <figure
-      class="bg-surface-container-low rounded-xl overflow-hidden border border-outline-variant/20 flex flex-col"
+      class="galeria-item bg-surface-container-low rounded-xl overflow-hidden border border-outline-variant/20 flex flex-col"
+      data-peluqueria="{{ foto.peluqueria.id }}"
     >
       <img
         src="{{ foto.imagen.url }}"
@@ -62,5 +93,41 @@
   </p>
   {% endif %}
 </main>
+
+<script>
+  // Filtrado de la galería por peluquería (Todas / una barbería)
+  (function () {
+    var botones = document.querySelectorAll(".galeria-filtro");
+    var items = document.querySelectorAll(".galeria-item");
+    var vacio = document.getElementById("galeria-vacio");
+    if (!botones.length || !items.length) return;
+
+    botones.forEach(function (boton) {
+      boton.addEventListener("click", function () {
+        var id = boton.dataset.peluqueria;
+        var visibles = 0;
+
+        botones.forEach(function (otro) {
+          var activo = otro === boton;
+          otro.classList.toggle("is-active", activo);
+          otro.classList.toggle("border-primary/40", activo);
+          otro.classList.toggle("bg-primary/15", activo);
+          otro.classList.toggle("text-primary", activo);
+          otro.classList.toggle("border-outline-variant/40", !activo);
+          otro.classList.toggle("bg-surface-container-high", !activo);
+          otro.classList.toggle("text-on-surface-variant", !activo);
+        });
+
+        items.forEach(function (item) {
+          var coincide = !id || item.dataset.peluqueria === id;
+          item.classList.toggle("hidden", !coincide);
+          if (coincide) visibles++;
+        });
+
+        if (vacio) vacio.classList.toggle("hidden", visibles > 0);
+      });
+    });
+  })();
+</script>
 {% include "includes/admin_mobile_nav.html" with active="galeria" %}
 {% endblock %}

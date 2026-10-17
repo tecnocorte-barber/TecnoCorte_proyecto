@@ -81,20 +81,7 @@
               class="absolute -top-2 -right-2 min-w-5 h-5 px-1 rounded-full bg-primary text-on-primary text-[10px] font-bold flex items-center justify-center"
               >{{ cantidad|default:0 }}
             </span> </a
-          ><a
-            href="{% url 'sena:usuario_perfil' %}"
-            class="text-primary hover:text-primary-container transition-colors"
-            title="Perfil"
-            ><span
-              class="material-symbols-outlined"
-              style="font-variation-settings: &quot;FILL&quot; 1"
-              >account_circle</span
-            > </a
-          ><a
-            href="{% url 'sena:logout' %}"
-            class="text-on-surface-variant hover:text-error transition-colors text-xs font-bold uppercase tracking-widest"
-            >Salir</a
-          >
+          >{% include "includes/panel_header_actions.html" with sin_notificaciones=True %}
         </div>
       </div>
     </nav>
@@ -261,13 +248,13 @@
           >
         </div>
         <a
-          href="{% url 'sena:logout' %}"
-          class="flex items-center justify-center gap-2 w-full py-4 text-error hover:text-error/80 transition-colors group"
+          href="{% url 'sena:usuario_configuracion' %}"
+          class="flex items-center justify-center gap-2 w-full py-4 text-primary hover:text-primary-container transition-colors group"
           ><span
             class="material-symbols-outlined transition-transform group-hover:-translate-x-1"
-            >logout</span
+            >settings</span
           ><span class="text-sm uppercase tracking-widest font-semibold"
-            >Cerrar Sesión</span
+            >Configuración</span
           >
         </a>
       </div>

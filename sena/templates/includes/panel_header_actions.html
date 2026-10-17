@@ -1,0 +1,164 @@
+{% comment %}Acciones de la cabecera de panel: iconos de Dashboard y Notificaciones más
+el desplegable del perfil (Mi perfil, Configuración, Tema, Cerrar sesión).
+Se usa solo o dentro de "includes/panel_header.html".{% endcomment %}
+{% if request.session.logueado.rol == "Admin" %}
+  {% url 'sena:admin_dashboard' as url_dashboard %}
+  {% url 'sena:admin_notificaciones' as url_notificaciones %}
+  {% url 'sena:admin_perfil' as url_perfil %}
+  {% url 'sena:admin_configuracion' as url_configuracion %}
+{% elif request.session.logueado.rol == "Barbero" %}
+  {% url 'sena:peluquero_dashboard' as url_dashboard %}
+  {% url 'sena:peluquero_notificaciones' as url_notificaciones %}
+  {% url 'sena:peluquero_perfil' as url_perfil %}
+  {% url 'sena:peluquero_configuracion' as url_configuracion %}
+{% else %}
+  {% url 'sena:usuario_dashboard' as url_dashboard %}
+  {% url 'sena:usuario_notificaciones' as url_notificaciones %}
+  {% url 'sena:usuario_perfil' as url_perfil %}
+  {% url 'sena:usuario_configuracion' as url_configuracion %}
+{% endif %}
+<div class="flex items-center gap-3 md:gap-4" data-panel-actions>
+  {# Icono de Dashboard: acceso rápido al inicio del panel #}
+  <a
+    href="{{ url_dashboard }}"
+    class="panel-header-icon"
+    title="Dashboard"
+    aria-label="Dashboard"
+    ><span class="material-symbols-outlined">dashboard</span></a
+  >
+
+  {# Icono de Notificaciones con badge de pendientes (opcional: se puede ocultar) #}
+  {% if not sin_notificaciones %}
+  <a
+    href="{{ url_notificaciones }}"
+    class="panel-header-icon relative"
+    title="Notificaciones"
+    aria-label="Notificaciones"
+    ><span class="material-symbols-outlined">notifications</span
+    >{% if notificaciones_no_leidas %}<span
+      class="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-error px-1 text-[10px] font-bold text-on-error"
+      >{{ notificaciones_no_leidas }}</span
+    >{% endif %}</a
+  >
+  {% endif %}
+
+  {# Menú desplegable del perfil: centraliza perfil, configuración, tema y salida #}
+  <div class="relative" data-profile-menu>
+    <button
+      type="button"
+      data-profile-menu-button
+      class="panel-header-icon"
+      title="Mi perfil"
+      aria-label="Mi perfil"
+      aria-haspopup="true"
+      aria-expanded="false"
+    >
+      <span
+        class="material-symbols-outlined"
+        style="font-variation-settings: &quot;FILL&quot; 1"
+        >account_circle</span
+      >
+    </button>
+    <div
+      data-profile-menu-panel
+      class="hidden absolute right-0 mt-2 w-56 rounded-xl border border-outline-variant/20 bg-surface-container-low p-2 shadow-xl z-50"
+    >
+      <p
+        class="px-3 pt-2 pb-1 text-[10px] uppercase tracking-widest text-on-surface-variant truncate"
+      >
+        {{ request.session.logueado.nombre }}
+      </p>
+      <a href="{{ url_perfil }}" class="panel-header-menu-item">
+        <span class="material-symbols-outlined text-base">person</span>Mi perfil
+      </a>
+      <a href="{{ url_configuracion }}" class="panel-header-menu-item">
+        <span class="material-symbols-outlined text-base">settings</span
+        >Configuración
+      </a>
+      <button
+        type="button"
+        data-theme-toggle
+        onclick="toggleTheme()"
+        class="panel-header-menu-item w-full text-left"
+        title="Activar tema claro"
+      >
+        <span class="material-symbols-outlined theme-icon text-base">dark_mode</span
+        >Tema
+      </button>
+      <a href="{% url 'sena:logout' %}" class="panel-header-menu-item hover:text-error">
+        <span class="material-symbols-outlined text-base">logout</span>Cerrar sesión
+      </a>
+    </div>
+  </div>
+</div>
+
+{# Estilos mínimos de la cabecera para heredar el tema sin CSS extra #}
+<style>
+  .panel-header-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 0.75rem;
+    color: var(--c-on-surface-variant, #555);
+    transition: color 0.2s ease, background 0.2s ease, transform 0.1s ease;
+  }
+  .panel-header-icon:hover {
+    color: var(--c-primary, #d4ad42);
+    background: color-mix(in srgb, var(--c-primary, #d4ad42) 12%, transparent);
+  }
+  .panel-header-icon:active {
+    transform: scale(0.92);
+  }
+  .panel-header-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--c-on-surface, #1c1c1c);
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  .panel-header-menu-item:hover {
+    background: color-mix(in srgb, var(--c-primary, #d4ad42) 10%, transparent);
+  }
+</style>
+
+{# Script del desplegable: se inicializa una sola vez por página #}
+<script>
+  (function () {
+    if (window.__tcPanelMenu) return; // Evita registrar el listener dos veces
+    window.__tcPanelMenu = true;
+    function cerrarTodos(excepto) {
+      document.querySelectorAll("[data-profile-menu]").forEach(function (menu) {
+        if (menu === excepto) return;
+        var panel = menu.querySelector("[data-profile-menu-panel]");
+        if (!panel) return;
+        panel.classList.add("hidden");
+        var boton = menu.querySelector("[data-profile-menu-button]");
+        if (boton) boton.setAttribute("aria-expanded", "false");
+      });
+    }
+    document.addEventListener("click", function (evento) {
+      var contenedor = evento.target.closest("[data-profile-menu]");
+      if (contenedor) {
+        var panel = contenedor.querySelector("[data-profile-menu-panel]");
+        var abierto = !panel.classList.contains("hidden");
+        cerrarTodos(contenedor);
+        panel.classList.toggle("hidden", abierto);
+        contenedor
+          .querySelector("[data-profile-menu-button]")
+          .setAttribute("aria-expanded", String(!abierto));
+        return;
+      }
+      cerrarTodos(null);
+    });
+    document.addEventListener("keydown", function (evento) {
+      if (evento.key === "Escape") cerrarTodos(null);
+    });
+  })();
+</script>

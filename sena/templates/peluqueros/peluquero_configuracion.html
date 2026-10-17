@@ -1,0 +1,354 @@
+{# Configuración del barbero: Portafolio, Agenda, Servicios y Notificaciones #}
+{% extends "usuarios/dashboard_base.html" %}
+{% block title %}TecnoCorte - Configuración de Barbero{% endblock %}
+{% block body_class %}antialiased min-h-screen flex bg-background text-on-surface{% endblock %}
+{% block content %}
+{% include "includes/peluquero_sidebar.html" with active="configuracion" %}
+<main class="flex-1 md:ml-72 flex flex-col min-h-screen relative bg-background">
+  {% include "includes/panel_header.html" %}
+
+  <div class="p-6 md:p-12 space-y-10 max-w-5xl mx-auto w-full">
+    <div class="border-b border-surface-container-low pb-6">
+      <h1 class="font-headline text-4xl text-on-surface tracking-tight mb-2">
+        Configuración
+      </h1>
+      <p class="font-body text-on-surface-variant text-sm">
+        Administra tu portafolio, tu agenda, los servicios que ofreces y cómo
+        quieres que te avisemos.
+      </p>
+    </div>
+
+    {# Navegación por pestañas #}
+    <nav class="flex flex-wrap gap-2" aria-label="Secciones de configuración">
+      {% for p in pestanas %}
+      <a
+        href="{% url 'sena:peluquero_configuracion' %}?seccion={{ p }}"
+        class="px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-all active:scale-95 {% if pestana == p %}bg-primary text-on-primary{% else %}border border-outline-variant/30 text-on-surface-variant hover:border-primary hover:text-primary{% endif %}"
+        >{{ p }}</a
+      >
+      {% endfor %}
+    </nav>
+
+    {# ---------- Portafolio ---------- #}
+    {% if pestana == "portafolio" %}
+    <section class="bg-surface-container-low rounded-xl p-8 ambient-glow">
+      <h2 class="font-headline text-2xl text-primary-container mb-6">
+        Mi portafolio
+      </h2>
+      <form method="post" enctype="multipart/form-data" class="space-y-5 max-w-lg">
+        {% csrf_token %}
+        <input type="hidden" name="accion" value="portafolio" />
+        <div>
+          <label
+            class="text-[10px] uppercase tracking-[0.2em] text-primary font-bold block mb-1"
+            >Foto de perfil</label
+          >
+          {% if usuario.foto %}
+          <img
+            src="{{ usuario.foto.url }}"
+            alt="{{ usuario.nombre }}"
+            class="mb-3 h-20 w-20 rounded-full object-cover border border-outline-variant/30"
+          />
+          {% endif %}
+          <input
+            type="file"
+            name="foto"
+            accept="image/*"
+            class="w-full text-on-surface-variant text-sm file:mr-3 file:rounded-md file:border-0 file:bg-primary/10 file:px-3 file:py-2 file:text-primary"
+          />
+        </div>
+        <div>
+          <label
+            class="text-[10px] uppercase tracking-[0.2em] text-primary font-bold block mb-1"
+            >Nombre</label
+          >
+          <input
+            class="w-full bg-transparent border-b border-outline-variant/30 py-2 focus:outline-none focus:border-primary text-on-surface text-sm"
+            name="nombre"
+            value="{{ usuario.nombre }}"
+            required
+          />
+        </div>
+        <div>
+          <label
+            class="text-[10px] uppercase tracking-[0.2em] text-primary font-bold block mb-1"
+            >Apellido</label
+          >
+          <input
+            class="w-full bg-transparent border-b border-outline-variant/30 py-2 focus:outline-none focus:border-primary text-on-surface text-sm"
+            name="apellido"
+            value="{{ usuario.apellido }}"
+            required
+          />
+        </div>
+        <div>
+          <label
+            class="text-[10px] uppercase tracking-[0.2em] text-primary font-bold block mb-1"
+            >Teléfono</label
+          >
+          <input
+            class="w-full bg-transparent border-b border-outline-variant/30 py-2 focus:outline-none focus:border-primary text-on-surface text-sm"
+            name="telefono"
+            value="{{ usuario.telefono }}"
+          />
+        </div>
+        <button
+          type="submit"
+          class="w-full py-3 rounded-md border border-primary/40 text-primary hover:bg-primary/5 transition-colors text-sm font-semibold uppercase tracking-widest active:scale-95"
+        >
+          Guardar cambios
+        </button>
+      </form>
+
+      {% if peluqueria %}
+      <div class="mt-8 pt-6 border-t border-outline-variant/10">
+        <p class="text-sm text-on-surface-variant mb-4">
+          Tu portafolio público en
+          <span class="text-on-surface font-semibold">{{ peluqueria.nombre }}</span
+          >.
+        </p>
+        <div class="flex flex-wrap gap-3">
+          <a
+            href="{% url 'sena:peluquero_galeria' %}"
+            class="inline-flex items-center gap-2 rounded-md border border-outline-variant/30 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-primary transition-colors hover:border-primary active:scale-95"
+            ><span class="material-symbols-outlined text-base">photo_library</span
+            >Galería ({{ fotos|length }})</a
+          >
+          <a
+            href="{% url 'sena:peluquero_editar_peluqueria' %}"
+            class="inline-flex items-center gap-2 rounded-md border border-outline-variant/30 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-primary transition-colors hover:border-primary active:scale-95"
+            ><span class="material-symbols-outlined text-base">storefront</span
+            >Editar mi peluquería</a
+          >
+          <a
+            href="{% url 'sena:peluquero_perfil' %}"
+            class="inline-flex items-center gap-2 rounded-md border border-outline-variant/30 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-primary transition-colors hover:border-primary active:scale-95"
+            ><span class="material-symbols-outlined text-base">visibility</span
+            >Ver mi perfil público</a
+          >
+        </div>
+      </div>
+      {% else %}
+      <p class="mt-8 pt-6 border-t border-outline-variant/10 text-sm text-on-surface-variant">
+        Aún no tienes una peluquería asignada. El administrador es quien la crea
+        y te asigna.
+      </p>
+      {% endif %}
+    </section>
+    {% endif %}
+
+    {# ---------- Agenda ---------- #}
+    {% if pestana == "agenda" %}
+    <section class="flex flex-col gap-8">
+      <div class="bg-surface-container-low rounded-xl p-8">
+        <h2 class="font-headline text-2xl text-primary-container mb-4">
+          Horario de atención
+        </h2>
+        <p class="text-sm text-on-surface-variant mb-6">
+          Horario general de tu peluquería. Si necesitas cambiarlo, pídele al
+          administrador.
+        </p>
+        {% if horarios %}
+        <ul class="divide-y divide-outline-variant/10">
+          {% for h in horarios %}
+          <li class="py-3 flex items-center justify-between gap-4 text-sm">
+            <span class="flex items-center gap-3 text-on-surface">
+              <span
+                class="material-symbols-outlined text-base {% if h.activo %}text-primary{% else %}text-on-surface-variant/40{% endif %}"
+                >{% if h.activo %}event_available{% else %}event_busy{% endif %}</span
+              >{{ h.get_dia_semana_display }}
+            </span>
+            <span class="text-on-surface-variant"
+              >{% if h.activo %}{{ h.hora_inicio|time:"H:i" }} - {{ h.hora_fin|time:"H:i" }}{% else %}Cerrado{% endif %}</span
+            >
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-sm text-on-surface-variant">
+          Tu peluquería todavía no tiene horarios configurados.
+        </p>
+        {% endif %}
+      </div>
+
+      <div class="bg-surface-container-low rounded-xl p-8">
+        <h2 class="font-headline text-2xl text-primary-container mb-4">
+          Días y horas bloqueados
+        </h2>
+        <p class="text-sm text-on-surface-variant mb-6">
+          Últimos bloqueos que no reciben citas.
+        </p>
+        {% if bloqueos %}
+        <ul class="divide-y divide-outline-variant/10">
+          {% for b in bloqueos %}
+          <li class="py-3 flex items-center justify-between gap-4 text-sm">
+            <span class="flex items-center gap-3 text-on-surface">
+              <span class="material-symbols-outlined text-base text-error"
+                >block</span
+              >{{ b.fecha|date:"d M Y" }}
+            </span>
+            <span class="text-on-surface-variant"
+              >{{ b.hora|time:"H:i"|default:"Todo el día" }}{% if b.motivo %} · {{ b.motivo }}{% endif %}</span
+            >
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-sm text-on-surface-variant">
+          No hay días bloqueados. ¡Tu agenda está libre!
+        </p>
+        {% endif %}
+      </div>
+    </section>
+    {% endif %}
+
+    {# ---------- Servicios ---------- #}
+    {% if pestana == "servicios" %}
+    <section class="bg-surface-container-low rounded-xl p-8">
+      <h2 class="font-headline text-2xl text-primary-container mb-4">
+        Servicios que ofreces
+      </h2>
+      <p class="text-sm text-on-surface-variant mb-6">
+        Estos son los servicios disponibles en TecnoCorte que puedes atender en
+        tu peluquería.
+      </p>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {% for servicio in servicios %}
+        <div class="rounded-xl border border-outline-variant/15 p-6 bg-surface-container">
+          <span
+            class="material-symbols-outlined text-primary text-3xl mb-3 block"
+            >content_cut</span
+          >
+          <h3 class="font-headline text-lg text-on-surface mb-1">
+            {{ servicio.nombre }}
+          </h3>
+          <p class="text-xs text-on-surface-variant mb-4">
+            {{ servicio.descripcion }}
+          </p>
+          <div class="flex items-center justify-between text-sm">
+            <span class="text-on-surface-variant flex items-center gap-1"
+              ><span class="material-symbols-outlined text-base">schedule</span
+              >{{ servicio.duracion }}</span
+            >
+            <span class="font-headline text-primary"
+              >${{ servicio.precio|floatformat:"0g" }} COP</span
+            >
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+    {% endif %}
+
+    {# ---------- Notificaciones ---------- #}
+    {% if pestana == "notificaciones" %}
+    <section class="bg-surface-container-low rounded-xl p-8 ambient-glow max-w-lg">
+      <h2 class="font-headline text-2xl text-primary-container mb-6">
+        Cómo quieres que te avisemos
+      </h2>
+      <form method="post" class="space-y-6">
+        {% csrf_token %}
+        <input type="hidden" name="accion" value="notificaciones" />
+        <label class="flex items-start gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            name="correo"
+            {% if notificaciones.correo %}checked{% endif %}
+            class="mt-1 h-5 w-5 rounded border-outline-variant/40 text-primary focus:ring-primary"
+          />
+          <span>
+            <span class="block text-sm font-semibold text-on-surface"
+              >Avisos por correo</span
+            >
+            <span class="block text-xs text-on-surface-variant"
+              >Nuevas citas, cambios de agenda y reseñas.</span
+            >
+          </span>
+        </label>
+        <label class="flex items-start gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            name="whatsapp"
+            {% if notificaciones.whatsapp %}checked{% endif %}
+            class="mt-1 h-5 w-5 rounded border-outline-variant/40 text-primary focus:ring-primary"
+          />
+          <span>
+            <span class="block text-sm font-semibold text-on-surface"
+              >Avisos por WhatsApp</span
+            >
+            <span class="block text-xs text-on-surface-variant"
+              >Recordatorios rápidos al teléfono registrado.</span
+            >
+          </span>
+        </label>
+        <label class="flex items-start gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            name="sms"
+            {% if notificaciones.sms %}checked{% endif %}
+            class="mt-1 h-5 w-5 rounded border-outline-variant/40 text-primary focus:ring-primary"
+          />
+          <span>
+            <span class="block text-sm font-semibold text-on-surface">Avisos por SMS</span>
+            <span class="block text-xs text-on-surface-variant"
+              >Solo para cambios de última hora.</span
+            >
+          </span>
+        </label>
+        <div>
+          <label
+            class="text-[10px] uppercase tracking-[0.2em] text-primary font-bold block mb-1"
+            >Recordarme con anticipación</label
+          >
+          <select
+            name="anticipacion"
+            class="w-full bg-surface-container-high border border-outline-variant/20 rounded-lg px-3 py-2 text-sm text-on-surface focus:outline-none focus:border-primary"
+          >
+            <option value="1" {% if notificaciones.anticipacion == 1 %}selected{% endif %}>1 hora antes</option>
+            <option value="3" {% if notificaciones.anticipacion == 3 %}selected{% endif %}>3 horas antes</option>
+            <option value="12" {% if notificaciones.anticipacion == 12 %}selected{% endif %}>12 horas antes</option>
+            <option value="24" {% if notificaciones.anticipacion == 24 %}selected{% endif %}>1 día antes</option>
+            <option value="48" {% if notificaciones.anticipacion == 48 %}selected{% endif %}>2 días antes</option>
+          </select>
+        </div>
+        <button
+          type="submit"
+          class="w-full py-3 rounded-md border border-primary/40 text-primary hover:bg-primary/5 transition-colors text-sm font-semibold uppercase tracking-widest active:scale-95"
+        >
+          Guardar preferencias
+        </button>
+      </form>
+
+      <div class="mt-8 pt-6 border-t border-outline-variant/10">
+        <p class="text-sm text-on-surface-variant mb-4">Tu actividad reciente:</p>
+        <ul class="divide-y divide-outline-variant/10">
+          {% for ingreso in ingresos %}
+          <li class="py-3 flex items-center justify-between gap-4 text-sm">
+            <span class="flex items-center gap-3 text-on-surface">
+              <span class="material-symbols-outlined text-primary text-base"
+                >login</span
+              >{{ ingreso.fecha|date:"d M Y H:i" }}
+            </span>
+            <span class="text-on-surface-variant text-xs"
+              >{{ ingreso.rol }}{% if ingreso.ip %} · {{ ingreso.ip }}{% endif %}</span
+            >
+          </li>
+          {% empty %}
+          <li class="py-3 text-sm text-on-surface-variant">Sin registros todavía.</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </section>
+    {% endif %}
+
+    <div>
+      <a
+        href="{% url 'sena:peluquero_dashboard' %}"
+        class="inline-flex items-center gap-2 text-on-surface-variant text-sm uppercase tracking-widest hover:text-primary transition-colors active:scale-95"
+        ><span class="material-symbols-outlined text-base">arrow_back</span
+        >Volver al dashboard</a
+      >
+    </div>
+  </div>
+</main>
+{% endblock %}

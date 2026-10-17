@@ -21,23 +21,7 @@ flex bg-surface{% endblock %} {% block content %} {% include "includes/admin_sid
         Administra todos los usuarios del sistema.
       </p>
     </div>
-    <div class="flex items-center space-x-4">
-      <a
-        href="{% url 'sena:admin_dashboard' %}"
-        class="w-10 h-10 rounded-full bg-surface-container-high border border-outline-variant/20 flex items-center justify-center hover:border-primary transition-colors"
-        title="Dashboard"
-        ><span class="material-symbols-outlined text-primary-container"
-          >dashboard</span
-        > </a
-      ><a
-        href="{% url 'sena:admin_perfil' %}"
-        class="w-10 h-10 rounded-full bg-surface-container-high border border-outline-variant/20 flex items-center justify-center hover:border-primary transition-colors"
-        title="Mi perfil"
-        ><span class="material-symbols-outlined text-primary-container"
-          >person</span
-        >
-      </a>
-    </div>
+          {% include "includes/panel_header_actions.html" %}
   </header>
 
   <div class="px-6 md:px-12 py-8 pt-24 md:pt-8 flex-1 max-w-7xl mx-auto w-full">

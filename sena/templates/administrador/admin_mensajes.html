@@ -2,35 +2,185 @@
 {% extends "usuarios/dashboard_base.html" %}{% block body_class %}font-body
 antialiased flex bg-surface{% endblock %}{% block content %}{% include "includes/admin_sidebar.html" with active="mensajes" %}
 <main class="ml-0 md:ml-64 flex-1 p-6 md:p-12 pb-24 md:pb-12">
+  {% include "includes/panel_header.html" %}
   <h1 class="font-headline text-3xl md:text-4xl text-primary mb-2">Mensajes recibidos</h1>
   <p class="text-on-surface-variant mb-8">
-    Consultas enviadas desde la sección Contáctanos.
+    Consultas enviadas desde la sección Contáctanos. Haz clic en un mensaje para
+    verlo completo.
   </p>
-  <div class="space-y-5">
-    {# Tarjeta de cada mensaje recibido #}
-    {% for mensaje in mensajes %}
-    <article
-      class="bg-surface-container-low rounded-xl p-6 border border-outline-variant/20"
-    >
-      <div class="flex flex-wrap justify-between items-start gap-2">
-        <div>
-          <h2 class="font-headline text-lg md:text-xl">{{ mensaje.asunto }}</h2>
-          <p class="text-primary text-sm mt-1">
-            {{ mensaje.nombre }} · {{ mensaje.email }}
-          </p>
-        </div>
-        <time class="text-xs text-on-surface-variant"
-          >{{ mensaje.fecha|date:'d/m/Y H:i' }}</time
-        >
-      </div>
-      <p class="mt-4 whitespace-pre-line break-words text-on-surface-variant">
-        {{ mensaje.mensaje }}
-      </p>
-    </article>
-    {% empty %}
-    <p class="text-on-surface-variant">No hay mensajes todavía.</p>
-    {% endfor %}
+
+  {# Tabla: solo Nombre, Correo y Tipo (el contenido completo se abre en el modal) #}
+  <div
+    class="panel-glass overflow-hidden rounded-2xl border border-outline-variant/20"
+  >
+    <div class="overflow-x-auto">
+      <table class="w-full text-left text-sm">
+        <thead>
+          <tr
+            class="border-b border-outline-variant/30 text-xs uppercase tracking-wider text-on-surface-variant"
+          >
+            <th class="px-5 py-4 font-semibold">Nombre</th>
+            <th class="px-5 py-4 font-semibold">Correo</th>
+            <th class="px-5 py-4 font-semibold">Tipo de mensaje</th>
+            <th class="px-5 py-4 text-right font-semibold">Fecha</th>
+          </tr>
+        </thead>
+        <tbody id="tabla-mensajes">
+          {% for mensaje in mensajes %}
+          <tr
+            class="mensaje-fila cursor-pointer border-b border-outline-variant/10 transition-colors last:border-0 hover:bg-primary/10"
+            data-nombre="{{ mensaje.nombre }}"
+            data-email="{{ mensaje.email }}"
+            data-tipo="{{ mensaje.get_tipo_display }}"
+            data-fecha="{{ mensaje.fecha|date:'d/m/Y H:i' }}"
+            data-mensaje="{{ mensaje.mensaje }}"
+            data-leido="{% if mensaje.leido %}1{% else %}0{% endif %}"
+            tabindex="0"
+            role="button"
+            aria-label="Abrir mensaje de {{ mensaje.nombre }}"
+          >
+            <td class="px-5 py-4 font-medium text-on-surface">
+              {{ mensaje.nombre }}
+            </td>
+            <td class="px-5 py-4 break-all text-on-surface-variant">
+              {{ mensaje.email }}
+            </td>
+            <td class="px-5 py-4">
+              <span
+                class="inline-flex items-center gap-1 rounded-full bg-primary/15 px-3 py-1 text-xs font-semibold text-primary"
+              >
+                <span class="material-symbols-outlined text-sm">label</span>
+                {{ mensaje.get_tipo_display }}
+              </span>
+            </td>
+            <td class="px-5 py-4 text-right text-xs text-on-surface-variant">
+              {{ mensaje.fecha|date:'d/m/Y H:i' }}
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="4" class="px-5 py-10 text-center text-on-surface-variant">
+              No hay mensajes todavía.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
   </div>
 </main>
+
+{# Modal flotante con estilo Glassmorphism para leer el mensaje completo #}
+<div id="modal-mensaje" class="fixed inset-0 z-50 hidden" aria-hidden="true">
+  <div
+    class="absolute inset-0 bg-black/50 backdrop-blur-sm"
+    data-cerrar-mensaje
+  ></div>
+  <section
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="modal-mensaje-titulo"
+    class="panel-glass absolute left-1/2 top-1/2 w-[min(92vw,40rem)] -translate-x-1/2 -translate-y-1/2 rounded-3xl p-7 shadow-2xl md:p-9"
+  >
+    <header class="mb-5 flex items-start justify-between gap-4">
+      <div class="min-w-0">
+        <p class="text-xs uppercase tracking-widest text-primary">
+          Mensaje de contacto
+        </p>
+        <h2
+          id="modal-mensaje-titulo"
+          class="truncate font-headline text-2xl text-on-surface"
+        ></h2>
+        <p class="mt-1 break-all text-sm text-on-surface-variant"></p>
+      </div>
+      <button
+        type="button"
+        class="rounded-full p-2 text-on-surface-variant transition-colors hover:bg-surface-container-high hover:text-on-surface"
+        data-cerrar-mensaje
+        aria-label="Cerrar"
+      >
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </header>
+
+    <div class="mb-5 flex flex-wrap items-center gap-3">
+      <span
+        id="modal-mensaje-tipo"
+        class="inline-flex items-center gap-1 rounded-full bg-primary/20 px-3 py-1 text-xs font-semibold text-primary"
+      ></span>
+      <span
+        class="inline-flex items-center gap-1 rounded-full bg-surface-container-high px-3 py-1 text-xs text-on-surface-variant"
+      >
+        <span class="material-symbols-outlined text-sm">schedule</span>
+        <span id="modal-mensaje-fecha"></span>
+      </span>
+    </div>
+
+    <div
+      class="max-h-[45vh] overflow-y-auto whitespace-pre-line rounded-2xl bg-surface-container-high/70 p-5 text-on-surface"
+      id="modal-mensaje-texto"
+    ></div>
+
+    <footer class="mt-6 flex justify-end">
+      <a
+        id="modal-mensaje-responder"
+        href="#"
+        class="gold-gradient rounded-md px-6 py-3 text-sm font-bold uppercase tracking-widest text-on-primary"
+      >
+        Responder por correo
+      </a>
+    </footer>
+  </section>
+</div>
+
+<script>
+  // Abre el modal glass con el contenido del mensaje clickeado
+  (function () {
+    var modal = document.getElementById("modal-mensaje");
+    if (!modal) return;
+    var titulo = document.getElementById("modal-mensaje-titulo");
+    var correo = modal.querySelector("header p.mt-1");
+    var tipo = document.getElementById("modal-mensaje-tipo");
+    var fecha = document.getElementById("modal-mensaje-fecha");
+    var texto = document.getElementById("modal-mensaje-texto");
+    var responder = document.getElementById("modal-mensaje-responder");
+
+    function abrir(fila) {
+      titulo.textContent = fila.dataset.nombre || "";
+      correo.textContent = fila.dataset.email || "";
+      tipo.textContent = fila.dataset.tipo || "";
+      fecha.textContent = fila.dataset.fecha || "";
+      texto.textContent = fila.dataset.mensaje || "";
+      responder.href =
+        "mailto:" + (fila.dataset.email || "") + "?subject=" + encodeURIComponent("Re: " + (fila.dataset.tipo || "Tu mensaje"));
+      modal.classList.remove("hidden");
+      modal.setAttribute("aria-hidden", "false");
+      document.body.style.overflow = "hidden";
+    }
+
+    function cerrar() {
+      modal.classList.add("hidden");
+      modal.setAttribute("aria-hidden", "true");
+      document.body.style.overflow = "";
+    }
+
+    document.querySelectorAll(".mensaje-fila").forEach(function (fila) {
+      fila.addEventListener("click", function () { abrir(fila); });
+      fila.addEventListener("keydown", function (evento) {
+        if (evento.key === "Enter" || evento.key === " ") {
+          evento.preventDefault();
+          abrir(fila);
+        }
+      });
+    });
+
+    modal.querySelectorAll("[data-cerrar-mensaje]").forEach(function (elemento) {
+      elemento.addEventListener("click", cerrar);
+    });
+    document.addEventListener("keydown", function (evento) {
+      if (evento.key === "Escape" && !modal.classList.contains("hidden")) cerrar();
+    });
+  })();
+</script>
 {% include "includes/admin_mobile_nav.html" with active="mensajes" %}
 {% endblock %}

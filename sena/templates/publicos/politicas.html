@@ -1,0 +1,151 @@
+{# Página con las Políticas de Privacidad y las Políticas del Proyecto #}
+{% extends 'base/base.html' %}
+{% load static %}
+{% block title %}Políticas - TecnoCorte{% endblock %}
+{% block styles %}
+<link rel="stylesheet" href="{% static 'css/publicos/sobre_nosotros.css' %}" />
+<style>
+  .politicas-toc {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+  }
+  .politicas-toc a {
+    border: 1px solid rgba(128, 128, 128, 0.35);
+    border-radius: 999px;
+    padding: 0.4rem 0.9rem;
+    font-size: 0.85rem;
+    text-decoration: none;
+    color: inherit;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  .politicas-toc a:hover {
+    background: rgba(128, 128, 128, 0.18);
+  }
+  .politicas-texto h3 {
+    font-size: 1.05rem;
+    font-weight: 700;
+    margin-top: 1.4rem;
+    margin-bottom: 0.4rem;
+  }
+  .politicas-texto ul {
+    list-style: disc;
+    padding-left: 1.4rem;
+    margin: 0.5rem 0 1rem;
+  }
+  .politicas-texto li {
+    margin-bottom: 0.35rem;
+  }
+</style>
+{% endblock %}
+{% block content %}
+<h2 class="section-title">Políticas de Privacidad y del Proyecto</h2>
+<p>
+  Última actualización: octubre de 2026. Estas políticas explican cómo
+  TecnoCorte trata tus datos y bajo qué reglas funciona la plataforma. Si tienes
+  dudas, escríbenos desde la sección
+  <a href="{% url 'sena:ayuda' %}">Contáctanos</a>.
+</p>
+
+<div class="politicas-toc">
+  <a href="#privacidad">Políticas de Privacidad</a>
+  <a href="#proyecto">Políticas del Proyecto</a>
+  <a href="#derechos">Tus derechos</a>
+  <a href="#contacto">Contacto</a>
+</div>
+
+<div class="politicas-texto">
+  <h3 id="privacidad">1. Políticas de Privacidad</h3>
+  <p>
+    <strong>Qué datos recogemos.</strong> Para poder prestarte el servicio,
+    guardamos los datos que tú mismo nos entregas:
+  </p>
+  <ul>
+    <li>Nombre, correo electrónico, teléfono y foto de perfil.</li>
+    <li>
+      Información de tus citas: peluquería, barbero, servicio, fecha y hora.
+    </li>
+    <li>Datos de tus pedidos en la tienda (dirección de envío y contenido).</li>
+    <li>Historial de ingresos a tu cuenta, para detectar accesos sospechosos.</li>
+  </ul>
+
+  <p>
+    <strong>Para qué los usamos.</strong> Únicamente para agendar tus citas,
+    gestionar tu cuenta, entregarte tus compras y enviarte notificaciones
+    relacionadas con el servicio (confirmaciones, cambios o cancelaciones de
+    citas).
+  </p>
+
+  <p>
+    <strong>Quién puede verlos.</strong> Tú y el equipo administrativo de
+    TecnoCorte. El personal de cada barbería únicamente ve lo necesario para
+    atenderte: tu nombre, la cita y los datos de contacto que ya son públicos en
+    el perfil. Los teléfonos y las ubicaciones de las barberías se muestran
+    según la configuración de privacidad del sitio.
+  </p>
+
+  <p>
+    <strong>Cookies y almacenamiento local.</strong> Usamos la sesión del
+    navegador para mantenerte dentro de tu cuenta y el almacenamiento local
+    para recordar tu tema visual (claro/oscuro) y los productos de tu carrito.
+    No vendemos ni compartimos tus datos con terceros con fines publicitarios.
+  </p>
+
+  <p>
+    <strong>Seguridad.</strong> Las contraseñas se guardan cifradas, la sesión
+    se renueva al iniciar sesión y el sitio obliga conexiones seguras (HTTPS)
+    fuera del entorno de desarrollo.
+  </p>
+
+  <h3 id="proyecto">2. Políticas del Proyecto</h3>
+  <ul>
+    <li>
+      <strong>Cuentas:</strong> el registro está abierto para clientes. Los
+      roles de barbero y administrador los asigna el equipo administrativo.
+    </li>
+    <li>
+      <strong>Reservas:</strong> una cita queda confirmada solo cuando el
+      sistema la muestra en el calendario correspondiente. Cada peluquería solo
+      ofrece sus propios barberos, servicios y horarios.
+    </li>
+    <li>
+      <strong>Cancelaciones:</strong> los tiempos de aviso y las políticas de
+      cancelación se publican en la sección de configuración de la plataforma
+      y pueden actualizarse por el administrador.
+    </li>
+    <li>
+      <strong>Pagos:</strong> los pedidos de la tienda se procesan a través de
+      los medios habilitados en cada momento; TecnoCorte no almacena los datos
+      completos de tus tarjetas.
+    </li>
+    <li>
+      <strong>Contenido de la galería:</strong> las fotos que suben barberías y
+      clientes pueden ser moderadas y eliminadas por el administrador cuando no
+      cumplan las normas, informando a quien las subió.
+    </li>
+    <li>
+      <strong>Cambios:</strong> estas políticas pueden actualizarse; la fecha de
+      la última actualización siempre aparece al inicio de la página.
+    </li>
+  </ul>
+
+  <h3 id="derechos">3. Tus derechos</h3>
+  <ul>
+    <li>Consultar y corregir los datos personales de tu perfil.</li>
+    <li>Solicitar la baja de tu cuenta cuando lo desees.</li>
+    <li>
+      Pedir información sobre qué datos conservamos de ti escribiendo a
+      soporte.
+    </li>
+  </ul>
+
+  <h3 id="contacto">4. Contacto</h3>
+  <p>
+    Para cualquier solicitud relacionada con tus datos o con estas políticas,
+    usa el formulario de
+    <a href="{% url 'sena:ayuda' %}">Contáctanos</a> eligiendo el tipo de
+    mensaje <em>Cuenta y acceso</em> o <em>Consulta general</em>.
+  </p>
+</div>
+{% endblock %}

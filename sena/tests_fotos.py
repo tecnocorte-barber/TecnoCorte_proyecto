@@ -153,6 +153,8 @@ class FotosYConfiguracionTests(TestCase):
             r = self.client.get(url)
             self.assertEqual(r.status_code, 200, url)
             self.assertContains(r, "panel-glass", msg_prefix=url)
+            # Todas las pantallas de panel llevan el header con Dashboard y perfil.
+            self.assertContains(r, "data-panel-actions", msg_prefix=url)
 
         # Ahora como barbero: ve sus páginas con el menú de cristal.
         s = self.client.session
@@ -165,11 +167,13 @@ class FotosYConfiguracionTests(TestCase):
             reverse("sena:peluquero_perfil"),
             reverse("sena:peluquero_notificaciones"),
             reverse("sena:peluquero_crear_cita"),
+            reverse("sena:peluquero_configuracion"),
         ]
         for url in barbero_urls:
             r = self.client.get(url)
             self.assertEqual(r.status_code, 200, url)
             self.assertContains(r, "panel-glass", msg_prefix=url)
+            self.assertContains(r, "data-panel-actions", msg_prefix=url)
 
         # Como cliente, el menú normal (site_nav) no usa el cristal.
         cliente = Usuario.objects.create(
@@ -289,3 +293,275 @@ class FotosYConfiguracionTests(TestCase):
         r = self.client.get(reverse("sena:inicio"))
         self.assertEqual(r.status_code, 503)
         self.assertContains(r, "mantenimiento", status_code=503)
+
+
+@override_settings(MEDIA_ROOT=tempfile.mkdtemp())
+class ZonaConfiguracionTests(TestCase):
+    """Zona de Configuración de cliente y barbero, header unificado y reserva inteligente."""
+
+    def setUp(self):
+        from .models import Peluqueria
+
+        self.peluqueria = Peluqueria.objects.create(
+            nombre="Barberia Central", ubicacion="Calle 1", telefono="300-1111",
+        )
+        self.cliente = Usuario.objects.create(
+            nombre="Ana", apellido="Gomez", email="ana@test.com", password="x",
+            rol="Cliente", telefono="300-2222",
+        )
+        self.barbero = Usuario.objects.create(
+            nombre="Luis", apellido="Rios", email="luis@test.com", password="x",
+            rol="Barbero", peluqueria=self.peluqueria,
+        )
+        self.admin = Usuario.objects.create(
+            nombre="Root", apellido="Admin", email="root@test.com", password="x",
+            rol="Admin",
+        )
+
+    def sesion(self, usuario):
+        s = self.client.session
+        s["logueado"] = {"id": usuario.id, "nombre": usuario.nombre, "rol": usuario.rol}
+        s.save()
+
+    def tearDown(self):
+        from django.core.cache import cache
+
+        cache.clear()
+
+    # ---------- Configuracion del cliente ----------
+
+    def test_cliente_entra_a_su_configuracion_y_ve_las_cuatro_pestanas(self):
+        self.sesion(self.cliente)
+        for pestana in ("perfil", "seguridad", "notificaciones", "privacidad"):
+            r = self.client.get(reverse("sena:usuario_configuracion") + "?seccion=" + pestana)
+            self.assertEqual(r.status_code, 200, pestana)
+        # Una seccion desconocida cae en la primera pestana, no en un error.
+        r = self.client.get(reverse("sena:usuario_configuracion") + "?seccion=xyz")
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.context["pestana"], "perfil")
+
+    def test_configuracion_bloquea_aotros_roles(self):
+        self.sesion(self.barbero)
+        r = self.client.get(reverse("sena:usuario_configuracion"))
+        self.assertEqual(r.status_code, 302)
+
+    def test_actualizar_perfil_desde_configuracion(self):
+        self.sesion(self.cliente)
+        self.client.post(reverse("sena:usuario_configuracion") + "?seccion=perfil", {
+            "accion": "perfil", "nombre": "Ana M.", "apellido": "Gomez",
+            "telefono": "300-9999",
+        })
+        self.cliente.refresh_from_db()
+        self.assertEqual(self.cliente.nombre, "Ana M.")
+        self.assertEqual(self.cliente.telefono, "300-9999")
+        # El header muestra el nombre nuevo sin volver a entrar.
+        self.assertEqual(self.client.session["logueado"]["nombre"], "Ana M.")
+
+    def test_notificaciones_se_guardan_en_el_usuario(self):
+        self.sesion(self.cliente)
+        self.client.post(reverse("sena:usuario_configuracion") + "?seccion=notificaciones", {
+            "accion": "notificaciones", "correo": "on", "anticipacion": "48",
+        })
+        self.cliente.refresh_from_db()
+        self.assertTrue(self.cliente.aviso_correo)
+        self.assertFalse(self.cliente.aviso_whatsapp)  # No viene en el POST
+        self.assertFalse(self.cliente.aviso_sms)
+        self.assertEqual(self.cliente.aviso_anticipacion_horas, 48)
+
+    def test_anticipacion_no_numerica_usa_el_valor_por_defecto(self):
+        self.sesion(self.cliente)
+        self.client.post(reverse("sena:usuario_configuracion") + "?seccion=notificaciones", {
+            "accion": "notificaciones", "anticipacion": "mucho",
+        })
+        self.cliente.refresh_from_db()
+        self.assertEqual(self.cliente.aviso_anticipacion_horas, 24)
+
+    def test_descarga_de_datos_entrega_un_json(self):
+        self.sesion(self.cliente)
+        r = self.client.post(reverse("sena:usuario_configuracion") + "?seccion=privacidad", {"accion": "descarga"})
+        self.assertEqual(r.status_code, 200)
+        self.assertIn("attachment", r["Content-Disposition"])
+        datos = r.json()
+        self.assertEqual(datos["perfil"]["email"], "ana@test.com")
+        self.assertEqual(datos["reservas"], [])
+
+    # ---------- Configuracion del barbero ----------
+
+    def test_barbero_entra_a_su_configuracion(self):
+        self.sesion(self.barbero)
+        for pestana in ("portafolio", "agenda", "servicios", "notificaciones"):
+            r = self.client.get(reverse("sena:peluquero_configuracion") + "?seccion=" + pestana)
+            self.assertEqual(r.status_code, 200, pestana)
+        # En Agenda ve los horarios de su peluqueria.
+        r = self.client.get(reverse("sena:peluquero_configuracion") + "?seccion=agenda")
+        self.assertEqual(r.context["peluqueria"], self.peluqueria)
+
+    def test_configuracion_del_barbero_bloquea_aotros_roles(self):
+        self.sesion(self.cliente)
+        r = self.client.get(reverse("sena:peluquero_configuracion"))
+        self.assertEqual(r.status_code, 302)
+
+    def test_barbero_actualiza_su_portafolio(self):
+        self.sesion(self.barbero)
+        self.client.post(reverse("sena:peluquero_configuracion") + "?seccion=portafolio", {
+            "accion": "portafolio", "nombre": "Luis A.", "apellido": "Rios",
+            "telefono": "300-3333",
+        })
+        self.barbero.refresh_from_db()
+        self.assertEqual(self.barbero.nombre, "Luis A.")
+        self.assertEqual(self.barbero.telefono, "300-3333")
+
+    # ---------- Header unificado ----------
+
+    def test_header_de_panel_ofrece_dashboard_perfil_configuracion_y_salida(self):
+        self.sesion(self.admin)
+        r = self.client.get(reverse("sena:admin_dashboard"))
+        self.assertContains(r, "data-panel-actions")
+        self.assertContains(r, reverse("sena:admin_dashboard"))
+        self.assertContains(r, reverse("sena:admin_perfil"))
+        self.assertContains(r, reverse("sena:admin_configuracion"))
+        self.assertContains(r, reverse("sena:logout"))
+
+    def test_sidebars_dejan_de_repetir_perfil_tema_y_salida(self):
+        self.sesion(self.admin)
+        r = self.client.get(reverse("sena:admin_dashboard"))
+        self.assertContains(r, "Nueva cita")
+        # La salida aparece una sola vez: en el dropdown del header, no en el sidebar.
+        self.assertEqual(r.content.count(b"panel-header-menu-item hover:text-error"), 1)
+        self.sesion(self.barbero)
+        r = self.client.get(reverse("sena:peluquero_dashboard"))
+        self.assertEqual(r.content.count(b"panel-header-menu-item hover:text-error"), 1)
+
+    def test_nav_publico_usa_el_mismo_dropdown_de_perfil(self):
+        self.sesion(self.cliente)
+        r = self.client.get(reverse("sena:usuario_dashboard"))
+        self.assertContains(r, "data-panel-actions")
+        self.assertContains(r, reverse("sena:usuario_configuracion"))
+
+    def test_las_paginas_de_cliente_centralizan_la_salida_en_el_dropdown(self):
+        """Perfil, notificaciones, reserva y carrito usan el header unificado."""
+        # La página de finalizar redirige al carrito si está vacío, así que lo llenamos.
+        producto = Producto.objects.create(
+            nombre="Cera modeladora", precio=15000, stock=5, disponible=True,
+        )
+        paginas = [
+            reverse("sena:usuario_perfil"),
+            reverse("sena:usuario_notificaciones"),
+            reverse("sena:usuario_reservar_cita"),
+            reverse("sena:carrito"),
+            reverse("sena:finalizar_pedido"),
+        ]
+        for pagina in paginas:
+            self.sesion(self.cliente)
+            s = self.client.session
+            s["carrito"] = {str(producto.id): 1}
+            s.save()
+            r = self.client.get(pagina)
+            self.assertEqual(r.status_code, 200, pagina)
+            self.assertContains(r, "data-panel-actions", msg_prefix=pagina)
+            # La salida ya no es un enlace de texto suelto: vive en el desplegable.
+            self.assertNotContains(r, ">Salir<", msg_prefix=pagina)
+
+    def test_perfil_de_cliente_ofrece_configuracion_y_no_salida_suelta(self):
+        self.sesion(self.cliente)
+        r = self.client.get(reverse("sena:usuario_perfil"))
+        self.assertContains(r, reverse("sena:usuario_configuracion"))
+        # El "Cerrar Sesión" que colgaba bajo el formulario se sustituyó por Configuración.
+        self.assertNotContains(r, ">Cerrar Sesión<")
+
+    # ---------- Reserva inteligente ----------
+
+    def test_catalogo_de_servicios_preselecciona_el_servicio(self):
+        self.sesion(self.cliente)
+        r = self.client.get(reverse("sena:usuario_servicios"))
+        self.assertContains(r, "usuario/reservar_cita/?servicio=Corte%20de%20Cabello")
+
+    def test_reservar_cita_acepta_servicio_y_sucursal_iniciales(self):
+        self.sesion(self.cliente)
+        r = self.client.get(
+            reverse("sena:usuario_reservar_cita")
+            + "?servicio=Combo%20Completo&peluqueria=" + str(self.peluqueria.id)
+        )
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.context["servicio_inicial"], "Combo Completo")
+        self.assertEqual(r.context["peluqueria_inicial"], str(self.peluqueria.id))
+        # Un servicio inventado no se preselecciona.
+        r = self.client.get(reverse("sena:usuario_reservar_cita") + "?servicio=Hacked")
+        self.assertEqual(r.context["servicio_inicial"], "")
+
+    def test_barbero_no_puede_reservar_en_otra_sucursal(self):
+        from .models import Peluqueria
+
+        otra = Peluqueria.objects.create(nombre="Otra", ubicacion="Calle 2", telefono="300-3333")
+        self.sesion(self.cliente)
+        r = self.client.post(reverse("sena:usuario_pre_confirmar"), {
+            "peluquero": self.barbero.id, "peluqueria": otra.id,
+            "servicio": "Corte de Cabello", "fecha": "2030-01-10", "hora": "10:00",
+        })
+        self.assertContains(r, "no pertenece a la barber")
+        # Si puede en su peluqueria real (el horario se rechaza despues, no la sucursal).
+        r = self.client.post(reverse("sena:usuario_pre_confirmar"), {
+            "peluquero": self.barbero.id, "peluqueria": self.peluqueria.id,
+            "servicio": "Corte de Cabello", "fecha": "2030-01-10", "hora": "10:00",
+        })
+        self.assertNotContains(r, "no pertenece a la barber")
+
+    # ---------- Contacto, mensajes y politicas ----------
+
+    def test_ayuda_acepta_tipo(self):
+        from .models import MensajeContacto
+
+        r = self.client.post(reverse("sena:ayuda"), {
+            "nombre": "Carla", "email": "carla@test.com", "tipo": "cita", "mensaje": "Hola",
+        })
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(MensajeContacto.objects.get().tipo, "cita")
+
+    def test_ayuda_respeta_el_asunto_libre_antiguo(self):
+        from .models import MensajeContacto
+
+        r = self.client.post(reverse("sena:ayuda"), {
+            "nombre": "Pedro", "email": "pedro@test.com", "asunto": "Asunto libre", "mensaje": "Hola",
+        })
+        self.assertEqual(r.status_code, 200)
+        mensaje = MensajeContacto.objects.get()
+        self.assertEqual(mensaje.asunto, "Asunto libre")
+        self.assertEqual(mensaje.tipo, "otro")
+
+    def test_admin_redirige_al_dashboard(self):
+        self.sesion(self.admin)
+        r = self.client.get(reverse("sena:inicio"))
+        self.assertRedirects(r, reverse("sena:admin_dashboard"))
+        r = self.client.get(reverse("sena:login"))
+        self.assertRedirects(r, reverse("sena:admin_dashboard"))
+
+    def test_admin_mensajes_muestra_tipo_y_abre_modal(self):
+        from .models import MensajeContacto
+
+        MensajeContacto.objects.create(
+            nombre="Carla", email="carla@test.com", asunto="Cita", tipo="cita", mensaje="Detalle",
+        )
+        self.sesion(self.admin)
+        r = self.client.get(reverse("sena:admin_mensajes"))
+        self.assertContains(r, "Carla")
+        self.assertContains(r, "carla@test.com")
+        self.assertContains(r, "Cita")
+        self.assertContains(r, "data-mensaje")
+
+    def test_galeria_del_admin_filtra_por_peluqueria(self):
+        self.sesion(self.admin)
+        # Con una foto publicada, el filtro "Todas" y el de la barbería aparecen.
+        buffer = BytesIO()
+        Image.new("RGB", (2, 2), "white").save(buffer, format="PNG")
+        archivo = SimpleUploadedFile("g.png", buffer.getvalue(), content_type="image/png")
+        ImagenPeluqueria.objects.create(peluqueria=self.peluqueria, imagen=archivo, descripcion="x")
+        r = self.client.get(reverse("sena:admin_galeria"))
+        self.assertContains(r, "galeria-filtro")
+        self.assertContains(r, "Todas")
+        self.assertContains(r, "galeria-item")
+        self.assertContains(r, 'data-peluqueria="' + str(self.peluqueria.id) + '"')
+
+    def test_pagina_de_politicas_y_enlace_en_el_pie(self):
+        self.assertEqual(self.client.get(reverse("sena:politicas")).status_code, 200)
+        r = self.client.get(reverse("sena:ayuda"))
+        self.assertContains(r, reverse("sena:politicas"))

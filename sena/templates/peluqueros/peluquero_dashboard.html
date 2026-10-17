@@ -3,31 +3,7 @@
 de Barbero{% endblock %} {% block body_class %}antialiased min-h-screen flex
 bg-background text-on-surface{% endblock %} {% block content %} {% include "includes/peluquero_sidebar.html" with active="inicio" %}
 <main class="flex-1 md:ml-72 flex flex-col min-h-screen relative bg-background">
-  <header
-    class="glass-header sticky top-0 z-40 flex justify-between items-center w-full px-6 md:px-12 py-4"
-  >
-    <a
-      class="inline-flex md:hidden"
-      href="{% url 'sena:peluquero_dashboard' %}"
-      aria-label="TecnoCorte"
-      >{% include "includes/logo.html" %}</a
-    >
-    <div class="hidden md:block"></div>
-    <div class="flex items-center gap-6">
-      <a
-        href="{% url 'sena:peluquero_notificaciones' %}"
-        class="text-on-surface-variant hover:text-primary transition-opacity cursor-pointer active:opacity-80"
-        title="Notificaciones"
-        ><span class="material-symbols-outlined">notifications</span></a
-      >
-      <a
-        href="{% url 'sena:peluquero_perfil' %}"
-        class="text-on-surface-variant hover:text-primary transition-opacity cursor-pointer active:opacity-80"
-        title="Mi perfil"
-        ><span class="material-symbols-outlined">account_circle</span></a
-      >
-    </div>
-  </header>
+  {% include "includes/panel_header.html" %}
 
   <div class="p-6 md:p-12 space-y-12 max-w-7xl mx-auto w-full">
     {# Aviso cuando el barbero aún no tiene peluquería: el Admin es quien la crea o asigna #}

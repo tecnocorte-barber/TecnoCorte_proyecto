@@ -1,0 +1,283 @@
+{% load static %}
+<!doctype html>
+<!-- Configuración de la cuenta del cliente: Perfil, Seguridad, Notificaciones y Privacidad -->
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Configuración - TecnoCorte</title>
+    {% include "includes/favicon.html" %}
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&amp;family=Noto+Serif:ital,wght@0,400;0,700;1,400&amp;display=swap"
+      rel="stylesheet"
+    />
+    {% include "includes/tema.html" %}
+    <link rel="stylesheet" href="{% static 'css/usuarios/usuario_perfil.css' %}" />
+    {# Mismo panel glass que usan los paneles de Admin y Barbero #}
+    <link rel="stylesheet" href="{% static 'css/includes/panel_glass.css' %}" />
+  </head>
+
+  <body class="min-h-screen flex flex-col pt-24 bg-background text-on-background">
+    {% include "includes/site_nav.html" with active="" %}
+
+    <main class="flex-grow w-full max-w-5xl mx-auto px-6 py-12 md:py-16">
+      {# Encabezado de la zona de configuración #}
+      <div class="mb-10 border-b border-outline-variant/10 pb-6">
+        <h1 class="font-headline text-4xl tracking-tight mb-2">Configuración</h1>
+        <p class="text-on-surface-variant text-sm">
+          Administra tu perfil, tu seguridad y tus preferencias de TecnoCorte.
+        </p>
+      </div>
+
+      {# Navegación por pestañas (Perfil / Seguridad / Notificaciones / Privacidad) #}
+      <nav class="flex flex-wrap gap-2 mb-10" aria-label="Secciones de configuración">
+        {% for p in pestanas %}
+        <a
+          href="{% url 'sena:usuario_configuracion' %}?seccion={{ p }}"
+          class="px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-all active:scale-95 {% if pestana == p %}bg-primary text-on-primary{% else %}border border-outline-variant/30 text-on-surface-variant hover:border-primary hover:text-primary{% endif %}"
+          >{{ p }}</a
+        >
+        {% endfor %}
+      </nav>
+
+      {# ---------- Perfil ---------- #}
+      {% if pestana == "perfil" %}
+      <section class="bg-surface-container-low rounded-xl p-8 ambient-glow">
+        <h2 class="font-headline text-2xl text-primary-container mb-6">Mis datos</h2>
+        <form method="post" enctype="multipart/form-data" class="space-y-5 max-w-lg">
+          {% csrf_token %}
+          <input type="hidden" name="accion" value="perfil" />
+          <div>
+            <label class="text-[10px] uppercase tracking-[0.2em] text-primary font-bold block mb-1"
+              >Foto de perfil</label
+            >
+            {% if usuario.foto %}
+            <img
+              src="{{ usuario.foto.url }}"
+              alt="{{ usuario.nombre }}"
+              class="mb-3 h-20 w-20 rounded-full object-cover border border-outline-variant/30"
+            />
+            {% endif %}
+            <input
+              type="file"
+              name="foto"
+              accept="image/*"
+              class="w-full text-on-surface-variant text-sm file:mr-3 file:rounded-md file:border-0 file:bg-primary/10 file:px-3 file:py-2 file:text-primary"
+            />
+          </div>
+          <div>
+            <label class="text-[10px] uppercase tracking-[0.2em] text-primary font-bold block mb-1"
+              >Nombre</label
+            >
+            <input
+              class="w-full bg-transparent border-b border-outline-variant/30 py-2 focus:outline-none focus:border-primary text-on-surface text-sm"
+              name="nombre"
+              value="{{ usuario.nombre }}"
+              required
+            />
+          </div>
+          <div>
+            <label class="text-[10px] uppercase tracking-[0.2em] text-primary font-bold block mb-1"
+              >Apellido</label
+            >
+            <input
+              class="w-full bg-transparent border-b border-outline-variant/30 py-2 focus:outline-none focus:border-primary text-on-surface text-sm"
+              name="apellido"
+              value="{{ usuario.apellido }}"
+              required
+            />
+          </div>
+          <div>
+            <label class="text-[10px] uppercase tracking-[0.2em] text-primary font-bold block mb-1"
+              >Teléfono</label
+            >
+            <input
+              class="w-full bg-transparent border-b border-outline-variant/30 py-2 focus:outline-none focus:border-primary text-on-surface text-sm"
+              name="telefono"
+              value="{{ usuario.telefono }}"
+            />
+          </div>
+          <button
+            type="submit"
+            class="w-full py-3 rounded-md border border-primary/40 text-primary hover:bg-primary/5 transition-colors text-sm font-semibold uppercase tracking-widest active:scale-95"
+          >
+            Guardar cambios
+          </button>
+        </form>
+      </section>
+      {% endif %}
+
+      {# ---------- Seguridad ---------- #}
+      {% if pestana == "seguridad" %}
+      <section class="flex flex-col gap-8">
+        <div class="bg-surface-container-low rounded-xl p-8 ambient-glow">
+          <h2 class="font-headline text-2xl text-primary-container mb-4">Contraseña</h2>
+          <p class="text-on-surface-variant text-sm mb-6">
+            Usa una contraseña fuerte con mayúsculas, números y símbolos.
+          </p>
+          <a
+            href="{% url 'sena:cambiar_password' %}"
+            class="inline-flex items-center gap-2 rounded-md border border-primary/40 px-6 py-3 text-sm font-semibold uppercase tracking-widest text-primary transition-colors hover:bg-primary/5 active:scale-95"
+            ><span class="material-symbols-outlined text-base">lock_reset</span
+            >Cambiar contraseña</a
+          >
+        </div>
+
+        <div class="bg-surface-container-low rounded-xl p-8">
+          <h2 class="font-headline text-2xl text-primary-container mb-4">Actividad reciente</h2>
+          <p class="text-on-surface-variant text-sm mb-6">
+            Últimos inicios de sesión en tu cuenta.
+          </p>
+          <ul class="divide-y divide-outline-variant/10">
+            {% for ingreso in ingresos %}
+            <li class="py-3 flex items-center justify-between gap-4 text-sm">
+              <span class="flex items-center gap-3 text-on-surface">
+                <span class="material-symbols-outlined text-primary text-base">login</span
+                >{{ ingreso.fecha|date:"d M Y H:i" }}
+              </span>
+              <span class="text-on-surface-variant text-xs"
+                >{{ ingreso.rol }}{% if ingreso.ip %} · {{ ingreso.ip }}{% endif %}</span
+              >
+            </li>
+            {% empty %}
+            <li class="py-3 text-sm text-on-surface-variant">Sin registros todavía.</li>
+            {% endfor %}
+          </ul>
+        </div>
+      </section>
+      {% endif %}
+
+      {# ---------- Notificaciones ---------- #}
+      {% if pestana == "notificaciones" %}
+      <section class="bg-surface-container-low rounded-xl p-8 ambient-glow max-w-lg">
+        <h2 class="font-headline text-2xl text-primary-container mb-6">Cómo quieres que te avisemos</h2>
+        <form method="post" class="space-y-6">
+          {% csrf_token %}
+          <input type="hidden" name="accion" value="notificaciones" />
+          <label class="flex items-start gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              name="correo"
+              {% if notificaciones.correo %}checked{% endif %}
+              class="mt-1 h-5 w-5 rounded border-outline-variant/40 text-primary focus:ring-primary"
+            />
+            <span>
+              <span class="block text-sm font-semibold text-on-surface">Avisos por correo</span>
+              <span class="block text-xs text-on-surface-variant"
+                >Confirmaciones de citas, pedidos y novedades.</span
+              >
+            </span>
+          </label>
+          <label class="flex items-start gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              name="whatsapp"
+              {% if notificaciones.whatsapp %}checked{% endif %}
+              class="mt-1 h-5 w-5 rounded border-outline-variant/40 text-primary focus:ring-primary"
+            />
+            <span>
+              <span class="block text-sm font-semibold text-on-surface">Avisos por WhatsApp</span>
+              <span class="block text-xs text-on-surface-variant"
+                >Recordatorios rápidos al teléfono registrado.</span
+              >
+            </span>
+          </label>
+          <label class="flex items-start gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              name="sms"
+              {% if notificaciones.sms %}checked{% endif %}
+              class="mt-1 h-5 w-5 rounded border-outline-variant/40 text-primary focus:ring-primary"
+            />
+            <span>
+              <span class="block text-sm font-semibold text-on-surface">Avisos por SMS</span>
+              <span class="block text-xs text-on-surface-variant"
+                >Solo para cambios de última hora.</span
+              >
+            </span>
+          </label>
+          <div>
+            <label
+              class="text-[10px] uppercase tracking-[0.2em] text-primary font-bold block mb-1"
+              >Recordarme con anticipación</label
+            >
+            <select
+              name="anticipacion"
+              class="w-full bg-surface-container-high border border-outline-variant/20 rounded-lg px-3 py-2 text-sm text-on-surface focus:outline-none focus:border-primary"
+            >
+              <option value="1" {% if notificaciones.anticipacion == 1 %}selected{% endif %}>1 hora antes</option>
+              <option value="3" {% if notificaciones.anticipacion == 3 %}selected{% endif %}>3 horas antes</option>
+              <option value="12" {% if notificaciones.anticipacion == 12 %}selected{% endif %}>12 horas antes</option>
+              <option value="24" {% if notificaciones.anticipacion == 24 %}selected{% endif %}>1 día antes</option>
+              <option value="48" {% if notificaciones.anticipacion == 48 %}selected{% endif %}>2 días antes</option>
+            </select>
+          </div>
+          <button
+            type="submit"
+            class="w-full py-3 rounded-md border border-primary/40 text-primary hover:bg-primary/5 transition-colors text-sm font-semibold uppercase tracking-widest active:scale-95"
+          >
+            Guardar preferencias
+          </button>
+        </form>
+      </section>
+      {% endif %}
+
+      {# ---------- Privacidad ---------- #}
+      {% if pestana == "privacidad" %}
+      <section class="flex flex-col gap-8">
+        <div class="bg-surface-container-low rounded-xl p-8 ambient-glow">
+          <h2 class="font-headline text-2xl text-primary-container mb-4">Descarga tus datos</h2>
+          <p class="text-on-surface-variant text-sm mb-6">
+            Exportamos tu perfil, tus citas, tus pedidos y tus mensajes en un archivo JSON que
+            puedes guardar en tu equipo.
+          </p>
+          <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="accion" value="descarga" />
+            <button
+              type="submit"
+              class="inline-flex items-center gap-2 rounded-md border border-primary/40 px-6 py-3 text-sm font-semibold uppercase tracking-widest text-primary transition-colors hover:bg-primary/5 active:scale-95"
+            >
+              <span class="material-symbols-outlined text-base">download</span>Descargar mis datos
+            </button>
+          </form>
+        </div>
+
+        <div class="bg-surface-container-low rounded-xl p-8">
+          <h2 class="font-headline text-2xl text-primary-container mb-4">Tus datos en TecnoCorte</h2>
+          <p class="text-on-surface-variant text-sm mb-4">
+            Guardamos únicamente la información necesidad para agendarte citas y entregarte tus
+            pedidos. Nunca vendemos tus datos.
+          </p>
+          <p class="text-on-surface-variant text-sm mb-6">
+            Puedes consultar el detalle completo en nuestras
+            <a href="{% url 'sena:politicas' %}" class="text-primary hover:underline"
+              >Políticas de Privacidad y del Proyecto</a
+            >.
+          </p>
+          <a
+            href="{% url 'sena:ayuda' %}"
+            class="inline-flex items-center gap-2 rounded-md border border-outline-variant/30 px-6 py-3 text-sm font-semibold uppercase tracking-widest text-primary transition-colors hover:border-primary active:scale-95"
+            ><span class="material-symbols-outlined text-base">support_agent</span
+            >Escríbenos si quieres eliminar tu cuenta</a
+          >
+        </div>
+      </section>
+      {% endif %}
+
+      {# Enlace de regreso al perfil #}
+      <div class="mt-12">
+        <a
+          href="{% url 'sena:usuario_perfil' %}"
+          class="inline-flex items-center gap-2 text-on-surface-variant text-sm uppercase tracking-widest hover:text-primary transition-colors active:scale-95"
+          ><span class="material-symbols-outlined text-base">arrow_back</span>Volver a mi perfil</a
+        >
+      </div>
+    </main>
+  </body>
+</html>

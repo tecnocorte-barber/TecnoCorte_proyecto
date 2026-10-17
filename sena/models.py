@@ -26,6 +26,23 @@ class Usuario(models.Model):
     )
     # Foto de perfil. Se sube desde los formularios de edición de perfil.
     foto = models.ImageField(upload_to="fotos_perfil/", blank=True, null=True)
+    # ── Preferencias de notificación (Configuración del cliente y del barbero) ──
+    aviso_correo = models.BooleanField(
+        default=True,
+        help_text="Recibir recordatorios de citas por correo.",
+    )
+    aviso_whatsapp = models.BooleanField(
+        default=False,
+        help_text="Recibir recordatorios de citas por WhatsApp.",
+    )
+    aviso_sms = models.BooleanField(
+        default=False,
+        help_text="Recibir recordatorios de citas por SMS.",
+    )
+    aviso_anticipacion_horas = models.PositiveSmallIntegerField(
+        default=24,
+        help_text="Horas de anticipación con las que se envía el recordatorio.",
+    )
     activo = models.BooleanField(default=True)
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     
@@ -214,11 +231,32 @@ class BloqueoHorario(models.Model):
         return f"{self.peluqueria.nombre} - {self.fecha} (todo el día)"
 
 
+# Opciones de tipo de mensaje que reemplazan el "asunto" de texto libre del
+# formulario de contacto. Se usan en el dropdown del formulario y en la tabla
+# de mensajes del panel de administración.
+TIPOS_MENSAJE = [
+    ("consulta", "Consulta general"),
+    ("soporte", "Soporte técnico"),
+    ("cita", "Problema con una cita"),
+    ("pedido", "Pedidos y tienda"),
+    ("cuenta", "Cuenta y acceso"),
+    ("denuncia", "Denuncia o queja"),
+    ("otro", "Otro"),
+]
+TIPOS_MENSAJE_DICCIONARIO = dict(TIPOS_MENSAJE)
+
+
 # Mensaje enviado desde el formulario de contacto de la página de ayuda
 class MensajeContacto(models.Model):
     nombre = models.CharField(max_length=100)
     email = models.EmailField()
     asunto = models.CharField(max_length=150)
+    tipo = models.CharField(
+        max_length=20,
+        choices=TIPOS_MENSAJE,
+        default="consulta",
+        help_text="Categoría del mensaje (dropdown del formulario de contacto).",
+    )
     mensaje = models.TextField()
     fecha = models.DateTimeField(auto_now_add=True)
     leido = models.BooleanField(default=False)

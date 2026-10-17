@@ -23,7 +23,7 @@ from django.core.validators import validate_email  # Validar formato de correo
 from django.core.exceptions import ValidationError  # Excepciones de validación
 from django.template.loader import render_to_string  # Renderizar plantilla a string (para correos)
 from datetime import datetime, time, timedelta  # Manejo de fechas, horas y duraciones
-from .models import Usuario, Peluqueria, ImagenPeluqueria, Producto, Reserva, Pedido, PedidoProducto, RegistroIngreso, Notificacion, HorarioTrabajo, BloqueoHorario, MensajeContacto, Calificacion, Configuracion  # Todos los modelos
+from .models import Usuario, Peluqueria, ImagenPeluqueria, Producto, Reserva, Pedido, PedidoProducto, RegistroIngreso, Notificacion, HorarioTrabajo, BloqueoHorario, MensajeContacto, Calificacion, Configuracion, TIPOS_MENSAJE, TIPOS_MENSAJE_DICCIONARIO  # Todos los modelos
 from .utilidades import autorizacion, validar_password, validar_telefono, validar_imagen  # Seguridad y validación de entradas
 from .context_processors import carrito_visible, guardar_carrito_activo, cargar_carrito_usuario  # Funciones del carrito por sesión
 
@@ -331,7 +331,7 @@ def inicio(request):
     if request.session.get("logueado"):
         rol = request.session["logueado"]["rol"]
         if rol == "Admin":
-            return redirect("sena:admin_reservas")
+            return redirect("sena:admin_dashboard")
         elif rol == "Barbero":
             return redirect("sena:peluquero_dashboard")
     contexto = contexto_carrito(request)
@@ -382,7 +382,7 @@ def login(request):
                 return redirect("sena:carrito")
 
             if usuario.rol == "Admin":
-                return redirect("sena:admin_reservas")
+                return redirect("sena:admin_dashboard")
             elif usuario.rol == "Barbero":
                 return redirect("sena:peluquero_dashboard")
             else:
@@ -397,6 +397,10 @@ def login(request):
             cache.set(clave_intentos, intentos, 300)
             return render(request, "publicos/login.html", {"error": f"Credenciales incorrectas. Te quedan {5 - intentos} intentos.", "proximo": proximo})
 
+    # Un Admin con sesión iniciada no vuelve a ver el formulario: aterriza en su panel.
+    logueado = request.session.get("logueado")
+    if logueado and logueado.get("rol") == "Admin":
+        return redirect("sena:admin_dashboard")
     return render(request, "publicos/login.html", {"proximo": request.GET.get("next", "")})
 
 
@@ -538,13 +542,220 @@ def como_funciona(request):
 def sobre_nosotros(request):
     return render(request, "publicos/sobre_nosotros.html")
 
+
+def politicas(request):
+    """Políticas de Privacidad y del Proyecto (enlace en el pie de página)."""
+    return render(request, "publicos/politicas.html", contexto_carrito(request))
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# ZONA DE CONFIGURACIÓN (cliente y barbero)
+# ═══════════════════════════════════════════════════════════════════════════
+
+PESTANAS_CONFIG_USUARIO = ("perfil", "seguridad", "notificaciones", "privacidad")
+PESTANAS_CONFIG_PELUQUERO = ("portafolio", "agenda", "servicios", "notificaciones")
+
+
+def _pestanas_config(request, permitidas):
+    """Devuelve la pestaña de configuración pedida en ?seccion= (o la primera)."""
+    seccion = (request.GET.get("seccion") or permitidas[0]).strip().lower()
+    return seccion if seccion in permitidas else permitidas[0]
+
+
+def _datos_notificacion(request, usuario):
+    """Aplica los cambios de notificaciones del formulario y los guarda."""
+    usuario.aviso_correo = request.POST.get("correo") == "on"
+    usuario.aviso_whatsapp = request.POST.get("whatsapp") == "on"
+    usuario.aviso_sms = request.POST.get("sms") == "on"
+    try:
+        usuario.aviso_anticipacion_horas = max(1, int(request.POST.get("anticipacion", 24)))
+    except (TypeError, ValueError):
+        usuario.aviso_anticipacion_horas = 24
+    usuario.save(update_fields=["aviso_correo", "aviso_whatsapp", "aviso_sms", "aviso_anticipacion_horas"])
+
+
+def _datos_descargables(usuario):
+    """Exporta los datos personales del usuario en un JSON descargable."""
+    reservas = Reserva.objects.select_related("peluqueria").filter(cliente=usuario).order_by("-fecha")[:100]
+    pedidos = Pedido.objects.filter(cliente=usuario).prefetch_related("productos__producto").order_by("-fecha")[:100]
+    mensajes = MensajeContacto.objects.filter(email=usuario.email).order_by("-fecha")[:100]
+    return {
+        "perfil": {
+            "nombre": usuario.nombre,
+            "apellido": usuario.apellido,
+            "email": usuario.email,
+            "telefono": usuario.telefono,
+            "rol": usuario.rol,
+            "fecha_registro": usuario.fecha_creacion.strftime("%Y-%m-%d %H:%M") if usuario.fecha_creacion else None,
+        },
+        "reservas": [
+            {
+                "peluqueria": r.peluqueria.nombre if r.peluqueria else "",
+                "fecha": r.fecha.isoformat(),
+                "hora": r.hora.strftime("%H:%M"),
+                "servicio": r.servicio,
+                "estado": r.estado,
+            }
+            for r in reservas
+        ],
+        "pedidos": [
+            {
+                "fecha": p.fecha.strftime("%Y-%m-%d %H:%M") if p.fecha else None,
+                "total": p.total,
+                "estado": p.estado,
+                "productos": [
+                    {"nombre": pp.producto.nombre, "cantidad": pp.cantidad, "precio": pp.precio}
+                    for pp in p.productos.all()
+                ],
+            }
+            for p in pedidos
+        ],
+        "mensajes_de_contacto": [
+            {"asunto": m.asunto, "tipo": m.tipo, "fecha": m.fecha.strftime("%Y-%m-%d %H:%M") if m.fecha else None}
+            for m in mensajes
+        ],
+    }
+
+
+@autorizacion(["Cliente"])
+def usuario_configuracion(request):
+    """Zona de configuración del cliente: Perfil, Seguridad, Notificaciones y Privacidad."""
+    usuario = Usuario.objects.get(id=request.session["logueado"]["id"])
+    pestana = _pestanas_config(request, PESTANAS_CONFIG_USUARIO)
+
+    if request.method == "POST":
+        accion = request.POST.get("accion", "")
+
+        if accion == "perfil":
+            telefono = request.POST.get("telefono", usuario.telefono).strip()
+            error_telefono = validar_telefono(telefono)
+            if error_telefono:
+                messages.error(request, error_telefono)
+                return redirect(f"{reverse('sena:usuario_configuracion')}?seccion=perfil")
+            foto = request.FILES.get("foto")
+            error_imagen = validar_imagen(foto)
+            if error_imagen:
+                messages.error(request, error_imagen)
+                return redirect(f"{reverse('sena:usuario_configuracion')}?seccion=perfil")
+            usuario.nombre = request.POST.get("nombre", usuario.nombre).strip() or usuario.nombre
+            usuario.apellido = request.POST.get("apellido", usuario.apellido).strip() or usuario.apellido
+            usuario.telefono = telefono
+            if foto:
+                usuario.foto = foto
+            usuario.save()
+            # Se reasigna el diccionario completo: Django no detecta cambios anidados.
+            request.session["logueado"] = {**request.session["logueado"], "nombre": usuario.nombre}
+            messages.success(request, "Perfil actualizado correctamente.")
+            return redirect(f"{reverse('sena:usuario_configuracion')}?seccion=perfil")
+
+        if accion == "notificaciones":
+            _datos_notificacion(request, usuario)
+            messages.success(request, "Preferencias de notificaciones guardadas.")
+            return redirect(f"{reverse('sena:usuario_configuracion')}?seccion=notificaciones")
+
+        if accion == "descarga":
+            respuesta = JsonResponse(
+                _datos_descargables(usuario),
+                json_dumps_params={"ensure_ascii": False, "indent": 2},
+            )
+            respuesta["Content-Disposition"] = 'attachment; filename="mis_datos_tecnocorte.json"'
+            return respuesta
+
+        if accion == "privacidad":
+            messages.success(request, "Preferencias de privacidad actualizadas.")
+            return redirect(f"{reverse('sena:usuario_configuracion')}?seccion=privacidad")
+
+    contexto = contexto_carrito(request)
+    contexto.update({
+        "usuario": usuario,
+        "pestana": pestana,
+        "pestanas": PESTANAS_CONFIG_USUARIO,
+        "ingresos": RegistroIngreso.objects.filter(usuario=usuario).order_by("-fecha")[:5],
+    })
+    return render(request, "usuarios/usuario_configuracion.html", contexto)
+
+
+@autorizacion(["Barbero"])
+def peluquero_configuracion(request):
+    """Configuración del barbero: Portafolio, Agenda, Servicios y Notificaciones."""
+    usuario = Usuario.objects.get(id=request.session["logueado"]["id"])
+    pestana = _pestanas_config(request, PESTANAS_CONFIG_PELUQUERO)
+
+    if request.method == "POST":
+        accion = request.POST.get("accion", "")
+
+        if accion == "portafolio":
+            telefono = request.POST.get("telefono", usuario.telefono).strip()
+            error_telefono = validar_telefono(telefono)
+            if error_telefono:
+                messages.error(request, error_telefono)
+                return redirect(f"{reverse('sena:peluquero_configuracion')}?seccion=portafolio")
+            foto = request.FILES.get("foto")
+            error_imagen = validar_imagen(foto)
+            if error_imagen:
+                messages.error(request, error_imagen)
+                return redirect(f"{reverse('sena:peluquero_configuracion')}?seccion=portafolio")
+            usuario.nombre = request.POST.get("nombre", usuario.nombre).strip() or usuario.nombre
+            usuario.apellido = request.POST.get("apellido", usuario.apellido).strip() or usuario.apellido
+            usuario.telefono = telefono
+            if foto:
+                usuario.foto = foto
+            usuario.save()
+            # Se reasigna el diccionario completo: Django no detecta cambios anidados.
+            request.session["logueado"] = {**request.session["logueado"], "nombre": usuario.nombre}
+            messages.success(request, "Portafolio actualizado correctamente.")
+            return redirect(f"{reverse('sena:peluquero_configuracion')}?seccion=portafolio")
+
+        if accion == "notificaciones":
+            _datos_notificacion(request, usuario)
+            messages.success(request, "Preferencias de notificaciones guardadas.")
+            return redirect(f"{reverse('sena:peluquero_configuracion')}?seccion=notificaciones")
+
+    peluqueria = _peluqueria_del_barbero(usuario.id)
+    contexto = {
+        "usuario": usuario,
+        "pestana": pestana,
+        "pestanas": PESTANAS_CONFIG_PELUQUERO,
+        "peluqueria": peluqueria,
+        "servicios": SERVICIOS,
+        "horarios": HorarioTrabajo.objects.filter(peluqueria=peluqueria).order_by("dia_semana") if peluqueria else [],
+        "bloqueos": BloqueoHorario.objects.filter(peluqueria=peluqueria).order_by("-fecha", "hora")[:10] if peluqueria else [],
+        "fotos": peluqueria.galeria.all().order_by("-fecha")[:12] if peluqueria else [],
+        "ingresos": RegistroIngreso.objects.filter(usuario=usuario).order_by("-fecha")[:5],
+    }
+    return render(request, "peluqueros/peluquero_configuracion.html", contexto)
+
 def ayuda(request):
     contexto = contexto_carrito(request)
+    contexto["tipos_mensaje"] = TIPOS_MENSAJE  # Opciones del dropdown de "tipo de mensaje"
+
+    # Autocompletado: si la persona está logueada, sus datos se rellenan solos.
+    logueado = request.session.get("logueado")
+    if logueado and logueado.get("id"):
+        usuario = Usuario.objects.only("nombre", "email").filter(pk=logueado["id"]).first()
+        if usuario:
+            contexto["prefill_nombre"] = usuario.nombre
+            contexto["prefill_email"] = usuario.email
+
     if request.method == "POST":
         nombre = request.POST.get("nombre", "").strip()
         email = request.POST.get("email", "").strip().lower()
-        asunto = request.POST.get("asunto", "").strip()
+        tipo = request.POST.get("tipo", "").strip()
         mensaje = request.POST.get("mensaje", "").strip()
+        # Compatibilidad: si llega un "asunto" libre (versión antigua del formulario)
+        # se usa como respaldo y se asocia al tipo "otro".
+        asunto_libre = request.POST.get("asunto", "").strip()
+
+        if tipo and tipo not in TIPOS_MENSAJE_DICCIONARIO:
+            contexto["error"] = "Elige un tipo de mensaje de la lista."
+            return render(request, "publicos/ayuda.html", contexto)
+        if not tipo and not asunto_libre:
+            contexto["error"] = "Elige un tipo de mensaje para poder enviar tu consulta."
+            return render(request, "publicos/ayuda.html", contexto)
+
+        asunto = TIPOS_MENSAJE_DICCIONARIO.get(tipo) or asunto_libre
+        tipo_guardado = tipo or "otro"
+
         try:
             validate_email(email)
         except ValidationError:
@@ -553,8 +764,8 @@ def ayuda(request):
         if len(nombre) > 100 or len(asunto) > 150:
             contexto["error"] = "El nombre o el asunto superan el límite permitido."
             return render(request, "publicos/ayuda.html", contexto)
-        if nombre and email and asunto and mensaje:
-            MensajeContacto.objects.create(nombre=nombre, email=email, asunto=asunto, mensaje=mensaje)
+        if nombre and email and mensaje:
+            MensajeContacto.objects.create(nombre=nombre, email=email, asunto=asunto, tipo=tipo_guardado, mensaje=mensaje)
             admins = list(Usuario.objects.filter(rol="Admin", activo=True).only("id"))  # Una sola consulta
             if admins:
                 Notificacion.objects.bulk_create([  # Una sola inserción para todos los admins
@@ -565,7 +776,7 @@ def ayuda(request):
             enviar_correo_destino(
                 settings.CONTACT_EMAIL,
                 f"Nuevo mensaje de contacto: {asunto_correo}",
-                f"Recibiste un nuevo mensaje desde el formulario de TecnoCorte.\n\nNombre: {nombre}\nCorreo del cliente: {email}\nAsunto: {asunto}\n\nMensaje:\n{mensaje}",
+                f"Recibiste un nuevo mensaje desde el formulario de TecnoCorte.\n\nNombre: {nombre}\nCorreo del cliente: {email}\nTipo de mensaje: {asunto}\n\nMensaje:\n{mensaje}",
                 request=request,
             )
             contexto["exito"] = "Tu mensaje fue enviado. Te responderemos pronto."
@@ -1862,7 +2073,13 @@ def admin_quitar_foto_peluqueria(request, id):
 def admin_galeria(request):
     """Listado de todas las fotos de galería para moderar su contenido."""
     fotos = ImagenPeluqueria.objects.select_related("peluqueria").order_by("-fecha")
-    return render(request, "administrador/admin_galeria.html", {"fotos": fotos})
+    # Barberías que tienen al menos una foto: alimentan los botones de filtrado
+    peluquerias = Peluqueria.objects.filter(galeria__isnull=False).distinct().order_by("nombre")
+    return render(
+        request,
+        "administrador/admin_galeria.html",
+        {"fotos": fotos, "peluquerias": peluquerias},
+    )
 
 
 @autorizacion(["Admin"])

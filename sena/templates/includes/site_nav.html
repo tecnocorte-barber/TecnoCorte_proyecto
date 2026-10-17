@@ -75,32 +75,9 @@
       >
         <span class="material-symbols-outlined theme-icon">light_mode</span>
       </button>
-      {% include "includes/notificaciones_indicator.html" %} {% include "includes/carrito_indicator.html" %} {# Muestra perfil y salir si está logueado, o ingresar si no #}
+      {% include "includes/notificaciones_indicator.html" %} {% include "includes/carrito_indicator.html" %} {# Iconos de Dashboard y menú de perfil si está logueado, o ingresar si no #}
       {% if request.session.logueado %}
-      {% if request.session.logueado.rol == 'Admin' %}
-      <a
-        class="pill-text-action hidden sm:inline-flex"
-        href="{% url 'sena:admin_perfil' %}"
-        >Perfil</a
-      >
-      {% elif request.session.logueado.rol == 'Barbero' %}
-      <a
-        class="pill-text-action hidden sm:inline-flex"
-        href="{% url 'sena:peluquero_perfil' %}"
-        >Perfil</a
-      >
-      {% else %}
-      <a
-        class="pill-text-action hidden sm:inline-flex"
-        href="{% url 'sena:usuario_perfil' %}"
-        >Perfil</a
-      >
-      {% endif %}
-      <a
-        class="pill-text-action hidden sm:inline-flex"
-        href="{% url 'sena:logout' %}"
-        >Salir</a
-      >
+      {% include "includes/panel_header_actions.html" with sin_notificaciones=True %}
       {% else %}
       <a
         class="pill-text-action hidden sm:inline-flex"

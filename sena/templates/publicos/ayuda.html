@@ -113,7 +113,7 @@
                 required
                 name="nombre"
                 placeholder="Tu nombre"
-                value="{% if request.method == 'POST' %}{{ request.POST.nombre }}{% endif %}"
+                value="{% if request.method == 'POST' %}{{ request.POST.nombre }}{% else %}{{ prefill_nombre|default:'' }}{% endif %}"
                 class="rounded-md border-0 bg-surface-container-high p-3 text-on-surface focus:outline-none"
               />
               <input
@@ -121,17 +121,36 @@
                 type="email"
                 name="email"
                 placeholder="Tu correo"
-                value="{% if request.method == 'POST' %}{{ request.POST.email }}{% endif %}"
+                value="{% if request.method == 'POST' %}{{ request.POST.email }}{% else %}{{ prefill_email|default:'' }}{% endif %}"
                 class="rounded-md border-0 bg-surface-container-high p-3 text-on-surface focus:outline-none"
               />
             </div>
-            <input
+            {% if prefill_nombre %}
+            <p class="-mt-2 text-xs text-on-surface-variant">
+              Completamos tu nombre y correo con los datos de tu cuenta.
+            </p>
+            {% endif %}
+            <label for="tipo" class="text-sm font-semibold text-on-surface"
+              >Tipo de mensaje</label
+            >
+            <select
+              id="tipo"
               required
-              name="asunto"
-              placeholder="Asunto"
-              value="{% if request.method == 'POST' %}{{ request.POST.asunto }}{% endif %}"
+              name="tipo"
               class="rounded-md border-0 bg-surface-container-high p-3 text-on-surface focus:outline-none"
-            />
+            >
+              <option value="" disabled {% if not request.POST.tipo %}selected{% endif %}>
+                Selecciona el motivo de tu consulta
+              </option>
+              {% for valor, etiqueta in tipos_mensaje %}
+              <option
+                value="{{ valor }}"
+                {% if request.POST.tipo == valor %}selected{% endif %}
+              >
+                {{ etiqueta }}
+              </option>
+              {% endfor %}
+            </select>
             <textarea
               required
               name="mensaje"
@@ -206,9 +225,10 @@
       >
         <a
           class="opacity-80 transition-colors duration-300 hover:text-primary hover:opacity-100"
-          href="{% url 'sena:ayuda' %}"
+          href="{% url 'sena:politicas' %}"
           >Privacidad</a
         >
+          <a class="opacity-80 transition-colors duration-300 hover:text-primary hover:opacity-100" href="{% url 'sena:politicas' %}">Políticas de Privacidad y del Proyecto</a>
         <a
           class="opacity-80 transition-colors duration-300 hover:text-primary hover:opacity-100"
           href="{% url 'sena:ayuda' %}"

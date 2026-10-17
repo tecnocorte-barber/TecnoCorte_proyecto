@@ -2,6 +2,7 @@
 {% extends 'usuarios/dashboard_base.html' %} {% block body_class %} font-body
 antialiased flex bg-surface {% endblock %} {% block content %} {% include 'includes/admin_sidebar.html' with active='dashboard' %}
 <main class="ml-0 md:ml-64 flex-1 min-h-screen p-6 md:p-12 pb-24 md:pb-12">
+  {% include "includes/panel_header.html" %}
   <header class="mb-10 flex flex-wrap items-start justify-between gap-5 pr-16">
     <div>
       <h1 class="font-headline text-4xl text-primary">

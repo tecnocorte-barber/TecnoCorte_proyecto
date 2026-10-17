@@ -156,14 +156,14 @@
                 </div>
                 <div class="mt-8 flex justify-center">
                   {% if request.session.logueado %}<a
-                    href="{% url 'sena:usuario_reservar_cita' %}"
+                    href="{% url 'sena:usuario_reservar_cita' %}?servicio=Corte%20de%20Cabello"
                     class="btn-brand inline-flex items-center gap-3 rounded-md px-8 py-4 text-sm font-bold uppercase tracking-[0.14em] transition-transform duration-300 hover:scale-[1.02] active:scale-95"
                     ><span>Reservar Cita</span
                     ><span class="material-symbols-outlined text-xl"
                       >workspace_premium</span
                     ></a
                   >{% else %}<a
-                    href="{% url 'sena:login' %}?next={% url 'sena:usuario_reservar_cita' %}"
+                    href="{% url 'sena:login' %}?next={% url 'sena:usuario_reservar_cita' %}%3Fservicio%3DCorte%20de%20Cabello"
                     class="btn-brand inline-flex items-center gap-3 rounded-md px-8 py-4 text-sm font-bold uppercase tracking-[0.14em] transition-transform duration-300 hover:scale-[1.02] active:scale-95"
                     ><span>Reservar Cita</span
                     ><span class="material-symbols-outlined text-xl"
@@ -204,12 +204,12 @@
                 </li>
               </ul>
               {% if request.session.logueado %}<a
-                href="{% url 'sena:usuario_reservar_cita' %}"
+                href="{% url 'sena:usuario_reservar_cita' %}?servicio=Corte%20de%20Cabello"
                 class="service-flip-back__action"
                 >Agendar cita
                 <span class="material-symbols-outlined">arrow_forward</span></a
               >{% else %}<a
-                href="{% url 'sena:login' %}?next={% url 'sena:usuario_reservar_cita' %}"
+                href="{% url 'sena:login' %}?next={% url 'sena:usuario_reservar_cita' %}%3Fservicio%3DCorte%20de%20Cabello"
                 class="service-flip-back__action"
                 >Iniciar sesión para reservar
                 <span class="material-symbols-outlined">arrow_forward</span></a
@@ -276,14 +276,14 @@
                 </div>
                 <div class="mt-8 flex justify-center">
                   {% if request.session.logueado %}<a
-                    href="{% url 'sena:usuario_reservar_cita' %}"
+                    href="{% url 'sena:usuario_reservar_cita' %}?servicio=Arreglo%20de%20Barba"
                     class="btn-brand inline-flex items-center gap-3 rounded-md px-8 py-4 text-sm font-bold uppercase tracking-[0.14em] transition-transform duration-300 hover:scale-[1.02] active:scale-95"
                     ><span>Reservar Cita</span
                     ><span class="material-symbols-outlined text-xl"
                       >workspace_premium</span
                     ></a
                   >{% else %}<a
-                    href="{% url 'sena:login' %}?next={% url 'sena:usuario_reservar_cita' %}"
+                    href="{% url 'sena:login' %}?next={% url 'sena:usuario_reservar_cita' %}%3Fservicio%3DArreglo%20de%20Barba"
                     class="btn-brand inline-flex items-center gap-3 rounded-md px-8 py-4 text-sm font-bold uppercase tracking-[0.14em] transition-transform duration-300 hover:scale-[1.02] active:scale-95"
                     ><span>Reservar Cita</span
                     ><span class="material-symbols-outlined text-xl"
@@ -324,12 +324,12 @@
                 </li>
               </ul>
               {% if request.session.logueado %}<a
-                href="{% url 'sena:usuario_reservar_cita' %}"
+                href="{% url 'sena:usuario_reservar_cita' %}?servicio=Arreglo%20de%20Barba"
                 class="service-flip-back__action"
                 >Agendar cita
                 <span class="material-symbols-outlined">arrow_forward</span></a
               >{% else %}<a
-                href="{% url 'sena:login' %}?next={% url 'sena:usuario_reservar_cita' %}"
+                href="{% url 'sena:login' %}?next={% url 'sena:usuario_reservar_cita' %}%3Fservicio%3DArreglo%20de%20Barba"
                 class="service-flip-back__action"
                 >Iniciar sesión para reservar
                 <span class="material-symbols-outlined">arrow_forward</span></a
@@ -402,7 +402,7 @@
                 <div class="mt-8 flex justify-center">
                   {% if request.session.logueado %}
                   <a
-                    href="{% url 'sena:usuario_reservar_cita' %}"
+                    href="{% url 'sena:usuario_reservar_cita' %}?servicio=Combo%20Completo"
                     class="btn-brand inline-flex items-center gap-3 rounded-md px-8 py-4 text-sm font-bold uppercase tracking-[0.14em] transition-transform duration-300 hover:scale-[1.02] active:scale-95"
                   >
                     <span>Reservar Cita</span>
@@ -412,7 +412,7 @@
                   </a>
                   {% else %}
                   <a
-                    href="{% url 'sena:login' %}?next={% url 'sena:usuario_reservar_cita' %}"
+                    href="{% url 'sena:login' %}?next={% url 'sena:usuario_reservar_cita' %}%3Fservicio%3DCombo%20Completo"
                     class="btn-brand inline-flex items-center gap-3 rounded-md px-8 py-4 text-sm font-bold uppercase tracking-[0.14em] transition-transform duration-300 hover:scale-[1.02] active:scale-95"
                   >
                     <span>Reservar Cita</span>
@@ -455,12 +455,12 @@
                 </li>
               </ul>
               {% if request.session.logueado %}<a
-                href="{% url 'sena:usuario_reservar_cita' %}"
+                href="{% url 'sena:usuario_reservar_cita' %}?servicio=Combo%20Completo"
                 class="service-flip-back__action"
                 >Reservar combo
                 <span class="material-symbols-outlined">arrow_forward</span></a
               >{% else %}<a
-                href="{% url 'sena:login' %}?next={% url 'sena:usuario_reservar_cita' %}"
+                href="{% url 'sena:login' %}?next={% url 'sena:usuario_reservar_cita' %}%3Fservicio%3DCombo%20Completo"
                 class="service-flip-back__action"
                 >Iniciar sesión para reservar
                 <span class="material-symbols-outlined">arrow_forward</span></a
@@ -484,9 +484,10 @@
         >
           <a
             class="hover:text-primary transition-colors opacity-80 hover:opacity-100"
-            href="{% url 'sena:ayuda' %}"
+            href="{% url 'sena:politicas' %}"
             >Privacidad</a
-          ><a
+          >
+          <a class="hover:text-primary transition-colors opacity-80 hover:opacity-100" href="{% url 'sena:politicas' %}">Políticas de Privacidad y del Proyecto</a><a
             class="hover:text-primary transition-colors opacity-80 hover:opacity-100"
             href="{% url 'sena:ayuda' %}"
             >Términos</a

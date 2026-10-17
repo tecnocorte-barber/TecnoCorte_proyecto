@@ -4,7 +4,9 @@
 {% block body_class %}font-body antialiased flex bg-surface{% endblock %}
 {% block content %}
 {% include "includes/peluquero_sidebar.html" with active="galeria" %}
-<main class="md:ml-72 flex-1 min-h-screen p-6 md:p-12"><script>
+<main class="md:ml-72 flex-1 min-h-screen p-6 md:p-12">
+  {% include "includes/panel_header.html" %}
+<script>
   var fotoInput = document.getElementById("foto-input");
   var fotoPreview = document.getElementById("foto-preview");
   var fotoPreviewImg = document.getElementById("foto-preview-img");

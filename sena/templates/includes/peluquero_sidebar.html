@@ -55,8 +55,8 @@
       <span class="font-label uppercase tracking-widest text-sm">Galería</span>
     </a>
     <a
-      class="panel-glass-link flex items-center gap-4 p-3 {% if active == 'perfil' %}panel-glass-link--active{% else %}text-on-surface-variant font-medium{% endif %}"
-      href="{% url 'sena:peluquero_perfil' %}"
+      class="panel-glass-link flex items-center gap-4 p-3 {% if active == 'configuracion' %}panel-glass-link--active{% else %}text-on-surface-variant font-medium{% endif %}"
+      href="{% url 'sena:peluquero_configuracion' %}"
     >
       <span
         class="material-symbols-outlined"
@@ -88,27 +88,4 @@
   >
     <span class="material-symbols-outlined text-base">add</span>Nueva Cita
   </a>
-
-  {# Botón de tema y cerrar sesión #}
-  <div class="mt-auto space-y-2 pt-6 border-t border-surface-container-low">
-    <button
-      data-theme-toggle
-      onclick="toggleTheme()"
-      type="button"
-      class="panel-glass-link flex items-center gap-4 p-3 w-full text-on-surface-variant font-medium"
-      title="Activar tema claro"
-    >
-      <span class="material-symbols-outlined theme-icon">dark_mode</span>
-      <span class="font-label uppercase tracking-widest text-sm">Tema</span>
-    </button>
-    <a
-      class="panel-glass-link flex items-center gap-4 p-3 text-on-surface-variant font-medium hover:text-error"
-      href="{% url 'sena:logout' %}"
-    >
-      <span class="material-symbols-outlined">logout</span>
-      <span class="font-label uppercase tracking-widest text-sm"
-        >Cerrar Sesión</span
-      >
-    </a>
-  </div>
 </nav>

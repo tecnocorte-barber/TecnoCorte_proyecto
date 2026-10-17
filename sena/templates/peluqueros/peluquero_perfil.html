@@ -3,26 +3,7 @@
 Perfil{% endblock %} {% block body_class %}antialiased min-h-screen flex
 bg-background text-on-surface{% endblock %} {% block content %} {% include "includes/peluquero_sidebar.html" with active="perfil" %}
 <main class="flex-1 md:ml-72 flex flex-col min-h-screen relative bg-background">
-  <header
-    class="glass-header sticky top-0 z-40 flex justify-between items-center w-full px-6 md:px-12 py-4"
-  >
-    <a
-      class="inline-flex md:hidden"
-      href="{% url 'sena:peluquero_dashboard' %}"
-      aria-label="TecnoCorte"
-      >{% include "includes/logo.html" %}</a
-    >
-    <div class="hidden md:block"></div>
-    <div class="flex items-center gap-6">
-      <a
-        href="{% url 'sena:logout' %}"
-        class="text-on-surface-variant hover:text-primary transition-opacity cursor-pointer active:opacity-80"
-        title="Cerrar sesión"
-      >
-        <span class="material-symbols-outlined">logout</span>
-      </a>
-    </div>
-  </header>
+  {% include "includes/panel_header.html" %}
 
   <div class="p-6 md:p-12 space-y-12 max-w-5xl mx-auto w-full">
     {# Encabezado de la página de perfil con botón de edición #}

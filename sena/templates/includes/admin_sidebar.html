@@ -1,4 +1,4 @@
-<!-- Barra lateral del panel de administración: enlaces de navegación, acciones rápidas y cerrar sesión -->
+<!-- Barra lateral del panel de administración: enlaces de navegación y acción rápida -->
 <nav
   class="admin-sidebar panel-glass hidden md:flex fixed left-0 top-0 z-40 flex-col p-4 w-64 h-screen"
 >
@@ -145,7 +145,7 @@
       >
     </a>
   </div>
-  {# Acciones fijas: nueva cita, perfil, tema y cerrar sesión #}
+  {# Acciones fijas: nueva cita (perfil, tema y salida viven en el header) #}
   <div class="mt-4 shrink-0 space-y-1 border-t border-primary/10 pt-3">
     <a
       href="{% url 'sena:admin_crear_reserva' %}"
@@ -153,32 +153,6 @@
     >
       <span class="material-symbols-outlined text-lg">add</span>
       Nueva cita
-    </a>
-    <a
-      href="{% url 'sena:admin_perfil' %}"
-      class="panel-glass-link flex w-full items-center justify-center gap-2 px-3 py-2.5 font-label text-xs uppercase tracking-widest {% if active == 'perfil' %}panel-glass-link--active{% else %}text-on-surface-variant{% endif %}"
-    >
-      <span class="material-symbols-outlined text-base">person</span>
-      Mi perfil
-    </a>
-    <button
-      data-theme-toggle
-      onclick="toggleTheme()"
-      type="button"
-      class="panel-glass-link flex w-full items-center justify-center gap-2 px-3 py-2.5 font-label text-xs uppercase tracking-widest text-on-surface-variant"
-      title="Activar tema claro"
-    >
-      <span class="material-symbols-outlined theme-icon text-base"
-        >dark_mode</span
-      >
-      Tema
-    </button>
-    <a
-      href="{% url 'sena:logout' %}"
-      class="panel-glass-link flex w-full items-center justify-center gap-2 px-3 py-2.5 font-label text-xs uppercase tracking-widest text-on-surface-variant hover:text-error"
-    >
-      <span class="material-symbols-outlined text-base">logout</span>
-      Cerrar sesión
     </a>
   </div>
 </nav>

@@ -98,7 +98,7 @@
           </div>
           <div class="flex gap-3">
             <a
-              href="{% url 'sena:usuario_reservar_cita' %}"
+              href="{% url 'sena:usuario_reservar_cita' %}?peluqueria={{ peluqueria.id }}"
               class="gold-gradient whitespace-nowrap rounded-md px-6 py-3 text-center text-sm font-bold uppercase tracking-wider text-on-primary transition-all hover:brightness-110 active:scale-95"
               >Reservar</a
             >
@@ -175,9 +175,10 @@
       >
         <a
           class="opacity-80 transition-colors hover:text-primary hover:opacity-100"
-          href="{% url 'sena:ayuda' %}"
+          href="{% url 'sena:politicas' %}"
           >Privacidad</a
         >
+          <a class="opacity-80 transition-colors hover:text-primary hover:opacity-100" href="{% url 'sena:politicas' %}">Políticas de Privacidad y del Proyecto</a>
         <a
           class="opacity-80 transition-colors hover:text-primary hover:opacity-100"
           href="{% url 'sena:ayuda' %}"

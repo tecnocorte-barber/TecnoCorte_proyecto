@@ -94,16 +94,7 @@
               class="absolute -top-2 -right-2 min-w-5 h-5 px-1 rounded-full bg-primary text-on-primary text-[10px] font-bold flex items-center justify-center"
               >{{ cantidad|default:0 }}
             </span> </a
-          ><a
-            href="{% url 'sena:usuario_perfil' %}"
-            class="hover:text-primary-container transition-all duration-300 active:scale-90"
-            title="Perfil"
-            ><span class="material-symbols-outlined">account_circle</span> </a
-          ><a
-            href="{% url 'sena:logout' %}"
-            class="hidden md:inline text-xs font-bold uppercase tracking-widest text-on-surface-variant hover:text-primary transition-colors"
-            >Salir</a
-          >
+          >{% include "includes/panel_header_actions.html" with sin_notificaciones=True %}
         </div>
       </div>
     </nav>
@@ -413,9 +404,10 @@
       >
         <a
           class="opacity-80 transition-colors duration-300 hover:text-primary hover:opacity-100"
-          href="{% url 'sena:ayuda' %}"
+          href="{% url 'sena:politicas' %}"
           >Privacidad</a
         >
+          <a class="opacity-80 transition-colors duration-300 hover:text-primary hover:opacity-100" href="{% url 'sena:politicas' %}">Políticas de Privacidad y del Proyecto</a>
         <a
           class="opacity-80 transition-colors duration-300 hover:text-primary hover:opacity-100"
           href="{% url 'sena:ayuda' %}"

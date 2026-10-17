@@ -23,6 +23,7 @@ urlpatterns = [
     path('logout/', views.logout, name="logout"),  # Cerrar sesión
     path('como_funciona/', views.como_funciona, name="como_funciona"),  # Página informativa
     path('sobre_nosotros/', views.sobre_nosotros, name="sobre_nosotros"),  # Página institucional
+    path('politicas/', views.politicas, name="politicas"),  # Políticas de privacidad y del proyecto
     path('ayuda/', views.ayuda, name="ayuda"),  # Formulario de contacto/soporte
 
     # === CARRITO DE COMPRAS (funciona sin login) ===
@@ -43,6 +44,7 @@ urlpatterns = [
     path('usuario/pre_confirmar/', views.usuario_pre_confirmar, name="usuario_pre_confirmar"),  # Vista previa antes de confirmar
     path('usuario/confirmar_reserva/', views.usuario_confirmar_reserva, name="usuario_confirmar_reserva"),  # Confirmar la reserva
     path('usuario/perfil/', views.usuario_perfil, name="usuario_perfil"),  # Ver/editar perfil y historial
+    path('usuario/configuracion/', views.usuario_configuracion, name="usuario_configuracion"),  # Config: perfil, seguridad, notificaciones y privacidad
     path('usuario/cita/<int:reserva_id>/cancelar/', views.usuario_cancelar_reserva, name="usuario_cancelar_reserva"),  # Cancelar una cita
     path('usuario/cita/<int:reserva_id>/editar/', views.usuario_editar_reserva, name="usuario_editar_reserva"),  # Modificar fecha/hora/barbero
     path('usuario/cita/<int:reserva_id>/calificar/', views.usuario_calificar, name="usuario_calificar"),  # Calificar barbero tras cita completada
@@ -54,6 +56,7 @@ urlpatterns = [
     # === PANEL DEL BARBERO (requiere rol "Barbero") ===
     path('peluquero/dashboard/', views.peluquero_dashboard, name="peluquero_dashboard"),  # Dashboard: citas, ingresos, calificaciones
     path('peluquero/perfil/', views.peluquero_perfil, name="peluquero_perfil"),  # Ver/editar perfil del barbero
+    path('peluquero/configuracion/', views.peluquero_configuracion, name="peluquero_configuracion"),  # Config: portafolio, agenda, servicios y notificaciones
     path('peluquero/crear_cita/', views.peluquero_crear_cita, name="peluquero_crear_cita"),  # Agendar cita para un cliente
     path('peluquero/cita/<int:cita_id>/estado/', views.peluquero_cambiar_estado, name="peluquero_cambiar_estado"),  # Cambiar estado de una cita
     path('peluquero/notificaciones/', views.peluquero_notificaciones, name="peluquero_notificaciones"),  # Ver notificaciones del barbero
