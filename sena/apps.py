@@ -5,3 +5,9 @@ from django.apps import AppConfig
 class SenaConfig(AppConfig):
     default_auto_field = 'django.db.models.AutoField'
     name = 'sena'
+
+    def ready(self):
+        # Importa sena.errores al arrancar para que la señal
+        # got_request_exception quede conectada antes de la primera petición.
+        # Si no, el handler500 se importaría tarde y perdería la traza.
+        from . import errores  # noqa: F401

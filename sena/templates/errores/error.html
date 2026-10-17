@@ -1,0 +1,176 @@
+{% comment %}
+Página de error amigable. Se renderiza con el motor "errores", que no tiene
+procesadores de contexto: debe funcionar aunque la base de datos esté caída.
+{% endcomment %}{% load static %}<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>{{ titulo }} · TecnoCorte</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Notable&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --c-primary: #d4ad42;
+        --c-on-surface: #1c1c1c;
+        --c-on-surface-variant: #6b6b6b;
+        --c-surface: #faf7f0;
+        --c-surface-container: #ffffff;
+        --c-outline: rgba(0, 0, 0, 0.08);
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1.5rem;
+        background: var(--c-surface);
+        background-image: radial-gradient(
+            circle at 15% 20%,
+            rgba(212, 173, 66, 0.12),
+            transparent 45%
+          ),
+          radial-gradient(circle at 85% 80%, rgba(212, 173, 66, 0.1), transparent 45%);
+        font-family: "Manrope", system-ui, sans-serif;
+        color: var(--c-on-surface);
+      }
+      .tarjeta {
+        width: 100%;
+        max-width: 32rem;
+        padding: 3rem 2.5rem;
+        text-align: center;
+        background: var(--c-surface-container);
+        border: 1px solid var(--c-outline);
+        border-radius: 1.5rem;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+      }
+      .simbolo {
+        font-size: 4.5rem;
+        line-height: 1;
+        color: var(--c-primary);
+        margin-bottom: 1.25rem;
+      }
+      .codigo {
+        display: inline-block;
+        margin-bottom: 1.25rem;
+        padding: 0.35rem 0.9rem;
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.25em;
+        text-transform: uppercase;
+        color: var(--c-on-surface-variant);
+        border: 1px solid var(--c-outline);
+        border-radius: 999px;
+      }
+      h1 {
+        font-size: 1.85rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        margin-bottom: 0.85rem;
+      }
+      p {
+        color: var(--c-on-surface-variant);
+        line-height: 1.7;
+        margin-bottom: 0.6rem;
+      }
+      .acciones {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.85rem;
+        justify-content: center;
+        margin-top: 2rem;
+      }
+      .boton {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.85rem 1.75rem;
+        border-radius: 0.6rem;
+        font-size: 0.8rem;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        text-decoration: none;
+        transition: transform 0.1s ease, opacity 0.2s ease;
+      }
+      .boton:active {
+        transform: scale(0.96);
+      }
+      .boton-primario {
+        background: var(--c-primary);
+        color: #1c1c1c;
+      }
+      .boton-secundario {
+        background: transparent;
+        color: var(--c-on-surface);
+        border: 1px solid var(--c-outline);
+      }
+      .boton:hover {
+        opacity: 0.88;
+      }
+      .simbolo-boton {
+        font-size: 1.05rem;
+      }
+      @media (max-width: 420px) {
+        .tarjeta {
+          padding: 2.25rem 1.5rem;
+        }
+        .boton {
+          width: 100%;
+          justify-content: center;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="tarjeta" role="main">
+      <span class="material-symbols-outlined simbolo" aria-hidden="true"
+        >{% if codigo == 404 %}search_off{% elif codigo == 403 %}lock{% else %}error{% endif %}</span
+      >
+      <span class="codigo"
+        >Error {{ codigo }}{% if codigo_reporte %} · {{ codigo_reporte }}{% endif %}</span
+      >
+      <h1>{{ titulo }}</h1>
+      {% if codigo == 404 %}
+        <p>
+          Puede que el enlace esté desactualizado o que esa sección haya cambiado
+          de lugar.
+        </p>
+      {% elif codigo == 403 %}
+        <p>
+          Esta sección es solo para cuentas con permisos. Si crees que es un
+          error, inicia sesión con tu cuenta o contáctanos.
+        </p>
+      {% else %}
+        <p>
+          Nuestro equipo ya recibió el aviso de este fallo y lo está revisando.
+          Puedes intentar de nuevo en unos minutos.
+        </p>
+      {% endif %}
+      <p>Disculpa las molestias. Gracias por tu paciencia.</p>
+      <div class="acciones">
+        <a class="boton boton-primario" href="/">
+          <span class="material-symbols-outlined simbolo-boton" aria-hidden="true">home</span>Ir
+          al inicio</a
+        >
+        <a class="boton boton-secundario" href="javascript:location.reload()">
+          <span class="material-symbols-outlined simbolo-boton" aria-hidden="true">refresh</span>Reintentar</a
+        >
+      </div>
+    </main>
+  </body>
+</html>

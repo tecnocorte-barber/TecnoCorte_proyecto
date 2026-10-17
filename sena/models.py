@@ -361,3 +361,54 @@ class Configuracion(models.Model):
             config, _ = cls.objects.get_or_create(pk=1)
             cache.set("configuracion_sitio", config, 300)
         return config
+
+
+# Error inesperado del sistema. Guarda lo suficiente para reproducirlo y avisa al
+# Admin, sin filtrar nunca esos detalles a la persona que navega.
+class RegistroError(models.Model):
+    ESTADOS = (
+        ("pendiente", "Pendiente"),
+        ("revisado", "Revisado"),
+    )
+
+    codigo = models.CharField(
+        max_length=12,
+        unique=True,
+        help_text="Código corto que se muestra a la persona afectada.",
+    )
+    estado = models.CharField(max_length=20, choices=ESTADOS, default="pendiente")
+    codigo_http = models.PositiveSmallIntegerField(default=500)
+    ruta = models.CharField(max_length=300)
+    metodo = models.CharField(max_length=10)
+    tipo = models.CharField(max_length=150, help_text="Clase de la excepción.")
+    mensaje = models.TextField(help_text="Texto del error, recortado a un tamaño razonable.")
+    detalle = models.TextField(blank=True, help_text="Traza completa para depurar.")
+    usuario = models.ForeignKey(
+        Usuario,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="errores",
+    )
+    ip = models.CharField(max_length=45, blank=True)
+    navegador = models.CharField(max_length=200, blank=True)
+    notificado = models.BooleanField(default=False, help_text="Si ya se avisó a los Admin.")
+    fecha = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-fecha"]
+        indexes = [
+            models.Index(fields=["estado", "-fecha"]),
+        ]
+
+    def __str__(self):
+        return f"[{self.codigo}] {self.tipo} en {self.ruta}"
+
+    @property
+    def titulo(self):
+        """Frase corta para el asunto del correo y la notificación."""
+        if self.codigo_http == 404:
+            return "Página no encontrada"
+        if self.codigo_http == 403:
+            return "Acceso denegado"
+        return "Error inesperado del sitio"

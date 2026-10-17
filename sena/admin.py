@@ -5,7 +5,7 @@ from .models import (
     Usuario, Peluqueria, Producto, Reserva, Pedido,
     PedidoProducto, RegistroIngreso, Notificacion,
     HorarioTrabajo, BloqueoHorario, MensajeContacto, Calificacion,
-    Configuracion,
+    Configuracion, RegistroError,
 )
 
 
@@ -105,4 +105,27 @@ class ConfiguracionAdmin(admin.ModelAdmin):
         return not Configuracion.objects.exists()
 
     def has_delete_permission(self, request, obj=None):
+        return False
+
+
+# Admin de registros de error: fallos inesperados capturados por los handlers.
+# El código es el que ve la persona afectada en su pantalla, y el detalle
+# contiene la traza completa que no se le muestra nunca.
+@admin.register(RegistroError)
+class RegistroErrorAdmin(admin.ModelAdmin):
+    list_display = ("codigo", "codigo_http", "tipo", "ruta", "estado", "usuario", "fecha")
+    list_filter = ("codigo_http", "estado")
+    search_fields = ("codigo", "ruta", "tipo", "mensaje")
+    readonly_fields = (
+        "codigo", "codigo_http", "ruta", "metodo", "tipo", "mensaje",
+        "detalle", "usuario", "ip", "navegador", "notificado", "fecha",
+    )
+    list_editable = ("estado",)
+
+    def has_add_permission(self, request):
+        # Los errores los genera el sistema, no se crean a mano.
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        # Se conservan para poder auditar qué falló y cuándo.
         return False

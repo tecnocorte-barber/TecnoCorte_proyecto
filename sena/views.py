@@ -52,8 +52,8 @@ def _horarios_para_template(peluqueria_id=None):
         for b in qs:
             bloqueos.append({"fecha": b.fecha.strftime("%Y-%m-%d"), "hora": b.hora.strftime("%H:%M") if b.hora else None})
         datos = {
-            "horarios_json": json.dumps(horarios),  # Horarios como JSON para JavaScript
-            "bloqueos_json": json.dumps(bloqueos),  # Bloqueos como JSON para JavaScript
+            "horarios_json": _json_seguro(horarios),  # Horarios seguros para JavaScript
+            "bloqueos_json": _json_seguro(bloqueos),  # Bloqueos seguros para JavaScript
         }
         cache.set(clave, datos, 15)  # TTL corto: los horarios cambian poco
     ahora = timezone.localtime()  # Hora actual del servidor (siempre fresca)
@@ -93,9 +93,27 @@ def _reservas_para_template():
                 "hora": reserva.hora.strftime("%H:%M"),  # Hora en formato HH:MM
                 "minutos": minutos_servicio(reserva.servicio),  # Duración del servicio
             })
-        datos = {"reservas_json": json.dumps(reservas)}  # Reservas como JSON
+        datos = {"reservas_json": _json_seguro(reservas)}  # Reservas seguras para JavaScript
         cache.set("reservas_json", datos, 10)  # TTL corto: refleja citas nuevas con rapidez
     return datos
+
+
+def _json_seguro(valor):
+    """Serializa a JSON a prueba de cierre de etiqueta.
+
+    Se usa con el filtro |safe dentro de <script>. json.dumps no escapa "<",
+    ">", "&" ni los separadores de línea de Unicode: con un solo texto libre en
+    los datos (por ejemplo el motivo de un bloqueo) bastaría "</script>" para
+    inyectar código. Se escapan como \u003c, que JavaScript interpreta igual.
+    """
+    return (
+        json.dumps(valor, ensure_ascii=False)
+        .replace("<", "\\u003c")
+        .replace(">", "\\u003e")
+        .replace("&", "\\u0026")
+        .replace("\u2028", "\\u2028")
+        .replace("\u2029", "\\u2029")
+    )
 
 
 # Convierte un valor a entero o devuelve None si no es válido (previene inyección)

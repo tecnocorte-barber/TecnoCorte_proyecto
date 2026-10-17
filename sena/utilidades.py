@@ -80,5 +80,8 @@ def autorizacion(roles=[]):
                     return redirect("sena:login")
             
             return vista(request, *args, **kwargs)
+        # Deja constancia de los roles permitidos para poder auditar las rutas
+        # desde los tests (ver test_toda_vista_de_panel_tiene_autorizacion).
+        envoltorio.roles_permitidas = list(roles)
         return envoltorio
     return decorador

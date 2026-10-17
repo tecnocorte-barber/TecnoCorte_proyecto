@@ -50,23 +50,35 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'tecnocorte.urls'
 
-TEMPLATES = [{
-    'BACKEND': 'django.template.backends.django.DjangoTemplates',
-    'DIRS': [os.path.join(BASE_DIR, 'sena', 'templates')],
-    'APP_DIRS': True,
-    'OPTIONS': {
-        'context_processors': [
-            'django.template.context_processors.debug',
-            'django.template.context_processors.request',
-            'django.contrib.auth.context_processors.auth',
-            'django.contrib.messages.context_processors.messages',
-            'sena.context_processors.carrito_contexto',
-            'sena.context_processors.notificaciones_contexto',
-            'sena.context_processors.formulario_contexto',
-            'sena.context_processors.configuracion_contexto',
-        ],
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [os.path.join(BASE_DIR, 'sena', 'templates')],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.debug',
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+                'sena.context_processors.carrito_contexto',
+                'sena.context_processors.notificaciones_contexto',
+                'sena.context_processors.formulario_contexto',
+                'sena.context_processors.configuracion_contexto',
+            ],
+        },
     },
-}]
+    {
+        # Motor para las páginas de error: sin procesadores de contexto ni
+        # acceso a la base de datos, para que respondan incluso cuando el
+        # fallo venga de una caída de la base.
+        'NAME': 'errores',
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [os.path.join(BASE_DIR, 'sena', 'templates')],
+        'APP_DIRS': True,
+        'OPTIONS': {'context_processors': []},
+    },
+]
 
 WSGI_APPLICATION = 'tecnocorte.wsgi.application'
 

@@ -22,3 +22,9 @@ if settings.DEBUG or os.environ.get('API_DOCS_PUBLIC', '').lower() == 'true':
         path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
         path('api/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
     ]
+
+# Páginas de error amigables: nunca muestran la traza a la persona que navega
+# y registran el fallo para que el Admin lo reciba como notificación y correo.
+handler404 = 'sena.errores.pagina_no_encontrada'
+handler403 = 'sena.errores.pagina_prohibida'
+handler500 = 'sena.errores.error_servidor'
