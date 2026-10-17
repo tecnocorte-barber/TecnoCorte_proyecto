@@ -94,7 +94,16 @@
               class="absolute -top-2 -right-2 min-w-5 h-5 px-1 rounded-full bg-primary text-on-primary text-[10px] font-bold flex items-center justify-center"
               >{{ cantidad|default:0 }}
             </span> </a
-          >{% include "includes/panel_header_actions.html" with sin_notificaciones=True %}
+          ><a
+            href="{% url 'sena:usuario_perfil' %}"
+            class="hover:text-primary-container transition-all duration-300 active:scale-90"
+            title="Perfil"
+            ><span class="material-symbols-outlined">account_circle</span> </a
+          ><a
+            href="{% url 'sena:logout' %}"
+            class="hidden md:inline text-xs font-bold uppercase tracking-widest text-on-surface-variant hover:text-primary transition-colors"
+            >Salir</a
+          >
         </div>
       </div>
     </nav>

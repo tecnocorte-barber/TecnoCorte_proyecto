@@ -65,7 +65,15 @@
             <span class="material-symbols-outlined theme-icon"
               >light_mode</span
             ></button
-          >{% include "includes/notificaciones_indicator.html" %}{% if request.session.logueado %}{% include "includes/panel_header_actions.html" with sin_notificaciones=True %}{% endif %}{% include "includes/carrito_indicator.html" %}
+          >{% include "includes/notificaciones_indicator.html" %}{% if request.session.logueado %}<a
+            href="{% url 'sena:usuario_perfil' %}"
+            class="text-on-surface-variant hover:text-primary transition-colors font-bold uppercase tracking-widest"
+            >Perfil</a
+          ><a
+            href="{% url 'sena:logout' %}"
+            class="text-on-surface-variant hover:text-primary transition-colors font-bold uppercase tracking-widest"
+            >Salir</a
+          >{% endif %}{% include "includes/carrito_indicator.html" %}
         </div>
       </div>
     </nav>

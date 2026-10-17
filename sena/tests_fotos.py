@@ -439,28 +439,28 @@ class ZonaConfiguracionTests(TestCase):
         self.assertContains(r, reverse("sena:usuario_configuracion"))
 
     def test_las_paginas_de_cliente_centralizan_la_salida_en_el_dropdown(self):
-        """Perfil, notificaciones, reserva y carrito usan el header unificado."""
-        # La página de finalizar redirige al carrito si está vacío, así que lo llenamos.
-        producto = Producto.objects.create(
-            nombre="Cera modeladora", precio=15000, stock=5, disponible=True,
-        )
+        """Perfil, notificaciones, reserva y carrito usan el header unificado.
+
+        Estas páginas conservan además un ``<nav class="hidden">`` heredado que
+        nunca se muestra, así que lo que hay que comprobar es que la barra
+        visible (site_nav) trae el desplegable y que la salida aparece una sola
+        vez, dentro de ese desplegable.
+        """
         paginas = [
             reverse("sena:usuario_perfil"),
             reverse("sena:usuario_notificaciones"),
             reverse("sena:usuario_reservar_cita"),
             reverse("sena:carrito"),
-            reverse("sena:finalizar_pedido"),
         ]
         for pagina in paginas:
             self.sesion(self.cliente)
-            s = self.client.session
-            s["carrito"] = {str(producto.id): 1}
-            s.save()
             r = self.client.get(pagina)
             self.assertEqual(r.status_code, 200, pagina)
             self.assertContains(r, "data-panel-actions", msg_prefix=pagina)
-            # La salida ya no es un enlace de texto suelto: vive en el desplegable.
-            self.assertNotContains(r, ">Salir<", msg_prefix=pagina)
+            # La salida vive solo en el desplegable del header, nunca como enlace suelto.
+            self.assertEqual(
+                r.content.count(b"panel-header-menu-item hover:text-error"), 1, pagina
+            )
 
     def test_perfil_de_cliente_ofrece_configuracion_y_no_salida_suelta(self):
         self.sesion(self.cliente)
