@@ -18,8 +18,12 @@ antialiased flex bg-surface {% endblock %} {% block content %} {% include 'inclu
       ><span class="material-symbols-outlined text-lg">add</span>Nueva cita</a
     >
   </header>
+  <div class="mb-8 flex flex-wrap gap-3">
+    <a href="{% url 'sena:admin_exportar_reservas' %}" class="inline-flex items-center gap-2 rounded-lg border border-primary/25 bg-primary/10 px-4 py-2 text-xs font-bold uppercase tracking-widest text-primary"><span class="material-symbols-outlined text-base">download</span>Excel de reservas</a>
+    <a href="{% url 'sena:admin_exportar_pedidos' %}" class="inline-flex items-center gap-2 rounded-lg border border-primary/25 bg-primary/10 px-4 py-2 text-xs font-bold uppercase tracking-widest text-primary"><span class="material-symbols-outlined text-base">download</span>Excel de pedidos</a>
+  </div>
   {# Tarjetas de métricas: ingresos, servicios, ventas y clientes #}
-  <section class="grid sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-10">
+  <section class="grid sm:grid-cols-2 xl:grid-cols-6 gap-4 mb-10">
     <div class="bg-surface-container-low rounded-xl p-6">
       <p class="text-on-surface-variant text-sm">Ingresos totales</p>
       <p class="font-headline text-3xl text-primary mt-2">${{ total }}</p>
@@ -36,10 +40,18 @@ antialiased flex bg-surface {% endblock %} {% block content %} {% include 'inclu
       <p class="text-on-surface-variant text-sm">Clientes</p>
       <p class="font-headline text-3xl mt-2">{{ total_clientes }}</p>
     </div>
+    <div class="bg-surface-container-low rounded-xl p-6 border border-primary/20">
+      <p class="text-on-surface-variant text-sm">Citas hoy</p>
+      <p class="font-headline text-3xl text-primary mt-2">{{ citas_hoy }}</p>
+    </div>
+    <div class="bg-surface-container-low rounded-xl p-6 border border-primary/20">
+      <p class="text-on-surface-variant text-sm">Pedidos pendientes</p>
+      <p class="font-headline text-3xl text-primary mt-2">{{ pedidos_pendientes }}</p>
+    </div>
   </section>
   <section class="grid lg:grid-cols-2 gap-8">
     <div class="bg-surface-container-low rounded-xl p-7">
-      <h2 class="font-headline text-2xl mb-6">Estado de las citas</h2>
+      <div class="mb-6 flex items-center justify-between"><h2 class="font-headline text-2xl">Estado de las citas</h2><span class="material-symbols-outlined text-primary">bar_chart</span></div>
       {# Barra de progreso por estado de cita #}
       {% for estado, cantidad in estados.items %}
       <div class="mb-5">

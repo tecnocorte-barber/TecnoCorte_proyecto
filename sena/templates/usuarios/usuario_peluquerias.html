@@ -34,7 +34,7 @@
     >
       <div class="col-span-1 mb-8 lg:col-span-12">
         <h1
-          class="mb-6 max-w-4xl font-headline text-5xl font-bold leading-tight tracking-tight text-on-surface md:text-7xl"
+          class="mb-4 max-w-4xl font-headline text-4xl font-bold leading-tight tracking-tight text-on-surface md:text-6xl"
         >
           Nuestras <br /><span class="font-light italic text-primary-container"
             >Barberías</span
@@ -44,88 +44,34 @@
           Encuentra la barbería ideal para ti. Cortes, barba y cuidado personal
           con atención profesional.
         </p>
-        <div class="signature-divider mt-8 w-full max-w-md"></div>
+        <div class="signature-divider mt-5 w-full max-w-md"></div>
       </div>
 
-      {# Barra lateral con filtros de búsqueda y mapa #}
-      <aside class="col-span-1 h-fit gap-8 lg:sticky lg:top-32 lg:col-span-4">
-        <div class="rounded-[28px] bg-surface-container-low p-8 ambient-glow">
-          <h3 class="mb-6 font-headline text-xl text-primary-container">
-            Filtros de búsqueda
-          </h3>
-          <div class="relative">
-            <input
-              class="w-full border-b border-outline-variant/20 bg-transparent py-3 pr-10 text-on-surface placeholder:text-on-surface-variant/50 transition-colors focus:border-primary focus:ring-0"
-              placeholder="Buscar por nombre o zona..."
-              type="text"
-              id="buscar-peluqueria"
-            />
-            <span
-              class="material-symbols-outlined pointer-events-none absolute right-2 top-3 text-on-surface-variant/50"
-              >search</span
-            >
+      {# Buscador principal del directorio #}
+      <div class="tc-directory-search col-span-1 lg:col-span-12">
+        <div class="tc-directory-search__copy">
+          <span class="tc-directory-search__icon material-symbols-outlined">manage_search</span>
+          <div>
+            <p class="tc-eyebrow">Encuentra tu lugar</p>
+            <h2>Busca una barbería cerca de ti</h2>
           </div>
         </div>
-
-        <div
-          class="mt-8 overflow-hidden rounded-[28px] border border-outline-variant/10 bg-surface-container-low ambient-glow"
-        >
-          <div class="relative h-[380px]">
-            {% if peluquerias.0.imagen %}
-            <img
-              src="{{ peluquerias.0.imagen.url }}"
-              alt="{{ peluquerias.0.nombre }}"
-              class="h-full w-full object-cover opacity-35"
-            />
-            {% elif peluquerias.0.galeria.first %}
-            <img
-              src="{{ peluquerias.0.galeria.first.imagen.url }}"
-              alt="{{ peluquerias.0.nombre }}"
-              class="h-full w-full object-cover opacity-35"
-            />
-            {% else %}
-            <img
-              src="{% static 'sena/images/Logo.png' %}"
-              alt="TecnoCorte"
-              class="h-full w-full object-cover opacity-35"
-            />
-            {% endif %}
-            <div
-              class="absolute inset-0 bg-gradient-to-t from-surface-container-high to-surface-container-low/30"
-            ></div>
-            <div
-              class="absolute left-4 top-4 flex items-center gap-2 rounded-sm border border-outline-variant/20 bg-surface/80 px-3 py-2 backdrop-blur-md"
-            >
-              <span class="material-symbols-outlined text-[18px] text-primary"
-                >location_on</span
-              >
-              <span class="text-xs text-on-surface"
-                >{{ peluquerias.0.ubicacion|default:"Consulta nuestra ubicación" }}</span
-              >
-            </div>
-            {% if peluquerias %}
-            <div
-              class="absolute bottom-4 left-4 right-4 rounded-lg border border-outline-variant/20 bg-surface-container-highest/90 p-4 backdrop-blur-md"
-            >
-              <h4 class="mb-1 font-headline text-lg text-primary-container">
-                {{ peluquerias.0.nombre }}
-              </h4>
-              <p
-                class="flex items-center gap-1 text-sm text-on-surface-variant"
-              >
-                <span class="material-symbols-outlined text-[14px]"
-                  >directions_walk</span
-                >
-                {{ peluquerias.0.ubicacion }}
-              </p>
-            </div>
-            {% endif %}
-          </div>
+        <div class="tc-directory-search__input relative">
+          <input
+            class="w-full bg-transparent py-3 pl-12 pr-12 text-on-surface placeholder:text-on-surface-variant/60 transition-colors focus:border-primary focus:ring-0"
+            placeholder="Escribe el nombre o la zona..."
+            type="text"
+            id="buscar-peluqueria"
+            autocomplete="off"
+            aria-label="Buscar barbería por nombre o zona"
+          />
+          <span class="material-symbols-outlined pointer-events-none absolute left-4 top-3 text-primary">search</span>
+          <span class="tc-directory-search__shortcut">Buscar</span>
         </div>
-      </aside>
+      </div>
 
       {# Directorio de peluquerías: tarjetas con imagen, ubicación y botón reservar #}
-      <section class="col-span-1 flex flex-col gap-8 lg:col-span-8">
+      <section class="col-span-1 flex flex-col gap-8 lg:col-span-12">
         <div
           class="flex items-end justify-between border-b border-outline-variant/20 pb-4"
         >
@@ -137,14 +83,14 @@
         </div>
 
         {# Tarjeta individual de cada peluquería #}
-        <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+        <div class="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
           {% for peluqueria in peluquerias %}
           <article
-            class="group flex flex-col overflow-hidden rounded-[28px] border border-transparent bg-surface-container-low transition-all duration-500 hover:-translate-y-1 hover:border-outline-variant/20 ambient-glow peluqueria-card"
+              class="group flex flex-col overflow-hidden rounded-3xl border border-transparent bg-surface-container-low transition-all duration-500 hover:-translate-y-1 hover:border-outline-variant/20 ambient-glow peluqueria-card"
             data-busqueda="{{ peluqueria.nombre|lower }} {{ peluqueria.ubicacion|lower }}"
           >
             <div
-              class="relative h-56 overflow-hidden bg-surface-container-highest"
+                class="relative h-56 overflow-hidden bg-surface-container-highest"
             >
               {% if peluqueria.imagen %}
               <img
@@ -160,7 +106,7 @@
               />
               {% else %}
               <img
-                src="{% static 'sena/images/Logo.png' %}"
+                src="{% static 'sena/images/Logo.webp' %}"
                 alt="{{ peluqueria.nombre }}"
                 class="h-full w-full object-cover object-contain bg-surface-container-highest p-8 transition-transform duration-700 group-hover:scale-105"
               />
@@ -172,7 +118,7 @@
               </div>
             </div>
 
-            <div class="flex flex-grow flex-col p-6">
+            <div class="flex flex-grow flex-col p-5">
               <h3
                 class="mb-3 font-headline text-2xl text-primary-container transition-colors group-hover:text-primary"
               >

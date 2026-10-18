@@ -143,3 +143,123 @@
   color: var(--c-primary) !important;
   transform: translateY(-2px);
 }
+
+/* ── Detalles visuales de la experiencia de reserva ─────────────────────── */
+.tc-booking-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .65rem 1rem;
+  color: var(--c-on-surface-variant);
+  font-size: .73rem;
+}
+
+.tc-booking-meta > span {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  padding: .55rem .75rem;
+  border: 1px solid var(--glass-border);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--glass-bg) 75%, transparent);
+}
+
+.tc-booking-meta .material-symbols-outlined {
+  color: var(--c-primary);
+  font-size: 16px;
+}
+
+.tc-booking-step {
+  position: relative;
+}
+
+.tc-booking-step > .flex.items-center {
+  min-height: 42px;
+  padding: .55rem .8rem .55rem .55rem;
+  border: 1px solid color-mix(in srgb, var(--c-outline-variant) 35%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--c-surface-container-low) 70%, transparent);
+}
+
+.tc-booking-step > .flex.items-center .tc-step__num {
+  display: inline-flex;
+  width: 32px;
+  height: 32px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--c-primary);
+  color: var(--c-on-primary);
+  font-size: .72rem;
+  font-weight: 800;
+  letter-spacing: .04em;
+}
+
+.tc-booking-step > .flex.items-center .tc-step__title {
+  font-size: 1rem;
+}
+
+.tc-booking-step > .flex.items-center .tc-step__rule {
+  opacity: .55;
+}
+
+.tc-booking-step .tc-opt {
+  transition: transform .25s ease, border-color .25s ease, box-shadow .25s ease;
+}
+
+.tc-booking-step .tc-opt:not(.opt-selected):hover {
+  transform: translateY(-4px);
+  border-color: color-mix(in srgb, var(--c-primary) 65%, transparent);
+  box-shadow: 0 16px 30px -24px var(--c-primary);
+}
+
+.tc-ticket-enhanced {
+  overflow: hidden;
+}
+
+.tc-ticket__head {
+  position: relative;
+}
+
+.tc-ticket__brand-row {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+}
+
+.tc-ticket__brand-row img {
+  border: 1px solid rgba(214, 173, 66, .35);
+  border-radius: 10px;
+}
+
+.tc-ticket__status {
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+  margin-top: 1rem;
+  padding: .35rem .65rem;
+  border: 1px solid rgba(214, 173, 66, .3);
+  border-radius: 999px;
+  color: var(--c-primary);
+  font-size: .62rem;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+.tc-ticket__status .material-symbols-outlined { font-size: 14px; }
+
+.tc-ticket__row {
+  transition: background .2s ease;
+}
+
+.tc-ticket__row:hover {
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--c-primary) 7%, transparent);
+}
+
+@media (max-width: 640px) {
+  .tc-booking-meta { gap: .45rem; }
+  .tc-booking-meta > span { font-size: .66rem; padding: .45rem .6rem; }
+  .tc-booking-step > .flex.items-center { padding-right: .55rem; }
+  .tc-booking-step > .flex.items-center .tc-step__rule { display: none; }
+}

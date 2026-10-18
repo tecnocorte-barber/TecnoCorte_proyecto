@@ -3,6 +3,47 @@
   box-shadow: 0 20px 40px rgba(242, 202, 80, 0.06);
 }
 
+.tc-services-hero {
+  border: 1px solid color-mix(in srgb, var(--c-primary) 18%, transparent);
+  background:
+    radial-gradient(circle at 0% 100%, rgba(214, 173, 66, .1), transparent 34%),
+    color-mix(in srgb, var(--c-surface-container-low) 82%, transparent);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, .08);
+}
+
+.tc-services-hero > div:first-child { position: relative; z-index: 1; }
+.tc-services-hero > div:last-child {
+  border: 1px solid rgba(214, 173, 66, .22);
+  box-shadow: 0 20px 45px rgba(0, 0, 0, .18);
+}
+
+.tc-services-heading {
+  border-bottom: 1px solid color-mix(in srgb, var(--c-outline-variant) 35%, transparent);
+}
+
+.tc-service-card {
+  border-color: color-mix(in srgb, var(--c-outline-variant) 40%, transparent) !important;
+  box-shadow: 0 16px 38px rgba(0, 0, 0, .08) !important;
+}
+
+.tc-service-card:hover {
+  border-color: color-mix(in srgb, var(--c-primary) 55%, transparent) !important;
+  box-shadow: 0 22px 46px rgba(0, 0, 0, .14) !important;
+}
+
+.tc-service-card .service-flip-front > div:first-child img {
+  filter: saturate(.9);
+}
+
+.tc-service-card .service-flip-front h2 {
+  font-size: 1.65rem;
+}
+
+@media (max-width: 767px) {
+  .tc-services-hero { padding: 1rem; }
+  .tc-services-heading h2 { font-size: 1.35rem; }
+}
+
 #servicio-corte,
 #servicio-barba {
   scroll-margin-top: 7rem;

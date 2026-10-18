@@ -27,10 +27,14 @@
     {% include "includes/site_nav.html" with active="contactos" %}
 
     <main
-      class="mx-auto flex w-full max-w-4xl flex-grow px-6 pb-24 pt-36 md:px-12"
+      class="tc-contact-page mx-auto flex w-full max-w-6xl flex-grow px-6 pb-24 pt-32 md:px-12"
     >
       <div class="w-full">
-        <header class="mb-16 text-center">
+        <header class="tc-contact-hero mb-12 text-center">
+          <div class="tc-contact-badge mx-auto mb-5">
+            <span class="material-symbols-outlined">support_agent</span>
+            Estamos para ayudarte
+          </div>
           <h1
             class="mb-4 font-headline text-5xl tracking-tight text-primary-container md:text-6xl"
           >
@@ -39,15 +43,16 @@
           <p class="text-lg text-on-surface-variant">
             ¿Necesitas ayuda? Escríbenos y con gusto te atendemos.
           </p>
-          <div class="mt-4 flex h-12 items-center justify-center">
-            <div class="h-1 w-1 rounded-full bg-primary-container"></div>
+          <div class="tc-contact-highlights mx-auto mt-6">
+            <span><span class="material-symbols-outlined">schedule</span> Atención personalizada</span>
+            <span><span class="material-symbols-outlined">reply</span> Respondemos pronto</span>
           </div>
         </header>
 
         <!-- Tarjetas de información de contacto -->
-        <div class="mb-12 grid grid-cols-1 gap-6 md:grid-cols-3">
+        <div class="tc-contact-cards mb-12 grid grid-cols-1 gap-5 md:grid-cols-3">
           <div
-            class="rounded-[24px] bg-surface-container-low p-8 text-center ambient-glow ghost-border transition-colors hover:bg-surface-container"
+            class="tc-contact-card rounded-[24px] bg-surface-container-low p-6 text-center ambient-glow ghost-border transition-colors hover:bg-surface-container"
           >
             <span
               class="material-symbols-outlined mb-4 text-4xl text-primary"
@@ -58,7 +63,7 @@
             <p class="text-on-surface-variant">+57 300 123 4567</p>
           </div>
           <div
-            class="rounded-[24px] bg-surface-container-low p-8 text-center ambient-glow ghost-border transition-colors hover:bg-surface-container"
+            class="tc-contact-card rounded-[24px] bg-surface-container-low p-6 text-center ambient-glow ghost-border transition-colors hover:bg-surface-container"
           >
             <span
               class="material-symbols-outlined mb-4 text-4xl text-primary"
@@ -69,7 +74,7 @@
             <p class="text-on-surface-variant">tecnocorte083@gmail.com</p>
           </div>
           <div
-            class="rounded-[24px] bg-surface-container-low p-8 text-center ambient-glow ghost-border transition-colors hover:bg-surface-container"
+            class="tc-contact-card rounded-[24px] bg-surface-container-low p-6 text-center ambient-glow ghost-border transition-colors hover:bg-surface-container"
           >
             <span
               class="material-symbols-outlined mb-4 text-4xl text-primary"
@@ -96,6 +101,7 @@
         </div>
         {% endif %}
 
+        <div class="tc-contact-lower">
         <!-- Formulario de envío de mensaje al administrador -->
         <section
           class="mb-8 rounded-[28px] bg-surface-container-low p-8 md:p-12 ambient-glow ghost-border"
@@ -114,6 +120,7 @@
                 name="nombre"
                 placeholder="Tu nombre"
                 value="{% if request.method == 'POST' %}{{ request.POST.nombre }}{% else %}{{ prefill_nombre|default:'' }}{% endif %}"
+                aria-label="Tu nombre"
                 class="rounded-md border-0 bg-surface-container-high p-3 text-on-surface focus:outline-none"
               />
               <input
@@ -122,6 +129,7 @@
                 name="email"
                 placeholder="Tu correo"
                 value="{% if request.method == 'POST' %}{{ request.POST.email }}{% else %}{{ prefill_email|default:'' }}{% endif %}"
+                aria-label="Tu correo electrónico"
                 class="rounded-md border-0 bg-surface-container-high p-3 text-on-surface focus:outline-none"
               />
             </div>
@@ -156,6 +164,7 @@
               name="mensaje"
               rows="5"
               placeholder="Escribe tu mensaje"
+              aria-label="Mensaje de contacto"
               class="rounded-md border-0 bg-surface-container-high p-3 text-on-surface focus:outline-none"
             >
 {% if request.method == 'POST' %}{{ request.POST.mensaje }}{% endif %}</textarea>
@@ -211,6 +220,7 @@
               >Volver al inicio</a
             >
           </div>
+        </div>
         </div>
       </div>
     </main>

@@ -39,6 +39,7 @@ urlpatterns = [
     # === PANEL DEL CLIENTE (requiere rol "Cliente") ===
     path('usuario/dashboard/', views.usuario_dashboard, name="usuario_dashboard"),  # Dashboard del cliente
     path('usuario/tienda/', views.usuario_tienda, name="usuario_tienda"),  # Tienda de productos
+    path('usuario/tienda/producto/<int:id>/', views.usuario_producto_detalle, name="usuario_producto_detalle"),
     path('usuario/servicios/', views.usuario_servicios, name="usuario_servicios"),  # Lista de servicios de barbería
     path('usuario/peluquerias/', views.usuario_peluquerias, name="usuario_peluquerias"),  # Sedes disponibles
     path('usuario/peluquerias/<int:id>/', views.usuario_peluqueria_detalle, name="usuario_peluqueria_detalle"),  # Detalle de una peluquería
@@ -69,6 +70,8 @@ urlpatterns = [
     
     # === PANEL DEL ADMINISTRADOR (requiere rol "Admin") ===
     path('admin/dashboard/', views.admin_dashboard, name="admin_dashboard"),  # Dashboard: métricas y ventas
+    path('admin/reportes/reservas.xls', views.admin_exportar_reservas, name="admin_exportar_reservas"),
+    path('admin/reportes/pedidos.xls', views.admin_exportar_pedidos, name="admin_exportar_pedidos"),
     path('admin/usuarios/', views.admin_usuarios, name="admin_usuarios"),  # Listar todos los usuarios
     path('admin/crear_usuario/', views.admin_crear_usuario, name="admin_crear_usuario"),  # Crear usuario nuevo
     path('admin/editar_usuario/<int:id>/', views.admin_editar_usuario, name="admin_editar_usuario"),  # Editar datos de usuario

@@ -14,3 +14,95 @@
 .ghost-border {
   border: 1px solid var(--c-outline-variant);
 }
+
+.tc-contact-page {
+  position: relative;
+}
+
+.tc-contact-hero {
+  padding: 2rem 1rem;
+  border: 1px solid color-mix(in srgb, var(--c-primary) 18%, transparent);
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(214, 173, 66, .13), transparent 42%),
+    color-mix(in srgb, var(--c-surface-container-low) 78%, transparent);
+  box-shadow: 0 22px 55px rgba(0, 0, 0, .08);
+}
+
+.tc-contact-badge,
+.tc-contact-highlights,
+.tc-contact-highlights span {
+  display: inline-flex;
+  align-items: center;
+}
+
+.tc-contact-badge {
+  gap: .45rem;
+  padding: .5rem .8rem;
+  border: 1px solid rgba(214, 173, 66, .28);
+  border-radius: 999px;
+  color: var(--c-primary);
+  font-size: .68rem;
+  font-weight: 800;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.tc-contact-badge .material-symbols-outlined { font-size: 17px; }
+.tc-contact-highlights { justify-content: center; gap: .6rem; flex-wrap: wrap; }
+.tc-contact-highlights span {
+  gap: .35rem;
+  padding: .45rem .7rem;
+  color: var(--c-on-surface-variant);
+  font-size: .72rem;
+}
+.tc-contact-highlights .material-symbols-outlined { color: var(--c-primary); font-size: 16px; }
+
+.tc-contact-card {
+  transition: transform .25s ease, border-color .25s ease, box-shadow .25s ease;
+}
+.tc-contact-card:hover {
+  transform: translateY(-4px);
+  border-color: color-mix(in srgb, var(--c-primary) 45%, transparent);
+  box-shadow: 0 18px 36px rgba(0, 0, 0, .1);
+}
+
+.tc-contact-lower {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(300px, .85fr);
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.tc-contact-lower > section,
+.tc-contact-lower > div {
+  height: 100%;
+  margin-bottom: 0;
+}
+
+.tc-contact-lower input,
+.tc-contact-lower select,
+.tc-contact-lower textarea {
+  border: 1px solid color-mix(in srgb, var(--c-outline-variant) 35%, transparent);
+  transition: border-color .2s ease, box-shadow .2s ease;
+}
+
+.tc-contact-lower input:focus,
+.tc-contact-lower select:focus,
+.tc-contact-lower textarea:focus {
+  border-color: var(--c-primary);
+  box-shadow: 0 0 0 3px rgba(214, 173, 66, .12);
+  outline: none;
+}
+
+.tc-contact-lower > div > div {
+  transition: border-color .2s ease, background .2s ease;
+}
+.tc-contact-lower > div > div:hover {
+  border-color: color-mix(in srgb, var(--c-primary) 35%, transparent);
+  background: color-mix(in srgb, var(--c-primary) 5%, transparent);
+}
+
+@media (max-width: 900px) {
+  .tc-contact-lower { grid-template-columns: 1fr; }
+}

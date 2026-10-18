@@ -41,20 +41,27 @@
 {% endblock %}
 {% block content %}
 <div class="politicas-page">
-  <h2 class="section-title">Políticas de Privacidad y del Proyecto</h2>
-  <p>
+  <header class="politicas-hero">
+    <div class="politicas-badge">
+      <span class="material-symbols-outlined">verified_user</span>
+      Información importante
+    </div>
+    <h1 class="section-title">Políticas de Privacidad y del Proyecto</h1>
+    <p>
     Última actualización: octubre de 2026. Estas políticas explican cómo
     TecnoCorte trata tus datos y bajo qué reglas funciona la plataforma. Si tienes
     dudas, escríbenos desde la sección
     <a href="{% url 'sena:ayuda' %}">Contáctanos</a>.
-  </p>
+    </p>
+  </header>
 
-  <div class="politicas-toc">
+  <nav class="politicas-toc" aria-label="Índice de políticas">
+    <span class="politicas-toc__label">En esta página</span>
     <a href="#privacidad">Políticas de Privacidad</a>
     <a href="#proyecto">Políticas del Proyecto</a>
     <a href="#derechos">Tus derechos</a>
     <a href="#contacto">Contacto</a>
-  </div>
+  </nav>
 
 <div class="politicas-texto">
   <h3 id="privacidad">1. Políticas de Privacidad</h3>

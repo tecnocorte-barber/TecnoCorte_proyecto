@@ -6,6 +6,37 @@
   margin: 0 auto;
 }
 
+.politicas-hero {
+  margin-bottom: 1.5rem;
+  padding: 1.5rem 1.75rem;
+  border: 1px solid color-mix(in srgb, var(--c-primary) 22%, transparent);
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(214, 173, 66, .14), transparent 35%),
+    color-mix(in srgb, var(--c-surface-container-low) 85%, transparent);
+}
+
+.politicas-hero .section-title {
+  margin: .8rem 0 .7rem;
+  font-size: clamp(1.8rem, 4vw, 2.7rem);
+}
+
+.politicas-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  padding: .45rem .7rem;
+  border-radius: 999px;
+  color: var(--c-primary);
+  background: color-mix(in srgb, var(--c-primary) 10%, transparent);
+  font-size: .68rem;
+  font-weight: 800;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.politicas-badge .material-symbols-outlined { font-size: 16px; }
+
 .politicas-page > p {
   max-width: 760px;
   color: var(--muted);
@@ -13,7 +44,39 @@
 }
 
 .politicas-page .politicas-texto {
+  padding: 1.5rem 1.75rem;
+  border: 1px solid color-mix(in srgb, var(--c-outline-variant) 35%, transparent);
+  border-radius: 22px;
+  background: color-mix(in srgb, var(--c-surface-container-low) 55%, transparent);
   line-height: 1.7;
+}
+
+.politicas-page .politicas-texto h3 {
+  scroll-margin-top: 6rem;
+  padding-top: .7rem;
+  border-top: 1px solid color-mix(in srgb, var(--c-outline-variant) 30%, transparent);
+  color: var(--c-primary-container);
+}
+
+.politicas-page .politicas-texto h3:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.politicas-toc {
+  align-items: center;
+  padding: .8rem;
+  border: 1px solid color-mix(in srgb, var(--c-outline-variant) 30%, transparent);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--c-surface-container-low) 65%, transparent);
+}
+
+.politicas-toc__label {
+  color: var(--c-on-surface-variant);
+  font-size: .68rem;
+  font-weight: 800;
+  letter-spacing: .12em;
+  text-transform: uppercase;
 }
 
 .politicas-page .politicas-texto p {
@@ -33,4 +96,7 @@
   .politicas-page .politicas-toc a {
     text-align: center;
   }
+
+  .politicas-page .politicas-texto,
+  .politicas-hero { padding: 1.1rem; }
 }

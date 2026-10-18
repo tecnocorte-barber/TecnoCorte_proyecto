@@ -398,6 +398,48 @@ html:not(.dark) .tc-form {
     0 0 0 3px rgba(214, 173, 66, 0.18),
     0 14px 34px -20px rgba(214, 173, 66, 0.8);
 }
+
+/* Los controles nativos de fecha/hora no deben volver al fondo blanco del
+   navegador: siguen el tema y el resto de los campos del panel. */
+input[type="date"],
+input[type="time"] {
+  color-scheme: dark;
+  color: var(--c-on-surface);
+  background-color: var(--c-surface-container-high);
+  border: 1px solid var(--c-outline-variant) !important;
+  border-radius: 0.85rem;
+  background-clip: padding-box;
+  box-shadow: none;
+}
+
+html:not(.dark) input[type="date"],
+html:not(.dark) input[type="time"] {
+  color-scheme: light;
+}
+
+html.dark input[type="date"]::-webkit-calendar-picker-indicator,
+html.dark input[type="time"]::-webkit-calendar-picker-indicator {
+  filter: invert(1) sepia(1) saturate(.35) brightness(1.35);
+  opacity: .85;
+}
+
+input[type="date"]::-webkit-datetime-edit,
+input[type="time"]::-webkit-datetime-edit {
+  color: var(--c-on-surface);
+}
+
+input[type="date"]:hover,
+input[type="time"]:hover {
+  border-color: color-mix(in srgb, var(--c-primary) 45%, var(--c-outline-variant)) !important;
+}
+
+input[type="date"]:focus,
+input[type="time"]:focus {
+  border-color: var(--c-primary) !important;
+  background-color: color-mix(in srgb, var(--c-primary) 7%, var(--c-surface-container-high));
+  box-shadow: 0 0 0 3px rgba(214, 173, 66, 0.18) !important;
+  outline: none;
+}
 .tc-field__label {
   position: absolute;
   left: 0.95rem;

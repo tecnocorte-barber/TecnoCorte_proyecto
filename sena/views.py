@@ -5,7 +5,7 @@ import hmac  # Para comparar tokens de forma segura (recuperación de contraseñ
 
 from django.shortcuts import render, redirect, get_object_or_404  # Renderizar plantillas, redirigir, buscar objeto o 404
 from django.urls import reverse  # Generar URLs por nombre
-from django.http import JsonResponse  # Respuestas JSON para AJAX
+from django.http import HttpResponse, JsonResponse  # Respuestas HTTP y JSON
 from django.utils import timezone  # Hora actual con zona horaria
 from django.db import IntegrityError, models, transaction  # Errores de BD, agregaciones y transacciones
 from django.db.models import Count, Q  # Agregaciones y filtros condicionales (Consultas optimizadas)
@@ -18,7 +18,9 @@ from django.utils.http import url_has_allowed_host_and_scheme  # Validar URLs de
 from django.core.cache import cache  # Cache para rate limiting (anti fuerza bruta)
 from django.core.validators import validate_email  # Validar formato de correo
 from django.core.exceptions import ValidationError  # Excepciones de validación
+from django.db.models.deletion import ProtectedError  # Relaciones protegidas al eliminar usuarios
 from datetime import datetime, time, timedelta  # Manejo de fechas, horas y duraciones
+from html import escape  # Escapa valores al generar reportes HTML compatibles con Excel
 from .models import Usuario, Peluqueria, ImagenPeluqueria, Producto, Reserva, Pedido, PedidoProducto, RegistroIngreso, Notificacion, HorarioTrabajo, BloqueoHorario, MensajeContacto, Calificacion, Configuracion, Servicio, SolicitudServicio, TIPOS_MENSAJE, TIPOS_MENSAJE_DICCIONARIO  # Todos los modelos
 from .utilidades import autorizacion, validar_password, validar_telefono, validar_imagen, registrar_accion, transicion_valida, TRANSICIONES_RESERVA, TRANSICIONES_PEDIDO  # Seguridad, auditoría, estados y validación
 from .context_processors import carrito_visible, guardar_carrito_activo, cargar_carrito_usuario  # Funciones del carrito por sesión
@@ -1199,6 +1201,11 @@ def usuario_tienda(request):
     contexto["productos"] = Producto.objects.all()
     return render(request, "usuarios/usuario_tienda.html", contexto)
 
+def usuario_producto_detalle(request, id):
+    contexto = contexto_carrito(request)
+    contexto["producto"] = get_object_or_404(Producto, id=id)
+    return render(request, "usuarios/usuario_producto_detalle.html", contexto)
+
 def usuario_servicios(request):
     contexto = contexto_carrito(request)
     contexto["servicios"] = catalogo_servicios()
@@ -1628,6 +1635,13 @@ def peluquero_dashboard(request):
     contexto["total_calificaciones"] = len(todas_califs)
     contexto["peluqueria"] = peluqueria
     contexto["fotos"] = peluqueria.galeria.all() if peluqueria else []
+    hoy = timezone.localdate()
+    contexto["proxima_cita"] = next(
+        (cita for cita in sorted(contexto["citas"], key=lambda c: (c.fecha, c.hora, c.id))
+         if (cita.fecha > hoy or (cita.fecha == hoy and cita.hora >= timezone.localtime().time()))
+         and cita.estado in {"Pendiente", "Confirmada"}),
+        None,
+    )
     return render(request, "peluqueros/peluquero_dashboard.html", contexto)
 
 @autorizacion(["Barbero"])
@@ -1905,10 +1919,49 @@ def admin_dashboard(request):
         total = ventas_servicios + ventas_productos
         maximo = max(estados.values()) if any(estados.values()) else 1
         total_clientes = Usuario.objects.filter(rol="Cliente").count()
+        citas_hoy = sum(1 for reserva in todas_reservas if reserva.fecha == timezone.localdate())
+        pedidos_pendientes = Pedido.objects.filter(estado="Pendiente").count()
         ultimas = sorted(todas_reservas, key=lambda r: (r.fecha, r.hora, r.id), reverse=True)[:6]
-        metricas = {"total": total, "ventas_servicios": ventas_servicios, "ventas_productos": ventas_productos, "total_reservas": total_reservas, "total_clientes": total_clientes, "estados": estados, "maximo": maximo, "ultimas_reservas": ultimas}
+        metricas = {"total": total, "ventas_servicios": ventas_servicios, "ventas_productos": ventas_productos, "total_reservas": total_reservas, "total_clientes": total_clientes, "citas_hoy": citas_hoy, "pedidos_pendientes": pedidos_pendientes, "estados": estados, "maximo": maximo, "ultimas_reservas": ultimas}
         cache.set(clave, metricas, 20)
     return render(request, "administrador/admin_dashboard.html", metricas)
+
+@autorizacion(["Admin"])
+def admin_exportar_reservas(request):
+    """Descarga un reporte compatible con Excel de todas las reservas."""
+    reservas = Reserva.objects.select_related("cliente", "peluquero", "peluqueria").order_by("fecha", "hora")
+    filas = [(r.id, f"{r.fecha:%d/%m/%Y}", f"{r.hora:%H:%M}", f"{r.cliente.nombre} {r.cliente.apellido}", f"{r.peluquero.nombre} {r.peluquero.apellido}", r.peluqueria.nombre, r.servicio, r.estado) for r in reservas]
+    respuesta = _respuesta_reporte_excel("Reporte de reservas · TecnoCorte", "Reservas registradas", ["ID", "Fecha", "Hora", "Cliente", "Barbero", "Barbería", "Servicio", "Estado"], filas, "reservas_tecnocorte.xls")
+    return respuesta
+
+@autorizacion(["Admin"])
+def admin_exportar_pedidos(request):
+    """Descarga un reporte compatible con Excel de los pedidos."""
+    pedidos = Pedido.objects.select_related("cliente").order_by("-fecha")
+    filas = [(p.id, f"{p.fecha:%d/%m/%Y %H:%M}", f"{p.cliente.nombre} {p.cliente.apellido}", p.cliente.email, p.total, p.estado, "Sí" if p.pago_confirmado else "No") for p in pedidos]
+    return _respuesta_reporte_excel("Reporte de pedidos · TecnoCorte", "Pedidos registrados", ["ID", "Fecha", "Cliente", "Correo", "Total COP", "Estado", "Pago confirmado"], filas, "pedidos_tecnocorte.xls")
+
+def _respuesta_reporte_excel(titulo, subtitulo, encabezados, filas, nombre_archivo):
+    """Genera un HTML con estilos que Excel abre como hoja formateada (.xls)."""
+    encabezados_html = "".join(f"<th>{escape(str(encabezado))}</th>" for encabezado in encabezados)
+    filas_html = "".join(
+        "<tr>" + "".join(f"<td>{escape(str(valor))}</td>" for valor in fila) + "</tr>"
+        for fila in filas
+    ) or f'<tr><td colspan="{len(encabezados)}" class="empty">No hay registros para mostrar</td></tr>'
+    html = f"""<!doctype html><html><head><meta charset="utf-8"><style>
+    body{{font-family:Arial,sans-serif;color:#27231b;background:#fff;padding:24px}}
+    .report{{max-width:1400px;margin:auto}}
+    h1{{margin:0;color:#6f520d;font-size:24px}} .subtitle{{color:#777;margin:6px 0 20px;font-size:13px}}
+    .meta{{background:#f6edcf;border:1px solid #d6ad42;padding:10px 14px;margin-bottom:18px;font-size:12px}}
+    table{{border-collapse:collapse;width:100%;font-size:12px}} th{{background:#6f520d;color:#fff;padding:11px 9px;text-align:left;white-space:nowrap}}
+    td{{border:1px solid #ded8c9;padding:9px;background:#fff}} tr:nth-child(even) td{{background:#faf7ef}}
+    .empty{{text-align:center;color:#777;padding:22px}} .total{{font-weight:bold;color:#6f520d}}
+    </style></head><body><div class="report"><h1>{escape(titulo)}</h1><p class="subtitle">{escape(subtitulo)}</p>
+    <div class="meta">Generado por TecnoCorte · Registros: <strong>{len(filas)}</strong></div>
+    <table><thead><tr>{encabezados_html}</tr></thead><tbody>{filas_html}</tbody></table></div></body></html>"""
+    respuesta = HttpResponse("\ufeff" + html, content_type="application/vnd.ms-excel; charset=utf-8")
+    respuesta["Content-Disposition"] = f'attachment; filename="{nombre_archivo}"'
+    return respuesta
 
 @autorizacion(["Admin"])
 def admin_peluqueros(request):
@@ -2005,7 +2058,13 @@ def admin_eliminar_peluquero(request, id):
 @autorizacion(["Admin"])
 def admin_reservas(request):
     reservas = Reserva.objects.select_related("cliente", "peluquero", "peluqueria").order_by("fecha", "hora")
-    return render(request, "administrador/admin_listar_reservas.html", {"datos": reservas})
+    fecha = request.GET.get("fecha", "").strip()
+    estado = request.GET.get("estado", "").strip()
+    if fecha:
+        reservas = reservas.filter(fecha=fecha)
+    if estado in {opcion[0] for opcion in Reserva.ESTADOS}:
+        reservas = reservas.filter(estado=estado)
+    return render(request, "administrador/admin_listar_reservas.html", {"datos": reservas, "filtro_fecha": fecha, "filtro_estado": estado, "reserva_estados": Reserva.ESTADOS})
 
 
 @autorizacion(["Admin"])
@@ -2854,12 +2913,18 @@ def admin_eliminar_usuario(request, id):
     if request.method == "POST":
         usuario = Usuario.objects.filter(id=id).exclude(id=request.session["logueado"]["id"]).first()
         if usuario:
-            estaba_activo = usuario.activo
-            usuario.activo = False
-            usuario.save(update_fields=["activo"])
-            if usuario.rol == "Barbero" and estaba_activo:
-                notificar_suspension_barbero(request, usuario)
-            messages.info(request, "El usuario fue suspendido.")
+            nombre = f"{usuario.nombre} {usuario.apellido}"
+            try:
+                foto_archivo = usuario.foto
+                usuario.delete()
+                if foto_archivo:
+                    _borrar_archivo(foto_archivo)
+                registrar_accion(request, "eliminar_usuario", "Usuario", id, f"Usuario eliminado: {nombre}")
+                messages.success(request, f"El usuario {nombre} fue eliminado correctamente.")
+            except ProtectedError:
+                messages.error(request, "No se puede eliminar este usuario porque tiene citas o pedidos asociados. Puedes suspenderlo para conservar el historial.")
+        else:
+            messages.error(request, "No puedes eliminar tu propia cuenta o el usuario no existe.")
     return redirect("sena:admin_usuarios")
 
 @autorizacion(["Admin"])

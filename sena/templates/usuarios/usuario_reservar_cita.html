@@ -59,6 +59,12 @@
         </p>
         {% endif %}
 
+        <div class="tc-booking-meta mt-7">
+          <span><span class="material-symbols-outlined">schedule</span> 2 minutos</span>
+          <span><span class="material-symbols-outlined">event_available</span> Sin pago anticipado</span>
+          <span><span class="material-symbols-outlined">verified_user</span> Reserva segura</span>
+        </div>
+
         {% if error %}
         <p
           class="mt-6 rounded-xl border border-error/50 bg-error-container/20 px-4 py-3 text-error"
@@ -71,7 +77,7 @@
       <div class="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:gap-12">
         <div class="flex flex-col gap-12 lg:col-span-8">
           {# ── Paso 01 · Servicio ── #}
-          <section class="flex flex-col gap-6">
+          <section class="tc-booking-step flex flex-col gap-6">
             <div class="flex items-center gap-4">
               <span class="tc-step__num">01</span>
               <h2 class="tc-step__title">Elige el servicio</h2>
@@ -116,7 +122,7 @@
           </section>
 
           {# ── Paso 02 · Barbería (aislada si ya se eligió una) ── #}
-          <section class="flex flex-col gap-6">
+          <section class="tc-booking-step flex flex-col gap-6">
             <div class="flex items-center gap-4">
               <span class="tc-step__num">02</span>
               <h2 class="tc-step__title">
@@ -190,7 +196,7 @@
           </section>
 
           {# ── Paso 03 · Barbero ── #}
-          <section class="flex flex-col gap-6">
+          <section class="tc-booking-step flex flex-col gap-6">
             <div class="flex items-center gap-4">
               <span class="tc-step__num">03</span>
               <h2 class="tc-step__title">Elige el barbero</h2>
@@ -222,7 +228,7 @@
           </section>
 
           {# ── Paso 04 · Fecha y hora ── #}
-          <section class="flex flex-col gap-6">
+          <section class="tc-booking-step flex flex-col gap-6">
             <div class="flex items-center gap-4">
               <span class="tc-step__num">04</span>
               <h2 class="tc-step__title">Fecha y hora</h2>
@@ -247,13 +253,19 @@
 
         {# ── Resumen: ticket de lujo ── #}
         <div class="lg:col-span-4">
-          <div class="tc-ticket lg:sticky lg:top-32">
+          <div class="tc-ticket tc-ticket-enhanced lg:sticky lg:top-32">
             <span class="tc-ticket__notch tc-ticket__notch--left" aria-hidden="true"></span>
             <span class="tc-ticket__notch tc-ticket__notch--right" aria-hidden="true"></span>
 
             <div class="tc-ticket__head">
-              <p class="tc-ticket__brand">TecnoCorte</p>
-              <p class="tc-ticket__sub">Comprobante de reserva</p>
+              <div class="tc-ticket__brand-row">
+                {% include "includes/logo.html" with logo_class="h-10 w-10" %}
+                <div>
+                  <p class="tc-ticket__brand">TecnoCorte</p>
+                  <p class="tc-ticket__sub">Resumen de tu cita</p>
+                </div>
+              </div>
+              <span class="tc-ticket__status"><span class="material-symbols-outlined">edit_calendar</span> En proceso</span>
             </div>
 
             <div class="tc-ticket__body">

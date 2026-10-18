@@ -26,12 +26,23 @@
           class="w-full bg-transparent border-b border-outline-variant/20 focus:border-primary text-on-background font-body text-sm py-2 pl-8 pr-4 transition-colors focus:ring-0 placeholder:text-on-surface-variant/50"
           placeholder="Buscar por nombre o fecha..."
           type="text"
+          aria-label="Buscar reservas"
         />
         <span
           class="material-symbols-outlined absolute left-0 top-2.5 text-on-surface-variant/50 text-sm group-focus-within:text-primary transition-colors"
           >search</span
         >
       </div>
+      <form method="get" class="flex w-full flex-wrap items-center gap-2 md:w-auto">
+        <label class="sr-only" for="filtro-fecha">Filtrar por fecha</label>
+        <input id="filtro-fecha" name="fecha" type="date" value="{{ filtro_fecha }}" class="rounded-lg border border-outline-variant/30 bg-surface-container-low px-3 py-2 text-sm text-on-surface" />
+        <label class="sr-only" for="filtro-estado">Filtrar por estado</label>
+        <select id="filtro-estado" name="estado" class="rounded-lg border border-outline-variant/30 bg-surface-container-low px-3 py-2 text-sm text-on-surface">
+          <option value="">Todos los estados</option>
+          {% for opcion, etiqueta in reserva_estados %}<option value="{{ opcion }}" {% if filtro_estado == opcion %}selected{% endif %}>{{ etiqueta }}</option>{% endfor %}
+        </select>
+        <button type="submit" class="tc-btn tc-btn--gold tc-btn--sm">Filtrar</button>
+      </form>
     </div>
   </header>
   <!-- Status Overview Chips -->
@@ -98,7 +109,8 @@
       {% for reserva in datos %}
       <div
         class="grid grid-cols-6 gap-6 px-8 py-6 items-center hover:bg-surface-container-highest/30 transition-colors fila-reserva"
-        data-estado="{{ reserva.estado }}"
+         data-estado="{{ reserva.estado }}"
+         data-fecha="{{ reserva.fecha|date:'Y-m-d' }}"
       >
         <div class="font-headline text-xl text-primary">{{ reserva.hora }}</div>
         <div class="col-span-2">

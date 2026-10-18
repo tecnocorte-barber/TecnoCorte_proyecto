@@ -3,13 +3,12 @@
   class="admin-sidebar panel-glass hidden md:flex fixed left-0 top-0 z-40 flex-col p-4 w-64 h-screen"
 >
   {# Logo y título de la sección de administración #}
-  <div class="flex items-center gap-3">
-    {% include "includes/logo.html" with logo_class="h-16 w-16" %}
-    <p
-      class="truncate font-label text-[0.62rem] uppercase tracking-[0.16em] text-on-surface-variant"
-    >
-      Administración
-    </p>
+  <div class="tc-panel-brand flex items-center gap-3 border-b border-primary/10 pb-5">
+    {% include "includes/logo.html" with logo_class="h-12 w-12" %}
+    <div class="min-w-0">
+      <p class="font-headline text-lg font-bold leading-tight text-primary-container">TecnoCorte</p>
+      <p class="truncate font-label text-[0.6rem] uppercase tracking-[0.16em] text-on-surface-variant">Administración</p>
+    </div>
   </div>
   {# Lista de enlaces de navegación del admin (resaltado según la página activa) #}
   <div class="mt-4 flex-1 space-y-1 overflow-y-auto">
@@ -34,6 +33,16 @@
       <span class="font-label uppercase text-xs tracking-widest"
         >Inicio</span
       >
+    </a>
+    <a
+      class="panel-glass-link flex items-center space-x-4 px-4 py-3 text-primary"
+      href="{% url 'sena:inicio' %}?vista=publica"
+      target="_blank"
+      rel="noopener"
+      title="Abrir el sitio público"
+    >
+      <span class="material-symbols-outlined">open_in_new</span>
+      <span class="font-label uppercase text-xs tracking-widest">Ver sitio</span>
     </a>
     <a
       class="panel-glass-link flex items-center space-x-4 px-4 py-3 {% if active == 'reservas' %}panel-glass-link--active{% else %}text-on-surface-variant{% endif %}"

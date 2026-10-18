@@ -1,0 +1,83 @@
+/* Presentación del panel principal del barbero. */
+.tc-barber-welcome {
+  position: relative;
+  padding: 1.5rem;
+  border: 1px solid color-mix(in srgb, var(--c-primary) 18%, transparent);
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at 90% 0%, rgba(214, 173, 66, .13), transparent 32%),
+    color-mix(in srgb, var(--c-surface-container-low) 75%, transparent);
+}
+
+.tc-barber-stat {
+  border: 1px solid color-mix(in srgb, var(--c-outline-variant) 30%, transparent);
+  transition: transform .25s ease, border-color .25s ease, box-shadow .25s ease;
+}
+
+.tc-barber-stat:hover {
+  transform: translateY(-3px);
+  border-color: color-mix(in srgb, var(--c-primary) 45%, transparent);
+  box-shadow: 0 18px 36px rgba(0, 0, 0, .14);
+}
+
+.tc-barber-quick-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  border: 1px solid color-mix(in srgb, var(--c-primary) 20%, transparent);
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--c-surface-container-low) 82%, transparent);
+}
+
+.tc-next-appointment {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border: 1px solid color-mix(in srgb, var(--c-primary) 35%, transparent);
+  border-radius: 18px;
+  background: linear-gradient(110deg, color-mix(in srgb, var(--c-primary) 13%, var(--c-surface-container-low)), var(--c-surface-container-low));
+}
+
+.tc-next-appointment__icon {
+  display: grid;
+  width: 46px;
+  height: 46px;
+  flex-shrink: 0;
+  place-items: center;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--c-primary) 16%, transparent);
+  color: var(--c-primary);
+}
+
+.tc-barber-action {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  padding: .65rem .8rem;
+  border: 1px solid color-mix(in srgb, var(--c-outline-variant) 38%, transparent);
+  border-radius: 10px;
+  color: var(--c-on-surface-variant);
+  font-size: .7rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+  transition: color .2s ease, border-color .2s ease, background .2s ease;
+}
+
+.tc-barber-action:hover {
+  border-color: var(--c-primary);
+  background: color-mix(in srgb, var(--c-primary) 10%, transparent);
+  color: var(--c-primary);
+  text-decoration: none;
+}
+
+.tc-barber-action .material-symbols-outlined { font-size: 18px; }
+
+@media (max-width: 767px) {
+  .tc-barber-quick-actions { align-items: flex-start; flex-direction: column; }
+  .tc-barber-action { font-size: .62rem; }
+  .tc-next-appointment { align-items: flex-start; }
+  .tc-next-appointment .tc-barber-action { margin-left: auto; }
+}

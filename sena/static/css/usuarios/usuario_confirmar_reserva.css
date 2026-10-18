@@ -14,3 +14,164 @@
 .ghost-border {
   border: 1px solid var(--c-outline-variant);
 }
+
+/* Confirmación: una composición más cálida y guiada, sin alterar el flujo del formulario. */
+.tc-confirm-page {
+  position: relative;
+}
+
+.tc-confirm-page::before,
+.tc-confirm-page::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  width: 220px;
+  height: 220px;
+  border-radius: 999px;
+  background: rgba(214, 173, 66, 0.08);
+  filter: blur(60px);
+  pointer-events: none;
+}
+
+.tc-confirm-page::before { top: 130px; left: -130px; }
+.tc-confirm-page::after { right: -130px; bottom: 80px; }
+
+.tc-brand-lockup {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 28px;
+  text-align: left;
+}
+
+.tc-brand-lockup img {
+  border: 1px solid rgba(214, 173, 66, 0.35);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.22);
+}
+
+.tc-brand-name {
+  margin: 0;
+  color: var(--c-primary);
+  font-family: "Noto Serif", serif;
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.tc-brand-caption {
+  margin: 3px 0 0;
+  color: var(--c-on-surface-variant);
+  font-size: .7rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.tc-confirm-step,
+.tc-payment-note {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--c-primary);
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.tc-confirm-step {
+  padding: 8px 14px;
+  border: 1px solid var(--glass-border);
+  border-radius: 999px;
+  background: var(--glass-bg);
+}
+
+.tc-confirm-step .material-symbols-outlined { font-size: 17px; }
+.tc-gold-text { color: var(--c-primary); }
+
+.tc-progress {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  width: 132px;
+}
+
+.tc-progress span {
+  height: 4px;
+  flex: 1;
+  border-radius: 99px;
+  background: var(--c-outline-variant);
+}
+
+.tc-progress span.is-current { background: var(--c-primary); box-shadow: 0 0 10px rgba(214, 173, 66, .55); }
+
+.tc-card-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  padding-bottom: 25px;
+  margin-bottom: 25px;
+  border-bottom: 1px solid color-mix(in srgb, var(--c-outline-variant) 35%, transparent);
+}
+
+.tc-eyebrow {
+  margin: 0;
+  color: var(--c-primary);
+  font-size: .68rem;
+  font-weight: 800;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+}
+
+.tc-confirm-card-icon {
+  display: grid;
+  width: 52px;
+  height: 52px;
+  place-items: center;
+  border: 1px solid rgba(214, 173, 66, .28);
+  border-radius: 16px;
+  background: rgba(214, 173, 66, .1);
+  color: var(--c-primary);
+  font-size: 25px;
+}
+
+.tc-detail-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+  min-height: 78px;
+  padding: 16px;
+  border: 1px solid color-mix(in srgb, var(--c-outline-variant) 32%, transparent);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--c-surface-container-high) 42%, transparent);
+}
+
+.tc-detail-item > .material-symbols-outlined {
+  color: var(--c-primary);
+  font-size: 21px;
+}
+
+.tc-payment-note {
+  width: 100%;
+  justify-content: flex-start;
+  padding: 13px 15px;
+  border-radius: 12px;
+  background: rgba(214, 173, 66, .08);
+  color: var(--c-on-surface-variant);
+  font-size: .78rem;
+  font-weight: 400;
+  letter-spacing: normal;
+  line-height: 1.5;
+  text-transform: none;
+}
+
+.tc-payment-note .material-symbols-outlined { color: var(--c-primary); font-size: 23px; }
+.tc-payment-note p { margin: 0; }
+.tc-payment-note strong { color: var(--c-on-surface); }
+
+@media (max-width: 480px) {
+  .tc-brand-lockup { margin-bottom: 22px; }
+  .tc-brand-lockup img { width: 54px; height: 54px; }
+  .tc-brand-caption { font-size: .6rem; }
+  .tc-confirm-card h2 { font-size: 1.45rem; }
+  .tc-confirm-card-icon { width: 44px; height: 44px; font-size: 21px; }
+}

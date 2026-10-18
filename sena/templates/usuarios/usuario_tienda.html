@@ -23,24 +23,29 @@
   <body class="bg-surface font-body text-on-surface antialiased">
     {% include "includes/site_nav.html" with active="tienda" %}
 
-    <main class="mx-auto min-h-screen max-w-[1600px] px-4 pb-24 pt-32 md:px-12">
+    <main class="tc-store-page mx-auto min-h-screen max-w-[1600px] px-4 pb-24 pt-32 md:px-12">
       <header
-        class="mb-12 flex flex-col items-end justify-between gap-8 md:flex-row"
+        class="tc-store-hero mb-10 flex flex-col items-end justify-between gap-8 rounded-[28px] p-6 md:flex-row md:p-8"
       >
         <div class="max-w-2xl">
+          <p class="tc-eyebrow mb-4">Selección TecnoCorte · Barber essentials</p>
           <h1
-            class="mb-4 font-headline text-5xl font-black leading-tight tracking-tight text-on-surface md:text-6xl"
+            class="mb-3 font-headline text-4xl font-black leading-tight tracking-tight text-on-surface md:text-5xl"
           >
             Nuestros <span class="heading-accent">Productos</span>
           </h1>
-          <p class="max-w-lg text-lg text-on-surface-variant">
+          <p class="max-w-lg text-base text-on-surface-variant">
             Todo lo que necesitas para tu cuidado personal: herramientas,
             productos de estilo y cuidado premium.
           </p>
+          <div class="tc-store-benefits mt-6">
+            <span><span class="material-symbols-outlined">verified</span> Productos seleccionados</span>
+            <span><span class="material-symbols-outlined">local_shipping</span> Compra fácil</span>
+          </div>
         </div>
 
         <div
-          class="flex w-full items-center gap-4 rounded-xl bg-surface-container-low p-2 ghost-border md:w-auto"
+          class="tc-store-search flex w-full items-center gap-4 rounded-xl bg-surface-container-low p-2 ghost-border md:w-auto"
         >
           <div class="relative w-full md:w-64">
             <span
@@ -52,6 +57,7 @@
               class="w-full border-none bg-transparent py-2 pl-10 pr-2 text-sm text-on-surface placeholder:text-on-surface-variant/50 focus:ring-0"
               placeholder="Buscar productos..."
               type="text"
+              aria-label="Buscar productos"
             />
           </div>
           <button
@@ -80,15 +86,15 @@
       ></div>
       {% endif %}
 
-      <div class="mb-16 flex h-12 w-full items-center justify-center">
+      <div class="mb-10 flex h-4 w-full items-center justify-center">
         <div
           class="h-1 w-1 rounded-full bg-primary-container shadow-[0_0_10px_rgba(212,175,55,0.8)]"
         ></div>
       </div>
 
-      <div class="flex flex-col gap-12 lg:flex-row">
+      <div class="tc-store-layout flex flex-col gap-8 lg:flex-row">
         {# Barra lateral con filtros de categoría y rango de precio #}
-      <aside class="w-full flex-shrink-0 space-y-12 lg:w-64">
+      <aside class="tc-store-filters self-start h-fit w-full flex-shrink-0 space-y-7 rounded-2xl p-5 lg:w-64">
           <div>
             <h3 class="mb-6 font-headline text-lg tracking-wide text-primary">
               Categorías
@@ -215,7 +221,7 @@
         </aside>
 
         <div class="flex-1">
-          <div class="mb-8 flex flex-wrap items-center justify-between gap-4">
+          <div class="tc-store-toolbar mb-6 flex flex-wrap items-center justify-between gap-4">
             <div class="flex items-center gap-2">
               <span
                 class="text-xs font-label uppercase tracking-wider text-on-surface-variant"
@@ -268,14 +274,15 @@
           >
             {% for producto in productos %}
             <article
-              class="{% if forloop.first %}md:col-span-2 lg:col-span-2{% endif %} flex flex-col rounded-[28px] bg-surface-container-low p-6 transition-all duration-500 hover-ambient-glow {% if not producto.disponible or producto.stock <= 0 %}opacity-70 grayscale-[30%]{% endif %}"
+              class="tc-product-card flex flex-col rounded-[24px] bg-surface-container-low p-5 transition-all duration-500 hover-ambient-glow {% if not producto.disponible or producto.stock <= 0 %}opacity-70 grayscale-[30%]{% endif %}"
               data-categoria="{{ producto.categoria }}"
               data-precio="{{ producto.precio }}"
               data-nombre="{{ producto.nombre|lower }}"
+              data-producto-id="{{ producto.id }}"
               data-disponible="{{ producto.disponible|yesno:'1,0' }}"
             >
               <div
-                class="relative mb-6 h-52 overflow-hidden rounded-xl bg-surface-container-highest"
+                class="relative mb-5 h-56 overflow-hidden rounded-2xl bg-surface-container-highest"
               >
                 {% if not producto.disponible %}
                 <div
@@ -320,7 +327,7 @@
                 />
                 {% else %}
                 <img
-                  src="{% static 'sena/images/Logo.png' %}"
+                  src="{% static 'sena/images/Logo.webp' %}"
                   alt="{{ producto.nombre }}"
                   class="h-full w-full object-contain bg-surface-container-highest p-8"
                 />
@@ -333,9 +340,10 @@
                     class="mb-1 block text-[10px] font-bold uppercase tracking-[0.18em] text-on-surface-variant"
                     >{{ producto.get_categoria_display }}</span
                   >
-                  <h2 class="mb-2 font-headline text-xl text-on-surface">
-                    {{ producto.nombre }}
-                  </h2>
+                  <div class="flex items-start justify-between gap-3">
+                    <h2 class="mb-2 font-headline text-xl text-on-surface"><a href="{% url 'sena:usuario_producto_detalle' producto.id %}" class="hover:text-primary">{{ producto.nombre }}</a></h2>
+                    <button type="button" class="producto-favorito rounded-full p-1 text-on-surface-variant hover:text-primary" data-producto-id="{{ producto.id }}" aria-label="Agregar {{ producto.nombre }} a favoritos" aria-pressed="false"><span class="material-symbols-outlined text-[20px]">favorite_border</span></button>
+                  </div>
                   {% if producto.descripcion %}
                   <p class="mb-4 text-sm text-on-surface-variant">
                     {{ producto.descripcion|truncatewords:15 }}
@@ -639,4 +647,26 @@
       });
     </script>
   </body>
+  <script>
+    (function () {
+      var clave = "tc-favoritos";
+      var favoritos = JSON.parse(localStorage.getItem(clave) || "[]");
+      function pintar() {
+        document.querySelectorAll(".producto-favorito").forEach(function (boton) {
+          var activo = favoritos.indexOf(String(boton.dataset.productoId)) !== -1;
+          boton.setAttribute("aria-pressed", activo ? "true" : "false");
+          boton.querySelector(".material-symbols-outlined").textContent = activo ? "favorite" : "favorite_border";
+        });
+      }
+      document.querySelectorAll(".producto-favorito").forEach(function (boton) {
+        boton.addEventListener("click", function () {
+          var id = String(this.dataset.productoId);
+          favoritos = favoritos.indexOf(id) === -1 ? favoritos.concat(id) : favoritos.filter(function (item) { return item !== id; });
+          localStorage.setItem(clave, JSON.stringify(favoritos));
+          pintar();
+        });
+      });
+      pintar();
+    })();
+  </script>
 </html>

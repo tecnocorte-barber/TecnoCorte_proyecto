@@ -1,7 +1,9 @@
+{% extends "usuarios/dashboard_base.html" %}
+{% load static %}
 {# Panel principal del barbero con resumen, métricas, citas y reseñas #}
-{% extends "usuarios/dashboard_base.html" %} {% block title %}TecnoCorte - Panel
+{% block title %}TecnoCorte - Panel
 de Barbero{% endblock %} {% block body_class %}antialiased min-h-screen flex
-bg-background text-on-surface{% endblock %} {% block content %} {% include "includes/peluquero_sidebar.html" with active="inicio" %}
+bg-background text-on-surface{% endblock %} {% block extra_head %}<link rel="stylesheet" href="{% static 'css/peluqueros/peluquero_dashboard.css' %}" />{% endblock %} {% block content %} {% include "includes/peluquero_sidebar.html" with active="inicio" %}
 <main class="flex-1 md:ml-72 flex flex-col min-h-screen relative bg-background">
   {% include "includes/panel_header.html" %}
 
@@ -36,7 +38,7 @@ bg-background text-on-surface{% endblock %} {% block content %} {% include "incl
     {# Sección de saludo y calificación promedio del barbero #}
     <!-- Saludo + Calificación -->
     <section
-      class="flex flex-col md:flex-row justify-between items-end gap-6 border-b border-surface-container-low pb-8"
+      class="tc-barber-welcome flex flex-col md:flex-row justify-between items-end gap-6 border-b border-surface-container-low pb-8"
     >
       <div>
         <h2
@@ -78,7 +80,7 @@ bg-background text-on-surface{% endblock %} {% block content %} {% include "incl
     <section class="grid grid-cols-2 md:grid-cols-4 gap-4">
       <!-- Citas Hoy -->
       <div
-        class="bg-surface-container-low p-6 rounded-xl ambient-glow relative overflow-hidden group"
+        class="tc-barber-stat bg-surface-container-low p-6 rounded-xl ambient-glow relative overflow-hidden group"
       >
         <div
           class="absolute -right-4 -top-4 text-primary/5 group-hover:text-primary/10 transition-colors duration-500"
@@ -100,7 +102,7 @@ bg-background text-on-surface{% endblock %} {% block content %} {% include "incl
       </div>
       <!-- Ingresos Hoy -->
       <div
-        class="bg-surface-container-low p-6 rounded-xl ambient-glow relative overflow-hidden group"
+        class="tc-barber-stat bg-surface-container-low p-6 rounded-xl ambient-glow relative overflow-hidden group"
       >
         <div
           class="absolute -right-4 -top-4 text-primary/5 group-hover:text-primary/10 transition-colors duration-500"
@@ -123,7 +125,7 @@ bg-background text-on-surface{% endblock %} {% block content %} {% include "incl
       </div>
       <!-- Ingresos Totales -->
       <div
-        class="bg-surface-container-low p-6 rounded-xl ambient-glow relative overflow-hidden group"
+        class="tc-barber-stat bg-surface-container-low p-6 rounded-xl ambient-glow relative overflow-hidden group"
       >
         <div
           class="absolute -right-4 -top-4 text-primary/5 group-hover:text-primary/10 transition-colors duration-500"
@@ -148,7 +150,7 @@ bg-background text-on-surface{% endblock %} {% block content %} {% include "incl
       </div>
       <!-- Total Citas -->
       <div
-        class="bg-surface-container-low p-6 rounded-xl ambient-glow relative overflow-hidden group"
+        class="tc-barber-stat bg-surface-container-low p-6 rounded-xl ambient-glow relative overflow-hidden group"
       >
         <div
           class="absolute -right-4 -top-4 text-primary/5 group-hover:text-primary/10 transition-colors duration-500"
@@ -177,6 +179,30 @@ bg-background text-on-surface{% endblock %} {% block content %} {% include "incl
       </div>
     </section>
 
+    <section class="tc-barber-quick-actions">
+      <div>
+        <p class="font-label text-[0.65rem] uppercase tracking-widest text-primary">Accesos rápidos</p>
+        <h3 class="mt-1 font-headline text-2xl text-on-surface">Administra tu espacio</h3>
+      </div>
+      <div class="flex flex-wrap gap-3">
+        <a href="{% url 'sena:peluquero_editar_peluqueria' %}" class="tc-barber-action"><span class="material-symbols-outlined">storefront</span> Mi peluquería</a>
+        <a href="{% url 'sena:peluquero_galeria' %}" class="tc-barber-action"><span class="material-symbols-outlined">photo_library</span> Galería</a>
+        <a href="{% url 'sena:peluquero_configuracion' %}" class="tc-barber-action"><span class="material-symbols-outlined">settings</span> Configuración</a>
+      </div>
+    </section>
+
+    {% if proxima_cita %}
+    <section class="tc-next-appointment">
+      <div class="tc-next-appointment__icon"><span class="material-symbols-outlined">event_upcoming</span></div>
+      <div class="min-w-0 flex-1">
+        <p class="font-label text-[0.65rem] uppercase tracking-widest text-primary">Próxima cita</p>
+        <h3 class="mt-1 truncate font-headline text-xl text-on-surface">{{ proxima_cita.servicio }}</h3>
+        <p class="mt-1 text-sm text-on-surface-variant">{{ proxima_cita.cliente.nombre }} {{ proxima_cita.cliente.apellido }} · {{ proxima_cita.fecha|date:"d/m/Y" }} a las {{ proxima_cita.hora|time:"H:i" }}</p>
+      </div>
+      <a href="#citas" class="tc-barber-action shrink-0">Ver agenda <span class="material-symbols-outlined">arrow_downward</span></a>
+    </section>
+    {% endif %}
+
     <!-- Divider -->
     <div class="flex justify-center items-center h-4">
       <div class="w-1 h-1 rounded-full bg-primary-container"></div>
@@ -184,7 +210,7 @@ bg-background text-on-surface{% endblock %} {% block content %} {% include "incl
 
     {# Lista de citas con botones para completar o cancelar #}
     <!-- Citas con botones de estado -->
-    <section>
+    <section id="citas">
       <div class="flex justify-between items-end mb-8">
         <div>
           <h3
@@ -203,11 +229,17 @@ bg-background text-on-surface{% endblock %} {% block content %} {% include "incl
           Nueva Cita <span class="material-symbols-outlined text-sm">add</span>
         </a>
       </div>
+      <div class="mb-5 flex flex-wrap items-center gap-3">
+        <label for="barbero-filtro-fecha" class="text-xs uppercase tracking-widest text-on-surface-variant">Ver agenda del día</label>
+        <input id="barbero-filtro-fecha" type="date" class="rounded-lg border border-outline-variant/30 bg-surface-container-low px-3 py-2 text-sm text-on-surface" aria-label="Filtrar citas por fecha" />
+        <button id="barbero-limpiar-fecha" type="button" class="text-xs font-bold uppercase tracking-widest text-primary">Ver todas</button>
+      </div>
 
       <div class="space-y-4">
         {% for cita in citas %}
         <div
           class="bg-surface-container-low rounded-xl p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 ambient-glow"
+          data-cita-fecha="{{ cita.fecha|date:'Y-m-d' }}"
         >
           <div class="flex items-start gap-4">
             <div
@@ -441,4 +473,17 @@ bg-background text-on-surface{% endblock %} {% block content %} {% include "incl
   </div>
 </main>
 {% include "includes/peluquero_mobile_nav.html" with active="inicio" %}
+<script>
+  (function () {
+    var filtro = document.getElementById("barbero-filtro-fecha");
+    var limpiar = document.getElementById("barbero-limpiar-fecha");
+    var citas = document.querySelectorAll("[data-cita-fecha]");
+    function aplicar() {
+      var fecha = filtro ? filtro.value : "";
+      citas.forEach(function (cita) { cita.hidden = Boolean(fecha && cita.dataset.citaFecha !== fecha); });
+    }
+    if (filtro) filtro.addEventListener("change", aplicar);
+    if (limpiar) limpiar.addEventListener("click", function () { filtro.value = ""; aplicar(); });
+  })();
+</script>
 {% endblock %}
