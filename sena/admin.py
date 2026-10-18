@@ -5,7 +5,7 @@ from .models import (
     Usuario, Peluqueria, Producto, Reserva, Pedido,
     PedidoProducto, RegistroIngreso, Notificacion,
     HorarioTrabajo, BloqueoHorario, MensajeContacto, Calificacion,
-    Configuracion, RegistroError,
+    Configuracion, RegistroError, RegistroAccion,
 )
 
 
@@ -44,8 +44,9 @@ class ReservaAdmin(admin.ModelAdmin):
 # Admin de pedidos: compras realizadas por los clientes
 @admin.register(Pedido)
 class PedidoAdmin(admin.ModelAdmin):
-    list_display = ("id", "cliente", "total", "estado", "fecha")
-    list_filter = ("estado",)
+    list_display = ("id", "cliente", "total", "estado", "pago_confirmado", "fecha")
+    list_filter = ("estado", "pago_confirmado")
+    list_editable = ("estado", "pago_confirmado")
 
 
 # Admin del detalle de pedidos: productos y cantidades de cada compra
@@ -128,4 +129,21 @@ class RegistroErrorAdmin(admin.ModelAdmin):
 
     def has_delete_permission(self, request, obj=None):
         # Se conservan para poder auditar qué falló y cuándo.
+        return False
+
+
+@admin.register(RegistroAccion)
+class RegistroAccionAdmin(admin.ModelAdmin):
+    """Auditoría de acciones sensibles; solo lectura para conservar evidencia."""
+    list_display = ("fecha", "actor", "accion", "entidad", "entidad_id", "ip")
+    list_filter = ("accion", "entidad", "fecha")
+    search_fields = ("accion", "entidad", "detalle", "ip", "actor__email")
+    readonly_fields = (
+        "actor", "accion", "entidad", "entidad_id", "detalle", "ip", "navegador", "fecha",
+    )
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
         return False

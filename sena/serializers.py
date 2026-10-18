@@ -40,12 +40,29 @@ class ProductoSerializer(serializers.ModelSerializer):
         model = Producto
         fields = "__all__"  # Todos los campos del modelo
 
+    def validate_precio(self, value):
+        if value < 0:
+            raise serializers.ValidationError("El precio no puede ser negativo.")
+        return value
+
+    def validate_stock(self, value):
+        if value < 0:
+            raise serializers.ValidationError("El stock no puede ser negativo.")
+        return value
+
+    def validate(self, attrs):
+        stock = attrs.get("stock", getattr(self.instance, "stock", 0))
+        if attrs.get("disponible", getattr(self.instance, "disponible", True)) and stock <= 0:
+            raise serializers.ValidationError({"disponible": "Un producto disponible debe tener stock."})
+        return attrs
+
 
 # Serializador de Reserva: con validaciones de servicio, cliente y barbero
 class ReservaSerializer(serializers.ModelSerializer):
     # Solo permite seleccionar clientes (rol Cliente) y barberos activos
     cliente = serializers.PrimaryKeyRelatedField(queryset=Usuario.objects.filter(rol="Cliente"))
     peluquero = serializers.PrimaryKeyRelatedField(queryset=Usuario.objects.filter(rol="Barbero", activo=True))
+    peluqueria = serializers.PrimaryKeyRelatedField(queryset=Peluqueria.objects.all(), write_only=True)
     # Campos calculados para mostrar nombres en la respuesta
     cliente_nombre = serializers.SerializerMethodField()  # Nombre completo del cliente
     peluquero_nombre = serializers.SerializerMethodField()  # Nombre completo del barbero
@@ -81,6 +98,35 @@ class ReservaSerializer(serializers.ModelSerializer):
         if value.rol != "Barbero" or not value.activo:
             raise serializers.ValidationError("El barbero no está disponible para nuevas citas.")
         return value
+
+    def validate_estado(self, value):
+        if value not in {estado[0] for estado in Reserva.ESTADOS}:
+            raise serializers.ValidationError("El estado de la reserva no es válido.")
+        return value
+
+    def validate(self, attrs):
+        """Aplica las reglas de sede, horario y cruces también en la API."""
+        peluquero = attrs.get("peluquero", getattr(self.instance, "peluquero", None))
+        peluqueria = attrs.get("peluqueria", getattr(self.instance, "peluqueria", None))
+        fecha = attrs.get("fecha", getattr(self.instance, "fecha", None))
+        hora = attrs.get("hora", getattr(self.instance, "hora", None))
+        servicio = attrs.get("servicio", getattr(self.instance, "servicio", ""))
+        if peluquero and peluqueria and peluquero.peluqueria_id != peluqueria.id:
+            raise serializers.ValidationError("El barbero no pertenece a la peluquería seleccionada.")
+        if fecha and hora and peluqueria and servicio:
+            from .views import barbero_esta_disponible, cita_disponible
+
+            fecha_texto = fecha.isoformat()
+            hora_texto = hora.strftime("%H:%M")
+            disponible, mensaje = cita_disponible(fecha_texto, hora_texto, peluqueria.id, servicio)
+            if not disponible:
+                raise serializers.ValidationError(mensaje)
+            disponible, mensaje = barbero_esta_disponible(
+                peluquero.id, fecha_texto, hora_texto, servicio, self.instance
+            )
+            if not disponible:
+                raise serializers.ValidationError(mensaje)
+        return attrs
 
     # Devuelve nombre completo del cliente para la respuesta JSON
     def get_cliente_nombre(self, obj) -> str:

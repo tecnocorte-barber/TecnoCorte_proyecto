@@ -468,7 +468,10 @@
                     class="text-[10px] uppercase tracking-widest text-primary block mb-1"
                     >Pedido #{{ pedido.id }} • {{ pedido.fecha|date:"d M Y" }}
                   </span>
-                  <h4 class="font-headline text-lg">{{ pedido.estado }}</h4>
+                  <h4 class="font-headline text-lg">{{ pedido.get_estado_display }}</h4>
+                  <p class="mt-1 text-xs text-on-surface-variant">
+                    {% if pedido.pago_confirmado %}Pago confirmado en tienda{% else %}Pago pendiente en tienda{% endif %}
+                  </p>
                 </div>
                 <span class="font-headline text-xl text-primary"
                   >${{ pedido.total|floatformat:"0g" }} COP</span

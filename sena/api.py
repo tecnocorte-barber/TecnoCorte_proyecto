@@ -6,6 +6,7 @@ from rest_framework.permissions import IsAuthenticated  # Permisos base de DRF
 from rest_framework.permissions import BasePermission  # Para crear permiso personalizado
 from .models import Usuario, Peluqueria, Producto, Reserva  # Modelos que expone la API
 from .serializers import UsuarioSerializer, PeluqueriaSerializer, ProductoSerializer, ReservaSerializer  # Serializadores
+from .utilidades import registrar_accion
 
 
 def app_role(request):
@@ -13,12 +14,23 @@ def app_role(request):
     return request.session.get("logueado", {}).get("rol")
 
 
+def app_usuario(request):
+    """Usuario propio de la aplicación cuando la API usa sesión web."""
+    sesion = request.session.get("logueado", {})
+    if not sesion.get("id"):
+        return None
+    usuario = Usuario.objects.filter(id=sesion["id"], activo=True).first()
+    if usuario and sesion.get("sesion_version") not in (None, usuario.sesion_version):
+        return None
+    return usuario
+
+
 # Permiso personalizado: verifica sesión activa y restringe escritura a admins
 class ApiPermission(BasePermission):
     """Permite lectura a cualquier usuario autenticado, escritura solo a Admin."""
     def has_permission(self, request, view):
         role = app_role(request)  # Rol de la sesión web
-        authenticated = bool(role) or bool(getattr(request.user, "is_authenticated", False))  # Sesión o token
+        authenticated = bool(app_usuario(request)) or bool(getattr(request.user, "is_authenticated", False))  # Sesión o token
         if not authenticated:
             return False  # Sin autenticación, no hay acceso
         # Escritura (POST/PUT/PATCH/DELETE) solo para Admin o staff
@@ -27,8 +39,24 @@ class ApiPermission(BasePermission):
         return True  # Lectura permitida para cualquier autenticado
 
 
+class AuditedModelViewSet(viewsets.ModelViewSet):
+    """ViewSet común: registra escrituras de API en la auditoría."""
+    def perform_create(self, serializer):
+        objeto = serializer.save()
+        registrar_accion(self.request, "api_crear", objeto.__class__.__name__, objeto.pk)
+
+    def perform_update(self, serializer):
+        objeto = serializer.save()
+        registrar_accion(self.request, "api_actualizar", objeto.__class__.__name__, objeto.pk)
+
+    def perform_destroy(self, instance):
+        entidad, entidad_id = instance.__class__.__name__, instance.pk
+        instance.delete()
+        registrar_accion(self.request, "api_eliminar", entidad, entidad_id)
+
+
 # CRUD de usuarios: solo Admin puede listar todos los usuarios
-class UsuarioViewSet(viewsets.ModelViewSet):
+class UsuarioViewSet(AuditedModelViewSet):
     authentication_classes = [TokenAuthentication, SessionAuthentication]  # Acepta token o sesión
     permission_classes = [ApiPermission]  # Usa nuestro permiso personalizado
     queryset = Usuario.objects.all()  # Query base: todos los usuarios
@@ -43,7 +71,7 @@ class UsuarioViewSet(viewsets.ModelViewSet):
 
 
 # CRUD de peluquerías (sedes): visible para cualquier autenticado
-class PeluqueriaViewSet(viewsets.ModelViewSet):
+class PeluqueriaViewSet(AuditedModelViewSet):
     authentication_classes = [TokenAuthentication, SessionAuthentication]
     permission_classes = [ApiPermission]
     queryset = Peluqueria.objects.all()  # Todas las sedes
@@ -54,7 +82,7 @@ class PeluqueriaViewSet(viewsets.ModelViewSet):
 
 
 # CRUD de productos de la tienda
-class ProductoViewSet(viewsets.ModelViewSet):
+class ProductoViewSet(AuditedModelViewSet):
     authentication_classes = [TokenAuthentication, SessionAuthentication]
     permission_classes = [ApiPermission]
     queryset = Producto.objects.all()  # Todos los productos
@@ -65,7 +93,7 @@ class ProductoViewSet(viewsets.ModelViewSet):
 
 
 # CRUD de reservas (citas): cada rol solo ve las que le corresponden
-class ReservaViewSet(viewsets.ModelViewSet):
+class ReservaViewSet(AuditedModelViewSet):
     authentication_classes = [TokenAuthentication, SessionAuthentication]
     permission_classes = [ApiPermission]
     queryset = Reserva.objects.select_related("cliente", "peluquero", "peluqueria").all()  # Consulta optimizada con relaciones

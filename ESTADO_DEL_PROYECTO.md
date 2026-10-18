@@ -1,5 +1,11 @@
 # TecnoCorte — Documentación completa del estado del proyecto
 
+> **Nota de mantenimiento:** este documento es una fotografía del proyecto y
+> puede quedar desactualizado después de nuevas funcionalidades. La guía
+> operativa vigente está en `DOCUMENTACION_PROYECTO.md`. Actualmente existen
+> además recordatorios por correo (`enviar_recordatorios`) y gestión de pedidos
+> desde `/admin/pedidos/`.
+
 > Documento descriptivo y exhaustivo del estado actual del proyecto **TecnoCorte**, generado el **15 de octubre de 2026** a partir del análisis directo del código fuente (commit `1834b59`, rama `main`, árbol limpio).
 
 ---
@@ -247,6 +253,7 @@ Cita de un cliente con un barbero.
 | `hora` | TimeField | — |
 | `servicio` | CharField(100) | `blank=True`, default `"Corte de Cabello"` (nombre del catálogo `SERVICIOS`) |
 | `estado` | CharField(20) | Choices: `Pendiente`, `Confirmada`, `Completada`, `Cancelada` (default `Pendiente`) |
+| `recordatorio_correo_enviado` | DateTimeField | Marca el recordatorio automático ya enviado para evitar duplicados |
 
 ### 5.6 `Pedido`
 Compra de productos.
@@ -256,7 +263,10 @@ Compra de productos.
 | `cliente` | FK → Usuario | `PROTECT`, related_name `pedidos` |
 | `fecha` | DateTimeField | `auto_now_add=True` |
 | `total` | IntegerField | default 0 (COP) |
-| `estado` | CharField(20) | Choices: `Pendiente`, `Pagado`, `Entregado`, `Cancelado` |
+| `estado` | CharField(20) | Choices: `Pendiente`, `Listo para recoger`, `Entregado`, `Cancelado` |
+| `pago_confirmado` | BooleanField | El administrador confirma el pago realizado en la tienda |
+| `fecha_pago` | DateTimeField | Momento en que el Admin confirmó el pago |
+| `fecha_entrega` | DateTimeField | Momento en que el pedido fue entregado |
 
 ### 5.7 `PedidoProducto`
 Detalle línea a línea de cada pedido.

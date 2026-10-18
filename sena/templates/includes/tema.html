@@ -154,10 +154,36 @@
         nav.addEventListener("mouseleave", function () {
           moveHighlight(active);
         });
-        window.addEventListener("resize", function () {
-          moveHighlight(active);
+      } else {
+        // En páginas sin una sección activa, el resaltado solo debe aparecer
+        // mientras el usuario pasa el cursor por una opción.
+        nav.addEventListener("mouseleave", function () {
+          highlight.style.opacity = "0";
+          highlight.style.width = "0";
         });
       }
+
+      function sincronizarMenuAlCambiarVentana() {
+        // Al volver de una ventana minimizada se fuerza el estado de escritorio
+        // y se elimina un menú móvil que pudiera haber quedado abierto.
+        if (window.innerWidth > 640) {
+          nav.classList.remove("is-open");
+          var boton = nav.closest(".site-header")?.querySelector(".pill-menu-toggle");
+          if (boton) {
+            boton.setAttribute("aria-expanded", "false");
+            boton.setAttribute("aria-label", "Abrir menú");
+            var icono = boton.querySelector(".material-symbols-outlined");
+            if (icono) icono.textContent = "menu";
+          }
+        }
+        if (active) window.requestAnimationFrame(function () { moveHighlight(active); });
+      }
+
+      window.addEventListener("resize", sincronizarMenuAlCambiarVentana);
+      window.addEventListener("pageshow", sincronizarMenuAlCambiarVentana);
+      document.addEventListener("visibilitychange", function () {
+        if (!document.hidden) sincronizarMenuAlCambiarVentana();
+      });
     });
   });
 </script>

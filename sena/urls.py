@@ -24,6 +24,8 @@ urlpatterns = [
     path('como_funciona/', views.como_funciona, name="como_funciona"),  # Página informativa
     path('sobre_nosotros/', views.sobre_nosotros, name="sobre_nosotros"),  # Página institucional
     path('politicas/', views.politicas, name="politicas"),  # Políticas de privacidad y del proyecto
+    path('health/', views.health_check, name="health_check"),  # Estado mínimo para monitores externos
+    path('health', views.health_check, name="health_check_no_slash"),  # Compatible con monitores que no siguen redirecciones
     path('ayuda/', views.ayuda, name="ayuda"),  # Formulario de contacto/soporte
 
     # === CARRITO DE COMPRAS (funciona sin login) ===
@@ -77,11 +79,14 @@ urlpatterns = [
     path('admin/editar_peluquero/<int:id>/', views.admin_editar_peluquero, name="admin_editar_peluquero"),  # Editar barbero
     path('admin/eliminar_peluquero/<int:id>/', views.admin_eliminar_peluquero, name="admin_eliminar_peluquero"),  # Suspender barbero
     path('admin/reservas/', views.admin_reservas, name="admin_reservas"),  # Listar todas las reservas
+    path('admin/pedidos/', views.admin_pedidos, name="admin_pedidos"),  # Gestionar pedidos de la tienda
+    path('admin/pedidos/<int:id>/actualizar/', views.admin_actualizar_pedido, name="admin_actualizar_pedido"),  # Cambiar estado y pago de un pedido
     path('admin/crear_reserva/', views.admin_crear_reserva, name="admin_crear_reserva"),  # Crear reserva manual
     path('admin/editar_reserva/<int:id>/', views.admin_editar_reserva, name="admin_editar_reserva"),  # Editar reserva existente
     path('admin/eliminar_reserva/<int:id>/', views.admin_eliminar_reserva, name="admin_eliminar_reserva"),  # Eliminar reserva
     path('admin/cancelar_reserva/<int:id>/', views.admin_cancelar_reserva, name="admin_cancelar_reserva"),  # Cancelar reserva sin eliminar
     path('admin/ingresos/', views.admin_ingresos, name="admin_ingresos"),  # Historial de inicios de sesión
+    path('admin/acciones/', views.admin_acciones, name="admin_acciones"),  # Historial de acciones sensibles
     path('admin/perfil/', views.admin_perfil, name="admin_perfil"),  # Perfil del admin
     path('admin/horarios/', views.admin_horarios, name="admin_horarios"),  # Gestionar horarios y bloqueos
     path('admin/eliminar_bloqueo/<int:id>/', views.admin_eliminar_bloqueo, name="admin_eliminar_bloqueo"),  # Quitar un bloqueo de horario

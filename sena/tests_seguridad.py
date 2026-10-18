@@ -239,7 +239,7 @@ class AuditoriaDePermisosTests(TestCase):
     # Vistas públicas por diseño: no llevan @autorizacion y son correctas.
     VISTAS_PUBLICAS = {
         "inicio", "login", "solicitar_recuperacion", "restablecer_password",
-        "registro", "logout", "como_funciona", "sobre_nosotros", "politicas",
+        "registro", "logout", "como_funciona", "sobre_nosotros", "politicas", "health_check",
         "ayuda", "carrito", "agregar_carrito", "actualizar_carrito",
         "eliminar_carrito", "usuario_dashboard", "usuario_tienda",
         "usuario_servicios", "usuario_peluquerias", "usuario_peluqueria_detalle",

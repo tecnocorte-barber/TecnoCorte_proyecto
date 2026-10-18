@@ -330,6 +330,7 @@ select option {
   position: fixed;
   left: 0;
   right: 0;
+  width: 100%;
   top: 1rem;
   z-index: 50;
   display: block;
@@ -524,5 +525,35 @@ html:not(.dark) .pill-menu-toggle:hover {
   }
   .pill-nav .cart-indicator {
     margin-right: 0.25rem;
+  }
+}
+
+/* Fuerza una transición estable cuando el navegador cambia de tamaño al
+   dividir la pantalla, minimizarse o volver a maximizarse. Las clases de
+   Tailwind pueden quedar con el estado calculado antes del cambio de viewport;
+   estas reglas garantizan que el menú siempre tenga una visibilidad coherente. */
+@media (min-width: 641px) {
+  .site-header .pill-nav-menu {
+    display: flex !important;
+  }
+
+  .site-header .pill-menu-toggle {
+    display: none !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .site-header .pill-nav-menu:not(.is-open) {
+    display: none !important;
+  }
+
+  .site-header .pill-nav-menu.is-open {
+    display: flex !important;
+  }
+
+  /* En móvil los enlaces se apilan verticalmente. La pastilla animada del
+     escritorio no debe quedarse sobre "Tienda" ni simular una selección fija. */
+  .site-header .pill-nav-highlight {
+    display: none !important;
   }
 }

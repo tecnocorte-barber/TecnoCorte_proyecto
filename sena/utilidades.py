@@ -5,9 +5,30 @@ from functools import wraps
 import re
 
 from PIL import Image, UnidentifiedImageError
+from .services.auditoria import registrar_accion
 
 MAX_IMAGEN_BYTES = 5 * 1024 * 1024
 FORMATOS_IMAGEN_PERMITIDOS = {"JPEG", "PNG", "WEBP"}
+
+TRANSICIONES_RESERVA = {
+    "Pendiente": {"Pendiente", "Confirmada", "Cancelada"},
+    "Confirmada": {"Confirmada", "Completada", "Cancelada"},
+    "Completada": {"Completada"},
+    # El Admin puede devolver una cita cancelada a Pendiente para reagendarla.
+    "Cancelada": {"Cancelada", "Pendiente"},
+}
+
+TRANSICIONES_PEDIDO = {
+    "Pendiente": {"Pendiente", "Listo", "Entregado", "Cancelado"},
+    "Listo": {"Listo", "Entregado", "Cancelado"},
+    "Entregado": {"Entregado"},
+    "Cancelado": {"Cancelado"},
+}
+
+
+def transicion_valida(mapa, anterior, nuevo):
+    """Indica si un objeto puede pasar de un estado a otro."""
+    return nuevo in mapa.get(anterior, set())
 
 # Reglas de contraseña: mínimo 8 caracteres, una mayúscula, un número y un símbolo
 def validar_password(password):
@@ -56,6 +77,7 @@ def validar_imagen(archivo):
         return "El archivo seleccionado no es una imagen válida."
     return ""
 
+
 # Decorador que protege vistas: exige sesión iniciada y, opcionalmente, un rol permitido
 def autorizacion(roles=[]):
     def decorador(vista):
@@ -71,6 +93,13 @@ def autorizacion(roles=[]):
             usuario = Usuario.objects.filter(id=request.session["logueado"]["id"], activo=True).first()
             if usuario is None:
                 del request.session["logueado"]
+                return redirect("sena:login")
+
+            # Una nueva versión invalida las sesiones que existían antes de un
+            # cambio de contraseña o de una acción de cierre global.
+            version_sesion = request.session["logueado"].get("sesion_version")
+            if version_sesion is not None and version_sesion != usuario.sesion_version:
+                request.session.flush()
                 return redirect("sena:login")
             
             # Si se indicaron roles, comprueba que el rol del usuario esté permitido

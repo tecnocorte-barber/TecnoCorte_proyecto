@@ -43,6 +43,9 @@ class Usuario(models.Model):
         default=24,
         help_text="Horas de anticipación con las que se envía el recordatorio.",
     )
+    # Cambia al modificar la contraseña para invalidar todas las sesiones
+    # anteriores de la cuenta sin depender de Django Auth.
+    sesion_version = models.PositiveIntegerField(default=1)
     activo = models.BooleanField(default=True)
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     
@@ -119,6 +122,9 @@ class Reserva(models.Model):
     hora = models.TimeField()
     servicio = models.CharField(max_length=100, blank=True, default="Corte de Cabello")
     estado = models.CharField(max_length=20, choices=ESTADOS, default="Pendiente")
+    # Se guarda el momento del recordatorio para que el comando periódico no
+    # envíe el mismo correo varias veces para una misma cita.
+    recordatorio_correo_enviado = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         indexes = [
@@ -134,7 +140,7 @@ class Reserva(models.Model):
 class Pedido(models.Model):
     ESTADOS = (
         ("Pendiente", "Pendiente"),
-        ("Pagado", "Pagado"),
+        ("Listo", "Listo para recoger"),
         ("Entregado", "Entregado"),
         ("Cancelado", "Cancelado"),
     )
@@ -143,6 +149,11 @@ class Pedido(models.Model):
     fecha = models.DateTimeField(auto_now_add=True)
     total = models.IntegerField(default=0)
     estado = models.CharField(max_length=20, choices=ESTADOS, default="Pendiente")
+    # La tienda cobra al recoger. El pago se registra aparte del estado de
+    # preparación para que el Admin pueda marcarlo sin alterar el pedido.
+    pago_confirmado = models.BooleanField(default=False)
+    fecha_pago = models.DateTimeField(null=True, blank=True)
+    fecha_entrega = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return f"Pedido {self.id} - {self.cliente.nombre}"
@@ -447,6 +458,36 @@ class RegistroError(models.Model):
         if self.codigo_http == 403:
             return "Acceso denegado"
         return "Error inesperado del sitio"
+
+
+class RegistroAccion(models.Model):
+    """Auditoría de acciones sensibles realizadas dentro de la plataforma."""
+
+    actor = models.ForeignKey(
+        Usuario,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="acciones_realizadas",
+    )
+    accion = models.CharField(max_length=80)
+    entidad = models.CharField(max_length=80, blank=True, default="")
+    entidad_id = models.PositiveIntegerField(null=True, blank=True)
+    detalle = models.CharField(max_length=500, blank=True, default="")
+    ip = models.CharField(max_length=45, blank=True)
+    navegador = models.CharField(max_length=200, blank=True)
+    fecha = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-fecha"]
+        indexes = [
+            models.Index(fields=["accion", "-fecha"]),
+            models.Index(fields=["actor", "-fecha"]),
+        ]
+
+    def __str__(self):
+        nombre = self.actor.email if self.actor else "sistema"
+        return f"{nombre}: {self.accion} ({self.fecha:%Y-%m-%d %H:%M})"
 
 
 # ============================================================================

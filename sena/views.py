@@ -2,8 +2,6 @@
 # Incluye: autenticación, carrito, reservas, paneles de cliente/barbero/admin, y más
 import json  # Para serializar horarios y reservas a JSON para JavaScript
 import hmac  # Para comparar tokens de forma segura (recuperación de contraseña)
-import os  # Para rutas de archivos (logo del correo)
-from email.mime.image import MIMEImage  # Para adjuntar el logo en correos HTML
 
 from django.shortcuts import render, redirect, get_object_or_404  # Renderizar plantillas, redirigir, buscar objeto o 404
 from django.urls import reverse  # Generar URLs por nombre
@@ -14,28 +12,18 @@ from django.db.models import Count, Q  # Agregaciones y filtros condicionales (C
 from django.contrib.auth.hashers import check_password, make_password  # Verificar y cifrar contraseñas
 from django.contrib import messages  # Mensajes flash para el usuario
 from django.conf import settings  # Configuración del proyecto (email, etc.)
-from django.core.mail import EmailMultiAlternatives  # Correos con versión texto y HTML
 from django.core import signing  # Firma encriptada para tokens de recuperación
 from django.core.signing import salted_hmac  # HMAC con sal para tokens seguros
 from django.utils.http import url_has_allowed_host_and_scheme  # Validar URLs de redirección (seguridad)
 from django.core.cache import cache  # Cache para rate limiting (anti fuerza bruta)
 from django.core.validators import validate_email  # Validar formato de correo
 from django.core.exceptions import ValidationError  # Excepciones de validación
-from django.template.loader import render_to_string  # Renderizar plantilla a string (para correos)
 from datetime import datetime, time, timedelta  # Manejo de fechas, horas y duraciones
 from .models import Usuario, Peluqueria, ImagenPeluqueria, Producto, Reserva, Pedido, PedidoProducto, RegistroIngreso, Notificacion, HorarioTrabajo, BloqueoHorario, MensajeContacto, Calificacion, Configuracion, Servicio, SolicitudServicio, TIPOS_MENSAJE, TIPOS_MENSAJE_DICCIONARIO  # Todos los modelos
-from .utilidades import autorizacion, validar_password, validar_telefono, validar_imagen  # Seguridad y validación de entradas
+from .utilidades import autorizacion, validar_password, validar_telefono, validar_imagen, registrar_accion, transicion_valida, TRANSICIONES_RESERVA, TRANSICIONES_PEDIDO  # Seguridad, auditoría, estados y validación
 from .context_processors import carrito_visible, guardar_carrito_activo, cargar_carrito_usuario  # Funciones del carrito por sesión
-
-# Lista de servicios disponibles: nombre, descripción, duración en minutos y precio
-SERVICIOS = [
-    {"nombre": "Corte de Cabello", "descripcion": "Lavado, corte preciso con tijera y máquina, peinado con productos premium.", "duracion": "45 Minutos", "minutos": 45, "precio": 40000},
-    {"nombre": "Arreglo de Barba", "descripcion": "Toalla caliente, perfilado exacto, hidratación con aceites esenciales.", "duracion": "30 Minutos", "minutos": 30, "precio": 30000},
-    {"nombre": "Combo Completo", "descripcion": "Corte de cabello + arreglo de barba + limpieza facial.", "duracion": "1 Hora 15 Min", "minutos": 75, "precio": 60000},
-]
-
-# Duraciones (en minutos) que un barbero puede pedir al solicitar un servicio nuevo
-DURACIONES_SERVICIO = [15, 20, 30, 45, 60, 75, 90, 120]
+from .services.correos import enviar_correo, enviar_correo_destino, enviar_correo_cita
+from .services.catalogo import SERVICIOS, DURACIONES_SERVICIO, catalogo_servicios, servicio_valido, minutos_servicio
 
 # Imagen de respaldo para las tarjetas del inicio. En los servicios se elige por
 # nombre y en los productos por categoría, porque pueden no tener foto propia.
@@ -233,30 +221,6 @@ def cita_disponible(fecha_texto, hora_texto, peluqueria_id=None, servicio=None):
     return True, ""  # Todo OK, la cita está disponible
 
 
-# Catálogo completo: los servicios base más los que los barberos pidieron y el
-# Admin les aprobó. Se conserva el formato de la lista SERVICIOS.
-def catalogo_servicios():
-    lista = []
-    vistos = set()
-    for item in SERVICIOS:
-        vistos.add(item["nombre"])
-        lista.append(item)
-    propios = Servicio.objects.filter(activo=True).select_related("barbero")
-    for servicio in propios:
-        if servicio.nombre in vistos:
-            continue  # Un servicio base con el mismo nombre manda
-        vistos.add(servicio.nombre)
-        lista.append(servicio.a_dict())
-    return lista
-
-
-# Revisa si un nombre de servicio existe en el catálogo (base o de un barbero)
-def servicio_valido(nombre):
-    if not nombre:
-        return False
-    return nombre in {item["nombre"] for item in catalogo_servicios()}
-
-
 # Avisa a todos los Admin activos de un evento (una sola inserción)
 def notificar_admins(mensaje):
     admins = list(Usuario.objects.filter(rol="Admin", activo=True).only("id"))
@@ -264,14 +228,6 @@ def notificar_admins(mensaje):
         Notificacion.objects.bulk_create(
             [Notificacion(usuario=admin, mensaje=mensaje, fecha=timezone.now()) for admin in admins]
         )
-
-
-# Devuelve la duración en minutos de un servicio según su nombre
-def minutos_servicio(servicio):
-    for item in catalogo_servicios():
-        if item["nombre"] == servicio:
-            return item["minutos"]  # Duración del servicio encontrado
-    return 30  # Duración por defecto si no se encuentra
 
 
 def barberos_disponibles():
@@ -287,51 +243,6 @@ def formato_cita(reserva):
     fecha = reserva.fecha if hasattr(reserva.fecha, "strftime") else datetime.strptime(str(reserva.fecha), "%Y-%m-%d").date()  # Asegura que sea objeto date
     hora = reserva.hora if hasattr(reserva.hora, "strftime") else datetime.strptime(str(reserva.hora), "%H:%M").time()  # Asegura que sea objeto time
     return f"{fecha.strftime('%d/%m/%Y')} a las {hora.strftime('%H:%M')}"  # Formato: "01/01/2026 a las 10:00"
-
-
-# Envía un correo HTML a un usuario registrado
-def enviar_correo(usuario, asunto, cuerpo, request=None, enlace=None, texto_enlace=None):
-    """Envía una versión de texto y otra visual sin romper la operación si falla el proveedor."""
-    if not usuario or not usuario.email:
-        return  # No envía si no hay usuario o email
-    enviar_correo_destino(usuario.email, asunto, cuerpo, request=request, enlace=enlace, texto_enlace=texto_enlace)
-
-
-# Envía un correo HTML a una dirección cualquiera (no necesita ser usuario registrado)
-def enviar_correo_destino(destinatario, asunto, cuerpo, request=None, enlace=None, texto_enlace=None):
-    """Envía un correo HTML a una dirección que no pertenece a un usuario registrado."""
-    if not destinatario:
-        return  # No envía si no hay destinatario
-    html = render_to_string(  # Renderiza la plantilla de correo con los datos
-        "emails/notificacion.html",
-        {
-            "asunto": asunto,  # Asunto del correo
-            "cuerpo": cuerpo,  # Cuerpo en texto plano
-            "enlace": enlace,  # Enlace opcional (botón)
-            "texto_enlace": texto_enlace or "Ver en TecnoCorte",  # Texto del botón
-            "logo_url": "cid:tecnocorte-logo",  # Referencia al logo embebido
-        },
-    )
-    correo = EmailMultiAlternatives(  # Crea el correo con versión texto y HTML
-        asunto,  # Asunto
-        cuerpo,  # Versión texto plano
-        settings.DEFAULT_FROM_EMAIL,  # Remitente
-        [destinatario],  # Destinatario
-    )
-    correo.attach_alternative(html, "text/html")  # Adjunta la versión HTML
-    logo_path = os.path.join(settings.BASE_DIR, "sena", "static", "sena", "images", "Logo.png")  # Ruta del logo
-    if os.path.exists(logo_path):
-        with open(logo_path, "rb") as archivo_logo:  # Abre el logo en modo binario
-            imagen = MIMEImage(archivo_logo.read(), _subtype="png")  # Crea imagen MIME
-        imagen.add_header("Content-ID", "<tecnocorte-logo>")  # ID para referencia en HTML
-        imagen.add_header("Content-Disposition", "inline", filename="Logo.png")  # Muestra inline
-        correo.attach(imagen)  # Adjunta el logo al correo
-    correo.send(fail_silently=True)  # Envía sin lanzar excepciones si falla
-
-
-# Wrapper: envía correo de cita usando el template de notificación
-def enviar_correo_cita(request, usuario, asunto, cuerpo, enlace=None):
-    enviar_correo(usuario, asunto, cuerpo, request=request, enlace=enlace, texto_enlace="Revisar mi cita" if enlace else None)
 
 
 # Salt para generar tokens de recuperación de contraseña (evita que se adivinen)
@@ -554,11 +465,13 @@ def login(request):
             request.session["logueado"] = {
                 "id": usuario.id,
                 "nombre": usuario.nombre,
-                "rol": usuario.rol
+                "rol": usuario.rol,
+                "sesion_version": usuario.sesion_version,
             }
             cargar_carrito_usuario(request, usuario.id)
 
             registrar_ingreso(request, usuario)
+            registrar_accion(request, "inicio_sesion", "Usuario", usuario.id)
             messages.success(request, f"Bienvenido de nuevo, {usuario.nombre}.")
 
             # Si hay un "next" (página a la que quería ir), redirigir allá
@@ -711,7 +624,8 @@ def registro(request):
         request.session["logueado"] = {
             "id": usuario.id,
             "nombre": usuario.nombre,
-            "rol": usuario.rol
+            "rol": usuario.rol,
+            "sesion_version": usuario.sesion_version,
         }
         cargar_carrito_usuario(request, usuario.id)
         registrar_ingreso(request, usuario)
@@ -733,6 +647,18 @@ def sobre_nosotros(request):
 def politicas(request):
     """Políticas de Privacidad y del Proyecto (enlace en el pie de página)."""
     return render(request, "publicos/politicas.html", contexto_carrito(request))
+
+
+def health_check(request):
+    """Endpoint mínimo para monitores de disponibilidad y proveedores cloud."""
+    from django.db import connection
+
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT 1")
+        return JsonResponse({"status": "ok"})
+    except Exception:
+        return JsonResponse({"status": "unavailable"}, status=503)
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -832,6 +758,14 @@ def usuario_configuracion(request):
             usuario.save()
             # Se reasigna el diccionario completo: Django no detecta cambios anidados.
             request.session["logueado"] = {**request.session["logueado"], "nombre": usuario.nombre}
+            enviar_correo(
+                usuario,
+                "Tu perfil fue actualizado",
+                f"Hola {usuario.nombre},\n\nTus datos de perfil fueron actualizados correctamente en TecnoCorte.",
+                request=request,
+                enlace=request.build_absolute_uri(reverse("sena:usuario_configuracion")),
+                texto_enlace="Revisar mi perfil",
+            )
             messages.success(request, "Perfil actualizado correctamente.")
             return redirect(f"{reverse('sena:usuario_configuracion')}?seccion=perfil")
 
@@ -890,6 +824,14 @@ def peluquero_configuracion(request):
             usuario.save()
             # Se reasigna el diccionario completo: Django no detecta cambios anidados.
             request.session["logueado"] = {**request.session["logueado"], "nombre": usuario.nombre}
+            enviar_correo(
+                usuario,
+                "Tu perfil de barbero fue actualizado",
+                f"Hola {usuario.nombre},\n\nTus datos de perfil fueron actualizados correctamente en TecnoCorte.",
+                request=request,
+                enlace=request.build_absolute_uri(reverse("sena:peluquero_configuracion")),
+                texto_enlace="Revisar mi configuración",
+            )
             messages.success(request, "Portafolio actualizado correctamente.")
             return redirect(f"{reverse('sena:peluquero_configuracion')}?seccion=portafolio")
 
@@ -1218,7 +1160,20 @@ def finalizar_pedido(request):
             usuario_id=cliente_id,
             mensaje=f"Tu pedido #{pedido.id} fue recibido: {productos_resumen}. Total: ${pedido.total:,} COP.",
         )
-        messages.success(request, f"Pedido #{pedido.id} confirmado por ${pedido.total:,} COP.")
+        cliente = Usuario.objects.get(id=cliente_id)
+        enviar_correo(
+            cliente,
+            f"Recibimos tu pedido #{pedido.id}",
+            (
+                f"Hola {cliente.nombre},\n\nRecibimos tu pedido #{pedido.id} por "
+                f"${pedido.total:,} COP. Puedes pagarlo y recogerlo en la tienda. "
+                "Te avisaremos cuando esté listo."
+            ),
+            request=request,
+            enlace=request.build_absolute_uri(reverse("sena:usuario_perfil")),
+            texto_enlace="Ver mis pedidos",
+        )
+        messages.success(request, f"Pedido #{pedido.id} recibido por ${pedido.total:,} COP. Pagarás al recogerlo en la tienda.")
         return redirect("sena:pedido_exitoso", pedido_id=pedido.id)
 
     return render(request, "carrito/finalizar_pedido.html", contexto)
@@ -1420,6 +1375,14 @@ def usuario_perfil(request):
         if foto:
             usuario.foto = foto
         usuario.save()
+        enviar_correo(
+            usuario,
+            "Tu perfil fue actualizado",
+            f"Hola {usuario.nombre},\n\nTus datos de perfil fueron actualizados correctamente en TecnoCorte.",
+            request=request,
+            enlace=request.build_absolute_uri(reverse("sena:usuario_perfil")),
+            texto_enlace="Revisar mi perfil",
+        )
         messages.success(request, "Perfil actualizado correctamente.")
         return redirect("sena:usuario_perfil")
     citas = Reserva.objects.select_related("peluquero", "peluqueria").filter(cliente=usuario).order_by("-fecha", "-hora")
@@ -1482,6 +1445,9 @@ def usuario_editar_reserva(request, reserva_id):
             reserva.fecha, reserva.hora, reserva.servicio = fecha, hora, servicio
             reserva.peluquero, reserva.peluqueria = barbero, peluqueria
             reserva.estado = "Pendiente"
+            # Una cita reprogramada necesita un nuevo recordatorio aunque ya
+            # se hubiera enviado el de la fecha anterior.
+            reserva.recordatorio_correo_enviado = None
             reserva.save()
             Notificacion.objects.create(usuario=barbero, reserva=reserva, mensaje=f"Una cita fue modificada para el {formato_cita(reserva)} en {reserva.peluqueria.nombre}.")
             Notificacion.objects.create(usuario=reserva.cliente, reserva=reserva, mensaje=f"Tu cita de {reserva.servicio} fue modificada para el {formato_cita(reserva)} en {reserva.peluqueria.nombre} y quedó pendiente de confirmación.")
@@ -1539,6 +1505,20 @@ def usuario_confirmar_cita_peluquero(request, reserva_id):
         reserva=reserva,
         mensaje=f"El cliente confirmó la cita del {formato_cita(reserva)}.",
     )
+    enviar_correo_cita(
+        request,
+        reserva.peluquero,
+        "Cita confirmada por el cliente",
+        f"{reserva.cliente.nombre} {reserva.cliente.apellido} confirmó la cita de {reserva.servicio} para el {formato_cita(reserva)}.",
+        request.build_absolute_uri(reverse("sena:peluquero_dashboard")),
+    )
+    enviar_correo_cita(
+        request,
+        reserva.cliente,
+        "Tu cita quedó confirmada",
+        f"Tu cita de {reserva.servicio} para el {formato_cita(reserva)} quedó confirmada correctamente.",
+        request.build_absolute_uri(reverse("sena:usuario_perfil")),
+    )
     messages.success(request, "Cita confirmada. Te esperamos en TecnoCorte.")
     return redirect("sena:usuario_notificaciones")
 
@@ -1593,7 +1573,24 @@ def cambiar_password(request):
         if error:
             return render(request, "usuarios/cambiar_password.html", {"rol": rol, "usuario": usuario, "error": error})
         usuario.password = make_password(nueva)
-        usuario.save(update_fields=["password"])
+        # Invalida todas las sesiones anteriores y conserva únicamente esta
+        # sesión recién validada con la nueva versión.
+        usuario.sesion_version += 1
+        usuario.save(update_fields=["password", "sesion_version"])
+        request.session["logueado"] = {
+            **request.session["logueado"],
+            "sesion_version": usuario.sesion_version,
+        }
+        request.session.cycle_key()
+        registrar_accion(request, "cambio_contrasena", "Usuario", usuario.id)
+        enviar_correo(
+            usuario,
+            "Tu contraseña fue actualizada",
+            f"Hola {usuario.nombre},\n\nLa contraseña de tu cuenta de TecnoCorte fue actualizada correctamente. Si no hiciste este cambio, contacta al equipo de soporte.",
+            request=request,
+            enlace=request.build_absolute_uri(reverse(destino)),
+            texto_enlace="Ir a mi cuenta",
+        )
         messages.success(request, "Contraseña actualizada correctamente.")
         return redirect(destino)
     return render(request, "usuarios/cambiar_password.html", {"rol": rol, "usuario": usuario})
@@ -1644,8 +1641,12 @@ def peluquero_cambiar_estado(request, cita_id):
     estados_validos = [e[0] for e in Reserva.ESTADOS]
     if nuevo_estado in estados_validos:
         estado_anterior = cita.estado
+        if not transicion_valida(TRANSICIONES_RESERVA, estado_anterior, nuevo_estado):
+            messages.error(request, f"No se puede pasar una cita de {estado_anterior} a {nuevo_estado}.")
+            return redirect("sena:peluquero_dashboard")
         cita.estado = nuevo_estado
         cita.save()
+        registrar_accion(request, "actualizar_cita", "Reserva", cita.id, f"Estado: {estado_anterior} → {nuevo_estado}")
         # Las métricas del dashboard se recalculan con datos frescos (invalidar la caché corta).
         cache.delete(f"barbero_dashboard_metricas_{cita.peluquero_id}")
         cache.delete("admin_dashboard_metricas")
@@ -1666,6 +1667,14 @@ def peluquero_cambiar_estado(request, cita_id):
                 enviar_correo_cita(request, cita.cliente, "Cita cancelada en TecnoCorte", f"Tu cita de {cita.servicio} del {formato_cita(cita)} fue cancelada por el barbero.")
             elif nuevo_estado == "Confirmada":
                 enviar_correo_cita(request, cita.cliente, "Cita confirmada en TecnoCorte", f"Tu cita de {cita.servicio} del {formato_cita(cita)} fue confirmada por el barbero.")
+            elif nuevo_estado == "Completada":
+                enviar_correo_cita(
+                    request,
+                    cita.cliente,
+                    "Tu cita fue completada en TecnoCorte",
+                    f"Tu cita de {cita.servicio} del {formato_cita(cita)} fue marcada como completada. Ya puedes dejar tu calificación desde tu perfil.",
+                    request.build_absolute_uri(reverse("sena:usuario_perfil")),
+                )
             messages.success(request, f"Cita actualizada a {nuevo_estado.lower()}.")
     return redirect("sena:peluquero_dashboard")
 
@@ -1689,6 +1698,14 @@ def peluquero_perfil(request):
         if foto:
             usuario.foto = foto
         usuario.save()
+        enviar_correo(
+            usuario,
+            "Tu perfil de barbero fue actualizado",
+            f"Hola {usuario.nombre},\n\nTus datos de perfil fueron actualizados correctamente en TecnoCorte.",
+            request=request,
+            enlace=request.build_absolute_uri(reverse("sena:peluquero_perfil")),
+            texto_enlace="Revisar mi perfil",
+        )
         messages.success(request, "Perfil actualizado correctamente.")
         return redirect("sena:peluquero_perfil")
     citas = Reserva.objects.select_related("cliente", "peluqueria").filter(peluquero=usuario).order_by("-fecha", "-hora")
@@ -1879,7 +1896,12 @@ def admin_dashboard(request):
         total_reservas = len(todas_reservas)
         estados = {estado[0]: sum(1 for r in todas_reservas if r.estado == estado[0]) for estado in Reserva.ESTADOS}
         ventas_servicios = sum(precios.get(r.servicio, 0) for r in todas_reservas if r.estado == "Completada")
-        ventas_productos = sum(pedido.total for pedido in Pedido.objects.exclude(estado="Cancelado"))
+        # Solo se contabilizan pedidos pagados en la tienda; un pedido
+        # pendiente todavía no representa un ingreso confirmado.
+        ventas_productos = sum(
+            pedido.total
+            for pedido in Pedido.objects.filter(pago_confirmado=True).exclude(estado="Cancelado")
+        )
         total = ventas_servicios + ventas_productos
         maximo = max(estados.values()) if any(estados.values()) else 1
         total_clientes = Usuario.objects.filter(rol="Cliente").count()
@@ -1985,6 +2007,83 @@ def admin_reservas(request):
     reservas = Reserva.objects.select_related("cliente", "peluquero", "peluqueria").order_by("fecha", "hora")
     return render(request, "administrador/admin_listar_reservas.html", {"datos": reservas})
 
+
+@autorizacion(["Admin"])
+def admin_pedidos(request):
+    """Muestra los pedidos para gestionar preparación, pago y entrega en tienda."""
+    pedidos = (
+        Pedido.objects.select_related("cliente")
+        .prefetch_related("productos__producto")
+        .order_by("-fecha")[:200]
+    )
+    return render(
+        request,
+        "administrador/admin_pedidos.html",
+        {"pedidos": pedidos, "estados_pedido": Pedido.ESTADOS},
+    )
+
+
+@autorizacion(["Admin"])
+def admin_actualizar_pedido(request, id):
+    """Actualiza el estado logístico y el pago de un pedido desde el panel."""
+    if request.method != "POST":
+        return redirect("sena:admin_pedidos")
+
+    pedido = Pedido.objects.select_related("cliente").filter(id=id).first()
+    if pedido is None:
+        messages.error(request, "El pedido no existe.")
+        return redirect("sena:admin_pedidos")
+
+    estado = request.POST.get("estado", pedido.estado)
+    estados_validos = {opcion[0] for opcion in Pedido.ESTADOS}
+    if estado not in estados_validos:
+        messages.error(request, "El estado seleccionado no es válido.")
+        return redirect("sena:admin_pedidos")
+    if not transicion_valida(TRANSICIONES_PEDIDO, pedido.estado, estado):
+        messages.error(request, f"No se puede pasar un pedido de {pedido.get_estado_display()} a ese estado.")
+        return redirect("sena:admin_pedidos")
+
+    ahora = timezone.now()
+    pago_confirmado = request.POST.get("pago_confirmado") == "on"
+    pedido.estado = estado
+    pedido.pago_confirmado = pago_confirmado
+    pedido.fecha_pago = ahora if pago_confirmado and pedido.fecha_pago is None else pedido.fecha_pago
+    if not pago_confirmado:
+        pedido.fecha_pago = None
+    pedido.fecha_entrega = ahora if estado == "Entregado" and pedido.fecha_entrega is None else pedido.fecha_entrega
+    if estado != "Entregado":
+        pedido.fecha_entrega = None
+    pedido.save(update_fields=["estado", "pago_confirmado", "fecha_pago", "fecha_entrega"])
+    registrar_accion(
+        request,
+        "actualizar_pedido",
+        "Pedido",
+        pedido.id,
+        f"Estado: {pedido.get_estado_display()}; pago confirmado: {pedido.pago_confirmado}",
+    )
+
+    Notificacion.objects.create(
+        usuario=pedido.cliente,
+        mensaje=(
+            f"Tu pedido #{pedido.id} está: {pedido.get_estado_display()}. "
+            + ("Pago confirmado en tienda." if pedido.pago_confirmado else "Pago pendiente en tienda.")
+        ),
+    )
+    enviar_correo(
+        pedido.cliente,
+        f"Actualización de tu pedido #{pedido.id}",
+        (
+            f"Hola {pedido.cliente.nombre},\n\n"
+            f"Tu pedido #{pedido.id} ahora está: {pedido.get_estado_display()}.\n"
+            + ("El pago fue confirmado en tienda." if pedido.pago_confirmado else "El pago se realizará en tienda al recogerlo.")
+        ),
+        request=request,
+        enlace=request.build_absolute_uri(reverse("sena:usuario_perfil")),
+        texto_enlace="Ver mis pedidos",
+    )
+    messages.success(request, f"Pedido #{pedido.id} actualizado correctamente.")
+    return redirect("sena:admin_pedidos")
+
 @autorizacion(["Admin"])
 def admin_crear_reserva(request):
     if request.method == "POST":
@@ -2019,6 +2118,7 @@ def admin_crear_reserva(request):
             servicio=servicio,
             estado=request.POST.get("estado", "Pendiente")
         )
+        registrar_accion(request, "crear_cita", "Reserva", reserva.id, f"Cita de {reserva.servicio} para {reserva.cliente.email}")
         Notificacion.objects.create(usuario=cliente, reserva=reserva, mensaje=f"El administrador agendó tu cita de {reserva.servicio} para el {formato_cita(reserva)} en {reserva.peluqueria.nombre}.")
         Notificacion.objects.create(usuario=peluquero, reserva=reserva, mensaje=f"El administrador agendó una cita de {reserva.servicio} para el {formato_cita(reserva)} en {reserva.peluqueria.nombre}.")
         enviar_correo_cita(request, cliente, "Cita agendada en TecnoCorte", f"El administrador agendó tu cita de {reserva.servicio} para el {formato_cita(reserva)} en {reserva.peluqueria.nombre}.", request.build_absolute_uri(reverse("sena:usuario_editar_reserva", args=[reserva.id])))
@@ -2051,19 +2151,27 @@ def admin_editar_reserva(request, id):
         servicio = request.POST.get("servicio", "").strip()
         if cliente is None or peluquero is None or peluqueria is None or servicio not in {item["nombre"] for item in catalogo_servicios()}:
             return redirect("sena:admin_editar_reserva", id=id)
+        estado_anterior = reserva.estado
+        estado_nuevo = request.POST.get("estado")
+        if not transicion_valida(TRANSICIONES_RESERVA, estado_anterior, estado_nuevo):
+            messages.error(request, f"No se puede pasar una cita de {estado_anterior} a {estado_nuevo}.")
+            return redirect("sena:admin_editar_reserva", id=id)
         reserva.cliente = cliente
         reserva.peluquero = peluquero
         reserva.peluqueria = peluqueria
         reserva.fecha = request.POST.get("fecha")
         reserva.hora = request.POST.get("hora")
         reserva.servicio = servicio
-        reserva.estado = request.POST.get("estado")
+        reserva.estado = estado_nuevo
+        # Al cambiar la agenda se reinicia el aviso automático de la cita.
+        reserva.recordatorio_correo_enviado = None
         disponible, mensaje = cita_disponible(request.POST.get("fecha"), request.POST.get("hora"), peluqueria_id, servicio)
         if disponible:
             disponible, mensaje = barbero_esta_disponible(peluquero.id, request.POST.get("fecha"), request.POST.get("hora"), request.POST.get("servicio"), reserva)
         if not disponible:
             return render(request, "administrador/admin_formulario_reserva.html", {"datos": reserva, "error": mensaje, "clientes": Usuario.objects.filter(rol="Cliente"), "peluqueros": barberos_disponibles(), "peluquerias": Peluqueria.objects.all(), "servicios": catalogo_servicios(), "reserva_estados": Reserva.ESTADOS})
         reserva.save()
+        registrar_accion(request, "actualizar_cita", "Reserva", reserva.id, f"Estado: {estado_anterior} → {estado_nuevo}")
         Notificacion.objects.create(usuario=reserva.cliente, reserva=reserva, mensaje=f"Tu cita fue actualizada por el administrador para el {formato_cita(reserva)}.")
         Notificacion.objects.create(usuario=reserva.peluquero, reserva=reserva, mensaje=f"La cita de {reserva.cliente.nombre} fue actualizada para el {formato_cita(reserva)}.")
         if reserva.estado == "Cancelada":
@@ -2534,6 +2642,14 @@ def admin_perfil(request):
         if foto:
             usuario.foto = foto
         usuario.save()
+        enviar_correo(
+            usuario,
+            "Tu perfil de administrador fue actualizado",
+            f"Hola {usuario.nombre},\n\nTus datos de administrador fueron actualizados correctamente en TecnoCorte.",
+            request=request,
+            enlace=request.build_absolute_uri(reverse("sena:admin_perfil")),
+            texto_enlace="Revisar mi perfil",
+        )
         messages.success(request, "Perfil de administrador actualizado.")
         return redirect("sena:admin_perfil")
     contexto = contexto_carrito(request)
@@ -2555,6 +2671,15 @@ def admin_ingresos(request):
         "rol_filtro": rol,
     }
     return render(request, "administrador/admin_listar_ingresos.html", contexto)
+
+
+@autorizacion(["Admin"])
+def admin_acciones(request):
+    """Consulta de auditoría de acciones sensibles, solo visible para Admin."""
+    from .models import RegistroAccion
+
+    acciones = RegistroAccion.objects.select_related("actor").all()[:300]
+    return render(request, "administrador/admin_acciones.html", {"acciones": acciones})
 
 # ═══════════════════════════════════════════════════════════════════════════
 # GESTIÓN DE USUARIOS - SOLO ADMIN

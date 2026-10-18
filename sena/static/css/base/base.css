@@ -53,6 +53,10 @@ body {
   transition:
     background 0.25s ease,
     color 0.25s ease;
+  overflow-x: hidden;
+}
+img {
+  max-width: 100%;
 }
 .page {
   max-width: 1080px;
@@ -146,5 +150,9 @@ footer {
   }
   nav {
     justify-content: flex-start;
+  }
+  .card {
+    padding: 20px 16px;
+    border-radius: 18px;
   }
 }

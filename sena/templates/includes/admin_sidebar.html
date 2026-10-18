@@ -97,6 +97,13 @@
       ></a
     >
     <a
+      class="panel-glass-link flex items-center space-x-4 px-4 py-3 {% if active == 'pedidos' %}panel-glass-link--active{% else %}text-on-surface-variant{% endif %}"
+      href="{% url 'sena:admin_pedidos' %}"
+      ><span class="material-symbols-outlined">shopping_bag</span
+      ><span class="font-label uppercase text-xs tracking-widest">Pedidos</span
+      ></a
+    >
+    <a
       class="panel-glass-link flex items-center space-x-4 px-4 py-3 {% if active == 'mensajes' %}panel-glass-link--active{% else %}text-on-surface-variant{% endif %}"
       href="{% url 'sena:admin_mensajes' %}"
       ><span class="material-symbols-outlined">mail</span
@@ -129,6 +136,13 @@
         >login</span
       >
       <span class="font-label uppercase text-xs tracking-widest">Ingresos</span>
+    </a>
+    <a
+      class="panel-glass-link flex items-center space-x-4 px-4 py-3 {% if active == 'acciones' %}panel-glass-link--active{% else %}text-on-surface-variant{% endif %}"
+      href="{% url 'sena:admin_acciones' %}"
+    >
+      <span class="material-symbols-outlined">history</span>
+      <span class="font-label uppercase text-xs tracking-widest">Auditoría</span>
     </a>
     <a
       class="panel-glass-link flex items-center space-x-4 px-4 py-3 {% if active == 'horarios' %}panel-glass-link--active{% else %}text-on-surface-variant{% endif %}"

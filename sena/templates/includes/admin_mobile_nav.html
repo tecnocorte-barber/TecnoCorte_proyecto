@@ -52,11 +52,25 @@
       >Productos</span
     > </a
   ><a
+    class="flex flex-col items-center space-y-1 text-on-surface-variant p-2 {% if active == 'pedidos' %}panel-glass-link--active{% endif %}"
+    href="{% url 'sena:admin_pedidos' %}"
+    ><span class="material-symbols-outlined">shopping_bag</span
+    ><span class="font-label text-[10px] uppercase tracking-wider"
+      >Pedidos</span
+    > </a
+  ><a
     class="flex flex-col items-center space-y-1 text-on-surface-variant p-2 {% if active == 'galeria' %}panel-glass-link--active{% endif %}"
     href="{% url 'sena:admin_galeria' %}"
     ><span class="material-symbols-outlined">photo_library</span
     ><span class="font-label text-[10px] uppercase tracking-wider"
       >Galería</span
+    > </a
+  ><a
+    class="flex flex-col items-center space-y-1 text-on-surface-variant p-2 {% if active == 'acciones' %}panel-glass-link--active{% endif %}"
+    href="{% url 'sena:admin_acciones' %}"
+    ><span class="material-symbols-outlined">history</span
+    ><span class="font-label text-[10px] uppercase tracking-wider"
+      >Auditoría</span
     > </a
   ><a
     class="flex flex-col items-center space-y-1 text-on-surface-variant p-2 {% if active == 'configuracion' %}panel-glass-link--active{% endif %}"

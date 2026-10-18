@@ -134,6 +134,9 @@
 
 /* Barra inferior móvil con efecto cristal */
 .panel-glass-mobile {
+  overflow-x: auto;
+  justify-content: flex-start !important;
+  scrollbar-width: thin;
   background: linear-gradient(
     180deg,
     color-mix(in srgb, var(--c-surface-container-high) 52%, transparent),
@@ -145,6 +148,8 @@
   box-shadow: 0 -14px 40px rgba(0, 0, 0, 0.4);
 }
 .panel-glass-mobile a {
+  flex: 0 0 auto;
+  min-width: 4.25rem;
   border: 1px solid transparent;
   border-radius: 0.9rem;
   transition:

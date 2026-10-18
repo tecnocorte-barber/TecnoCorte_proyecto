@@ -91,7 +91,10 @@ DATABASES = {
         'HOST': os.environ.get('DB_HOST'),
         'PORT': os.environ.get('DB_PORT', '6543'),
         # Reutiliza la conexión entre peticiones para evitar el costo de reconexión por cada acción.
-        'CONN_MAX_AGE': int(os.environ.get('DB_CONN_MAX_AGE', '60')),
+        # En desarrollo se cierran conexiones al terminar cada petición para
+        # no agotar el pool compartido al abrir varios runserver. En producción
+        # se conserva la reutilización configurable para mejorar rendimiento.
+        'CONN_MAX_AGE': int(os.environ.get('DB_CONN_MAX_AGE', '0' if DEBUG else '60')),
         'OPTIONS': {
             'sslmode': 'require',
             # El modo transaccional de Supavisor no soporta declaraciones preparadas
@@ -140,9 +143,13 @@ LOGIN_URL = 'sena:login'
 
 # En desarrollo los correos se muestran en la consola. En producción se activa
 # SMTP mediante variables de entorno, sin guardar credenciales en el proyecto.
-EMAIL_BACKEND = os.environ.get(
-    'EMAIL_BACKEND',
-    'django.core.mail.backends.console.EmailBackend' if DEBUG else 'django.core.mail.backends.smtp.EmailBackend',
+_email_backend_configurado = os.environ.get('EMAIL_BACKEND', '').strip()
+# Si no se especifica un backend, el desarrollo imprime los correos en consola
+# y producción usa SMTP. Si se especifica, se respeta para permitir servicios
+# externos como SendGrid, Mailgun o Gmail.
+EMAIL_BACKEND = _email_backend_configurado or (
+    'django.core.mail.backends.console.EmailBackend'
+    if DEBUG else 'django.core.mail.backends.smtp.EmailBackend'
 )
 EMAIL_HOST = os.environ.get('EMAIL_HOST', '')
 EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '587'))
@@ -152,9 +159,14 @@ EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
 DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER or 'notificaciones@tecnocorte.local')
 CONTACT_EMAIL = os.environ.get('CONTACT_EMAIL', 'tecnocorte083@gmail.com')
+# URL pública opcional usada por los enlaces de correos enviados por comandos
+# programados, que no tienen un objeto request disponible.
+SITE_URL = os.environ.get('SITE_URL', '').rstrip('/')
 
 SESSION_COOKIE_SECURE = not DEBUG #Cuando inicias sesión, el sistema te da un "carnet".
 CSRF_COOKIE_SECURE = not DEBUG #Es una marca de agua que confirma que un formulario realmente lo llenaste tú y no un virus.
+SESSION_COOKIE_AGE = int(os.environ.get('DJANGO_SESSION_AGE', str(60 * 60 * 8)))
+SESSION_SAVE_EVERY_REQUEST = True
 SECURE_SSL_REDIRECT = os.environ.get('DJANGO_SSL_REDIRECT', 'True' if not DEBUG else 'False').lower() == 'true' #Si un usuario intenta entrar por la puerta transparente (http://) esta regla lo agarra de la mano y lo manda automáticamente al túnel seguro (https://).
 SECURE_HSTS_SECONDS = int(os.environ.get('DJANGO_HSTS_SECONDS', '31536000' if not DEBUG else '0')) #Le dice al navegador de la persona: "Memoriza esto: por los próximos X segundos, ni se te ocurra intentar entrar por la puerta transparente, entra siempre por el túnel seguro.
 SECURE_HSTS_INCLUDE_SUBDOMAINS = os.environ.get('DJANGO_HSTS_INCLUDE_SUBDOMAINS', 'True' if not DEBUG else 'False').lower() == 'true'

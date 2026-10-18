@@ -1,0 +1,71 @@
+{# Gestión de pedidos: el Admin prepara, confirma el pago en tienda y entrega. #}
+{% extends 'usuarios/dashboard_base.html' %}
+{% block title %}Pedidos - TecnoCorte{% endblock %}
+{% block body_class %}font-body antialiased flex bg-surface{% endblock %}
+{% block content %}
+{% include 'includes/admin_sidebar.html' with active='pedidos' %}
+<main class="ml-0 md:ml-64 flex-1 min-h-screen p-4 sm:p-6 md:p-12 pb-24 md:pb-12">
+  {% include "includes/panel_header.html" %}
+  <header class="mb-8 flex flex-wrap items-end justify-between gap-4 pr-12 sm:pr-16">
+    <div>
+      <p class="text-xs font-bold uppercase tracking-[0.2em] text-primary">Tienda</p>
+      <h1 class="mt-2 font-headline text-3xl text-on-surface sm:text-4xl">Pedidos</h1>
+      <p class="mt-2 max-w-2xl text-sm text-on-surface-variant sm:text-base">
+        Marca cuándo el pedido está listo, confirma el pago en tienda y registra la entrega.
+      </p>
+    </div>
+  </header>
+
+  <section class="grid gap-5">
+    {% for pedido in pedidos %}
+    <article class="overflow-hidden rounded-2xl bg-surface-container-low p-4 shadow-sm sm:p-6">
+      <div class="flex flex-wrap items-start justify-between gap-4 border-b border-outline-variant/10 pb-4">
+        <div>
+          <p class="text-xs font-bold uppercase tracking-widest text-primary">Pedido #{{ pedido.id }}</p>
+          <h2 class="mt-1 text-lg font-bold text-on-surface">{{ pedido.cliente.nombre }} {{ pedido.cliente.apellido }}</h2>
+          <p class="text-sm text-on-surface-variant">{{ pedido.fecha|date:"d/m/Y H:i" }} · {{ pedido.cliente.email }}</p>
+        </div>
+        <div class="text-left sm:text-right">
+          <p class="font-headline text-2xl text-primary">${{ pedido.total|floatformat:"0g" }} COP</p>
+          <p class="text-sm text-on-surface-variant">
+            {% if pedido.pago_confirmado %}Pago confirmado{% else %}Pago pendiente en tienda{% endif %}
+          </p>
+        </div>
+      </div>
+
+      <div class="my-4 grid gap-2 text-sm text-on-surface-variant sm:grid-cols-2">
+        {% for item in pedido.productos.all %}
+        <div class="flex justify-between gap-4 rounded-lg bg-surface-container-high/50 px-3 py-2">
+          <span class="min-w-0 truncate">{{ item.producto.nombre }} ×{{ item.cantidad }}</span>
+          <span class="shrink-0 text-on-surface">${{ item.precio|floatformat:"0g" }}</span>
+        </div>
+        {% endfor %}
+      </div>
+
+      <form method="post" action="{% url 'sena:admin_actualizar_pedido' pedido.id %}" class="grid gap-4 rounded-xl border border-outline-variant/10 bg-surface-container-high/30 p-4 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-end">
+        {% csrf_token %}
+        <label class="grid gap-2 text-xs font-bold uppercase tracking-wider text-on-surface-variant">
+          Estado del pedido
+          <select name="estado" class="min-h-11 rounded-lg border border-outline-variant/20 bg-surface-container-high px-3 text-sm font-normal normal-case tracking-normal text-on-surface">
+            {% for valor, etiqueta in estados_pedido %}
+            <option value="{{ valor }}" {% if pedido.estado == valor %}selected{% endif %}>{{ etiqueta }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <label class="flex min-h-11 items-center gap-2 text-sm text-on-surface sm:pb-2">
+          <input type="checkbox" name="pago_confirmado" {% if pedido.pago_confirmado %}checked{% endif %} class="rounded border-outline-variant text-primary focus:ring-primary" />
+          Pagado en tienda
+        </label>
+        <button type="submit" class="min-h-11 rounded-lg bg-primary px-5 py-2 text-sm font-bold text-on-primary transition hover:opacity-90">Guardar cambios</button>
+      </form>
+    </article>
+    {% empty %}
+    <div class="rounded-2xl bg-surface-container-low p-12 text-center text-on-surface-variant">
+      <span class="material-symbols-outlined mb-3 text-5xl text-primary/50">shopping_bag</span>
+      <p>No hay pedidos registrados.</p>
+    </div>
+    {% endfor %}
+  </section>
+</main>
+{% include "includes/admin_mobile_nav.html" with active="pedidos" %}
+{% endblock %}

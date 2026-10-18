@@ -3,7 +3,7 @@
 {% load static %}
 {% block title %}Políticas - TecnoCorte{% endblock %}
 {% block styles %}
-<link rel="stylesheet" href="{% static 'css/publicos/sobre_nosotros.css' %}" />
+<link rel="stylesheet" href="{% static 'css/publicos/politicas.css' %}" />
 <style>
   .politicas-toc {
     display: flex;
@@ -40,20 +40,21 @@
 </style>
 {% endblock %}
 {% block content %}
-<h2 class="section-title">Políticas de Privacidad y del Proyecto</h2>
-<p>
-  Última actualización: octubre de 2026. Estas políticas explican cómo
-  TecnoCorte trata tus datos y bajo qué reglas funciona la plataforma. Si tienes
-  dudas, escríbenos desde la sección
-  <a href="{% url 'sena:ayuda' %}">Contáctanos</a>.
-</p>
+<div class="politicas-page">
+  <h2 class="section-title">Políticas de Privacidad y del Proyecto</h2>
+  <p>
+    Última actualización: octubre de 2026. Estas políticas explican cómo
+    TecnoCorte trata tus datos y bajo qué reglas funciona la plataforma. Si tienes
+    dudas, escríbenos desde la sección
+    <a href="{% url 'sena:ayuda' %}">Contáctanos</a>.
+  </p>
 
-<div class="politicas-toc">
-  <a href="#privacidad">Políticas de Privacidad</a>
-  <a href="#proyecto">Políticas del Proyecto</a>
-  <a href="#derechos">Tus derechos</a>
-  <a href="#contacto">Contacto</a>
-</div>
+  <div class="politicas-toc">
+    <a href="#privacidad">Políticas de Privacidad</a>
+    <a href="#proyecto">Políticas del Proyecto</a>
+    <a href="#derechos">Tus derechos</a>
+    <a href="#contacto">Contacto</a>
+  </div>
 
 <div class="politicas-texto">
   <h3 id="privacidad">1. Políticas de Privacidad</h3>
@@ -147,5 +148,5 @@
     <a href="{% url 'sena:ayuda' %}">Contáctanos</a> eligiendo el tipo de
     mensaje <em>Cuenta y acceso</em> o <em>Consulta general</em>.
   </p>
-</div>
+  </div>
 {% endblock %}

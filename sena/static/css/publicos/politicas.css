@@ -1,0 +1,36 @@
+/* Estilos propios de la página de políticas.
+   No se reutilizan los estilos de páginas con navegación interna para no
+   modificar accidentalmente el header o el footer compartidos. */
+.politicas-page {
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+.politicas-page > p {
+  max-width: 760px;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.politicas-page .politicas-texto {
+  line-height: 1.7;
+}
+
+.politicas-page .politicas-texto p {
+  margin: 0 0 1rem;
+}
+
+@media (max-width: 640px) {
+  .politicas-page {
+    width: 100%;
+  }
+
+  .politicas-page .politicas-toc {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .politicas-page .politicas-toc a {
+    text-align: center;
+  }
+}
