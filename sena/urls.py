@@ -101,6 +101,7 @@ urlpatterns = [
     path('admin/configuracion/', views.admin_configuracion, name="admin_configuracion"),  # Configuración general y privacidad
     path('admin/mensajes/', views.admin_mensajes, name="admin_mensajes"),  # Ver mensajes de contacto
     path('admin/servicios/', views.admin_solicitudes_servicios, name="admin_solicitudes_servicios"),  # Aprobar/rechazar servicios que piden los barberos
+    path('admin/inicio/', views.admin_editar_inicio, name="admin_editar_inicio"),  # Editar los servicios y productos destacados del inicio
     path('admin/notificaciones/', views.admin_notificaciones, name="admin_notificaciones"),  # Ver notificaciones del admin
 
     # === API REST (accesible con token o sesión) ===

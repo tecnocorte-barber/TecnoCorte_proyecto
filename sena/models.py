@@ -333,6 +333,41 @@ class Configuracion(models.Model):
         default="Estamos realizando mejoras. Volvemos pronto.",
     )
 
+    # ── Contenido destacado del inicio ──
+    # El Admin los cambia con el botón "Editar inicio" de la página principal.
+    # Se guarda el nombre del servicio (igual que en Reserva.servicio) para poder
+    # destacar tanto los del sistema como los que los barberos piden y se aprueban.
+    servicio_destacado_1 = models.CharField(
+        max_length=100,
+        blank=True,
+        default="",
+        help_text="Servicio de la primera tarjeta destacada del inicio.",
+    )
+    servicio_destacado_2 = models.CharField(
+        max_length=100,
+        blank=True,
+        default="",
+        help_text="Servicio de la segunda tarjeta destacada del inicio.",
+    )
+    producto_destacado_1 = models.ForeignKey(
+        "Producto",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="+",
+        verbose_name="Producto destacado principal",
+        help_text="Producto grande de la tienda en el inicio.",
+    )
+    producto_destacado_2 = models.ForeignKey(
+        "Producto",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="+",
+        verbose_name="Producto destacado secundario",
+        help_text="Segundo producto de la tienda en el inicio.",
+    )
+
     actualizado = models.DateTimeField(auto_now=True)
 
     class Meta:

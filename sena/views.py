@@ -37,6 +37,25 @@ SERVICIOS = [
 # Duraciones (en minutos) que un barbero puede pedir al solicitar un servicio nuevo
 DURACIONES_SERVICIO = [15, 20, 30, 45, 60, 75, 90, 120]
 
+# Imagen de respaldo para las tarjetas del inicio. En los servicios se elige por
+# nombre y en los productos por categoría, porque pueden no tener foto propia.
+IMAGENES_SERVICIO = {
+    "Corte de Cabello": "sena/images/corte_cabello.jpeg",
+    "Arreglo de Barba": "sena/images/arreglo_barba.jpeg",
+    "Combo Completo": "sena/images/servicio_completo.jpeg",
+}
+IMAGEN_SERVICIO_POR_DEFECTO = "sena/images/corte_masculino.jpg"
+IMAGENES_PRODUCTO = {
+    "Herramientas": "sena/images/maquina_motilar.jpg",
+    "Fijacion": "sena/images/pomada_barba.jpeg",
+    "Cuidado": "sena/images/cepillo.jpeg",
+    "Barba": "sena/images/aceite_barba.jpeg",
+}
+IMAGEN_PRODUCTO_POR_DEFECTO = "sena/images/pomada_barba.jpeg"
+
+# Cuántas reseñas se muestran en el inicio antes de ofrecer "Ver más".
+RESENAS_VISIBLES = 5
+
 # Convierte los horarios de trabajo y bloqueos a JSON para que JavaScript los use en el calendario
 def _horarios_para_template(peluqueria_id=None):
     clave = f"horarios_json_{peluqueria_id or 'todas'}"  # Clave de caché por peluquería
@@ -381,15 +400,116 @@ def barbero_esta_disponible(barbero_id, fecha_texto, hora_texto, servicio, reser
     return True, ""  # No hay conflicto, el barbero está disponible
 
 # INICIO - Sin login
+def contenido_inicio():
+    """Servicios, productos y reseñas que se muestran en la página principal.
+
+    El Admin elige qué dos servicios y qué dos productos se destacan; si deja
+    alguno sin elegir, se completa con los primeros del catálogo para que el
+    inicio nunca quede con huecos.
+    """
+    config = Configuracion.cargar()
+
+    # ── Servicios destacados ──
+    catalogo = catalogo_servicios()
+    por_nombre = {s["nombre"]: s for s in catalogo}
+    elegidos = []
+    for nombre in (config.servicio_destacado_1, config.servicio_destacado_2):
+        if nombre and nombre in por_nombre and nombre not in {e["nombre"] for e in elegidos}:
+            elegidos.append(por_nombre[nombre])
+    for servicio in catalogo:  # Completa hasta dos, sin repetir
+        if len(elegidos) >= 2:
+            break
+        if servicio["nombre"] not in {e["nombre"] for e in elegidos}:
+            elegidos.append(servicio)
+    inicio_servicios = [
+        {**s, "imagen": IMAGENES_SERVICIO.get(s["nombre"], IMAGEN_SERVICIO_POR_DEFECTO)}
+        for s in elegidos[:2]
+    ]
+
+    # ── Productos destacados ──
+    productos = []
+    for producto in (config.producto_destacado_1, config.producto_destacado_2):
+        if producto and producto.disponible and producto.id not in {p.id for p in productos}:
+            productos.append(producto)
+    if len(productos) < 2:
+        for producto in Producto.objects.filter(disponible=True).order_by("id"):
+            if len(productos) >= 2:
+                break
+            if producto.id not in {p.id for p in productos}:
+                productos.append(producto)
+    for producto in productos:
+        # Respaldo de imagen por categoría (los productos pueden no tener foto).
+        producto.imagen_respaldo = IMAGENES_PRODUCTO.get(
+            producto.categoria, IMAGEN_PRODUCTO_POR_DEFECTO
+        )
+
+    # ── Reseñas reales: solo se publican si el Admin lo permite ──
+    resenas = []
+    if config.mostrar_calificaciones:
+        resenas = list(
+            Calificacion.objects.select_related("cliente", "barbero").all()[:60]
+        )
+
+    return {
+        "inicio_servicios": inicio_servicios,
+        "inicio_productos": productos[:2],
+        "inicio_resenas": resenas,
+        "resenas_visibles": RESENAS_VISIBLES,
+    }
+
+
 def inicio(request):
-    if request.session.get("logueado"):
+    # El Admin y el Barbero trabajan en su panel, pero el Admin puede abrir el
+    # inicio con ?vista=publica para revisarlo o usar el botón "Editar inicio".
+    if request.session.get("logueado") and request.GET.get("vista") != "publica":
         rol = request.session["logueado"]["rol"]
         if rol == "Admin":
             return redirect("sena:admin_dashboard")
         elif rol == "Barbero":
             return redirect("sena:peluquero_dashboard")
     contexto = contexto_carrito(request)
+    contexto.update(contenido_inicio())
     return render(request, "publicos/index.html", contexto)
+
+
+@autorizacion(["Admin"])
+def admin_editar_inicio(request):
+    """El Admin elige qué servicios y productos ya existentes se destacan en el inicio."""
+    config = Configuracion.cargar()
+    catalogo = catalogo_servicios()
+    productos = Producto.objects.filter(disponible=True).order_by("categoria", "nombre")
+
+    if request.method == "POST":
+        nombres_validos = {s["nombre"] for s in catalogo}
+        ids_validos = {p.id for p in productos}
+
+        def servicio_elegido(campo):
+            nombre = request.POST.get(campo, "").strip()
+            return nombre if nombre in nombres_validos else ""
+
+        def producto_elegido(campo):
+            pid = _id_entero(request.POST.get(campo))
+            return Producto.objects.filter(id=pid).first() if pid in ids_validos else None
+
+        config.servicio_destacado_1 = servicio_elegido("servicio_destacado_1")
+        config.servicio_destacado_2 = servicio_elegido("servicio_destacado_2")
+        config.producto_destacado_1 = producto_elegido("producto_destacado_1")
+        config.producto_destacado_2 = producto_elegido("producto_destacado_2")
+        config.save()  # save() limpia la caché, así que el cambio se ve al instante
+        messages.success(request, "El inicio se actualizó correctamente.")
+        return redirect("sena:admin_editar_inicio")
+
+    return render(request, "administrador/admin_editar_inicio.html", {
+        "config": config,
+        "servicios": catalogo,
+        "productos": productos,
+        "seleccion_servicios": [config.servicio_destacado_1, config.servicio_destacado_2],
+        "seleccion_productos": [
+            config.producto_destacado_1.id if config.producto_destacado_1 else None,
+            config.producto_destacado_2.id if config.producto_destacado_2 else None,
+        ],
+    })
+
 
 # LOGIN
 def login(request):

@@ -1,4 +1,4 @@
-{# Página principal con hero, servicios destacados y productos de la tienda #}
+{# Página principal con hero, servicios destacados, productos de la tienda y reseñas #}
 {% load static %}
 <!doctype html>
 <html lang="es">
@@ -92,7 +92,7 @@
       </div>
 
       <section class="relative px-6 py-16 md:py-24">
-        <!-- Sección de servicios destacados -->
+        <!-- Sección de servicios destacados (los elige el Admin con el botón de edición) -->
         <div class="mx-auto max-w-7xl">
           <div
             class="mb-14 flex flex-col gap-4 md:flex-row md:items-end md:justify-between"
@@ -107,35 +107,35 @@
           </div>
 
           <div class="grid items-stretch gap-8 md:grid-cols-2">
+            {% for servicio in inicio_servicios %}
             <article
-              id="servicio-corte"
+              id="servicio-{{ forloop.counter }}"
               class="group flex h-full flex-col overflow-hidden rounded-[28px] border border-outline-variant/20 bg-surface-container-low shadow-[0_20px_40px_rgba(0,0,0,0.08)] transition-transform duration-300 hover:-translate-y-1"
             >
               <div class="overflow-hidden">
                 <img
-                  src="{% static 'sena/images/corte_cabello.jpeg' %}"
-                  alt="Corte de cabello masculino"
+                  src="{% static servicio.imagen %}"
+                  alt="{{ servicio.nombre }}"
                   class="h-72 w-full object-cover transition-transform duration-700 group-hover:scale-105 md:h-80"
                 />
               </div>
               <div class="p-7 md:p-8">
                 <div class="mb-4 flex items-center justify-between gap-4">
                   <h3 class="font-headline text-2xl font-bold text-on-surface">
-                    Corte Técnico
+                    {{ servicio.nombre }}
                   </h3>
                   <span
                     class="text-sm font-semibold tracking-wider text-primary-container"
-                    >45 MIN</span
+                    >{{ servicio.minutos }} MIN</span
                   >
                 </div>
                 <p
                   class="mb-6 text-base leading-relaxed text-on-surface-variant"
                 >
-                  Estilo personalizado con precisión, lavado y asesoría para
-                  realzar tus facciones.
+                  {{ servicio.descripcion }}
                 </p>
                 <a
-                  href="{% url 'sena:usuario_servicios' %}?servicio=corte#servicio-corte"
+                  href="{% url 'sena:usuario_servicios' %}?servicio={{ servicio.nombre|urlencode }}"
                   class="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-[0.12em] text-primary transition-all group-hover:gap-3"
                 >
                   Ver más
@@ -143,49 +143,13 @@
                 </a>
               </div>
             </article>
-
-            <article
-              id="servicio-barba"
-              class="group flex h-full flex-col overflow-hidden rounded-[28px] border border-outline-variant/20 bg-surface-container-low shadow-[0_20px_40px_rgba(0,0,0,0.08)] transition-transform duration-300 hover:-translate-y-1"
-            >
-              <div class="overflow-hidden">
-                <img
-                  src="{% static 'sena/images/arreglo_barba.jpeg' %}"
-                  alt="Arreglo de barba masculina"
-                  class="h-72 w-full object-cover transition-transform duration-700 group-hover:scale-105 md:h-80"
-                />
-              </div>
-              <div class="p-7 md:p-8">
-                <div class="mb-4 flex items-center justify-between gap-4">
-                  <h3 class="font-headline text-2xl font-bold text-on-surface">
-                    Arreglo de Barba
-                  </h3>
-                  <span
-                    class="text-sm font-semibold tracking-wider text-primary-container"
-                    >30 MIN</span
-                  >
-                </div>
-                <p
-                  class="mb-6 text-base leading-relaxed text-on-surface-variant"
-                >
-                  Perfilado fino con toalla caliente, cuidado hidratante y forma
-                  impecable.
-                </p>
-                <a
-                  href="{% url 'sena:usuario_servicios' %}?servicio=barba#servicio-barba"
-                  class="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-[0.12em] text-primary transition-all group-hover:gap-3"
-                >
-                  Ver más
-                  <span class="material-symbols-outlined text-sm">east</span>
-                </a>
-              </div>
-            </article>
+            {% endfor %}
           </div>
         </div>
       </section>
 
       <section class="bg-surface-container-lowest px-6 py-16 md:py-24">
-        <!-- Sección de tienda con productos destacados -->
+        <!-- Sección de tienda con los productos reales del catálogo -->
         <div class="mx-auto max-w-7xl">
           <div class="mb-12 text-center">
             <h2
@@ -199,71 +163,143 @@
           </div>
 
           <div class="grid gap-6 md:grid-cols-3">
+            {% for producto in inicio_productos %}
             <a
               href="{% url 'sena:usuario_tienda' %}"
-              class="group md:col-span-2 block overflow-hidden rounded-[28px] bg-surface-container-low text-inherit no-underline shadow-[0_20px_40px_rgba(0,0,0,0.08)] transition-transform duration-300 hover:-translate-y-1 hover:no-underline"
+              class="group {% if forloop.first %}md:col-span-2{% endif %} block overflow-hidden rounded-[28px] bg-surface-container-low text-inherit no-underline shadow-[0_20px_40px_rgba(0,0,0,0.08)] transition-transform duration-300 hover:-translate-y-1 hover:no-underline"
             >
-              <div
-                class="relative h-full min-h-[360px] bg-surface-container-low"
-              >
+              <div class="relative h-full min-h-[360px] bg-surface-container-low">
                 <img
-                  src="{% static 'sena/images/pomada_barba.jpeg' %}"
-                  alt="Productos para barbería"
+                  src="{% if producto.imagen %}{{ producto.imagen.url }}{% else %}{% static producto.imagen_respaldo %}{% endif %}"
+                  alt="{{ producto.nombre }}"
                   class="h-full w-full object-cover opacity-80"
                 />
                 <div
-                  class="absolute inset-0 bg-gradient-to-t from-surface-dim via-surface/35 to-transparent"
+                  class="absolute inset-0 bg-gradient-to-t from-surface-dim {% if forloop.first %}via-surface/35{% endif %} to-transparent"
                 ></div>
                 <div
-                  class="absolute bottom-0 left-0 right-0 flex items-end justify-between gap-4 p-8"
+                  class="absolute bottom-0 left-0 right-0 flex items-end justify-between gap-4 {% if forloop.first %}p-8{% else %}p-6{% endif %}"
                 >
                   <div>
                     <span
                       class="mb-3 inline-block rounded-full bg-surface-container-highest px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-on-surface-variant"
-                      >Styling</span
+                      >{{ producto.get_categoria_display }}</span
                     >
                     <h3
-                      class="font-headline text-3xl font-bold text-on-surface"
+                      class="font-headline {% if forloop.first %}text-3xl{% else %}text-2xl{% endif %} font-bold text-on-surface"
                     >
-                      Pomada para Cabello
+                      {{ producto.nombre }}
                     </h3>
                   </div>
-                  <span class="text-xl font-bold text-primary">$85.000</span>
-                </div>
-              </div>
-            </a>
-
-            <a
-              href="{% url 'sena:usuario_tienda' %}"
-              class="group block overflow-hidden rounded-[28px] bg-surface-container-low text-inherit no-underline shadow-[0_20px_40px_rgba(0,0,0,0.08)] transition-transform duration-300 hover:-translate-y-1 hover:no-underline"
-            >
-              <div class="relative h-full min-h-[360px]">
-                <img
-                  src="{% static 'sena/images/aceite_barba.jpeg' %}"
-                  alt="Aceite para barba"
-                  class="h-full w-full object-cover opacity-80"
-                />
-                <div
-                  class="absolute inset-0 bg-gradient-to-t from-surface-dim to-transparent"
-                ></div>
-                <div class="absolute bottom-0 left-0 right-0 p-6">
                   <span
-                    class="mb-2 inline-block rounded-full bg-surface-container-highest px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-on-surface-variant"
-                    >Cuidado</span
+                    class="{% if forloop.first %}text-xl{% else %}text-lg{% endif %} font-bold text-primary"
+                    >${{ producto.precio|floatformat:"0g" }}</span
                   >
-                  <h3 class="font-headline text-2xl font-bold text-on-surface">
-                    Aceite de Barba
-                  </h3>
-                  <div class="mt-4 flex items-center justify-between">
-                    <span class="text-lg font-bold text-primary">$120.000</span>
-                  </div>
                 </div>
               </div>
             </a>
+            {% endfor %}
           </div>
         </div>
       </section>
+
+      <section class="relative px-6 py-16 md:py-24">
+        <!-- Reseñas reales de clientes (se publican si el Admin lo permite) -->
+        <div class="mx-auto max-w-7xl">
+          <div class="mb-12 text-center">
+            <h2
+              class="font-headline text-4xl font-bold text-on-surface md:text-5xl"
+            >
+              Lo que dicen nuestros <span class="heading-accent">Clientes</span>
+            </h2>
+            <p class="mx-auto mt-4 max-w-2xl text-lg text-on-surface-variant">
+              Reseñas reales que dejan los clientes después de su cita.
+            </p>
+          </div>
+
+          {% if inicio_resenas %}
+          <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {% for resena in inicio_resenas %}
+            <article
+              class="tc-glass flex h-full flex-col rounded-2xl p-6"
+              {% if forloop.counter > resenas_visibles %}hidden data-resena-extra{% endif %}
+            >
+              <div class="mb-3 flex items-center gap-1">
+                {% for i in "12345" %}{% if forloop.counter <= resena.puntuacion %}
+                <span
+                  class="material-symbols-outlined text-lg text-primary"
+                  style="font-variation-settings: &quot;FILL&quot; 1"
+                  >star</span
+                >
+                {% else %}
+                <span class="material-symbols-outlined text-lg text-primary/30"
+                  >star</span
+                >
+                {% endif %}{% endfor %}
+              </div>
+
+              {% if resena.comentario %}
+              <p
+                class="mb-4 flex-1 text-base leading-relaxed text-on-surface-variant"
+              >
+                “{{ resena.comentario }}”
+              </p>
+              {% else %}
+              <p class="mb-4 flex-1 text-base italic text-on-surface-variant/70">
+                Reseña sin comentario.
+              </p>
+              {% endif %}
+
+              <div class="mt-2 border-t border-outline-variant/15 pt-4">
+                <p class="font-headline text-base font-bold text-on-surface">
+                  {{ resena.cliente.nombre }} {{ resena.cliente.apellido|slice:":1" }}.
+                </p>
+                <p class="mt-1 text-xs text-on-surface-variant">
+                  Con {{ resena.barbero.nombre }} · {{ resena.fecha|date:"d/m/Y" }}
+                </p>
+              </div>
+            </article>
+            {% endfor %}
+          </div>
+
+          {% if inicio_resenas|length > resenas_visibles %}
+          <div class="mt-10 flex justify-center">
+            <button
+              type="button"
+              data-resenas-ver-mas
+              class="btn-brand inline-flex items-center gap-3 rounded-md px-8 py-4 text-sm font-bold uppercase tracking-[0.14em] transition-transform duration-300 hover:scale-[1.02] active:scale-95"
+            >
+              Ver más reseñas
+              <span class="material-symbols-outlined text-xl">expand_more</span>
+            </button>
+          </div>
+          {% endif %} {% else %}
+          <div class="tc-glass mx-auto max-w-2xl rounded-2xl p-10 text-center">
+            <span class="material-symbols-outlined text-4xl text-primary"
+              >rate_review</span
+            >
+            <p class="mt-4 text-lg text-on-surface">Todavía no hay reseñas.</p>
+            <p class="mt-2 text-sm text-on-surface-variant">
+              Aquí aparecerán las reseñas reales de los clientes en cuanto
+              califiquen sus citas.
+            </p>
+          </div>
+          {% endif %}
+        </div>
+      </section>
     </main>
+
+    <!-- Botón de edición del inicio: solo lo ve el Admin -->
+    {% if request.session.logueado.rol == "Admin" %}
+    <a
+      href="{% url 'sena:admin_editar_inicio' %}"
+      class="btn-brand fixed bottom-6 right-6 z-50 inline-flex items-center gap-2 rounded-full px-6 py-3 text-xs font-bold uppercase tracking-[0.14em] shadow-[0_18px_40px_-12px_rgba(184,137,40,0.7)] transition-transform duration-300 hover:scale-[1.03] active:scale-95"
+      title="Elegir los servicios y productos que se destacan en el inicio"
+    >
+      <span class="material-symbols-outlined text-lg">edit</span>
+      Editar inicio
+    </a>
+    {% endif %}
 
     <!-- Pie de página con enlaces de utilidad -->
     <footer
@@ -299,5 +335,21 @@
         © 2026 TecnoCorte. Todos los derechos reservados.
       </div>
     </footer>
+
+    <script>
+      // Despliega las reseñas que quedan ocultas en el inicio.
+      (function () {
+        var boton = document.querySelector("[data-resenas-ver-mas]");
+        if (!boton) return;
+        boton.addEventListener("click", function () {
+          document
+            .querySelectorAll("[data-resena-extra]")
+            .forEach(function (resena) {
+              resena.removeAttribute("hidden");
+            });
+          boton.remove();
+        });
+      })();
+    </script>
   </body>
 </html>

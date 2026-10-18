@@ -27,6 +27,15 @@
       >
     </a>
     <a
+      class="panel-glass-link flex items-center space-x-4 px-4 py-3 {% if active == 'inicio' %}panel-glass-link--active{% else %}text-on-surface-variant{% endif %}"
+      href="{% url 'sena:admin_editar_inicio' %}"
+    >
+      <span class="material-symbols-outlined">home_work</span>
+      <span class="font-label uppercase text-xs tracking-widest"
+        >Inicio</span
+      >
+    </a>
+    <a
       class="panel-glass-link flex items-center space-x-4 px-4 py-3 {% if active == 'reservas' %}panel-glass-link--active{% else %}text-on-surface-variant{% endif %}"
       href="{% url 'sena:admin_reservas' %}"
     >

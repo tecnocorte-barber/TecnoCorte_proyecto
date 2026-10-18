@@ -1,0 +1,121 @@
+{% extends "usuarios/dashboard_base.html" %}
+{# El Admin elige, entre lo que ya existe, qué se destaca en la página principal #}
+{% block title %}Editar inicio - TecnoCorte{% endblock %}
+{% block body_class %}font-body antialiased flex bg-surface{% endblock %}
+{% block content %}
+{% include "includes/admin_sidebar.html" with active="inicio" %}
+<main class="ml-0 md:ml-64 flex-1 min-h-screen p-6 md:p-12 pb-24 md:pb-12 bg-surface">
+  {% include "includes/panel_header.html" %}
+  <div class="mx-auto max-w-3xl">
+    <div class="mb-8">
+      <p class="tc-eyebrow mb-3">Página principal</p>
+      <h1 class="tc-display text-4xl md:text-5xl">
+        Editar el <span class="tc-gold-text">inicio</span>
+      </h1>
+      <p class="mt-3 text-on-surface-variant">
+        Elige, entre los servicios y productos que ya existen, cuáles se
+        destacan en la página principal. No se crea nada nuevo aquí.
+      </p>
+    </div>
+
+    <form method="post" class="tc-form tc-form__grid">
+      {% csrf_token %}
+
+      {# Servicios destacados #}
+      <div class="tc-field--full">
+        <p class="tc-eyebrow mb-4">Servicios destacados</p>
+        <div class="tc-form__grid">
+          <label class="tc-field tc-field--always">
+            <select name="servicio_destacado_1" class="tc-field__input">
+              <option value="">(Elegir automáticamente)</option>
+              {% for servicio in servicios %}
+              <option
+                value="{{ servicio.nombre }}"
+                {% if seleccion_servicios.0 == servicio.nombre %}selected{% endif %}
+              >
+                {{ servicio.nombre }} — {{ servicio.minutos }} min
+              </option>
+              {% endfor %}
+            </select>
+            <span class="tc-field__label">Tarjeta principal</span>
+          </label>
+
+          <label class="tc-field tc-field--always">
+            <select name="servicio_destacado_2" class="tc-field__input">
+              <option value="">(Elegir automáticamente)</option>
+              {% for servicio in servicios %}
+              <option
+                value="{{ servicio.nombre }}"
+                {% if seleccion_servicios.1 == servicio.nombre %}selected{% endif %}
+              >
+                {{ servicio.nombre }} — {{ servicio.minutos }} min
+              </option>
+              {% endfor %}
+            </select>
+            <span class="tc-field__label">Segunda tarjeta</span>
+          </label>
+        </div>
+      </div>
+
+      {# Productos destacados #}
+      <div class="tc-field--full">
+        <p class="tc-eyebrow mb-4">Productos destacados de la tienda</p>
+        <div class="tc-form__grid">
+          <label class="tc-field tc-field--always">
+            <select name="producto_destacado_1" class="tc-field__input">
+              <option value="">(Elegir automáticamente)</option>
+              {% for producto in productos %}
+              <option
+                value="{{ producto.id }}"
+                {% if seleccion_productos.0 == producto.id %}selected{% endif %}
+              >
+                {{ producto.nombre }} — ${{ producto.precio|floatformat:"0g" }}
+              </option>
+              {% endfor %}
+            </select>
+            <span class="tc-field__label">Producto principal (grande)</span>
+          </label>
+
+          <label class="tc-field tc-field--always">
+            <select name="producto_destacado_2" class="tc-field__input">
+              <option value="">(Elegir automáticamente)</option>
+              {% for producto in productos %}
+              <option
+                value="{{ producto.id }}"
+                {% if seleccion_productos.1 == producto.id %}selected{% endif %}
+              >
+                {{ producto.nombre }} — ${{ producto.precio|floatformat:"0g" }}
+              </option>
+              {% endfor %}
+            </select>
+            <span class="tc-field__label">Segundo producto</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="tc-form__actions">
+        <button class="tc-btn tc-btn--gold" type="submit">
+          <span class="material-symbols-outlined text-[18px]">save</span>
+          Guardar inicio
+        </button>
+        <a
+          href="{% url 'sena:inicio' %}?vista=publica"
+          target="_blank"
+          rel="noopener"
+          class="tc-btn tc-btn--ghost"
+        >
+          <span class="material-symbols-outlined text-[18px]">visibility</span>
+          Ver el inicio
+        </a>
+      </div>
+    </form>
+
+    <p class="tc-field__hint mt-6">
+      Si dejas una casilla en «Elegir automáticamente», se usan los primeros
+      servicios y productos disponibles. Los servicios que el Admin apruebe a
+      los barberos también aparecen en esta lista.
+    </p>
+  </div>
+</main>
+{% include "includes/admin_mobile_nav.html" with active="inicio" %}
+{% endblock %}
