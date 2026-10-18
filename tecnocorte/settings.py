@@ -156,7 +156,9 @@ EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '587'))
 EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True').lower() == 'true'
 EMAIL_TIMEOUT = int(os.environ.get('EMAIL_TIMEOUT', '10'))
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
-EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+# Gmail muestra las contraseñas de aplicación agrupadas con espacios; al
+# copiarlas a PythonAnywhere esos espacios pueden provocar un error SMTP 535.
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '').replace(' ', '')
 DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER or 'notificaciones@tecnocorte.local')
 CONTACT_EMAIL = os.environ.get('CONTACT_EMAIL', 'tecnocorte083@gmail.com')
 # URL pública opcional usada por los enlaces de correos enviados por comandos
