@@ -243,7 +243,7 @@ class AuditoriaDePermisosTests(TestCase):
         "ayuda", "carrito", "agregar_carrito", "actualizar_carrito",
         "eliminar_carrito", "usuario_dashboard", "usuario_tienda",
         "usuario_servicios", "usuario_peluquerias", "usuario_peluqueria_detalle",
-        "usuario_reservar_cita",
+        "usuario_reservar_cita", "usuario_producto_detalle",
     }
 
     def test_toda_vista_de_panel_tiene_autorizacion(self):

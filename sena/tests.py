@@ -49,7 +49,7 @@ class TecnoCorteTests(TestCase):
         response = self.client.get(reverse("sena:usuario_peluquerias"))
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "sena/images/Logo.png")
+        self.assertContains(response, "sena/images/Logo.webp")
 
     # Verifica que el login funciona con contraseña hasheada
     def test_login_usa_password_hasheada(self):

@@ -234,6 +234,19 @@ class FotosYConfiguracionTests(TestCase):
         self.assertIn("scrollbar-width: thin", css)  # Firefox
         self.assertIn("background-clip: content-box", css)  # pulgar fino e insetado
 
+    def test_las_tablas_de_panel_usan_el_contenedor_del_tema(self):
+        """Los paneles usan .table-responsive, no un overflow-x-auto crudo."""
+        import pathlib
+
+        plantillas = pathlib.Path(__file__).resolve().parent / "templates"
+        sospechosas = [
+            archivo.name
+            for carpeta in ("administrador", "peluqueros")
+            for archivo in (plantillas / carpeta).glob("*.html")
+            if "overflow-x-auto" in archivo.read_text(encoding="utf-8")
+        ]
+        self.assertEqual(sospechosas, [], "Deben usar .table-responsive: %s" % sospechosas)
+
     def test_borrar_foto_sin_motivo_no_elimina_y_avisa(self):
         """Sin motivo escrito no se borra ninguna foto."""
         self.login()
