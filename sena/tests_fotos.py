@@ -2,6 +2,7 @@
 import tempfile
 from io import BytesIO
 
+from django.contrib.staticfiles import finders
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 from django.urls import reverse, NoReverseMatch
@@ -193,6 +194,30 @@ class FotosYConfiguracionTests(TestCase):
         self.client.post(reverse("sena:admin_quitar_foto_usuario", args=[u.id]), {"motivo": "No es una persona"})
         u.refresh_from_db()
         self.assertFalse(u.foto)
+
+    def test_la_tabla_de_usuarios_no_saca_scroll_horizontal(self):
+        """Anchos en porcentaje y correo recortado: la tabla nunca desborda."""
+        self.login()
+        Usuario.objects.create(
+            nombre="Juan", apellido="Perez",
+            email="un.correo.larguisimo.de.prueba@tecnocorte.com",
+            password="x", rol="Cliente",
+        )
+        r = self.client.get(reverse("sena:admin_usuarios"))
+        h = r.content.decode()
+        self.assertContains(r, 'class="w-full text-left tc-table"')  # table-layout: fixed
+        self.assertEqual(h.count('<col style="width:'), 7)  # columnas en porcentaje
+        self.assertIn("tc-truncate", h)  # el correo se recorta con "..."
+        self.assertIn('title="un.correo.larguisimo.de.prueba@tecnocorte.com"', h)
+        self.assertNotIn("overflow-x-auto", h)  # sin la barra nativa del navegador
+
+    def test_las_barras_de_desplazamiento_son_del_tema(self):
+        """Nada de la barra gris nativa: el CSS define una fina y del tema."""
+        with open(finders.find("css/base/premium.css"), encoding="utf-8") as archivo:
+            css = archivo.read()
+        self.assertIn("::-webkit-scrollbar-thumb", css)
+        self.assertIn("scrollbar-width: thin", css)  # Firefox
+        self.assertIn("background-clip: content-box", css)  # pulgar fino e insetado
 
     def test_borrar_foto_sin_motivo_no_elimina_y_avisa(self):
         """Sin motivo escrito no se borra ninguna foto."""

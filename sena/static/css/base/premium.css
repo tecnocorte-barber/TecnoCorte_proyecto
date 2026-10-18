@@ -138,6 +138,61 @@ html:not(.dark) .tc-badge--ok {
   box-sizing: border-box;
 }
 
+/* ── 3c. Tablas de datos de los paneles ─────────────────────────────────── */
+/* Anchos en porcentaje y sin desbordes: un correo largo se recorta con
+   puntos suspensivos en vez de ensanchar la tabla y sacar scroll horizontal. */
+.tc-table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+.tc-table th,
+.tc-table td {
+  padding: 13px 12px;
+  vertical-align: middle;
+}
+.tc-truncate {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* En el móvil la tabla se desplaza dentro de su caja en vez de aplastarse */
+@media (max-width: 767px) {
+  .tc-table {
+    min-width: 44rem;
+  }
+}
+
+/* ── 4. Barras de desplazamiento del tema ───────────────────────────────── */
+/* Fuera la barra gris nativa del sistema: fina, redondeada y del tema, tanto
+   en la página como en los menús, modales y tablas que hacen scroll. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--c-outline-variant) transparent;
+}
+::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--c-outline-variant);
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--c-primary);
+  background-clip: content-box;
+}
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
 /* Halo dorado que aparece al pasar el ratón */
 .tc-glass--hover {
   transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.28s ease,
