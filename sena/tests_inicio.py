@@ -211,3 +211,91 @@ class InicioEditableTests(TestCase):
         r = self.client.get(reverse("sena:inicio"))
         self.assertNotContains(r, "No deberia verse")
         self.assertContains(r, "Todavía no hay reseñas")
+
+
+class LimiteDeResenasTests(TestCase):
+    """Cada cliente puede publicar como máximo dos reseñas."""
+
+    def setUp(self):
+        cache.clear()
+        self.peluqueria = Peluqueria.objects.create(
+            nombre="Barberia Centro", ubicacion="Calle 1", telefono="300-1111",
+        )
+        self.cliente = Usuario.objects.create(
+            nombre="Ana", apellido="Gomez", email="ana@test.com", password="x",
+            rol="Cliente", activo=True,
+        )
+        self.barbero = Usuario.objects.create(
+            nombre="Luis", apellido="Rios", email="luis@test.com", password="x",
+            rol="Barbero", peluqueria=self.peluqueria, activo=True,
+        )
+        # Tres citas completadas sin calificar
+        self.citas = [
+            Reserva.objects.create(
+                cliente=self.cliente, peluquero=self.barbero, peluqueria=self.peluqueria,
+                fecha=date(2026, 1, i + 1), hora=time(10, 0),
+                servicio="Corte de Cabello", estado="Completada",
+            )
+            for i in range(3)
+        ]
+
+    def tearDown(self):
+        cache.clear()
+
+    def sesion(self):
+        s = self.client.session
+        s["logueado"] = {"id": self.cliente.id, "nombre": self.cliente.nombre, "rol": "Cliente"}
+        s.save()
+
+    def calificar(self, reserva):
+        return self.client.post(
+            reverse("sena:usuario_calificar", args=[reserva.id]),
+            {"puntuacion": 5, "comentario": "Muy bueno"},
+        )
+
+    def test_solo_dos_resenas_por_cliente(self):
+        self.sesion()
+        self.calificar(self.citas[0])
+        self.calificar(self.citas[1])
+        self.assertEqual(Calificacion.objects.filter(cliente=self.cliente).count(), 2)
+
+        self.calificar(self.citas[2])  # La tercera ya no se guarda
+        self.assertEqual(Calificacion.objects.filter(cliente=self.cliente).count(), 2)
+
+    def test_al_llegar_al_limite_desaparece_la_opcion_de_calificar(self):
+        self.sesion()
+        r = self.client.get(reverse("sena:usuario_perfil"))
+        self.assertEqual(r.context["resenas_restantes"], 2)  # Cupo completo
+        self.assertContains(r, "Califica esta cita")
+
+        self.calificar(self.citas[0])
+        self.calificar(self.citas[1])
+        r = self.client.get(reverse("sena:usuario_perfil"))
+        self.assertEqual(r.context["resenas_restantes"], 0)
+        self.assertContains(r, "Ya usaste tus 2 reseñas permitidas")
+        self.assertNotContains(r, "Califica esta cita")
+
+    def test_el_limite_es_por_cliente(self):
+        otro = Usuario.objects.create(
+            nombre="Beto", apellido="Lopez", email="beto@test.com", password="x",
+            rol="Cliente", activo=True,
+        )
+        Reserva.objects.create(
+            cliente=otro, peluquero=self.barbero, peluqueria=self.peluqueria,
+            fecha=date(2026, 2, 1), hora=time(11, 0),
+            servicio="Corte de Cabello", estado="Completada",
+        )
+        Calificacion.objects.create(
+            reserva=self.citas[0], cliente=self.cliente, barbero=self.barbero,
+            puntuacion=5, comentario="Buena",
+        )
+        Calificacion.objects.create(
+            reserva=self.citas[1], cliente=self.cliente, barbero=self.barbero,
+            puntuacion=4, comentario="Buena",
+        )
+        s = self.client.session
+        s["logueado"] = {"id": otro.id, "nombre": otro.nombre, "rol": "Cliente"}
+        s.save()
+        r = self.client.get(reverse("sena:usuario_perfil"))
+        self.assertEqual(r.context["resenas_restantes"], 2)  # Su propio cupo sigue libre
+

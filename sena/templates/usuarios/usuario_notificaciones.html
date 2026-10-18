@@ -175,7 +175,7 @@
                   >Confirmar cita
                 </button>
               </form>
-              {% endif %}{% endif %} {% if notificacion.reserva and notificacion.reserva.estado == 'Completada' and notificacion.reserva.id not in calificaciones_reservas %}
+              {% endif %}{% endif %} {% if notificacion.reserva and notificacion.reserva.estado == 'Completada' and notificacion.reserva.id not in calificaciones_reservas and resenas_restantes %}
               <a
                 href="{% url 'sena:usuario_perfil' %}#citas"
                 class="gold-gradient inline-flex text-on-primary font-bold py-1 px-4 rounded-md text-[10px] uppercase tracking-widest hover:opacity-90 transition-opacity active:scale-95"

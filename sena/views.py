@@ -51,6 +51,15 @@ PRODUCTOS_DESTACADOS_POR_DEFECTO = ["Pomada para el Cabello", "Aceite para Barba
 
 RESENAS_VISIBLES = 5
 
+# Cada cliente puede publicar como máximo dos reseñas en el inicio.
+RESENAS_POR_PERSONA = 2
+
+
+def resenas_restantes(cliente_id):
+    """Reseñas que le quedan por publicar a un cliente."""
+    usadas = Calificacion.objects.filter(cliente_id=cliente_id).count()
+    return max(RESENAS_POR_PERSONA - usadas, 0)
+
 # Convierte los horarios de trabajo y bloqueos a JSON para que JavaScript los use en el calendario
 def _horarios_para_template(peluqueria_id=None):
     clave = f"horarios_json_{peluqueria_id or 'todas'}"  # Clave de caché por peluquería
@@ -1401,6 +1410,8 @@ def usuario_perfil(request):
     contexto["pedidos"] = pedidos
     contexto["notificaciones"] = Notificacion.objects.filter(usuario=usuario).order_by("-fecha")
     contexto["calificaciones_reservas"] = calificaciones_reservas
+    contexto["resenas_restantes"] = resenas_restantes(usuario.id)
+    contexto["resenas_por_persona"] = RESENAS_POR_PERSONA
     return render(request, "usuarios/usuario_perfil.html", contexto)
 
 
@@ -1483,6 +1494,7 @@ def usuario_notificaciones(request):
     contexto["calificaciones_reservas"] = set(
         Calificacion.objects.filter(cliente_id=request.session["logueado"]["id"]).values_list("reserva_id", flat=True)
     )
+    contexto["resenas_restantes"] = resenas_restantes(request.session["logueado"]["id"])
     return render(request, "usuarios/usuario_notificaciones.html", contexto)
 
 
@@ -1534,6 +1546,9 @@ def usuario_calificar(request, reserva_id):
     if request.method != "POST":
         return redirect("sena:usuario_perfil")
     cliente_id = request.session["logueado"]["id"]
+    if resenas_restantes(cliente_id) <= 0:
+        messages.error(request, f"Ya publicaste tus {RESENAS_POR_PERSONA} reseñas permitidas.")
+        return redirect("sena:usuario_perfil")
     reserva = Reserva.objects.filter(id=reserva_id, cliente_id=cliente_id, estado="Completada").first()
     if reserva is None:
         return redirect("sena:usuario_perfil")
