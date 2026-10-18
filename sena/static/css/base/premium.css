@@ -68,6 +68,8 @@ html:not(.dark) .tc-gold-text {
 /* ── 3. Tarjetas de cristal (glassmorphism oscuro) ──────────────────────── */
 .tc-glass {
   position: relative;
+  max-width: 100%;
+  box-sizing: border-box;
   border-radius: 1.25rem;
   border: 1px solid rgba(214, 173, 66, 0.14);
   background:
@@ -83,6 +85,59 @@ html:not(.dark) .tc-glass {
   background: linear-gradient(180deg, rgba(252, 250, 245, 0.95), rgba(240, 235, 224, 0.92));
   box-shadow: 0 16px 38px -24px rgba(43, 35, 20, 0.28), 0 1px 0 rgba(255, 255, 255, 0.7) inset;
 }
+/* ── 3b. Contenedores, tablas e insignias de los paneles ────────────────── */
+/* Apila bloques de arriba hacia abajo con aire entre ellos: nunca se enciman */
+.tc-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+/* Una tabla ancha hace scroll dentro de su caja; la caja respeta la pantalla */
+.table-responsive {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+/* Insignias de estado: se leen igual en modo claro y en modo oscuro */
+.tc-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  border-radius: 999px;
+  padding: 0.25rem 0.75rem;
+  font: 600 0.75rem/1 "Manrope", sans-serif;
+  white-space: nowrap;
+}
+.tc-badge--wait {
+  background: color-mix(in srgb, var(--c-primary) 15%, transparent);
+  color: var(--c-primary);
+}
+.tc-badge--ok {
+  background: rgba(31, 122, 77, 0.18);
+  color: #35c98a;
+}
+html:not(.dark) .tc-badge--ok {
+  background: rgba(20, 102, 60, 0.12);
+  color: #14663c;
+}
+.tc-badge--no {
+  background: color-mix(in srgb, var(--c-error) 15%, transparent);
+  color: var(--c-error);
+}
+/* Ventana modal: siempre centrada en la pantalla, cargue o no Tailwind.
+   El selector repetido le da más prioridad que las utilidades de Tailwind. */
+.tc-modal.tc-modal {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  max-width: min(92vw, 40rem);
+  box-sizing: border-box;
+}
+
 /* Halo dorado que aparece al pasar el ratón */
 .tc-glass--hover {
   transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.28s ease,

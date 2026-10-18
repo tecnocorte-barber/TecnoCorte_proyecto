@@ -222,3 +222,25 @@ class ServiciosDeBarberoTests(TestCase):
         self.assertContains(r, "Afeitado Premium")
         self.assertContains(r, "Aprobar y crear")
         self.assertContains(r, "Luis")
+
+    # ---------- Las tablas no se enciman una sobre otra (regresión) ----------
+
+    def test_las_tablas_del_admin_van_apiladas_y_no_superpuestas(self):
+        SolicitudServicio.objects.create(
+            barbero=self.barbero, nombre="Afeitado Premium", minutos=30,
+            precio=25000, estado="rechazada",
+        )
+        self.sesion(self.admin)
+        r = self.client.get(reverse("sena:admin_solicitudes_servicios"))
+        # Las dos tablas viven en una columna con aire entre ellas...
+        self.assertContains(r, 'class="tc-stack"')
+        self.assertEqual(r.content.decode().count("table-responsive"), 2)
+        # ...y NO dentro del contenedor fijo del menú lateral, que era lo que
+        # las sacaba del flujo y las montaba encima de la siguiente.
+        self.assertNotContains(r, "panel-glass overflow-hidden")
+
+    def test_la_pestana_de_servicios_del_barbero_usa_la_caja_con_scroll(self):
+        self.sesion(self.barbero)
+        r = self.client.get(reverse("sena:peluquero_configuracion") + "?seccion=servicios")
+        self.assertContains(r, "table-responsive")
+        self.assertNotContains(r, "panel-glass overflow-hidden")

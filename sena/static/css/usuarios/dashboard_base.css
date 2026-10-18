@@ -76,6 +76,14 @@ html.dark,
   --sidebar-shadow: 0 0 40px rgba(242, 202, 80, 0.06);
 }
 
+/* El área de contenido de los paneles es un hijo flex: sin min-width: 0 no
+   puede encogerse, y una tabla ancha empuja todo fuera de la pantalla. */
+main {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
 /* Variables CSS del tema claro */
 /* ── LIGHT ── */
 html:not(.dark),

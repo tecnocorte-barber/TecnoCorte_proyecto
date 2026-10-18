@@ -3,7 +3,12 @@
    El menú del cliente (site_nav) queda intacto. */
 
 .panel-glass {
-  position: fixed;
+  /* Es un estilo de cristal, NO una posición. Si se fija aquí, cualquier
+     contenedor de contenido (una tabla) sale del flujo normal y se monta
+     encima del bloque siguiente. El cristal debe fluir con el documento. */
+  position: relative;
+  box-sizing: border-box;
+  max-width: 100%;
   isolation: isolate;
   overflow: hidden;
   background:
@@ -50,6 +55,13 @@
 .panel-glass > * {
   position: relative;
   z-index: 1;
+}
+
+/* Solo los menús laterales son fijos, y lo siguen siendo aunque el CDN de
+   Tailwind no cargue (antes lo heredaban del position: fixed de arriba). */
+.admin-sidebar,
+.peluquero-sidebar {
+  position: fixed;
 }
 
 /* Enlaces tipo "píldora de cristal" (transición rápida) */

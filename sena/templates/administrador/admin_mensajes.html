@@ -11,9 +11,9 @@ antialiased flex bg-surface{% endblock %}{% block content %}{% include "includes
 
   {# Tabla: solo Nombre, Correo y Tipo (el contenido completo se abre en el modal) #}
   <div
-    class="panel-glass overflow-hidden rounded-2xl border border-outline-variant/20"
+    class="tc-glass overflow-hidden rounded-2xl border border-outline-variant/20"
   >
-    <div class="overflow-x-auto">
+    <div class="table-responsive">
       <table class="w-full text-left text-sm">
         <thead>
           <tr
@@ -80,7 +80,7 @@ antialiased flex bg-surface{% endblock %}{% block content %}{% include "includes
     role="dialog"
     aria-modal="true"
     aria-labelledby="modal-mensaje-titulo"
-    class="panel-glass absolute left-1/2 top-1/2 w-[min(92vw,40rem)] -translate-x-1/2 -translate-y-1/2 rounded-3xl p-7 shadow-2xl md:p-9"
+    class="tc-glass tc-modal rounded-3xl p-7 shadow-2xl md:p-9"
   >
     <header class="mb-5 flex items-start justify-between gap-4">
       <div class="min-w-0">
