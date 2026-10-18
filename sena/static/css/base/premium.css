@@ -148,8 +148,12 @@ html:not(.dark) .tc-badge--ok {
 }
 .tc-table th,
 .tc-table td {
-  padding: 13px 12px;
+  padding: 8px 12px;
   vertical-align: middle;
+}
+/* La fila de "no hay datos" respira aunque las demás sean compactas */
+.tc-table td[colspan] {
+  padding: 40px 12px;
 }
 .tc-truncate {
   display: block;
@@ -158,10 +162,10 @@ html:not(.dark) .tc-badge--ok {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-/* En el móvil la tabla se desplaza dentro de su caja en vez de aplastarse */
-@media (max-width: 767px) {
+/* En una pantalla muy estrecha la tabla se desplaza dentro de su caja */
+@media (max-width: 639px) {
   .tc-table {
-    min-width: 44rem;
+    min-width: 40rem;
   }
 }
 

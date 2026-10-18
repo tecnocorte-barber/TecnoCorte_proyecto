@@ -35,40 +35,40 @@ flex bg-surface{% endblock %} {% block content %} {% include "includes/admin_sid
     </div>
 
     <!-- Estadísticas -->
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
       <div
-        class="bg-surface-container-low p-5 rounded-xl ghost-border ambient-glow"
+        class="bg-surface-container-low p-4 rounded-xl ghost-border ambient-glow"
       >
         <p
-          class="text-on-surface-variant text-xs uppercase tracking-widest font-bold mb-2"
+          class="text-on-surface-variant text-xs uppercase tracking-widest font-bold mb-1"
         >
           Total
         </p>
-        <p class="font-headline text-3xl text-primary">{{ total_usuarios }}</p>
+        <p class="font-headline text-2xl text-primary">{{ total_usuarios }}</p>
       </div>
-      <div class="bg-surface-container-low p-5 rounded-xl ghost-border">
+      <div class="bg-surface-container-low p-4 rounded-xl ghost-border">
         <p
-          class="text-on-surface-variant text-xs uppercase tracking-widest font-bold mb-2"
+          class="text-on-surface-variant text-xs uppercase tracking-widest font-bold mb-1"
         >
           Admins
         </p>
-        <p class="font-headline text-3xl text-error">{{ total_admin }}</p>
+        <p class="font-headline text-2xl text-error">{{ total_admin }}</p>
       </div>
-      <div class="bg-surface-container-low p-5 rounded-xl ghost-border">
+      <div class="bg-surface-container-low p-4 rounded-xl ghost-border">
         <p
-          class="text-on-surface-variant text-xs uppercase tracking-widest font-bold mb-2"
+          class="text-on-surface-variant text-xs uppercase tracking-widest font-bold mb-1"
         >
           Clientes
         </p>
-        <p class="font-headline text-3xl text-tertiary">{{ total_clientes }}</p>
+        <p class="font-headline text-2xl text-tertiary">{{ total_clientes }}</p>
       </div>
-      <div class="bg-surface-container-low p-5 rounded-xl ghost-border">
+      <div class="bg-surface-container-low p-4 rounded-xl ghost-border">
         <p
-          class="text-on-surface-variant text-xs uppercase tracking-widest font-bold mb-2"
+          class="text-on-surface-variant text-xs uppercase tracking-widest font-bold mb-1"
         >
           Barberos
         </p>
-        <p class="font-headline text-3xl text-secondary">
+        <p class="font-headline text-2xl text-secondary">
           {{ total_peluqueros }}
         </p>
       </div>
@@ -76,7 +76,7 @@ flex bg-surface{% endblock %} {% block content %} {% include "includes/admin_sid
 
     <!-- Action Bar -->
     <div
-      class="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 space-y-6 md:space-y-0 bg-surface-container-low p-6 rounded-lg"
+      class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 space-y-4 md:space-y-0 bg-surface-container-low p-4 rounded-lg"
     >
       <div class="relative w-full md:w-64">
         <span
@@ -115,37 +115,37 @@ flex bg-surface{% endblock %} {% block content %} {% include "includes/admin_sid
           <thead>
             <tr>
               <th
-                class="font-label uppercase text-xs text-primary-container tracking-widest p-6 font-medium"
+                class="font-label uppercase text-xs text-primary-container tracking-widest font-medium"
               >
                 Nombre
               </th>
               <th
-                class="font-label uppercase text-xs text-primary-container tracking-widest p-6 font-medium"
+                class="font-label uppercase text-xs text-primary-container tracking-widest font-medium"
               >
                 Email
               </th>
               <th
-                class="font-label uppercase text-xs text-primary-container tracking-widest p-6 font-medium"
+                class="font-label uppercase text-xs text-primary-container tracking-widest font-medium"
               >
                 Teléfono
               </th>
               <th
-                class="font-label uppercase text-xs text-primary-container tracking-widest p-6 font-medium"
+                class="font-label uppercase text-xs text-primary-container tracking-widest font-medium"
               >
                 Rol
               </th>
               <th
-                class="font-label uppercase text-xs text-primary-container tracking-widest p-6 font-medium"
+                class="font-label uppercase text-xs text-primary-container tracking-widest font-medium"
               >
                 Estado
               </th>
               <th
-                class="font-label uppercase text-xs text-primary-container tracking-widest p-6 font-medium"
+                class="font-label uppercase text-xs text-primary-container tracking-widest font-medium"
               >
                 Registro
               </th>
               <th
-                class="font-label uppercase text-xs text-primary-container tracking-widest p-6 font-medium text-right"
+                class="font-label uppercase text-xs text-primary-container tracking-widest font-medium text-right"
               >
                 Acciones
               </th>
@@ -157,49 +157,46 @@ flex bg-surface{% endblock %} {% block content %} {% include "includes/admin_sid
             <tr
               class="fila-usuario hover:bg-surface-container-highest/30 transition-colors border-t border-outline-variant/20"
             >
-              <td class="p-6">
+              <td>
                 <div class="flex min-w-0 items-center gap-3">
                   {# Foto de perfil del usuario (o inicial como respaldo) #}
                   {% if usuario.foto %}
                   <img
                     src="{{ usuario.foto.url }}"
                     alt="{{ usuario.nombre }}"
-                    class="h-10 w-10 shrink-0 rounded-full object-cover border border-outline-variant/30"
+                    class="h-8 w-8 shrink-0 rounded-full object-cover border border-outline-variant/30"
                   />
                   {% else %}
                   <span
-                    class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-surface-container-high text-on-surface-variant font-bold"
+                    class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-surface-container-high text-xs font-bold text-on-surface-variant"
                     >{{ usuario.nombre|first|upper }}</span
                   >
                   {% endif %}
-                  <div class="flex min-w-0 flex-col">
-                    <span
-                      class="tc-truncate font-bold text-on-background text-base"
-                      title="{{ usuario.nombre }} {{ usuario.apellido }}"
-                      >{{ usuario.nombre }} {{ usuario.apellido }}</span
-                    ><span class="text-on-surface-variant text-xs"
-                      >ID: USR-{{ usuario.id }}</span
-                    >
-                  </div>
+                  {# Una sola línea: la fila queda baja y la tabla entra completa #}
+                  <span
+                    class="tc-truncate font-bold text-on-background"
+                    title="{{ usuario.nombre }} {{ usuario.apellido }} · ID: USR-{{ usuario.id }}"
+                    >{{ usuario.nombre }} {{ usuario.apellido }}</span
+                  >
                 </div>
               </td>
               {# El correo se recorta con puntos suspensivos: no ensancha la tabla #}
-              <td class="p-6 text-on-surface-variant">
+              <td class="text-on-surface-variant">
                 <span class="tc-truncate" title="{{ usuario.email }}"
                   >{{ usuario.email }}</span
                 >
               </td>
-              <td class="p-6 text-on-surface-variant">
+              <td class="text-on-surface-variant">
                 {{ usuario.telefono|default:"—" }}
               </td>
-              <td class="p-6">
+              <td>
                 <span
                   class="inline-block whitespace-nowrap px-3 py-1 rounded-sm font-label uppercase text-[10px] tracking-wider {% if usuario.rol == 'Admin' %}bg-error/15 text-error border border-error/20 {% elif usuario.rol == 'Barbero' %}bg-secondary/15 text-secondary border border-secondary/20 {% else %}bg-tertiary/15 text-tertiary border border-tertiary/20{% endif %}"
                 >
                   {{ usuario.rol }}
                 </span>
               </td>
-              <td class="p-6">
+              <td>
                 {# Estado activo o suspendido del usuario #}
                 {% if usuario.activo %}
                 <span
@@ -215,10 +212,10 @@ flex bg-surface{% endblock %} {% block content %} {% include "includes/admin_sid
                 >
                 {% endif %}
               </td>
-              <td class="p-6 text-on-surface-variant text-xs">
+              <td class="text-on-surface-variant text-xs">
                 {{ usuario.fecha_creacion|date:"d M Y" }}
               </td>
-              <td class="p-6 text-right">
+              <td class="text-right">
                 <div class="flex items-center justify-end space-x-3">
                   <a
                     class="text-on-surface-variant hover:text-primary transition-colors"
@@ -286,7 +283,7 @@ flex bg-surface{% endblock %} {% block content %} {% include "includes/admin_sid
             </tr>
             {% empty %}
             <tr>
-              <td colspan="7" class="p-6 text-center text-on-surface-variant">
+              <td colspan="7" class="text-center text-on-surface-variant">
                 No hay usuarios registrados.
               </td>
             </tr>
@@ -295,7 +292,7 @@ flex bg-surface{% endblock %} {% block content %} {% include "includes/admin_sid
         </table>
       </div>
       <div
-        class="p-4 border-t border-outline-variant/15 flex justify-between items-center bg-surface-container-low text-sm text-on-surface-variant"
+        class="p-3 border-t border-outline-variant/15 flex justify-between items-center bg-surface-container-low text-sm text-on-surface-variant"
       >
         <span
           >Mostrando

@@ -211,6 +211,21 @@ class FotosYConfiguracionTests(TestCase):
         self.assertIn('title="un.correo.larguisimo.de.prueba@tecnocorte.com"', h)
         self.assertNotIn("overflow-x-auto", h)  # sin la barra nativa del navegador
 
+    def test_la_tabla_de_usuarios_es_compacta(self):
+        """Filas bajas (una línea y avatar pequeño) para que el cuadro no crezca."""
+        self.login()
+        r = self.client.get(reverse("sena:admin_usuarios"))
+        h = r.content.decode()
+        self.assertNotIn(">ID: USR-", h)  # el ID vive en el tooltip, no gasta renglón
+        self.assertIn("· ID: USR-", h)
+        self.assertIn("h-8 w-8 shrink-0 items-center", h)  # inicial compacta
+        self.assertNotIn("h-10 w-10", h)  # sin el avatar alto de antes
+        self.assertNotIn("mb-10", h)  # menos aire entre los bloques de arriba
+        with open(finders.find("css/base/premium.css"), encoding="utf-8") as archivo:
+            css = archivo.read()
+        self.assertIn("padding: 8px 12px;", css)  # celdas compactas
+        self.assertIn(".tc-table td[colspan]", css)  # "sin datos" respira igual
+
     def test_las_barras_de_desplazamiento_son_del_tema(self):
         """Nada de la barra gris nativa: el CSS define una fina y del tema."""
         with open(finders.find("css/base/premium.css"), encoding="utf-8") as archivo:
