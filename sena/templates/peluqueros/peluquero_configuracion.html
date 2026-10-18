@@ -204,40 +204,255 @@
 
     {# ---------- Servicios ---------- #}
     {% if pestana == "servicios" %}
-    <section class="bg-surface-container-low rounded-xl p-8">
-      <h2 class="font-headline text-2xl text-primary-container mb-4">
-        Servicios que ofreces
-      </h2>
-      <p class="text-sm text-on-surface-variant mb-6">
-        Estos son los servicios disponibles en TecnoCorte que puedes atender en
-        tu peluquería.
-      </p>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {% for servicio in servicios %}
-        <div class="rounded-xl border border-outline-variant/15 p-6 bg-surface-container">
-          <span
-            class="material-symbols-outlined text-primary text-3xl mb-3 block"
-            >content_cut</span
-          >
-          <h3 class="font-headline text-lg text-on-surface mb-1">
-            {{ servicio.nombre }}
-          </h3>
-          <p class="text-xs text-on-surface-variant mb-4">
-            {{ servicio.descripcion }}
-          </p>
-          <div class="flex items-center justify-between text-sm">
-            <span class="text-on-surface-variant flex items-center gap-1"
-              ><span class="material-symbols-outlined text-base">schedule</span
-              >{{ servicio.duracion }}</span
+    <div class="space-y-10">
+      {# Encabezado de la sección #}
+      <section>
+        <p class="tc-eyebrow mb-3">Catálogo</p>
+        <h2 class="tc-display text-3xl md:text-4xl">
+          Servicios y <span class="tc-gold-text">solicitudes</span>
+        </h2>
+        <p class="mt-3 max-w-2xl text-sm text-on-surface-variant">
+          Atiendes los servicios del sistema. Si necesitas uno propio, envíale la
+          solicitud al administrador y él lo crea a tu nombre.
+        </p>
+      </section>
+
+      {# Servicios base del sistema #}
+      <section>
+        <h3 class="tc-eyebrow mb-4">Servicios del sistema que puedes atender</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {% for servicio in servicios %}
+          <div class="rounded-xl border border-outline-variant/15 p-6 bg-surface-container">
+            <span
+              class="material-symbols-outlined text-primary text-3xl mb-3 block"
+              >content_cut</span
             >
-            <span class="font-headline text-primary"
-              >${{ servicio.precio|floatformat:"0g" }} COP</span
+            <h4 class="font-headline text-lg text-on-surface mb-1">
+              {{ servicio.nombre }}
+            </h4>
+            <p class="text-xs text-on-surface-variant mb-4">
+              {{ servicio.descripcion }}
+            </p>
+            <div class="flex items-center justify-between text-sm">
+              <span class="text-on-surface-variant flex items-center gap-1"
+                ><span class="material-symbols-outlined text-base">schedule</span
+                >{{ servicio.duracion }}</span
+              >
+              <span class="font-headline text-primary"
+                >${{ servicio.precio|floatformat:"0g" }} COP</span
+              >
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </section>
+
+      {# Servicios propios ya aprobados por el Admin #}
+      {% if mis_servicios %}
+      <section>
+        <h3 class="tc-eyebrow mb-4">Tus servicios propios</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {% for servicio in mis_servicios %}
+          <div class="tc-glass tc-glass--hover rounded-xl p-6">
+            <span
+              class="material-symbols-outlined tc-gold-text text-3xl mb-3 block"
+              >workspace_premium</span
             >
+            <h4 class="font-headline text-lg text-on-surface mb-1">
+              {{ servicio.nombre }}
+            </h4>
+            <p class="text-xs text-on-surface-variant mb-4">
+              {{ servicio.descripcion|default:"Sin descripción." }}
+            </p>
+            <div class="flex items-center justify-between text-sm">
+              <span class="text-on-surface-variant flex items-center gap-1"
+                ><span class="material-symbols-outlined text-base">schedule</span
+                >{{ servicio.duracion }}</span
+              >
+              <span class="font-headline text-primary"
+                >${{ servicio.precio|floatformat:"0g" }} COP</span
+              >
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </section>
+      {% endif %}
+
+      {# Formulario: pedirle un servicio nuevo al Admin #}
+      <section class="tc-form">
+        <h3 class="tc-form__title">Solicitar un servicio nuevo</h3>
+        <p class="mb-6 text-sm text-on-surface-variant">
+          Cuéntale al administrador qué servicio quieres ofrecer. Él lo revisa y,
+          si lo aprueba, aparece en tu lista y en el catálogo de reservas.
+        </p>
+        <form method="post" class="tc-form__grid">
+          {% csrf_token %}
+          <input type="hidden" name="accion" value="solicitar_servicio" />
+
+          <label class="tc-field tc-field--full">
+            <input
+              required
+              maxlength="100"
+              name="nombre"
+              placeholder=" "
+              class="tc-field__input"
+            />
+            <span class="tc-field__label">Nombre del servicio</span>
+          </label>
+
+          <label class="tc-field tc-field--full">
+            <textarea
+              name="descripcion"
+              maxlength="300"
+              rows="2"
+              placeholder=" "
+              class="tc-field__input"
+            ></textarea>
+            <span class="tc-field__label">Descripción (opcional)</span>
+          </label>
+
+          <label class="tc-field tc-field--always">
+            <select name="minutos" class="tc-field__input">
+              {% for m in duraciones %}
+              <option value="{{ m }}" {% if m == 30 %}selected{% endif %}>
+                {{ m }} minutos
+              </option>
+              {% endfor %}
+            </select>
+            <span class="tc-field__label">Duración</span>
+          </label>
+
+          <label class="tc-field">
+            <input
+              required
+              type="number"
+              min="0"
+              step="1000"
+              name="precio"
+              placeholder=" "
+              class="tc-field__input"
+            />
+            <span class="tc-field__label">Precio (COP)</span>
+          </label>
+
+          <div class="tc-form__actions tc-field--full">
+            <button class="tc-btn tc-btn--gold" type="submit">
+              <span class="material-symbols-outlined text-[18px]">send</span>
+              Enviar solicitud
+            </button>
+          </div>
+        </form>
+      </section>
+
+      {# Historial de solicitudes #}
+      <section>
+        <h3 class="tc-eyebrow mb-4">
+          Mis solicitudes
+          {% if solicitudes_pendientes %}
+          <span class="tc-chip">{{ solicitudes_pendientes }} pendientes</span>
+          {% endif %}
+        </h3>
+        <div class="panel-glass overflow-hidden rounded-2xl border border-outline-variant/20">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+              <thead>
+                <tr
+                  class="border-b border-outline-variant/30 text-xs uppercase tracking-wider text-on-surface-variant"
+                >
+                  <th class="px-5 py-4 font-semibold">Servicio</th>
+                  <th class="px-5 py-4 font-semibold">Duración</th>
+                  <th class="px-5 py-4 font-semibold">Precio</th>
+                  <th class="px-5 py-4 font-semibold">Estado</th>
+                  <th class="px-5 py-4 font-semibold">Nota del Admin</th>
+                  <th class="px-5 py-4 text-right font-semibold">Fecha</th>
+                  <th class="px-5 py-4"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for s in solicitudes %}
+                <tr class="border-b border-outline-variant/10 last:border-0">
+                  <td class="px-5 py-4 font-medium text-on-surface">
+                    {{ s.nombre }}
+                  </td>
+                  <td class="px-5 py-4 text-on-surface-variant">
+                    {{ s.duracion }}
+                  </td>
+                  <td class="px-5 py-4 text-on-surface-variant">
+                    ${{ s.precio|floatformat:"0g" }}
+                  </td>
+                  <td class="px-5 py-4">
+                    {% if s.estado == "pendiente" %}
+                    <span
+                      class="inline-flex items-center gap-1 rounded-full bg-primary/15 px-3 py-1 text-xs font-semibold text-primary"
+                      ><span class="material-symbols-outlined text-sm"
+                        >hourglass_top</span
+                      >Pendiente</span
+                    >
+                    {% elif s.estado == "aprobada" %}
+                    <span
+                      class="inline-flex items-center gap-1 rounded-full bg-[#1f7a4d]/20 px-3 py-1 text-xs font-semibold text-[#2fbd78]"
+                      ><span class="material-symbols-outlined text-sm"
+                        >check_circle</span
+                      >Aprobada</span
+                    >
+                    {% else %}
+                    <span
+                      class="inline-flex items-center gap-1 rounded-full bg-error/15 px-3 py-1 text-xs font-semibold text-error"
+                      ><span class="material-symbols-outlined text-sm"
+                        >cancel</span
+                      >Rechazada</span
+                    >
+                    {% endif %}
+                  </td>
+                  <td class="px-5 py-4 text-xs text-on-surface-variant">
+                    {{ s.nota_admin|default:"—" }}
+                  </td>
+                  <td
+                    class="px-5 py-4 text-right text-xs text-on-surface-variant"
+                  >
+                    {{ s.creada|date:'d/m/Y H:i' }}
+                  </td>
+                  <td class="px-5 py-4 text-right">
+                    {% if s.estado == "pendiente" %}
+                    <form method="post" class="inline">
+                      {% csrf_token %}
+                      <input
+                        type="hidden"
+                        name="accion"
+                        value="cancelar_solicitud"
+                      />
+                      <input
+                        type="hidden"
+                        name="solicitud_id"
+                        value="{{ s.id }}"
+                      />
+                      <button
+                        type="submit"
+                        class="tc-btn tc-btn--ghost tc-btn--sm"
+                      >
+                        Cancelar
+                      </button>
+                    </form>
+                    {% endif %}
+                  </td>
+                </tr>
+                {% empty %}
+                <tr>
+                  <td
+                    colspan="7"
+                    class="px-5 py-10 text-center text-on-surface-variant"
+                  >
+                    Todavía no has enviado solicitudes.
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
           </div>
         </div>
-        {% endfor %}
-      </div>
-    </section>
+      </section>
+    </div>
     {% endif %}
 
     {# ---------- Notificaciones ---------- #}

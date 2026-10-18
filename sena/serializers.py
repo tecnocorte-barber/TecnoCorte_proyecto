@@ -63,10 +63,10 @@ class ReservaSerializer(serializers.ModelSerializer):
             "peluqueria": {"write_only": True},  # La peluquería solo se envía, no se lee
         }
 
-    # Valida que el servicio esté en la lista de servicios disponibles
+    # Valida que el servicio esté en el catálogo (base o aprobado a un barbero)
     def validate_servicio(self, value):
-        from .views import SERVICIOS  # Importa la lista de servicios
-        if value not in {item["nombre"] for item in SERVICIOS}:
+        from .views import servicio_valido  # Importa el validador del catálogo
+        if not servicio_valido(value):
             raise serializers.ValidationError("El servicio seleccionado no es válido.")
         return value
 

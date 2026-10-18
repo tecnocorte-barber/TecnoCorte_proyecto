@@ -1,181 +1,125 @@
 {# Formulario para crear o editar un usuario del sistema #}
-{% extends "usuarios/dashboard_base.html" %} {% block content %}
-<div class="w-full">
-  {% include "includes/admin_sidebar.html" with active="usuarios" %}
-
-  <div class="md:ml-64 p-4 lg:p-8 bg-gray-950 pb-24">
-    {% include "includes/panel_header.html" %}
-    <!-- Encabezado -->
-    <div class="max-w-2xl mx-auto">
-      <h1 class="text-3xl lg:text-4xl font-bold text-white mb-2">
-        {% if editar %} Editar Usuario {% else %} Crear Usuario {% endif %}
+{% extends "usuarios/dashboard_base.html" %}
+{% block title %}{% if editar %}Editar{% else %}Crear{% endif %} Usuario - TecnoCorte{% endblock %}
+{% block body_class %}font-body antialiased flex bg-surface{% endblock %}
+{% block content %}
+{% include "includes/admin_sidebar.html" with active="usuarios" %}
+<main class="ml-0 md:ml-64 flex-1 min-h-screen p-6 md:p-12 pb-24 md:pb-12 bg-surface">
+  {% include "includes/panel_header.html" %}
+  <div class="mx-auto max-w-3xl">
+    <div class="mb-8">
+      <p class="tc-eyebrow mb-3">Personas</p>
+      <h1 class="tc-display text-4xl md:text-5xl">
+        {% if editar %}Editar{% else %}Crear{% endif %}
+        <span class="tc-gold-text">usuario</span>
       </h1>
-      <p class="text-gray-400 mb-8">
-        {% if editar %} Modifica los datos del usuario {% else %} Crea un nuevo
-        usuario en el sistema {% endif %}
+      <p class="mt-3 text-on-surface-variant">
+        {% if editar %}
+          Modifica los datos del usuario.
+        {% else %}
+          Crea un nuevo usuario en el sistema.
+        {% endif %}
       </p>
     </div>
 
-    <!-- Formulario -->
-    <div
-      class="bg-gray-800 border border-gray-700 rounded-lg p-6 lg:p-8 max-w-2xl mx-auto"
-    >
+    <form method="POST" enctype="multipart/form-data" class="tc-form tc-form__grid">
+      {% csrf_token %}
       {% if error %}
       <div
-        class="bg-red-900 border border-red-700 text-red-200 px-4 py-3 rounded-lg mb-6"
+        class="tc-field--full rounded-xl border border-error/40 bg-error/10 p-3 text-sm text-error"
       >
         {{ error }}
       </div>
       {% endif %}
 
-      <form method="POST" enctype="multipart/form-data" class="space-y-6">
-        {% csrf_token %}
+      <label class="tc-field">
+        <input
+          required
+          type="text"
+          id="nombre"
+          name="nombre"
+          value="{{ usuario.nombre|default:'' }}"
+          placeholder=" "
+          class="tc-field__input"
+        />
+        <span class="tc-field__label">Nombre</span>
+      </label>
 
-        <!-- Nombre -->
-        <div>
-          <label
-            for="nombre"
-            class="block text-sm font-medium text-gray-300 mb-2"
-          >
-            Nombre <span class="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            id="nombre"
-            name="nombre"
-            value="{{ usuario.nombre|default:'' }}"
-            class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none"
-            placeholder="Juan"
-            required
-          />
-        </div>
+      <label class="tc-field">
+        <input
+          required
+          type="text"
+          id="apellido"
+          name="apellido"
+          value="{{ usuario.apellido|default:'' }}"
+          placeholder=" "
+          class="tc-field__input"
+        />
+        <span class="tc-field__label">Apellido</span>
+      </label>
 
-        <!-- Apellido -->
-        <div>
-          <label
-            for="apellido"
-            class="block text-sm font-medium text-gray-300 mb-2"
-          >
-            Apellido <span class="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            id="apellido"
-            name="apellido"
-            value="{{ usuario.apellido|default:'' }}"
-            class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none"
-            placeholder="Pérez"
-            required
-          />
-        </div>
+      <label class="tc-field tc-field--full">
+        <input
+          required
+          type="email"
+          id="email"
+          name="email"
+          value="{{ usuario.email|default:'' }}"
+          placeholder=" "
+          class="tc-field__input"
+        />
+        <span class="tc-field__label">Correo electrónico</span>
+      </label>
 
-        <!-- Email -->
-        <div>
-          <label
-            for="email"
-            class="block text-sm font-medium text-gray-300 mb-2"
-          >
-            Email <span class="text-red-500">*</span>
-          </label>
-          <input
-            type="email"
-            id="email"
-            name="email"
-            value="{{ usuario.email|default:'' }}"
-            class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none"
-            placeholder="juan@example.com"
-            required
-          />
-        </div>
+      <label class="tc-field tc-field--full">
+        <input
+          type="tel"
+          id="telefono"
+          name="telefono"
+          value="{{ usuario.telefono|default:'' }}"
+          placeholder=" "
+          class="tc-field__input"
+        />
+        <span class="tc-field__label">Teléfono</span>
+      </label>
 
-        <!-- Teléfono -->
-        <div>
-          <label
-            for="telefono"
-            class="block text-sm font-medium text-gray-300 mb-2"
-          >
-            Teléfono
-          </label>
-          <input
-            type="tel"
-            id="telefono"
-            name="telefono"
-            value="{{ usuario.telefono|default:'' }}"
-            class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none"
-            placeholder="+57 123 456 7890"
-          />
-        </div>
+      {# Foto de perfil: se puede reemplazar o quitar #}
+      <div class="tc-field--full space-y-3">
+        <p class="tc-eyebrow">Foto de perfil</p>
+        {% if usuario.foto %}
+        <img
+          src="{{ usuario.foto.url }}"
+          alt="{{ usuario.nombre }}"
+          class="h-24 w-24 rounded-full border border-primary/25 object-cover"
+        />
+        <label class="tc-switch">
+          <input type="checkbox" name="quitar_foto" />
+          <span class="text-error">Quitar la foto actual</span>
+        </label>
+        {% endif %}
+        <label class="tc-field tc-field--always">
+          <input type="file" id="foto" name="foto" accept="image/*" class="tc-field__input" />
+          <span class="tc-field__label">Imagen (JPG, PNG o WEBP)</span>
+        </label>
+      </div>
 
-        <!-- Foto de perfil -->
-        <div>
-          <label
-            for="foto"
-            class="block text-sm font-medium text-gray-300 mb-2"
-          >
-            Foto de perfil
-          </label>
-          {% if usuario.foto %}
-          {# Foto actual del usuario #}
-          <img
-            src="{{ usuario.foto.url }}"
-            alt="{{ usuario.nombre }}"
-            class="mb-3 h-24 w-24 rounded-full object-cover border border-gray-600"
-          />
-          <label class="flex items-center gap-2 text-sm text-red-400 mb-3">
-            <input type="checkbox" name="quitar_foto" />
-            Quitar la foto actual
-          </label>
-          {% endif %}
-          <input
-            type="file"
-            id="foto"
-            name="foto"
-            accept="image/*"
-            class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:border-blue-500 focus:outline-none"
-          />
-          <p class="mt-1 text-xs text-gray-400">
-            Formatos permitidos: JPG, PNG o WEBP.
-          </p>
-        </div>
+      <label class="tc-field tc-field--always tc-field--full">
+        <select id="rol" name="rol" onchange="togglePeluqueriaField()" required class="tc-field__input">
+          {# Selección del rol del usuario #}
+          <option value="">-- Selecciona un rol --</option>
+          {% for value, label in roles %}
+          <option value="{{ value }}" {% if usuario.rol == value %}selected{% endif %}>
+            {{ label }}
+          </option>
+          {% endfor %}
+        </select>
+        <span class="tc-field__label">Rol</span>
+      </label>
 
-        <!-- Rol -->
-        <div>
-          <label for="rol" class="block text-sm font-medium text-gray-300 mb-2">
-            Rol <span class="text-red-500">*</span>
-          </label>
-          <select
-            id="rol"
-            name="rol"
-            onchange="togglePeluqueriaField()"
-            class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:border-blue-500 focus:outline-none"
-            required
-          >
-            {# Selección del rol del usuario #}
-            <option value="">-- Selecciona un rol --</option>
-            {% for value, label in roles %}
-            <option
-              value="{{ value }}"
-              {% if usuario.rol == value %}selected{% endif %}
-            >
-              {{ label }}
-            </option>
-            {% endfor %}
-          </select>
-        </div>
-
-        <!-- Barbería (solo para rol Barbero) -->
-        <div id="campo-peluqueria" style="display: none">
-          <label
-            for="peluqueria"
-            class="block text-sm font-medium text-gray-300 mb-2"
-          >
-            Barbería <span class="text-red-500">*</span>
-          </label>
-          <select
-            id="peluqueria"
-            name="peluqueria"
-            class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:border-blue-500 focus:outline-none"
-          >
+      {# Barbería (solo para rol Barbero) #}
+      <div id="campo-peluqueria" class="tc-field--full" style="display: none">
+        <label class="tc-field tc-field--always">
+          <select id="peluqueria" name="peluqueria" class="tc-field__input">
             <option value="">-- Selecciona una barbería --</option>
             {% for peluqueria in peluquerias %}
             <option
@@ -186,59 +130,49 @@
             </option>
             {% endfor %}
           </select>
-        </div>
-
-        <!-- Contraseña -->
-        <div>
-          <label
-            for="password"
-            class="block text-sm font-medium text-gray-300 mb-2"
-          >
-            Contraseña {% if not editar %}<span class="text-red-500">*</span>{% else %}<span class="text-gray-500"
-              >(dejar vacío para no cambiar)</span
-            >{% endif %}
-          </label>
-          <input
-            type="password"
-            id="password"
-            name="password"
-            class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none"
-            placeholder="••••••••"
-            {% if not editar %}required{% endif %}
-          />
-        </div>
-
-        <!-- Botones -->
-        <div class="flex flex-col sm:flex-row gap-4 pt-4">
-          <button
-            type="submit"
-            class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition duration-200"
-          >
-            {% if editar %} Actualizar Usuario {% else %} Crear Usuario {% endif %}
-          </button>
-          <a
-            href="{% url 'sena:admin_usuarios' %}"
-            class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-6 rounded-lg transition duration-200"
-          >
-            Cancelar
-          </a>
-        </div>
-      </form>
-
-      {% if editar %}
-      {# Información adicional del usuario al editar #}
-      <div class="mt-8 pt-6 border-t border-gray-700">
-        <p class="text-sm text-gray-400 mb-3">
-          <strong>ID de usuario:</strong> {{ usuario.id }}
-        </p>
-        <p class="text-sm text-gray-400 mb-3">
-          <strong>Creado:</strong> {{ usuario.fecha_creacion|date:"d/m/Y H:i" }}
-        </p>
+          <span class="tc-field__label">Barbería</span>
+        </label>
       </div>
-      {% endif %}
+
+      <label class="tc-field tc-field--full">
+        <input
+          type="password"
+          id="password"
+          name="password"
+          placeholder=" "
+          {% if not editar %}required{% endif %}
+          class="tc-field__input"
+        />
+        <span class="tc-field__label">Contraseña</span>
+      </label>
+      <span class="tc-field__hint tc-field--full">
+        {% if editar %}
+          Déjala vacía para conservar la contraseña actual.
+        {% else %}
+          Mínimo 8 caracteres, con mayúscula, minúscula y número.
+        {% endif %}
+      </span>
+
+      <div class="tc-form__actions">
+        <button class="tc-btn tc-btn--gold" type="submit">
+          <span class="material-symbols-outlined text-[18px]">save</span>
+          {% if editar %}Actualizar usuario{% else %}Crear usuario{% endif %}
+        </button>
+        <a href="{% url 'sena:admin_usuarios' %}" class="tc-btn tc-btn--ghost"
+          >Cancelar</a
+        >
+      </div>
+    </form>
+
+    {% if editar %}
+    {# Información adicional del usuario al editar #}
+    <div class="mt-8 flex flex-wrap gap-6 border-t border-outline-variant/15 pt-6 text-sm text-on-surface-variant">
+      <p><strong class="text-on-surface">ID de usuario:</strong> {{ usuario.id }}</p>
+      <p><strong class="text-on-surface">Creado:</strong> {{ usuario.fecha_creacion|date:"d/m/Y H:i" }}</p>
     </div>
+    {% endif %}
   </div>
-</div>
+</main>
 {% include "includes/admin_mobile_nav.html" with active="usuarios" %}
 <script>
   function togglePeluqueriaField() {

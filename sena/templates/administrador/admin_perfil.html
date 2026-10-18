@@ -7,13 +7,16 @@
 <main class="ml-0 md:ml-64 flex-1 min-h-screen p-8 md:p-12 pb-24 md:pb-12">
   {% include "includes/panel_header.html" %}
   <header class="mb-10">
-    <h1 class="font-headline text-4xl text-primary">Mi Perfil</h1>
-    <p class="mt-2 text-on-surface-variant">Gestiona tu información personal.</p>
+    <p class="tc-eyebrow mb-3">Mi cuenta</p>
+    <h1 class="tc-display text-4xl md:text-5xl">
+      Mi <span class="tc-gold-text">perfil</span>
+    </h1>
+    <p class="mt-3 text-on-surface-variant">Gestiona tu información personal.</p>
   </header>
 
   <div class="grid md:grid-cols-2 gap-8 max-w-5xl">
     {# Tarjeta de info del usuario #}
-    <div class="bg-surface-container-low rounded-xl p-8 ambient-glow flex flex-col items-center text-center relative overflow-hidden">
+    <div class="tc-glass rounded-xl p-8 flex flex-col items-center text-center relative overflow-hidden">
       <div class="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
       <div class="w-28 h-28 rounded-full mb-6 bg-surface-container-highest border border-outline-variant/30 flex items-center justify-center overflow-hidden">
         {# Foto de perfil del administrador (o ícono si no tiene) #}
@@ -26,7 +29,7 @@
       <h2 class="font-headline text-2xl font-bold tracking-tight mb-1">
         {{ usuario.nombre }} {{ usuario.apellido }}
       </h2>
-      <p class="text-primary text-xs uppercase tracking-widest font-bold mb-1">Administrador</p>
+      <p class="tc-eyebrow mt-1 mb-1">Administrador</p>
       <p class="text-on-surface-variant text-sm mb-6">Miembro desde {{ usuario.fecha_creacion|date:"F Y" }}</p>
       <div class="w-full space-y-3 text-left text-sm">
         <p class="flex items-center gap-3 text-on-surface-variant">
@@ -36,49 +39,61 @@
           <span class="material-symbols-outlined text-primary text-base">call</span>{{ usuario.telefono|default:"Sin registrar" }}
         </p>
       </div>
-      <div class="flex gap-3 w-full mt-6">
-        <button type="button" data-profile-edit="editar" class="flex-1 gold-gradient text-on-primary font-bold py-3 rounded-md hover:opacity-90 transition-opacity active:scale-95 text-sm tracking-wide">
-          EDITAR PERFIL
-        </button>
-      </div>
+      <button
+        type="button"
+        data-profile-edit="editar"
+        class="tc-btn tc-btn--gold mt-6 w-full"
+      >
+        <span class="material-symbols-outlined text-[18px]">edit</span>
+        Editar perfil
+      </button>
     </div>
 
     {# Formulario de edición + acciones #}
     <div class="flex flex-col gap-6">
       {# Formulario editar datos #}
-      <div id="editar" class="bg-surface-container-low rounded-xl p-8 ambient-glow scroll-mt-28">
-        <h3 class="font-headline text-xl text-primary mb-6">Editar mis datos</h3>
-        <form method="post" enctype="multipart/form-data" class="space-y-5">
+      <div id="editar" class="hidden scroll-mt-28">
+        <form method="post" enctype="multipart/form-data" class="tc-form tc-form__grid">
           {% csrf_token %}
-          <div>
-            <label class="text-[10px] uppercase tracking-[0.2em] text-primary font-bold block mb-1">Nombre</label>
-            <input class="w-full bg-transparent border-b border-outline-variant/30 py-2 focus:outline-none focus:border-primary text-on-surface text-sm" name="nombre" value="{{ usuario.nombre }}" required />
+
+          <div class="tc-field--full space-y-3">
+            <p class="tc-eyebrow">Foto de perfil</p>
+            <label class="tc-field tc-field--always">
+              <input type="file" name="foto" accept="image/*" class="tc-field__input" />
+              <span class="tc-field__label">Imagen (JPG, PNG o WEBP)</span>
+            </label>
           </div>
-          <div>
-            <label class="text-[10px] uppercase tracking-[0.2em] text-primary font-bold block mb-1">Apellido</label>
-            <input class="w-full bg-transparent border-b border-outline-variant/30 py-2 focus:outline-none focus:border-primary text-on-surface text-sm" name="apellido" value="{{ usuario.apellido }}" required />
+
+          <label class="tc-field">
+            <input required name="nombre" value="{{ usuario.nombre }}" placeholder=" " class="tc-field__input" />
+            <span class="tc-field__label">Nombre</span>
+          </label>
+
+          <label class="tc-field">
+            <input required name="apellido" value="{{ usuario.apellido }}" placeholder=" " class="tc-field__input" />
+            <span class="tc-field__label">Apellido</span>
+          </label>
+
+          <label class="tc-field tc-field--full">
+            <input type="tel" name="telefono" value="{{ usuario.telefono }}" placeholder=" " class="tc-field__input" />
+            <span class="tc-field__label">Teléfono</span>
+          </label>
+
+          <div class="tc-form__actions">
+            <button type="submit" class="tc-btn tc-btn--gold">
+              <span class="material-symbols-outlined text-[18px]">save</span>
+              Guardar cambios
+            </button>
           </div>
-          <div>
-            <label class="text-[10px] uppercase tracking-[0.2em] text-primary font-bold block mb-1">Teléfono</label>
-            <input class="w-full bg-transparent border-b border-outline-variant/30 py-2 focus:outline-none focus:border-primary text-on-surface text-sm" name="telefono" value="{{ usuario.telefono }}" />
-          </div>
-          <div>
-            <label class="text-[10px] uppercase tracking-[0.2em] text-primary font-bold block mb-1">Foto de perfil</label>
-            <input type="file" name="foto" accept="image/*" class="w-full text-on-surface-variant text-sm file:mr-3 file:rounded-md file:border-0 file:bg-primary/10 file:px-3 file:py-2 file:text-primary" />
-            <p class="mt-1 text-[10px] text-on-surface-variant">JPG, PNG o WEBP.</p>
-          </div>
-          <button type="submit" class="w-full py-3 rounded-md border border-primary/40 text-primary hover:bg-primary/5 transition-colors text-sm font-semibold uppercase tracking-widest active:scale-95">
-            Guardar cambios
-          </button>
         </form>
-        <a href="{% url 'sena:cambiar_password' %}" class="mt-4 flex w-full items-center justify-center gap-2 rounded-md border border-outline-variant/30 py-3 text-sm font-semibold uppercase tracking-widest text-primary transition-colors hover:border-primary">
+        <a href="{% url 'sena:cambiar_password' %}" class="tc-btn tc-btn--ghost mt-4 w-full">
           <span class="material-symbols-outlined text-base">lock_reset</span>Cambiar contraseña
         </a>
       </div>
 
       {# Notificaciones recientes #}
-      <div class="bg-surface-container-low rounded-xl p-8 ambient-glow">
-        <h3 class="font-headline text-xl text-primary mb-6">Notificaciones recientes</h3>
+      <div class="tc-glass rounded-xl p-8">
+        <h3 class="tc-eyebrow mb-6">Notificaciones recientes</h3>
         {% if notificaciones %}
         <div class="space-y-3 max-h-64 overflow-y-auto scrollbar-hide">
           {% for notif in notificaciones|slice:":5" %}

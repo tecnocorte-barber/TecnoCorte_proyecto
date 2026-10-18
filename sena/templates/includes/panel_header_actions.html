@@ -18,15 +18,6 @@ Se usa solo o dentro de "includes/panel_header.html".{% endcomment %}
   {% url 'sena:usuario_configuracion' as url_configuracion %}
 {% endif %}
 <div class="flex items-center gap-3 md:gap-4" data-panel-actions>
-  {# Icono de Dashboard: acceso rápido al inicio del panel #}
-  <a
-    href="{{ url_dashboard }}"
-    class="panel-header-icon"
-    title="Dashboard"
-    aria-label="Dashboard"
-    ><span class="material-symbols-outlined">dashboard</span></a
-  >
-
   {# Icono de Notificaciones con badge de pendientes (opcional: se puede ocultar) #}
   {% if not sin_notificaciones %}
   <a

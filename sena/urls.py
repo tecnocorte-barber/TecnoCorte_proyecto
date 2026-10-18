@@ -100,6 +100,7 @@ urlpatterns = [
     path('admin/usuarios/<int:id>/quitar_foto/', views.admin_quitar_foto_usuario, name="admin_quitar_foto_usuario"),  # Quitar foto de perfil de un usuario
     path('admin/configuracion/', views.admin_configuracion, name="admin_configuracion"),  # Configuración general y privacidad
     path('admin/mensajes/', views.admin_mensajes, name="admin_mensajes"),  # Ver mensajes de contacto
+    path('admin/servicios/', views.admin_solicitudes_servicios, name="admin_solicitudes_servicios"),  # Aprobar/rechazar servicios que piden los barberos
     path('admin/notificaciones/', views.admin_notificaciones, name="admin_notificaciones"),  # Ver notificaciones del admin
 
     # === API REST (accesible con token o sesión) ===

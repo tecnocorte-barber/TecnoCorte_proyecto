@@ -412,3 +412,94 @@ class RegistroError(models.Model):
         if self.codigo_http == 403:
             return "Acceso denegado"
         return "Error inesperado del sitio"
+
+
+# ============================================================================
+# Servicios propios de un barbero
+# ----------------------------------------------------------------------------
+# El barbero no crea servicios directamente: envía una SOLICITUD y el Admin la
+# resuelve. Si la aprueba, se crea el servicio a nombre de ese barbero; si la
+# rechaza, se guarda el motivo.
+# ============================================================================
+class Servicio(models.Model):
+    """Servicio que ofrece un barbero concreto (nace de una solicitud aprobada)."""
+
+    nombre = models.CharField(max_length=100)
+    descripcion = models.CharField(max_length=300, blank=True, default="")
+    duracion = models.CharField(max_length=50, default="30 Minutos")
+    minutos = models.PositiveSmallIntegerField(default=30)
+    precio = models.PositiveIntegerField(default=0)
+    barbero = models.ForeignKey(
+        Usuario, on_delete=models.CASCADE, related_name="servicios"
+    )
+    peluqueria = models.ForeignKey(
+        Peluqueria,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="servicios",
+    )
+    activo = models.BooleanField(default=True)
+    creado = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["nombre"]
+        verbose_name = "Servicio del barbero"
+        verbose_name_plural = "Servicios de barberos"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["barbero", "nombre"], name="servicio_unico_por_barbero"
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.nombre} - {self.barbero_id}"
+
+    def a_dict(self):
+        """Mismo formato que la lista SERVICIOS que consume la reserva."""
+        return {
+            "nombre": self.nombre,
+            "descripcion": self.descripcion,
+            "duracion": self.duracion,
+            "minutos": self.minutos,
+            "precio": self.precio,
+        }
+
+
+class SolicitudServicio(models.Model):
+    """Petición del barbero para que el Admin le cree un servicio nuevo."""
+
+    ESTADOS = (
+        ("pendiente", "Pendiente"),
+        ("aprobada", "Aprobada"),
+        ("rechazada", "Rechazada"),
+    )
+
+    barbero = models.ForeignKey(
+        Usuario, on_delete=models.CASCADE, related_name="solicitudes_servicio"
+    )
+    nombre = models.CharField(max_length=100)
+    descripcion = models.CharField(max_length=300, blank=True, default="")
+    duracion = models.CharField(max_length=50, default="30 Minutos")
+    minutos = models.PositiveSmallIntegerField(default=30)
+    precio = models.PositiveIntegerField(default=0)
+    estado = models.CharField(max_length=20, choices=ESTADOS, default="pendiente")
+    nota_admin = models.CharField(max_length=300, blank=True, default="")
+    creada = models.DateTimeField(auto_now_add=True)
+    resuelta = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["-creada"]
+        verbose_name = "Solicitud de servicio"
+        verbose_name_plural = "Solicitudes de servicio"
+        indexes = [
+            models.Index(fields=["estado", "-creada"]),
+        ]
+
+    def __str__(self):
+        return f"{self.nombre} - {self.get_estado_display()} ({self.barbero_id})"
+
+    @property
+    def pendiente(self):
+        return self.estado == "pendiente"
+

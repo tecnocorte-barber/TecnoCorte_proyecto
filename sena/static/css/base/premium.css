@@ -1,0 +1,616 @@
+/* ============================================================================
+   TecnoCorte · Sistema de diseño PREMIUM (dark elegante + dorado)
+   ----------------------------------------------------------------------------
+   Capa de estilo global que se carga después de tema.css y base.css.
+   No sustituye al tema: lo intensifica. Todo lo "fuerte" está acotado a
+   html.dark para no romper el modo claro.
+   ========================================================================== */
+
+/* ── 1. Fondo ambiente premium ──────────────────────────────────────────── */
+html.dark body {
+  background-color: #0b0b0c;
+  background-image:
+    radial-gradient(1100px 620px at 82% -8%, rgba(214, 173, 66, 0.14), transparent 60%),
+    radial-gradient(760px 520px at -6% 108%, rgba(184, 137, 40, 0.1), transparent 62%),
+    linear-gradient(180deg, #0b0b0c 0%, #101012 55%, #0b0b0c 100%);
+  background-attachment: fixed;
+}
+
+/* Retícula sutil de "atelier" para dar profundidad sin ruido */
+html.dark body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.5;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px);
+  background-size: 46px 46px;
+  mask-image: radial-gradient(circle at 50% 30%, #000 0%, transparent 78%);
+  -webkit-mask-image: radial-gradient(circle at 50% 30%, #000 0%, transparent 78%);
+}
+
+/* El contenido siempre por encima del ambiente */
+body > *:not(script):not(style):not(link) {
+  position: relative;
+  z-index: 1;
+}
+
+/* ── 2. Tipografía de exhibición ────────────────────────────────────────── */
+.tc-display {
+  font-family: "Noto Serif", serif;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  line-height: 1.02;
+}
+.tc-eyebrow {
+  font: 700 0.68rem/1 "Manrope", sans-serif;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--c-primary);
+}
+.tc-gold-text {
+  background: linear-gradient(120deg, #f3d98a 0%, #d6ad42 45%, #a9791d 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+/* En modo claro el dorado claro no se lee sobre fondo blanco: se oscurece */
+html:not(.dark) .tc-gold-text {
+  background: linear-gradient(120deg, #8a6510 0%, #6f520d 55%, #4f3908 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+/* ── 3. Tarjetas de cristal (glassmorphism oscuro) ──────────────────────── */
+.tc-glass {
+  position: relative;
+  border-radius: 1.25rem;
+  border: 1px solid rgba(214, 173, 66, 0.14);
+  background:
+    linear-gradient(180deg, rgba(38, 38, 42, 0.62), rgba(20, 20, 22, 0.72));
+  backdrop-filter: blur(18px) saturate(120%);
+  -webkit-backdrop-filter: blur(18px) saturate(120%);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.05) inset,
+    0 26px 60px -28px rgba(0, 0, 0, 0.85);
+}
+html:not(.dark) .tc-glass {
+  border-color: rgba(79, 57, 8, 0.18);
+  background: linear-gradient(180deg, rgba(252, 250, 245, 0.95), rgba(240, 235, 224, 0.92));
+  box-shadow: 0 16px 38px -24px rgba(43, 35, 20, 0.28), 0 1px 0 rgba(255, 255, 255, 0.7) inset;
+}
+/* Halo dorado que aparece al pasar el ratón */
+.tc-glass--hover {
+  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.28s ease,
+    box-shadow 0.28s ease;
+}
+.tc-glass--hover:hover {
+  transform: translateY(-4px);
+  border-color: rgba(214, 173, 66, 0.55);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.07) inset,
+    0 0 0 1px rgba(214, 173, 66, 0.22),
+    0 34px 70px -30px rgba(0, 0, 0, 0.9),
+    0 0 46px -12px rgba(214, 173, 66, 0.42);
+}
+/* Marcador de esquina tipo sastrería */
+.tc-glass--hover::after {
+  content: "";
+  position: absolute;
+  right: 1rem;
+  top: 1rem;
+  width: 1.6rem;
+  height: 1.6rem;
+  border-top: 2px solid var(--c-primary);
+  border-right: 2px solid var(--c-primary);
+  border-radius: 0 0.35rem 0 0;
+  opacity: 0;
+  transform: translate(3px, -3px);
+  transition: opacity 0.28s ease, transform 0.28s ease;
+}
+.tc-glass--hover:hover::after {
+  opacity: 0.85;
+  transform: none;
+}
+
+/* ── 4. Badge de sede (indicador de tienda) ─────────────────────────────── */
+.tc-sede-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.5rem 1rem 0.5rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid rgba(214, 173, 66, 0.35);
+  background: linear-gradient(120deg, rgba(214, 173, 66, 0.16), rgba(214, 173, 66, 0.04));
+  color: var(--c-on-surface);
+  font: 700 0.78rem/1 "Manrope", sans-serif;
+  letter-spacing: 0.06em;
+  box-shadow: 0 10px 30px -16px rgba(214, 173, 66, 0.6);
+}
+.tc-sede-badge .material-symbols-outlined {
+  font-size: 1.05rem;
+  color: var(--c-primary);
+}
+.tc-sede-badge__label {
+  color: var(--c-primary);
+  text-transform: uppercase;
+  font-size: 0.62rem;
+  letter-spacing: 0.2em;
+}
+.tc-sede-badge__value {
+  color: var(--c-on-surface);
+  font-weight: 700;
+}
+
+/* ── 5. Botones premium ─────────────────────────────────────────────────── */
+.tc-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  border-radius: 0.85rem;
+  padding: 0.95rem 1.6rem;
+  font: 800 0.8rem/1 "Manrope", sans-serif;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: transform 0.18s ease, box-shadow 0.25s ease, background 0.25s ease,
+    color 0.25s ease, border-color 0.25s ease;
+}
+.tc-btn--gold {
+  background: linear-gradient(135deg, #f0cf72 0%, #d6ad42 42%, #b88928 100%);
+  color: #2a1f00;
+  box-shadow: 0 16px 40px -18px rgba(214, 173, 66, 0.85);
+}
+.tc-btn--gold:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 22px 52px -18px rgba(214, 173, 66, 0.95);
+}
+.tc-btn--gold:active:not(:disabled) {
+  transform: translateY(0) scale(0.985);
+}
+.tc-btn--ghost {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(214, 173, 66, 0.3);
+  color: var(--c-primary);
+}
+.tc-btn--ghost:hover {
+  background: rgba(214, 173, 66, 0.12);
+  border-color: var(--c-primary);
+}
+.tc-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  filter: saturate(0.6);
+}
+.tc-btn--sm {
+  padding: 0.6rem 1rem;
+  font-size: 0.68rem;
+  border-radius: 0.7rem;
+  letter-spacing: 0.1em;
+}
+/* Spinner reutilizable para estados de carga internos */
+.tc-spin {
+  display: inline-block;
+  width: 1.05rem;
+  height: 1.05rem;
+  border-radius: 999px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-bottom-color: transparent;
+  animation: tcSpin 0.7s linear infinite;
+}
+@keyframes tcSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ── 6. Formularios premium: dos columnas + etiquetas flotantes ─────────── */
+.tc-form {
+  border-radius: 1.4rem;
+  border: 1px solid rgba(214, 173, 66, 0.12);
+  background: linear-gradient(180deg, rgba(28, 28, 32, 0.72), rgba(17, 17, 19, 0.78));
+  box-shadow: 0 30px 70px -34px rgba(0, 0, 0, 0.9);
+  padding: 1.75rem;
+}
+html:not(.dark) .tc-form {
+  background: linear-gradient(180deg, #fbf8f2, #efe9dd);
+  border-color: rgba(79, 57, 8, 0.18);
+  box-shadow: 0 20px 46px -30px rgba(43, 35, 20, 0.32);
+}
+.tc-form__title {
+  font-family: "Noto Serif", serif;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+.tc-form__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.1rem;
+}
+/* El grid de dos columnas solo se abre cuando hay ancho de sobra */
+@media (min-width: 640px) {
+  .tc-form__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .tc-field--full {
+    grid-column: 1 / -1;
+  }
+}
+.tc-form__actions {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.9rem;
+  align-items: center;
+  padding-top: 0.4rem;
+  border-top: 1px solid rgba(214, 173, 66, 0.12);
+  margin-top: 0.4rem;
+}
+
+/* Campo con etiqueta flotante. Markup: input, luego label. */
+.tc-field {
+  position: relative;
+  display: block;
+  min-width: 0;
+}
+.tc-field__input {
+  width: 100%;
+  padding: 1.55rem 0.95rem 0.62rem;
+  border-radius: 0.85rem;
+  border: 1px solid var(--c-outline-variant, #4d4635);
+  background: color-mix(in srgb, var(--c-surface-container-high, #2a2a2a) 82%, transparent);
+  color: var(--c-on-surface);
+  font: 500 0.95rem/1.35 "Manrope", sans-serif;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.25s ease, background 0.25s ease;
+}
+.tc-field__input::placeholder {
+  color: transparent;
+}
+.tc-field__input:hover:not(:focus) {
+  border-color: color-mix(in srgb, var(--c-primary) 45%, var(--c-outline-variant));
+}
+.tc-field__input:focus {
+  border-color: var(--c-primary);
+  background: color-mix(in srgb, var(--c-primary) 7%, var(--c-surface-container-high, #2a2a2a));
+  box-shadow:
+    0 0 0 3px rgba(214, 173, 66, 0.18),
+    0 14px 34px -20px rgba(214, 173, 66, 0.8);
+}
+.tc-field__label {
+  position: absolute;
+  left: 0.95rem;
+  top: 1rem;
+  color: var(--c-on-surface-variant);
+  font: 700 0.7rem/1 "Manrope", sans-serif;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  pointer-events: none;
+  transition: transform 0.18s ease, color 0.18s ease, font-size 0.18s ease,
+    letter-spacing 0.18s ease;
+  transform-origin: left top;
+}
+/* La etiqueta sube al enfocar o cuando ya hay contenido */
+.tc-field__input:focus ~ .tc-field__label,
+.tc-field__input:not(:placeholder-shown) ~ .tc-field__label {
+  transform: translateY(-0.62rem) scale(0.92);
+  color: var(--c-primary);
+  letter-spacing: 0.22em;
+}
+/* Variantes donde :placeholder-shown no funciona (select, fecha, archivo) */
+.tc-field--always .tc-field__label {
+  transform: translateY(-0.62rem) scale(0.92);
+  color: var(--c-on-surface-variant);
+  letter-spacing: 0.22em;
+}
+.tc-field--always .tc-field__input:focus ~ .tc-field__label {
+  color: var(--c-primary);
+}
+.tc-field__hint {
+  display: block;
+  margin-top: 0.4rem;
+  padding-left: 0.2rem;
+  font: 500 0.72rem/1.35 "Manrope", sans-serif;
+  color: var(--c-on-surface-variant);
+  opacity: 0.8;
+}
+/* Caja de archivo: se disfraza de campo normal */
+.tc-field__input[type="file"] {
+  padding-top: 1.7rem;
+  cursor: pointer;
+}
+.tc-field__input[type="file"]::file-selector-button {
+  margin-right: 0.8rem;
+  border: 1px solid rgba(214, 173, 66, 0.35);
+  border-radius: 0.55rem;
+  background: rgba(214, 173, 66, 0.12);
+  color: var(--c-primary);
+  padding: 0.4rem 0.75rem;
+  font: 700 0.7rem/1 "Manrope", sans-serif;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+/* Interruptor (checkbox) premium */
+.tc-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  cursor: pointer;
+  font: 600 0.85rem/1.2 "Manrope", sans-serif;
+  color: var(--c-on-surface);
+}
+.tc-switch input {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 2.6rem;
+  height: 1.45rem;
+  border-radius: 999px;
+  border: 1px solid var(--c-outline-variant);
+  background: color-mix(in srgb, var(--c-surface-container-high) 88%, transparent);
+  position: relative;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+  flex-shrink: 0;
+}
+.tc-switch input::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0.16rem;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 999px;
+  background: var(--c-on-surface-variant);
+  transform: translateY(-50%);
+  transition: left 0.2s cubic-bezier(0.22, 1, 0.36, 1), background 0.2s ease;
+}
+.tc-switch input:checked {
+  background: linear-gradient(135deg, #f0cf72, #b88928);
+  border-color: transparent;
+}
+.tc-switch input:checked::after {
+  left: calc(100% - 1.16rem);
+  background: #2a1f00;
+}
+.tc-switch input:focus-visible {
+  box-shadow: 0 0 0 3px rgba(214, 173, 66, 0.28);
+}
+
+/* ── 7. Ticket de resumen (lujo) ────────────────────────────────────────── */
+.tc-ticket {
+  position: relative;
+  border-radius: 1.4rem;
+  border: 1px solid rgba(214, 173, 66, 0.28);
+  background:
+    radial-gradient(120% 90% at 50% -10%, rgba(214, 173, 66, 0.14), transparent 58%),
+    linear-gradient(180deg, rgba(32, 32, 36, 0.92), rgba(15, 15, 17, 0.95));
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.06) inset,
+    0 40px 90px -40px rgba(0, 0, 0, 0.95);
+  color: var(--c-on-surface);
+  overflow: hidden;
+}
+html:not(.dark) .tc-ticket {
+  background:
+    radial-gradient(120% 90% at 50% -10%, rgba(111, 82, 13, 0.14), transparent 58%),
+    linear-gradient(180deg, #fdfbf6, #efe9dd);
+  border-color: rgba(79, 57, 8, 0.24);
+  box-shadow: 0 26px 58px -34px rgba(43, 35, 20, 0.34);
+}
+/* En modo claro las muescas del ticket se pintan con el fondo de página */
+html:not(.dark) .tc-ticket__notch {
+  background: var(--c-bg, #ece7dd);
+}
+.tc-ticket__head {
+  padding: 1.5rem 1.6rem 1.15rem;
+  border-bottom: 1px dashed rgba(214, 173, 66, 0.3);
+}
+.tc-ticket__brand {
+  font: 900 1.05rem/1 "Noto Serif", serif;
+  letter-spacing: 0.02em;
+  color: var(--c-primary);
+}
+.tc-ticket__sub {
+  margin-top: 0.35rem;
+  font: 600 0.66rem/1.3 "Manrope", sans-serif;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--c-on-surface-variant);
+}
+.tc-ticket__body {
+  padding: 1.35rem 1.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.05rem;
+}
+.tc-ticket__row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.tc-ticket__key {
+  font: 700 0.62rem/1.2 "Manrope", sans-serif;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--c-on-surface-variant);
+}
+.tc-ticket__val {
+  margin-top: 0.3rem;
+  font: 600 1.02rem/1.3 "Manrope", sans-serif;
+  color: var(--c-on-surface);
+}
+.tc-ticket__val--gold {
+  color: var(--c-primary);
+  font-weight: 800;
+}
+.tc-ticket__foot {
+  padding: 1.25rem 1.6rem 1.6rem;
+  border-top: 1px dashed rgba(214, 173, 66, 0.3);
+}
+.tc-ticket__total {
+  font-family: "Noto Serif", serif;
+  font-weight: 900;
+  font-size: 2.05rem;
+  letter-spacing: -0.02em;
+  color: var(--c-primary);
+  line-height: 1;
+}
+/* Muescas laterales del ticket, efecto "talonario" */
+.tc-ticket__notch {
+  position: absolute;
+  width: 1.4rem;
+  height: 1.4rem;
+  border-radius: 999px;
+  background: var(--c-bg, #0b0b0c);
+  border: 1px solid rgba(214, 173, 66, 0.28);
+  top: 50%;
+  transform: translateY(-50%);
+}
+.tc-ticket__notch--left {
+  left: -0.72rem;
+}
+.tc-ticket__notch--right {
+  right: -0.72rem;
+}
+
+/* ── 8. Pasos numerados del flujo de reserva ────────────────────────────── */
+.tc-step__num {
+  font-family: "Noto Serif", serif;
+  font-weight: 900;
+  font-size: 1.65rem;
+  line-height: 1;
+  color: var(--c-primary);
+  text-shadow: 0 0 26px rgba(214, 173, 66, 0.45);
+}
+.tc-step__title {
+  font-family: "Noto Serif", serif;
+  font-weight: 700;
+  font-size: 1.4rem;
+  letter-spacing: -0.01em;
+}
+.tc-step__rule {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(214, 173, 66, 0.5), transparent);
+}
+/* Tarjeta seleccionable (servicios, barberos, fechas, horas) */
+.tc-opt {
+  cursor: pointer;
+  transition: transform 0.24s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.24s ease,
+    box-shadow 0.24s ease, background 0.24s ease;
+}
+.tc-opt:hover {
+  transform: translateY(-3px);
+  border-color: rgba(214, 173, 66, 0.6) !important;
+  box-shadow: 0 0 0 1px rgba(214, 173, 66, 0.25), 0 26px 55px -30px rgba(0, 0, 0, 0.95),
+    0 0 40px -14px rgba(214, 173, 66, 0.5);
+}
+.tc-opt__mark {
+  color: var(--c-outline-variant);
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+.tc-opt:hover .tc-opt__mark {
+  color: var(--c-primary);
+}
+
+/* ── 9. Header minimalista ──────────────────────────────────────────────── */
+/* Icono de acción compacto y coherente en toda la cabecera */
+.panel-header-icon {
+  border-radius: 999px !important;
+}
+.panel-header-icon:hover {
+  background: rgba(214, 173, 66, 0.14) !important;
+}
+/* Menú de perfil: cristal premium */
+[data-profile-menu-panel] {
+  border-radius: 1rem !important;
+  border: 1px solid rgba(214, 173, 66, 0.22) !important;
+  background: linear-gradient(180deg, rgba(30, 30, 34, 0.97), rgba(16, 16, 18, 0.98)) !important;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  box-shadow: 0 34px 70px -30px rgba(0, 0, 0, 0.95) !important;
+}
+html:not(.dark) [data-profile-menu-panel] {
+  background: linear-gradient(180deg, #fcfaf5, #f0ebe0) !important;
+  border-color: rgba(79, 57, 8, 0.22) !important;
+}
+
+/* ── 10. Carrito visual ─────────────────────────────────────────────────── */
+.tc-cart-item {
+  transition: border-color 0.24s ease, box-shadow 0.24s ease, transform 0.24s ease;
+}
+.tc-cart-item:hover {
+  border-color: rgba(214, 173, 66, 0.45);
+  box-shadow: 0 26px 60px -32px rgba(0, 0, 0, 0.9), 0 0 34px -16px rgba(214, 173, 66, 0.42);
+}
+.tc-cart-thumb {
+  width: 5.5rem;
+  height: 5.5rem;
+  border-radius: 0.9rem;
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 1px solid rgba(214, 173, 66, 0.25);
+  background: color-mix(in srgb, var(--c-surface-container-highest) 85%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 14px 32px -20px rgba(0, 0, 0, 0.9);
+}
+.tc-cart-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+@media (max-width: 640px) {
+  .tc-cart-thumb {
+    width: 4.5rem;
+    height: 4.5rem;
+  }
+}
+
+/* ── 11. Utilidades varias ──────────────────────────────────────────────── */
+.tc-divider-gold {
+  height: 1px;
+  width: 100%;
+  background: linear-gradient(90deg, transparent, rgba(214, 173, 66, 0.55), transparent);
+}
+.tc-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border-radius: 999px;
+  border: 1px solid rgba(214, 173, 66, 0.28);
+  background: rgba(214, 173, 66, 0.08);
+  color: var(--c-primary);
+  padding: 0.28rem 0.7rem;
+  font: 700 0.64rem/1 "Manrope", sans-serif;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.tc-locked {
+  opacity: 0.85;
+}
+
+/* Accesibilidad: respeta a quien prefiere menos movimiento */
+@media (prefers-reduced-motion: reduce) {
+  .tc-glass--hover,
+  .tc-opt,
+  .tc-btn {
+    transition: none !important;
+  }
+  .tc-glass--hover:hover,
+  .tc-opt:hover {
+    transform: none;
+  }
+}

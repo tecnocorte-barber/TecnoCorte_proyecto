@@ -49,6 +49,18 @@
       <span class="font-label uppercase text-xs tracking-widest">Barberos</span>
     </a>
     <a
+      class="panel-glass-link flex items-center space-x-4 px-4 py-3 {% if active == 'servicios' %}panel-glass-link--active{% else %}text-on-surface-variant{% endif %}"
+      href="{% url 'sena:admin_solicitudes_servicios' %}"
+      ><span class="material-symbols-outlined">design_services</span
+      ><span class="font-label uppercase text-xs tracking-widest"
+        >Servicios</span
+      {# Badge con las solicitudes de servicio pendientes #}
+  >{% if solicitudes_servicio_pendientes %}<span
+        class="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-error px-1 text-[10px] font-bold text-on-error"
+        >{{ solicitudes_servicio_pendientes }}</span
+      >{% endif %}</a
+    >
+    <a
       class="panel-glass-link flex items-center space-x-4 px-4 py-3 {% if active == 'usuarios' %}panel-glass-link--active{% else %}text-on-surface-variant{% endif %}"
       href="{% url 'sena:admin_usuarios' %}"
     >

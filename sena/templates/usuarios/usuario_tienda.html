@@ -365,7 +365,8 @@
                     {% csrf_token %}
                     <button
                       type="submit"
-                      class="flex cursor-pointer items-center gap-1 text-sm font-medium text-primary transition-colors hover:text-primary-container"
+                      class="tc-btn tc-btn--gold tc-btn--sm"
+                      aria-busy="false"
                     >
                       Añadir
                       <span class="material-symbols-outlined text-[16px]"
@@ -577,7 +578,22 @@
         // El indicador del carrito usa la clase .cart-count (no un id) y puede
         // repetirse en la navegación de escritorio y móvil.
         var badges = document.querySelectorAll(".cart-count");
+        // Estado de carga visible: el botón pasa a "Cargando..." con spinner
+        // mientras el servidor confirma que el producto se añadió.
         button.disabled = true;
+        button.setAttribute("aria-busy", "true");
+        if (button.dataset.textoOriginal === undefined) {
+          button.dataset.textoOriginal = button.innerHTML;
+        }
+        button.innerHTML =
+          '<span class="tc-spin" aria-hidden="true"></span> Cargando...';
+        function restaurarBoton() {
+          button.disabled = false;
+          button.setAttribute("aria-busy", "false");
+          if (button.dataset.textoOriginal !== undefined) {
+            button.innerHTML = button.dataset.textoOriginal;
+          }
+        }
         fetch(form.action, {
           method: "POST",
           headers: {
@@ -603,7 +619,7 @@
                 badge.classList.remove("hidden");
               });
             }
-            button.disabled = false;
+            restaurarBoton();
             if (window.TecnoCorteNotify)
               window.TecnoCorteNotify.success(
                 data.mensaje || "Producto agregado al carrito.",
@@ -618,7 +634,7 @@
             }
             if (window.TecnoCorteNotify)
               window.TecnoCorteNotify.error(error.message);
-            button.disabled = false;
+            restaurarBoton();
           });
       });
     </script>

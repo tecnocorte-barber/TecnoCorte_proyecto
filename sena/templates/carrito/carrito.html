@@ -122,16 +122,13 @@
         <div class="flex-1 space-y-6" id="cart-items">
           {% for item in items %}
           <div
-            class="bg-surface-container-low rounded-xl p-6 flex flex-col sm:flex-row sm:items-center gap-6 ghost-border group"
+            class="tc-glass tc-cart-item rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center gap-6 group"
             data-cart-item="{{ item.producto.id }}"
           >
-            <div
-              class="w-20 h-24 bg-surface-container-highest rounded-md overflow-hidden shrink-0 flex items-center justify-center"
-            >
+            <div class="tc-cart-thumb">
               {% if item.producto.imagen %}<img
                 src="{{ item.producto.imagen.url }}"
                 alt="{{ item.producto.nombre }}"
-                class="h-full w-full object-cover"
               />{% else %}<span
                 class="material-symbols-outlined text-primary/40 text-4xl"
                 >content_cut</span
@@ -221,9 +218,7 @@
         {# Resumen del carrito: total y botón para finalizar compra #}
         <!-- Summary -->
         <aside class="lg:w-80 shrink-0">
-          <div
-            class="bg-surface-container-low rounded-xl p-8 ambient-glow sticky top-32 ghost-border"
-          >
+          <div class="tc-glass rounded-2xl p-8 sticky top-32">
             <h3
               class="font-headline text-2xl text-primary-container mb-6 border-b border-outline-variant/20 pb-4"
             >

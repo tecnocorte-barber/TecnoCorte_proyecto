@@ -11,3 +11,8 @@ staticfiles/
 media/
 DOCUMENTACION_PROYECTO.md
 .idea/
+
+# Registros locales del servidor de desarrollo
+servidor.log
+servidor.err.log
+logs/

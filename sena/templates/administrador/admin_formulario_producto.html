@@ -3,97 +3,142 @@
 antialiased flex bg-surface{% endblock %}{% block content %}{% include "includes/admin_sidebar.html" with active="productos" %}
 <main class="ml-0 md:ml-64 flex-1 p-6 md:p-12 pb-24 md:pb-12">
   {% include "includes/panel_header.html" %}
-  <div class="max-w-xl mx-auto">
+  <div class="max-w-3xl mx-auto">
     <a href="{% url 'sena:admin_productos' %}" class="text-primary"
       >← Volver a productos</a
     >
-    <div class="bg-surface-container-low p-6 md:p-8 rounded-xl mt-6">
-    <h1 class="font-headline text-3xl mb-6">
-      {% if producto %}Editar{% else %}Nuevo{% endif %} producto
-    </h1>
-    <form method="post" enctype="multipart/form-data" class="space-y-5">
-      {% csrf_token %}<input
-        required
-        name="nombre"
-        value="{{ producto.nombre|default:'' }}"
-        placeholder="Nombre"
-        class="w-full rounded bg-surface-container-high border-0 p-3"
-      /><textarea
-        name="descripcion"
-        placeholder="Descripción"
-        class="w-full rounded bg-surface-container-high border-0 p-3"
-      >{{ producto.descripcion|default:'' }}</textarea>
+
+    <div class="mt-6 mb-8">
+      <p class="tc-eyebrow mb-3">Catálogo</p>
+      <h1 class="tc-display text-4xl md:text-5xl">
+        {% if producto %}Editar{% else %}Nuevo{% endif %}
+        <span class="tc-gold-text">producto</span>
+      </h1>
+      <p class="mt-3 text-on-surface-variant">
+        Completa la ficha del producto. Los campos con fondo más claro se
+        iluminan en dorado al enfocarlos.
+      </p>
+    </div>
+
+    <form
+      method="post"
+      enctype="multipart/form-data"
+      class="tc-form tc-form__grid"
+    >
+      {% csrf_token %}
+
+      <label class="tc-field tc-field--full">
+        <input
+          required
+          name="nombre"
+          value="{{ producto.nombre|default:'' }}"
+          placeholder=" "
+          class="tc-field__input"
+        />
+        <span class="tc-field__label">Nombre del producto</span>
+      </label>
+
+      <label class="tc-field tc-field--full">
+        <textarea
+          name="descripcion"
+          placeholder=" "
+          class="tc-field__input"
+          rows="3"
+        >{{ producto.descripcion|default:'' }}</textarea>
+        <span class="tc-field__label">Descripción</span>
+      </label>
+
       {# Imagen del producto: el Admin puede subirla o quitarla #}
-      <div class="space-y-3">
-        <p class="font-label uppercase text-xs tracking-widest text-on-surface-variant">
-          Foto del producto
-        </p>
+      <div class="tc-field--full space-y-3">
+        <p class="tc-eyebrow">Foto del producto</p>
         {% if producto.imagen %}
         <img
           src="{{ producto.imagen.url }}"
           alt="{{ producto.nombre }}"
-          class="h-40 w-full rounded-lg object-cover border border-outline-variant/20"
+          class="h-48 w-full rounded-xl object-cover border border-primary/25"
         />
-        <label class="flex items-center gap-2 text-sm text-error">
+        <label class="tc-switch">
           <input type="checkbox" name="quitar_imagen" />
-          Quitar la foto actual
+          <span class="text-error">Quitar la foto actual</span>
         </label>
         {% endif %}
-        <input
-          type="file"
-          name="imagen"
-          accept="image/*"
-          class="w-full rounded bg-surface-container-high border-0 p-3 text-sm"
-        />
-        <p class="text-xs text-on-surface-variant">
-          Formatos permitidos: JPG, PNG o WEBP. Si subes una nueva imagen se guarda en la base de datos.
-        </p>
+        <label class="tc-field tc-field--always">
+          <input
+            type="file"
+            name="imagen"
+            accept="image/*"
+            class="tc-field__input"
+          />
+          <span class="tc-field__label">Imagen (JPG, PNG o WEBP)</span>
+        </label>
+        <span class="tc-field__hint"
+          >Si subes una nueva imagen se guarda en la base de datos.</span
+        >
       </div>
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+      <label class="tc-field">
         <input
           required
           type="number"
           min="0"
           name="precio"
           value="{{ producto.precio|default:'' }}"
-          placeholder="Precio"
-          class="rounded bg-surface-container-high border-0 p-3"
-        /><input
+          placeholder=" "
+          class="tc-field__input"
+        />
+        <span class="tc-field__label">Precio (COP)</span>
+      </label>
+
+      <label class="tc-field">
+        <input
           required
           type="number"
           min="0"
           name="stock"
           value="{{ producto.stock|default:0 }}"
-          placeholder="Stock"
-          class="rounded bg-surface-container-high border-0 p-3"
+          placeholder=" "
+          class="tc-field__input"
         />
+        <span class="tc-field__label">Stock disponible</span>
+      </label>
+
+      <label class="tc-field tc-field--always">
+        <select name="categoria" class="tc-field__input">
+          {% for categoria in categorias %}
+          {# Opciones de categoría del producto #}
+          <option
+            value="{{ categoria.0 }}"
+            {% if producto.categoria == categoria.0 %}selected{% endif %}
+          >
+            {{ categoria.1 }}
+          </option>
+          {% endfor %}
+        </select>
+        <span class="tc-field__label">Categoría</span>
+      </label>
+
+      <div class="tc-field--full">
+        <label class="tc-switch">
+          <input
+            type="checkbox"
+            name="disponible"
+            {% if not producto or producto.disponible %}checked{% endif %}
+          />
+          {# Disponibilidad en la tienda #}
+          <span>Disponible en la tienda</span>
+        </label>
       </div>
-      <select
-        name="categoria"
-        class="w-full rounded bg-surface-container-high border-0 p-3"
-      >
-      {% for categoria in categorias %}
-      {# Opciones de categoría del producto #}
-      <option
-          value="{{ categoria.0 }}"
-          {% if producto.categoria == categoria.0 %}selected{% endif %}
+
+      <div class="tc-form__actions">
+        <button class="tc-btn tc-btn--gold" type="submit">
+          <span class="material-symbols-outlined text-[18px]">save</span>
+          Guardar producto
+        </button>
+        <a href="{% url 'sena:admin_productos' %}" class="tc-btn tc-btn--ghost"
+          >Cancelar</a
         >
-          {{ categoria.1 }}
-        </option>
-        {% endfor %}</select
-      ><label class="flex gap-2"
-        ><input
-          type="checkbox"
-          name="disponible"
-          {% if not producto or producto.disponible %}checked{% endif %}
-        />
-        {# Disponibilidad en la tienda #}
-        Disponible en tienda</label
-      ><button class="btn-gold-gradient px-5 py-3 rounded font-bold">
-        Guardar producto
-      </button>
+      </div>
     </form>
-  </div>
   </div>
 </main>
 {% include "includes/admin_mobile_nav.html" with active="productos" %}

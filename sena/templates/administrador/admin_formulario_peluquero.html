@@ -1,171 +1,155 @@
 {# Formulario para crear o editar un peluquero/barbero #}
-{% extends "usuarios/dashboard_base.html" %} {% block title %}Crear / Editar
-Peluquero - TecnoCorte{% endblock %} {% block body_class %}font-body antialiased
-flex bg-surface{% endblock %} {% block content %} {% include "includes/admin_sidebar.html" with active="peluqueros" %}
+{% extends "usuarios/dashboard_base.html" %}
+{% block title %}Crear / Editar Peluquero - TecnoCorte{% endblock %}
+{% block body_class %}font-body antialiased flex bg-surface{% endblock %}
+{% block content %}
+{% include "includes/admin_sidebar.html" with active="peluqueros" %}
 <main class="ml-0 md:ml-64 flex-1 min-h-screen p-6 md:p-12 pb-24 md:pb-12 bg-surface">
   {% include "includes/panel_header.html" %}
-  <!-- Header -->
-  <header class="max-w-2xl mx-auto flex flex-wrap justify-between items-end gap-4 mb-8 md:mb-16">
-    <div>
-      <h2 class="font-headline text-4xl text-on-background tracking-tight">
-        {% if datos %}Editar{% else %}Crear{% endif %} Barbero
-      </h2>
-      <p class="font-body text-on-surface-variant mt-2">
-        Registra un nuevo barbero en TecnoCorte.
-      </p>
-    </div>
+  <div class="mx-auto max-w-3xl">
     <a
       href="{% url 'sena:admin_peluqueros' %}"
-      class="flex items-center gap-2 text-primary uppercase tracking-widest text-sm font-bold hover:text-primary-container transition-colors active:scale-95"
+      class="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-primary transition-colors hover:text-primary-container active:scale-95"
       ><span class="material-symbols-outlined text-base">arrow_back</span
       >Volver</a
     >
-  </header>
-  <!-- Form Card -->
-  <div
-    class="bg-surface-container-low rounded-lg ambient-shadow p-6 md:p-10 max-w-2xl mx-auto"
-  >
-    <form method="post" enctype="multipart/form-data" class="grid gap-6">
-      {% csrf_token %} {% if error %}
-      {# Mensaje de error si existe #}
+
+    <div class="mt-6 mb-8">
+      <p class="tc-eyebrow mb-3">Equipo</p>
+      <h1 class="tc-display text-4xl md:text-5xl">
+        {% if datos %}Editar{% else %}Nuevo{% endif %}
+        <span class="tc-gold-text">barbero</span>
+      </h1>
+      <p class="mt-3 text-on-surface-variant">
+        {% if datos %}
+          Actualiza los datos del barbero y su barbería asignada.
+        {% else %}
+          Registra un nuevo barbero y asígnale su barbería.
+        {% endif %}
+      </p>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" class="tc-form tc-form__grid">
+      {% csrf_token %}
+      {% if error %}
       <p
-        class="rounded-lg border border-error/40 bg-error-container/20 p-3 text-error text-sm"
+        class="tc-field--full rounded-xl border border-error/40 bg-error/10 p-3 text-sm text-error"
       >
         {{ error }}
       </p>
       {% endif %}
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-        <div class="grid gap-2">
-          <label
-            class="font-label text-xs uppercase tracking-widest text-on-surface-variant"
-            >Nombre</label
-          >
-          <input
-            type="text"
-            name="nombre"
-            required
-            value="{{ datos.nombre|default_if_none:'' }}"
-            placeholder="Nombre"
-            class="w-full bg-surface-container-highest border border-outline-variant/20 text-on-surface rounded-lg px-4 py-3 focus:ring-0 focus:border-primary transition-colors placeholder:text-on-surface-variant/50"
-          />
-        </div>
-        <div class="grid gap-2">
-          <label
-            class="font-label text-xs uppercase tracking-widest text-on-surface-variant"
-            >Apellido</label
-          >
-          <input
-            type="text"
-            name="apellido"
-            required
-            value="{{ datos.apellido|default_if_none:'' }}"
-            placeholder="Apellido"
-            class="w-full bg-surface-container-highest border border-outline-variant/20 text-on-surface rounded-lg px-4 py-3 focus:ring-0 focus:border-primary transition-colors placeholder:text-on-surface-variant/50"
-          />
-        </div>
-      </div>
-      <div class="grid gap-2">
-        <label
-          class="font-label text-xs uppercase tracking-widest text-on-surface-variant"
-          >Email</label
-        >
+
+      <label class="tc-field">
         <input
+          required
+          type="text"
+          name="nombre"
+          value="{{ datos.nombre|default_if_none:'' }}"
+          placeholder=" "
+          class="tc-field__input"
+        />
+        <span class="tc-field__label">Nombre</span>
+      </label>
+
+      <label class="tc-field">
+        <input
+          required
+          type="text"
+          name="apellido"
+          value="{{ datos.apellido|default_if_none:'' }}"
+          placeholder=" "
+          class="tc-field__input"
+        />
+        <span class="tc-field__label">Apellido</span>
+      </label>
+
+      <label class="tc-field tc-field--full">
+        <input
+          required
           type="email"
           name="email"
-          required
           value="{{ datos.email|default_if_none:'' }}"
-          placeholder="Email"
-          class="w-full bg-surface-container-highest border border-outline-variant/20 text-on-surface rounded-lg px-4 py-3 focus:ring-0 focus:border-primary transition-colors placeholder:text-on-surface-variant/50"
+          placeholder=" "
+          class="tc-field__input"
         />
-      </div>
-      <div class="grid gap-2">
-        <label
-          class="font-label text-xs uppercase tracking-widest text-on-surface-variant"
-          >Teléfono</label
-        >
+        <span class="tc-field__label">Correo electrónico</span>
+      </label>
+
+      <label class="tc-field tc-field--full">
         <input
           type="text"
           name="telefono"
           value="{{ datos.telefono|default_if_none:'' }}"
-          placeholder="Teléfono"
-          class="w-full bg-surface-container-highest border border-outline-variant/20 text-on-surface rounded-lg px-4 py-3 focus:ring-0 focus:border-primary transition-colors placeholder:text-on-surface-variant/50"
+          placeholder=" "
+          class="tc-field__input"
         />
-      </div>
-      <div class="grid gap-2">
-        <label
-          class="font-label text-xs uppercase tracking-widest text-on-surface-variant"
-          >Barbería</label
-        >
-        <select
-          name="peluqueria"
-          required
-          class="w-full bg-surface-container-highest border border-outline-variant/20 text-on-surface rounded-lg px-4 py-3 focus:ring-0 focus:border-primary transition-colors"
-        >
-          <option value="" class="bg-surface-container-high">
-            Seleccione la barbería
-          </option>
+        <span class="tc-field__label">Teléfono</span>
+      </label>
+
+      <label class="tc-field tc-field--always tc-field--full">
+        <select name="peluqueria" required class="tc-field__input">
+          <option value="">Seleccione la barbería</option>
           {% for peluqueria in peluquerias %}
           <option
             value="{{ peluqueria.id }}"
-            class="bg-surface-container-high"
             {% if datos and datos.peluqueria_id == peluqueria.id %}selected{% endif %}
           >
             {{ peluqueria.nombre }}
           </option>
           {% endfor %}
         </select>
-      </div>
-      <div class="grid gap-2">
-        <label
-          class="font-label text-xs uppercase tracking-widest text-on-surface-variant"
-          >Foto de perfil</label
-        >
+        <span class="tc-field__label">Barbería</span>
+      </label>
+
+      {# Foto de perfil: se puede reemplazar o quitar #}
+      <div class="tc-field--full space-y-3">
+        <p class="tc-eyebrow">Foto de perfil</p>
         {% if datos.foto %}
-        {# Foto actual del barbero #}
         <img
           src="{{ datos.foto.url }}"
           alt="{{ datos.nombre }}"
-          class="h-24 w-24 rounded-full object-cover border border-outline-variant/20"
+          class="h-24 w-24 rounded-full border border-primary/25 object-cover"
         />
-        <label class="flex items-center gap-2 text-sm text-error">
+        <label class="tc-switch">
           <input type="checkbox" name="quitar_foto" />
-          Quitar la foto actual
+          <span class="text-error">Quitar la foto actual</span>
         </label>
         {% endif %}
-        <input
-          type="file"
-          name="foto"
-          accept="image/*"
-          class="w-full bg-surface-container-highest border border-outline-variant/20 text-on-surface rounded-lg px-4 py-3 text-sm file:mr-3 file:rounded-md file:border-0 file:bg-primary/10 file:px-3 file:py-2 file:text-primary"
-        />
-        <p class="text-xs text-on-surface-variant">
-          Formatos permitidos: JPG, PNG o WEBP.
-        </p>
+        <label class="tc-field tc-field--always">
+          <input type="file" name="foto" accept="image/*" class="tc-field__input" />
+          <span class="tc-field__label">Imagen (JPG, PNG o WEBP)</span>
+        </label>
       </div>
-      <div class="grid gap-2">
-        <label
-          class="font-label text-xs uppercase tracking-widest text-on-surface-variant"
-          >Contraseña</label
-        >
+
+      <label class="tc-field tc-field--full">
         <input
           type="password"
           name="password"
+          placeholder=" "
           {% if not datos %}required{% endif %}
-          placeholder="Contraseña"
-          class="w-full bg-surface-container-highest border border-outline-variant/20 text-on-surface rounded-lg px-4 py-3 focus:ring-0 focus:border-primary transition-colors placeholder:text-on-surface-variant/50"
+          class="tc-field__input"
         />
-      </div>
-      <div class="pt-2">
-        <button
-          type="submit"
-          class="btn-gold-gradient font-label uppercase tracking-widest text-sm font-bold py-4 px-10 rounded-md hover:opacity-90 transition-opacity active:scale-95"
-        >
-          Guardar Barbero
+        <span class="tc-field__label">Contraseña</span>
+      </label>
+      <span class="tc-field__hint tc-field--full">
+        {% if datos %}
+          Déjala vacía para conservar la contraseña actual.
+        {% else %}
+          Mínimo 8 caracteres, con mayúscula, minúscula y número.
+        {% endif %}
+      </span>
+
+      <div class="tc-form__actions">
+        <button class="tc-btn tc-btn--gold" type="submit">
+          <span class="material-symbols-outlined text-[18px]">save</span>
+          {% if datos %}Guardar cambios{% else %}Crear barbero{% endif %}
         </button>
+        <a href="{% url 'sena:admin_peluqueros' %}" class="tc-btn tc-btn--ghost"
+          >Cancelar</a
+        >
       </div>
     </form>
   </div>
-  <div class="signature-divider mt-12"></div>
 </main>
 {% include "includes/admin_mobile_nav.html" with active="peluqueros" %}
 {% endblock %}
