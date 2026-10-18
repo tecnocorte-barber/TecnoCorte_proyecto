@@ -203,7 +203,7 @@
         </div>
       </section>
 
-      <section class="relative px-6 py-16 md:py-24">
+      <section id="resenas" class="relative px-6 py-16 md:py-24">
         <!-- Reseñas reales de clientes (se publican si el Admin lo permite) -->
         <div class="mx-auto max-w-7xl">
           <div class="mb-12 text-center">
@@ -213,8 +213,84 @@
               Lo que dicen nuestros <span class="heading-accent">Clientes</span>
             </h2>
             <p class="mx-auto mt-4 max-w-2xl text-lg text-on-surface-variant">
-              Reseñas reales que dejan los clientes después de su cita.
+              Reseñas reales que dejan los clientes.
             </p>
+          </div>
+
+          <!-- Reseña escrita desde la portada: máximo dos por persona -->
+          <div class="mx-auto mb-12 max-w-2xl">
+            {% if request.session.logueado.rol == "Cliente" %} {% if puede_resenar %}
+            <form
+              method="post"
+              action="{% url 'sena:usuario_dejar_resena' %}"
+              class="tc-glass rounded-2xl p-6 md:p-8"
+              data-form-resena
+            >
+              {% csrf_token %}
+              <p class="font-headline text-xl font-bold text-on-surface">
+                Deja tu reseña
+              </p>
+              <p class="mt-1 mb-4 text-sm text-on-surface-variant">
+                Te quedan {{ resenas_restantes }} de {{ resenas_por_persona }}
+                reseñas.
+              </p>
+              <div class="mb-4 flex items-center gap-1" data-estrellas>
+                {% for i in "12345" %}
+                <button
+                  type="button"
+                  data-valor="{{ forloop.counter }}"
+                  class="leading-none"
+                  aria-label="{{ forloop.counter }} estrellas"
+                >
+                  <span
+                    class="material-symbols-outlined text-3xl text-primary/30 transition-colors"
+                    data-estrella="{{ forloop.counter }}"
+                    >star</span
+                  >
+                </button>
+                {% endfor %}
+              </div>
+              <input
+                type="hidden"
+                name="puntuacion"
+                value="0"
+                data-puntuacion
+              />
+              <textarea
+                name="comentario"
+                rows="3"
+                maxlength="500"
+                placeholder="Cuéntanos cómo fue tu experiencia..."
+                class="w-full rounded-xl border border-outline-variant/30 bg-surface-container-lowest px-4 py-3 text-sm text-on-surface placeholder:text-on-surface-variant/60 focus:border-primary focus:outline-none"
+              ></textarea>
+              <button
+                type="submit"
+                class="btn-brand mt-4 inline-flex items-center gap-2 rounded-md px-6 py-3 text-xs font-bold uppercase tracking-[0.14em]"
+              >
+                Publicar reseña
+              </button>
+            </form>
+            {% else %}
+            <p
+              class="tc-glass rounded-2xl px-6 py-4 text-center text-sm text-on-surface-variant"
+            >
+              Ya usaste tus {{ resenas_por_persona }} reseñas permitidas.
+              ¡Gracias!
+            </p>
+            {% endif %} {% elif not request.session.logueado %}
+            <div
+              class="tc-glass flex flex-col items-center gap-3 rounded-2xl px-6 py-6 text-center"
+            >
+              <p class="text-sm text-on-surface-variant">
+                ¿Ya te atendimos? Cuéntanos cómo fue.
+              </p>
+              <a
+                href="{% url 'sena:login' %}"
+                class="btn-brand inline-flex items-center gap-2 rounded-md px-6 py-3 text-xs font-bold uppercase tracking-[0.14em]"
+                >Ingresar para dejar tu reseña</a
+              >
+            </div>
+            {% endif %}
           </div>
 
           {% if inicio_resenas %}
@@ -255,7 +331,7 @@
                   {{ resena.cliente.nombre }} {{ resena.cliente.apellido|slice:":1" }}.
                 </p>
                 <p class="mt-1 text-xs text-on-surface-variant">
-                  Con {{ resena.barbero.nombre }} · {{ resena.fecha|date:"d/m/Y" }}
+                  {% if resena.barbero %}Con {{ resena.barbero.nombre }} · {% endif %}{{ resena.fecha|date:"d/m/Y" }}
                 </p>
               </div>
             </article>
@@ -280,8 +356,8 @@
             >
             <p class="mt-4 text-lg text-on-surface">Todavía no hay reseñas.</p>
             <p class="mt-2 text-sm text-on-surface-variant">
-              Aquí aparecerán las reseñas reales de los clientes en cuanto
-              califiquen sus citas.
+              Aquí aparecerán las reseñas reales de los clientes en cuanto dejen
+              la primera.
             </p>
           </div>
           {% endif %}
@@ -348,6 +424,29 @@
               resena.removeAttribute("hidden");
             });
           boton.remove();
+        });
+      })();
+
+      // Estrellas del formulario de reseña de la portada.
+      (function () {
+        var caja = document.querySelector("[data-estrellas]");
+        if (!caja) return;
+        var oculto = document.querySelector("[data-puntuacion]");
+        var estrellas = caja.querySelectorAll("[data-estrella]");
+        function pintar(valor) {
+          estrellas.forEach(function (estrella) {
+            var llena = Number(estrella.getAttribute("data-estrella")) <= valor;
+            estrella.classList.toggle("text-primary", llena);
+            estrella.classList.toggle("text-primary/30", !llena);
+            estrella.style.fontVariationSettings = llena ? '"FILL" 1' : "";
+          });
+        }
+        caja.querySelectorAll("[data-valor]").forEach(function (boton) {
+          boton.addEventListener("click", function () {
+            var valor = Number(boton.getAttribute("data-valor"));
+            oculto.value = valor;
+            pintar(valor);
+          });
         });
       })();
     </script>

@@ -51,6 +51,7 @@ urlpatterns = [
     path('usuario/cita/<int:reserva_id>/cancelar/', views.usuario_cancelar_reserva, name="usuario_cancelar_reserva"),  # Cancelar una cita
     path('usuario/cita/<int:reserva_id>/editar/', views.usuario_editar_reserva, name="usuario_editar_reserva"),  # Modificar fecha/hora/barbero
     path('usuario/cita/<int:reserva_id>/calificar/', views.usuario_calificar, name="usuario_calificar"),  # Calificar barbero tras cita completada
+    path('usuario/resena/', views.usuario_dejar_resena, name="usuario_dejar_resena"),  # Dejar una reseña desde la portada (máx. 2 por persona)
     path('usuario/notificaciones/', views.usuario_notificaciones, name="usuario_notificaciones"),  # Ver notificaciones
     path('usuario/notificaciones/leidas/', views.usuario_marcar_notificaciones_leidas, name="usuario_marcar_notificaciones_leidas"),  # Marcar todas como leídas
     path('usuario/cita/<int:reserva_id>/confirmar_peluquero/', views.usuario_confirmar_cita_peluquero, name="usuario_confirmar_cita_peluquero"),  # Confirmar cita agendada por barbero

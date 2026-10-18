@@ -212,6 +212,58 @@ class InicioEditableTests(TestCase):
         self.assertNotContains(r, "No deberia verse")
         self.assertContains(r, "Todavía no hay reseñas")
 
+    # ---------- Reseñas escritas desde la portada ----------
+
+    def test_un_cliente_deja_su_resena_desde_la_portada(self):
+        self.sesion(self.cliente)
+        self.assertContains(self.client.get(reverse("sena:inicio")), "Deja tu reseña")
+
+        r = self.client.post(
+            reverse("sena:usuario_dejar_resena"),
+            {"puntuacion": 5, "comentario": "Excelente atencion en la tienda"},
+        )
+        self.assertEqual(r.status_code, 302)
+        resena = Calificacion.objects.get()
+        self.assertEqual(resena.cliente, self.cliente)
+        self.assertEqual(resena.puntuacion, 5)
+        self.assertIsNone(resena.reserva)  # No nace de una cita
+        self.assertIsNone(resena.barbero)
+        self.assertContains(
+            self.client.get(reverse("sena:inicio")), "Excelente atencion en la tienda"
+        )
+
+    def test_desde_la_portada_solo_dos_resenas_por_persona(self):
+        self.sesion(self.cliente)
+        for i in range(2):
+            self.client.post(
+                reverse("sena:usuario_dejar_resena"),
+                {"puntuacion": 4, "comentario": f"Resena numero {i}"},
+            )
+        self.assertEqual(Calificacion.objects.filter(cliente=self.cliente).count(), 2)
+
+        # La tercera no entra y la portada avisa que el cupo se agotó.
+        self.client.post(
+            reverse("sena:usuario_dejar_resena"),
+            {"puntuacion": 4, "comentario": "La tercera no debe salir"},
+        )
+        self.assertEqual(Calificacion.objects.filter(cliente=self.cliente).count(), 2)
+        r = self.client.get(reverse("sena:inicio"))
+        self.assertNotContains(r, "La tercera no debe salir")
+        self.assertContains(r, "Ya usaste tus 2 reseñas permitidas")
+
+    def test_la_resena_de_la_portada_exige_estrellas(self):
+        self.sesion(self.cliente)
+        self.client.post(
+            reverse("sena:usuario_dejar_resena"),
+            {"puntuacion": 0, "comentario": "Sin estrellas"},
+        )
+        self.assertEqual(Calificacion.objects.count(), 0)
+
+    def test_un_visitante_es_invitado_a_ingresar(self):
+        r = self.client.get(reverse("sena:inicio"))
+        self.assertContains(r, "Ingresar para dejar tu reseña")
+        self.assertNotContains(r, "Deja tu reseña")
+
 
 class LimiteDeResenasTests(TestCase):
     """Cada cliente puede publicar como máximo dos reseñas."""
@@ -274,6 +326,19 @@ class LimiteDeResenasTests(TestCase):
         self.assertEqual(r.context["resenas_restantes"], 0)
         self.assertContains(r, "Ya usaste tus 2 reseñas permitidas")
         self.assertNotContains(r, "Califica esta cita")
+
+    def test_el_limite_cuenta_tambien_las_resenas_de_la_portada(self):
+        self.sesion()
+        self.calificar(self.citas[0])  # Una reseña desde la cita completada
+        self.client.post(
+            reverse("sena:usuario_dejar_resena"),
+            {"puntuacion": 5, "comentario": "Desde la portada"},
+        )
+        self.assertEqual(Calificacion.objects.filter(cliente=self.cliente).count(), 2)
+
+        # La segunda de sus citas ya no entra: el cupo es el mismo.
+        self.calificar(self.citas[1])
+        self.assertEqual(Calificacion.objects.filter(cliente=self.cliente).count(), 2)
 
     def test_el_limite_es_por_cliente(self):
         otro = Usuario.objects.create(

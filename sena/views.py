@@ -378,10 +378,11 @@ def contenido_inicio():
         )
 
     # ── Reseñas reales: solo se publican si el Admin lo permite ──
+    # Se traen todas: el inicio muestra las primeras y "Ver más" despliega el resto.
     resenas = []
     if config.mostrar_calificaciones:
         resenas = list(
-            Calificacion.objects.select_related("cliente", "barbero").all()[:60]
+            Calificacion.objects.select_related("cliente", "barbero").all()
         )
 
     return {
@@ -403,7 +404,40 @@ def inicio(request):
             return redirect("sena:peluquero_dashboard")
     contexto = contexto_carrito(request)
     contexto.update(contenido_inicio())
+    # Reseñas desde la portada: un cliente con sesión puede dejar hasta dos.
+    sesion = request.session.get("logueado")
+    if sesion and sesion.get("rol") == "Cliente":
+        restantes = resenas_restantes(sesion["id"])
+        contexto["resenas_restantes"] = restantes
+        contexto["resenas_por_persona"] = RESENAS_POR_PERSONA
+        contexto["puede_resenar"] = restantes > 0
     return render(request, "publicos/index.html", contexto)
+
+
+@autorizacion(["Cliente"])
+def usuario_dejar_resena(request):
+    """Publica una reseña escrita directamente desde la portada (máximo dos por persona)."""
+    destino = reverse("sena:inicio") + "#resenas"
+    if request.method != "POST":
+        return redirect(destino)
+    cliente_id = request.session["logueado"]["id"]
+    if resenas_restantes(cliente_id) <= 0:
+        messages.error(request, f"Ya publicaste tus {RESENAS_POR_PERSONA} reseñas permitidas.")
+        return redirect(destino)
+    try:
+        puntuacion = int(request.POST.get("puntuacion", 0))
+    except (TypeError, ValueError):
+        puntuacion = 0
+    if puntuacion < 1 or puntuacion > 5:
+        messages.error(request, "Elige de 1 a 5 estrellas para publicar tu reseña.")
+        return redirect(destino)
+    Calificacion.objects.create(
+        cliente_id=cliente_id,
+        puntuacion=puntuacion,
+        comentario=request.POST.get("comentario", "").strip(),
+    )
+    messages.success(request, "¡Gracias por tu reseña!")
+    return redirect(destino)
 
 
 @autorizacion(["Admin"])

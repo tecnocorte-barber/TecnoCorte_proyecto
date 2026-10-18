@@ -284,9 +284,11 @@ class MensajeContacto(models.Model):
 
 # Calificación de 1 a 5 que el cliente da al barbero tras una cita completada
 class Calificacion(models.Model):
-    reserva = models.OneToOneField(Reserva, on_delete=models.CASCADE, related_name="calificacion")
+    # La reserva y el barbero son opcionales: una reseña puede nacer de una cita
+    # completada o escribirse directamente desde la portada.
+    reserva = models.OneToOneField(Reserva, on_delete=models.CASCADE, related_name="calificacion", null=True, blank=True)
     cliente = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name="calificaciones_hechas")
-    barbero = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name="calificaciones_recibidas")
+    barbero = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name="calificaciones_recibidas", null=True, blank=True)
     puntuacion = models.PositiveSmallIntegerField()
     comentario = models.TextField(blank=True)
     fecha = models.DateTimeField(auto_now_add=True)
@@ -295,7 +297,8 @@ class Calificacion(models.Model):
         ordering = ["-fecha"]
 
     def __str__(self):
-        return f"{self.cliente.nombre} → {self.barbero.nombre} ({self.puntuacion}/5)"
+        destino = self.barbero.nombre if self.barbero else "TecnoCorte"
+        return f"{self.cliente.nombre} → {destino} ({self.puntuacion}/5)"
 
 
 # Configuración general del sitio: privacidad, datos de contacto y mantenimiento.
