@@ -529,6 +529,21 @@ class ZonaConfiguracionTests(TestCase):
         r = self.client.get(reverse("sena:usuario_servicios"))
         self.assertContains(r, "usuario/reservar_cita/?servicio=Corte%20de%20Cabello")
 
+    def test_la_lista_de_barberias_reserva_en_la_elegida(self):
+        """El botón Reservar de cada barbería lleva su sede y solo esa se ofrece."""
+        self.sesion(self.cliente)
+        r = self.client.get(reverse("sena:usuario_peluquerias"))
+        self.assertContains(
+            r, "usuario/reservar_cita/?peluqueria=" + str(self.peluqueria.id)
+        )
+        r = self.client.get(
+            reverse("sena:usuario_reservar_cita")
+            + "?peluqueria=" + str(self.peluqueria.id)
+        )
+        self.assertEqual(
+            [p.id for p in r.context["peluquerias"]], [self.peluqueria.id]
+        )
+
     def test_reservar_cita_acepta_servicio_y_sucursal_iniciales(self):
         self.sesion(self.cliente)
         r = self.client.get(
