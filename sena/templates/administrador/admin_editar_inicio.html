@@ -27,7 +27,7 @@
         <div class="tc-form__grid">
           <label class="tc-field tc-field--always">
             <select name="servicio_destacado_1" class="tc-field__input">
-              <option value="">(Elegir automáticamente)</option>
+              <option value="">(Automático: los dos primeros del catálogo)</option>
               {% for servicio in servicios %}
               <option
                 value="{{ servicio.nombre }}"
@@ -42,7 +42,7 @@
 
           <label class="tc-field tc-field--always">
             <select name="servicio_destacado_2" class="tc-field__input">
-              <option value="">(Elegir automáticamente)</option>
+              <option value="">(Automático: los dos primeros del catálogo)</option>
               {% for servicio in servicios %}
               <option
                 value="{{ servicio.nombre }}"
@@ -63,7 +63,9 @@
         <div class="tc-form__grid">
           <label class="tc-field tc-field--always">
             <select name="producto_destacado_1" class="tc-field__input">
-              <option value="">(Elegir automáticamente)</option>
+              <option value="">
+                (Automático: {{ productos_por_defecto }})
+              </option>
               {% for producto in productos %}
               <option
                 value="{{ producto.id }}"
@@ -78,7 +80,9 @@
 
           <label class="tc-field tc-field--always">
             <select name="producto_destacado_2" class="tc-field__input">
-              <option value="">(Elegir automáticamente)</option>
+              <option value="">
+                (Automático: {{ productos_por_defecto }})
+              </option>
               {% for producto in productos %}
               <option
                 value="{{ producto.id }}"
@@ -111,9 +115,9 @@
     </form>
 
     <p class="tc-field__hint mt-6">
-      Si dejas una casilla en «Elegir automáticamente», se usan los primeros
-      servicios y productos disponibles. Los servicios que el Admin apruebe a
-      los barberos también aparecen en esta lista.
+      Si dejas una casilla en «Automático», la portada usa los servicios y
+      productos de siempre ({{ productos_por_defecto }}). Los servicios que el
+      Admin apruebe a los barberos también aparecen en esta lista.
     </p>
   </div>
 </main>

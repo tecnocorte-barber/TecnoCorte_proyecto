@@ -28,7 +28,7 @@ class InicioEditableTests(TestCase):
             nombre="Luis", apellido="Rios", email="luis@test.com", password="x",
             rol="Barbero", peluqueria=self.peluqueria, activo=True,
         )
-        self.pomada = Producto.objects.create(nombre="Pomada Modeladora", precio=45900)
+        self.pomada = Producto.objects.create(nombre="Pomada para el Cabello", precio=45900)
         self.aceite = Producto.objects.create(nombre="Aceite para Barba", precio=35900)
         self.cera = Producto.objects.create(nombre="Cera Extra", precio=28900)
 
@@ -64,8 +64,27 @@ class InicioEditableTests(TestCase):
         self.assertContains(r, "Corte de Cabello")
         self.assertContains(r, "Arreglo de Barba")
         # Productos reales de la tienda (no los de antes, escritos a mano).
-        self.assertContains(r, "Pomada Modeladora")
+        self.assertContains(r, "Pomada para el Cabello")
         self.assertContains(r, "Aceite para Barba")
+
+    def test_por_defecto_la_portada_destaca_la_pomada_y_el_aceite(self):
+        # Aunque exista otro producto con un id menor, se destacan los de siempre.
+        Producto.objects.create(nombre="Aaa Herramienta", precio=1000)
+        r = self.client.get(reverse("sena:inicio"))
+        nombres = [p.nombre for p in r.context["inicio_productos"]]
+        self.assertEqual(nombres, ["Pomada para el Cabello", "Aceite para Barba"])
+
+    def test_el_admin_puede_cambiar_los_destacados_de_la_portada(self):
+        self.sesion(self.admin)
+        self.editar(
+            servicio_destacado_1="Combo Completo",
+            servicio_destacado_2="Arreglo de Barba",
+            producto_destacado_1=self.cera.id,
+            producto_destacado_2=self.aceite.id,
+        )
+        r = self.client.get(reverse("sena:inicio") + "?vista=publica")
+        nombres = [p.nombre for p in r.context["inicio_productos"]]
+        self.assertEqual(nombres, ["Cera Extra", "Aceite para Barba"])
 
     def test_el_admin_elige_los_servicios_y_productos_destacados(self):
         self.sesion(self.admin)

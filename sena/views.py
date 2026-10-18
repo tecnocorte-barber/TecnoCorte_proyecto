@@ -54,6 +54,11 @@ IMAGENES_PRODUCTO = {
 IMAGEN_PRODUCTO_POR_DEFECTO = "sena/images/pomada_barba.jpeg"
 
 # Cuántas reseñas se muestran en el inicio antes de ofrecer "Ver más".
+# Productos que la portada destaca mientras el Admin no elija otros: son la
+# pomada y el aceite de siempre. Se buscan por nombre en el catálogo real, igual
+# que los servicios base de SERVICIOS.
+PRODUCTOS_DESTACADOS_POR_DEFECTO = ["Pomada para el Cabello", "Aceite para Barba"]
+
 RESENAS_VISIBLES = 5
 
 # Convierte los horarios de trabajo y bloqueos a JSON para que JavaScript los use en el calendario
@@ -403,9 +408,9 @@ def barbero_esta_disponible(barbero_id, fecha_texto, hora_texto, servicio, reser
 def contenido_inicio():
     """Servicios, productos y reseñas que se muestran en la página principal.
 
-    El Admin elige qué dos servicios y qué dos productos se destacan; si deja
-    alguno sin elegir, se completa con los primeros del catálogo para que el
-    inicio nunca quede con huecos.
+    El Admin elige qué dos servicios y qué dos productos se destacan. Si deja
+    alguno sin elegir, la portada usa los de siempre (los primeros servicios del
+    catálogo y la pomada con el aceite) para que nunca quede con huecos.
     """
     config = Configuracion.cargar()
 
@@ -432,7 +437,14 @@ def contenido_inicio():
         if producto and producto.disponible and producto.id not in {p.id for p in productos}:
             productos.append(producto)
     if len(productos) < 2:
-        for producto in Producto.objects.filter(disponible=True).order_by("id"):
+        # Primero los de siempre (pomada y aceite, en ese orden); si ya no
+        # existen, se completa con los primeros productos disponibles.
+        de_siempre = list(
+            Producto.objects.filter(disponible=True, nombre__in=PRODUCTOS_DESTACADOS_POR_DEFECTO)
+        )
+        de_siempre.sort(key=lambda p: PRODUCTOS_DESTACADOS_POR_DEFECTO.index(p.nombre))
+        candidatos = de_siempre + list(Producto.objects.filter(disponible=True).order_by("id"))
+        for producto in candidatos:
             if len(productos) >= 2:
                 break
             if producto.id not in {p.id for p in productos}:
@@ -503,6 +515,7 @@ def admin_editar_inicio(request):
         "config": config,
         "servicios": catalogo,
         "productos": productos,
+        "productos_por_defecto": ", ".join(PRODUCTOS_DESTACADOS_POR_DEFECTO),
         "seleccion_servicios": [config.servicio_destacado_1, config.servicio_destacado_2],
         "seleccion_productos": [
             config.producto_destacado_1.id if config.producto_destacado_1 else None,
