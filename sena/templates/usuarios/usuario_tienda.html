@@ -244,6 +244,10 @@
             </div>
             <div class="flex items-center gap-2">
               <span
+                class="hidden text-[11px] uppercase tracking-wider text-on-surface-variant/70 sm:inline"
+                >Los favoritos quedan arriba ·</span
+              >
+              <span
                 class="text-xs font-label uppercase tracking-wider text-on-surface-variant"
                 >Ordenar por:</span
               >
@@ -557,25 +561,11 @@
       document
         .getElementById("ordenar")
         .addEventListener("change", function () {
-          var valor = this.value;
-          var grid = document.getElementById("productos-grid");
-          var arts = Array.from(
-            grid.querySelectorAll("article[data-categoria]"),
-          );
-          arts.sort(function (a, b) {
-            if (valor === "menor")
-              return (
-                parseFloat(a.dataset.precio) - parseFloat(b.dataset.precio)
-              );
-            if (valor === "mayor")
-              return (
-                parseFloat(b.dataset.precio) - parseFloat(a.dataset.precio)
-              );
-            return 0;
-          });
-          arts.forEach(function (el) {
-            grid.appendChild(el);
-          });
+          // El reordenamiento vive en el script de favoritos: así los favoritos
+          // siguen quedando arriba con cualquier criterio.
+          if (window.TecnoCorteOrdenarProductos) {
+            window.TecnoCorteOrdenarProductos();
+          }
         });
 
       document.addEventListener("submit", function (e) {
@@ -648,25 +638,91 @@
     </script>
   </body>
   <script>
+    // Favoritos de la tienda: se guardan en el navegador y quedan siempre arriba.
     (function () {
       var clave = "tc-favoritos";
+      var grid = document.getElementById("productos-grid");
+      var selector = document.getElementById("ordenar");
       var favoritos = JSON.parse(localStorage.getItem(clave) || "[]");
+      var articulos = grid
+        ? Array.from(grid.querySelectorAll("article[data-categoria]"))
+        : [];
+      // Se recuerda el orden original para el criterio "Relevancia".
+      articulos.forEach(function (articulo, indice) {
+        articulo.dataset.orden = indice;
+      });
+
+      function esFavorito(id) {
+        return favoritos.indexOf(String(id)) !== -1;
+      }
+
       function pintar() {
         document.querySelectorAll(".producto-favorito").forEach(function (boton) {
-          var activo = favoritos.indexOf(String(boton.dataset.productoId)) !== -1;
+          var activo = esFavorito(boton.dataset.productoId);
           boton.setAttribute("aria-pressed", activo ? "true" : "false");
-          boton.querySelector(".material-symbols-outlined").textContent = activo ? "favorite" : "favorite_border";
+          boton.setAttribute(
+            "title",
+            activo ? "Quitar de favoritos" : "Agregar a favoritos",
+          );
+          boton.classList.toggle("text-primary", activo);
+          boton.classList.toggle("text-on-surface-variant", !activo);
+          boton.querySelector(".material-symbols-outlined").textContent =
+            activo ? "favorite" : "favorite_border";
         });
       }
+
+      // Los favoritos van primero (en el orden en que se marcaron); el resto
+      // conserva el criterio elegido en "Ordenar por".
+      function ordenar() {
+        if (!grid) return;
+        var criterio = selector ? selector.value : "relevancia";
+        var ordenados = articulos.slice();
+        function puesto(articulo) {
+          var posicion = favoritos.indexOf(String(articulo.dataset.productoId));
+          return posicion === -1 ? Infinity : posicion;
+        }
+        ordenados.sort(function (a, b) {
+          var puestoA = puesto(a);
+          var puestoB = puesto(b);
+          if (puestoA !== puestoB) {
+            if (puestoA === Infinity) return 1;
+            if (puestoB === Infinity) return -1;
+            return puestoA - puestoB;
+          }
+          if (criterio === "menor")
+            return parseFloat(a.dataset.precio) - parseFloat(b.dataset.precio);
+          if (criterio === "mayor")
+            return parseFloat(b.dataset.precio) - parseFloat(a.dataset.precio);
+          if (criterio === "nuevos")
+            return (
+              Number(b.dataset.productoId) - Number(a.dataset.productoId)
+            );
+          return Number(a.dataset.orden) - Number(b.dataset.orden);
+        });
+        ordenados.forEach(function (articulo) {
+          grid.appendChild(articulo);
+        });
+      }
+
       document.querySelectorAll(".producto-favorito").forEach(function (boton) {
         boton.addEventListener("click", function () {
-          var id = String(this.dataset.productoId);
-          favoritos = favoritos.indexOf(id) === -1 ? favoritos.concat(id) : favoritos.filter(function (item) { return item !== id; });
+          var id = String(boton.dataset.productoId);
+          favoritos =
+            favoritos.indexOf(id) === -1
+              ? favoritos.concat(id)
+              : favoritos.filter(function (item) {
+                  return item !== id;
+                });
           localStorage.setItem(clave, JSON.stringify(favoritos));
           pintar();
+          ordenar();
         });
       });
+
       pintar();
+      ordenar();
+      // El selector "Ordenar por" reutiliza este mismo reordenamiento.
+      window.TecnoCorteOrdenarProductos = ordenar;
     })();
   </script>
 </html>
