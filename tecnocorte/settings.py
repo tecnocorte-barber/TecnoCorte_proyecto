@@ -46,6 +46,9 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     # Aplica el modo mantenimiento configurado por el Admin (debe ir al final).
     'sena.middleware.MantenimientoMiddleware',
+    # Deja la tarjeta de error amigable también en desarrollo: Django solo usa
+    # sus handlers 404/403/500 cuando DEBUG está apagado.
+    'sena.middleware.ErroresAmigablesMiddleware',
 ]
 
 ROOT_URLCONF = 'tecnocorte.urls'

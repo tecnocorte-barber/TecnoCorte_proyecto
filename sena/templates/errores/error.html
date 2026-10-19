@@ -125,6 +125,42 @@ procesadores de contexto: debe funcionar aunque la base de datos esté caída.
       .simbolo-boton {
         font-size: 1.05rem;
       }
+      .detalle-admin {
+        margin-top: 2rem;
+        padding: 1.25rem 1.35rem;
+        text-align: left;
+        background: rgba(0, 0, 0, 0.03);
+        border: 1px solid var(--c-outline);
+        border-radius: 0.9rem;
+      }
+      .detalle-admin-titulo {
+        margin-bottom: 0.75rem;
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--c-on-surface-variant);
+      }
+      .detalle-admin dl {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 0.35rem 0.85rem;
+        margin: 0;
+        font-size: 0.82rem;
+      }
+      .detalle-admin dt {
+        color: var(--c-on-surface-variant);
+      }
+      .detalle-admin dd {
+        margin: 0;
+        color: var(--c-on-surface);
+        font-weight: 600;
+        overflow-wrap: anywhere;
+      }
+      .detalle-admin dl,
+      .detalle-admin dd {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      }
       @media (max-width: 420px) {
         .tarjeta {
           padding: 2.25rem 1.5rem;
@@ -162,6 +198,27 @@ procesadores de contexto: debe funcionar aunque la base de datos esté caída.
         </p>
       {% endif %}
       <p>Disculpa las molestias. Gracias por tu paciencia.</p>
+      {% if detalle_admin %}
+      {# Solo lo ve una sesión de administrador: sirve para ubicar el fallo. #}
+      <div class="detalle-admin">
+        <p class="detalle-admin-titulo">Detalle para administradores</p>
+        <dl>
+          <dt>Estado</dt>
+          <dd>{{ detalle_admin.codigo_http }}</dd>
+          <dt>Tipo</dt>
+          <dd>{{ detalle_admin.tipo }}</dd>
+          <dt>Ruta</dt>
+          <dd>{{ detalle_admin.metodo }} {{ detalle_admin.ruta }}</dd>
+          {% if codigo_reporte %}
+          <dt>Código</dt>
+          <dd>{{ codigo_reporte }}</dd>
+          {% endif %}
+        </dl>
+        <p class="detalle-admin-titulo" style="margin-top: 0.9rem; margin-bottom: 0">
+          La traza completa queda en el registro de errores.
+        </p>
+      </div>
+      {% endif %}
       <div class="acciones">
         <a class="boton boton-primario" href="/">
           <span class="material-symbols-outlined simbolo-boton" aria-hidden="true">home</span>Ir

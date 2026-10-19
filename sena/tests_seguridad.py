@@ -177,6 +177,96 @@ class PaginasDeErrorTests(TestCase):
         self.assertEqual(r.status_code, 500)
         self.assertContains(r, "Estamos teniendo problemas", status_code=500)
 
+    # ── Detalle técnico solo para el Admin ──
+
+    def _como_admin(self):
+        cliente = self._sin_captura()
+        sesion = cliente.session
+        sesion["logueado"] = {
+            "id": self.admin.id,
+            "rol": "Admin",
+            "nombre": self.admin.nombre,
+            "sesion_version": self.admin.sesion_version,
+        }
+        sesion.save()
+        return cliente
+
+    def test_el_admin_ve_el_tipo_de_error_en_la_tarjeta(self):
+        r = self._como_admin().get("/__prueba__/revienta/")
+        self.assertEqual(r.status_code, 500)
+        self.assertContains(r, "Detalle para administradores", status_code=500)
+        self.assertContains(r, "RuntimeError", status_code=500)
+        self.assertContains(r, "/__prueba__/revienta/", status_code=500)
+
+    def test_quien_no_es_admin_no_ve_el_detalle_tecnico(self):
+        r = self.client.get("/no-existe-esta-seccion/")
+        self.assertNotContains(r, "Detalle para administradores", status_code=404)
+        self.assertNotContains(r, "Http404", status_code=404)
+
+
+@override_settings(
+    DEBUG=True,
+    ROOT_URLCONF="sena.tests_seguridad",
+    ALLOWED_HOSTS=["testserver", "localhost", "127.0.0.1"],
+    SECURE_SSL_REDIRECT=False,
+    SESSION_COOKIE_SECURE=False,
+    CSRF_COOKIE_SECURE=False,
+)
+class TarjetaDeErrorEnDesarrolloTests(TestCase):
+    """Con DEBUG encendido, Django pone su página amarilla; el middleware la evita."""
+
+    def setUp(self):
+        self.admin = Usuario.objects.create(
+            nombre="Admin", apellido="Dos", email="admin.debug@test.com",
+            password="x", rol="Admin", activo=True,
+        )
+
+    def _sin_captura(self):
+        from django.test import Client
+
+        return Client(raise_request_exception=False)
+
+    def test_un_enlace_roto_no_muestra_las_rutas_que_probo_django(self):
+        r = self.client.get("/usuario/error/")
+        self.assertEqual(r.status_code, 404)
+        self.assertContains(r, "Esta página no existe o se movió", status_code=404)
+        self.assertNotContains(r, "Django tried these URL patterns", status_code=404)
+        self.assertNotContains(r, "DEBUG = True", status_code=404)
+
+    def test_un_fallo_tampoco_muestra_la_pantalla_amarilla(self):
+        r = self._sin_captura().get("/__prueba__/revienta/")
+        self.assertEqual(r.status_code, 500)
+        self.assertContains(r, "Estamos teniendo problemas", status_code=500)
+        self.assertNotContains(r, "RuntimeError", status_code=500)
+        self.assertNotContains(r, "Traceback", status_code=500)
+        # El fallo se registra igual que en producción.
+        registro = RegistroError.objects.filter(codigo_http=500).first()
+        self.assertIsNotNone(registro)
+        self.assertEqual(registro.tipo, "RuntimeError")
+        self.assertIn("vista_que_revienta", registro.detalle)
+
+    def test_el_admin_sigue_viendo_el_tipo_con_debug_encendido(self):
+        cliente = self.client
+        sesion = cliente.session
+        sesion["logueado"] = {
+            "id": self.admin.id,
+            "rol": "Admin",
+            "nombre": self.admin.nombre,
+            "sesion_version": self.admin.sesion_version,
+        }
+        sesion.save()
+        r = cliente.get("/usuario/error/")
+        self.assertEqual(r.status_code, 404)
+        self.assertContains(r, "Detalle para administradores", status_code=404)
+        self.assertContains(r, "Http404", status_code=404)
+        self.assertContains(r, "/usuario/error/", status_code=404)
+
+    def test_las_rutas_de_la_api_conservan_su_respuesta(self):
+        """La API responde JSON: sustituirla por la tarjeta rompería al cliente."""
+        r = self.client.get("/api/no-existe-esta-ruta/")
+        self.assertEqual(r.status_code, 404)
+        self.assertNotContains(r, "Esta página no existe o se movió", status_code=404)
+
 
 # ── Auditorías que deben seguir cumpliéndose ────────────────────────────────
 class AuditoriaDeEnlacesTests(TestCase):

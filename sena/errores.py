@@ -208,8 +208,12 @@ if not any(
     got_request_exception.connect(capturar_excepcion, dispatch_uid="sena.errores.traza")
 
 
-# ── Handlers de error usados por Django (tecnocorte/urls.py) ────────────────
+# ── Tarjeta amigable (handlers de Django y middleware de errores) ───────────
 PLANTILLA_ERROR = "errores/error.html"
+
+# Marca que la tarjeta amigable deja en la respuesta. Evita que el middleware
+# vuelva a registrarla creyendo que es una página de error sin tratar.
+MARCA_AMIGABLE = "_tc_tarjeta_amigable"
 
 _TITULOS = {
     403: "No tienes permiso para ver esta página",
@@ -217,23 +221,69 @@ _TITULOS = {
 }
 
 
-def _pagina_error(request, codigo, codigo_reporte=""):
-    """Responde con la página amigable. Nunca lanza: si falla, responde en texto."""
+def es_amigable(respuesta):
+    """True si la respuesta ya es la tarjeta amigable."""
+    return bool(getattr(respuesta, MARCA_AMIGABLE, False))
+
+
+def es_admin(request):
+    """True solo si quien navega trae sesión de administrador.
+
+    Se lee de la sesión sin consultar la base de datos: la tarjeta tiene que
+    dibujarse incluso cuando el fallo viene de la base caída.
+    """
+    try:
+        return (request.session.get("logueado") or {}).get("rol") == "Admin"
+    except Exception:
+        return False
+
+
+def detalle_para_admin(request, excepcion, codigo_http):
+    """Datos técnicos que solo se le muestran a un administrador."""
+    if isinstance(excepcion, Exception):
+        tipo = excepcion.__class__.__name__
+    else:
+        tipo = type(excepcion).__name__
+    return {
+        "codigo_http": codigo_http,
+        "tipo": tipo,
+        "ruta": (request.path_info if request is not None else "/")[:300],
+        "metodo": request.method if request is not None else "",
+    }
+
+
+def pagina_amigable(request, codigo, codigo_reporte="", detalle_admin=None):
+    """Responde con la tarjeta de error. Nunca lanza: si falla, responde en texto.
+
+    El detalle técnico solo viaja al contexto cuando quien mira es Admin.
+    """
     contexto = {
         "codigo": codigo,
         "codigo_reporte": codigo_reporte,
         "titulo": _TITULOS.get(codigo, "Estamos teniendo problemas"),
+        "detalle_admin": detalle_admin if es_admin(request) else None,
     }
     try:
-        return render(request, PLANTILLA_ERROR, contexto, status=codigo, using="errores")
+        respuesta = render(request, PLANTILLA_ERROR, contexto, status=codigo, using="errores")
     except Exception:
         logger.error("No se pudo renderizar %s (%s)", PLANTILLA_ERROR, codigo, exc_info=True)
         cuerpo = f"TecnoCorte esta teniendo problemas. Codigo HTTP {codigo}."
         if codigo == 404:
-            return HttpResponseNotFound(cuerpo, content_type="text/plain; charset=utf-8")
-        if codigo == 403:
-            return HttpResponseForbidden(cuerpo, content_type="text/plain; charset=utf-8")
-        return HttpResponseServerError(cuerpo, content_type="text/plain; charset=utf-8")
+            respuesta = HttpResponseNotFound(cuerpo, content_type="text/plain; charset=utf-8")
+        elif codigo == 403:
+            respuesta = HttpResponseForbidden(cuerpo, content_type="text/plain; charset=utf-8")
+        else:
+            respuesta = HttpResponseServerError(cuerpo, content_type="text/plain; charset=utf-8")
+    setattr(respuesta, MARCA_AMIGABLE, True)
+    return respuesta
+
+
+def tarjeta_de_fallo(request, excepcion, codigo_http):
+    """Registra el fallo y devuelve la tarjeta. La usan handlers y middleware."""
+    codigo = registrar_error(request, excepcion, codigo_http)
+    return pagina_amigable(
+        request, codigo_http, codigo, detalle_para_admin(request, excepcion, codigo_http)
+    )
 
 
 def pagina_no_encontrada(request, exception=None):
@@ -242,19 +292,16 @@ def pagina_no_encontrada(request, exception=None):
     Django lo invoca como callback(request, exception=...), por eso el
     parámetro se llama "exception" y no "excepcion".
     """
-    codigo = registrar_error(request, exception or Http404("Página no encontrada"), 404)
-    return _pagina_error(request, 404, codigo)
+    return tarjeta_de_fallo(request, exception or Http404("Página no encontrada"), 404)
 
 
 def pagina_prohibida(request, exception=None):
     """handler403: sesión sin permisos para la sección."""
-    codigo = registrar_error(request, exception or PermissionDenied("Acceso denegado"), 403)
-    return _pagina_error(request, 403, codigo)
+    return tarjeta_de_fallo(request, exception or PermissionDenied("Acceso denegado"), 403)
 
 
 def error_servidor(request):
     """handler500: fallo inesperado. Recupera la traza de la señal."""
     traza = ultima_excepcion()
     excepcion = traza[1] if traza and traza[1] is not None else Exception("Error 500 sin traza registrada")
-    codigo = registrar_error(request, excepcion, 500)
-    return _pagina_error(request, 500, codigo)
+    return tarjeta_de_fallo(request, excepcion, 500)
