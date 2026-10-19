@@ -42,6 +42,13 @@ class FavoritosDeLaTiendaTests(TestCase):
         self.assertIn("favorite_border", html)  # Estado sin marcar
         self.assertIn('"favorite"', html)  # Estado marcado
 
+    def test_el_corazon_se_rellena_al_marcarlo(self):
+        """El corazón relleno distingue el favorito (eje FILL de la fuente)."""
+        html = self.plantilla()
+        self.assertIn("fontVariationSettings", html)
+        self.assertIn('"FILL" 1', html)
+        self.assertIn('activo ? "favorite" : "favorite_border"', html)
+
     def test_los_favoritos_quedan_arriba_en_la_grilla(self):
         html = self.plantilla()
         # El reordenamiento deja los favoritos primero y luego respeta el criterio.

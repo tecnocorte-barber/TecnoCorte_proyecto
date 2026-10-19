@@ -666,8 +666,11 @@
           );
           boton.classList.toggle("text-primary", activo);
           boton.classList.toggle("text-on-surface-variant", !activo);
-          boton.querySelector(".material-symbols-outlined").textContent =
-            activo ? "favorite" : "favorite_border";
+          var icono = boton.querySelector(".material-symbols-outlined");
+          icono.textContent = activo ? "favorite" : "favorite_border";
+          // Material Symbols dibuja el corazón hueco mientras el eje FILL siga
+          // en 0: al marcarlo se rellena (y se pinta dorado) para que se note.
+          icono.style.fontVariationSettings = activo ? '"FILL" 1' : "";
         });
       }
 
