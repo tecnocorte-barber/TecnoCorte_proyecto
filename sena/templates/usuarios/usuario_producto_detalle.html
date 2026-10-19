@@ -3,7 +3,7 @@
 {% block title %}{{ producto.nombre }} - TecnoCorte{% endblock %}
 {% block styles %}<link rel="stylesheet" href="{% static 'css/usuarios/usuario_tienda.css' %}" />{% endblock %}
 {% block content %}
-<main class="tc-product-detail mx-auto w-full max-w-5xl px-4 py-10 md:px-8">
+<main class="tc-product-detail mx-auto w-full max-w-5xl px-4 pt-32 pb-10 md:px-8">
   <a href="{% url 'sena:usuario_tienda' %}" class="mb-8 inline-flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-primary">
     <span class="material-symbols-outlined">arrow_back</span> Volver a la tienda
   </a>
@@ -17,9 +17,10 @@
       <p class="mt-4 text-on-surface-variant">{{ producto.descripcion|default:"Producto seleccionado para tu rutina de cuidado personal." }}</p>
       <p class="mt-8 font-headline text-3xl text-primary">${{ producto.precio|floatformat:"0g" }} <span class="text-sm text-on-surface-variant">COP</span></p>
       {% if producto.disponible and producto.stock > 0 %}
-      <form method="post" action="{% url 'sena:agregar_carrito' producto.id %}" class="mt-8">{% csrf_token %}<button class="tc-btn tc-btn--gold" type="submit"><span class="material-symbols-outlined">shopping_bag</span> Añadir al carrito</button></form>
+      <form method="post" action="{% url 'sena:agregar_carrito' producto.id %}" class="add-to-cart-form mt-8" data-nombre="{{ producto.nombre }}">{% csrf_token %}<button class="tc-btn tc-btn--gold" type="submit"><span class="material-symbols-outlined">shopping_bag</span> Añadir al carrito</button></form>
       {% else %}<p class="mt-8 font-bold text-error">Producto no disponible</p>{% endif %}
     </div>
   </section>
 </main>
+{% include "includes/agregar_carrito_ajax.html" %}
 {% endblock %}

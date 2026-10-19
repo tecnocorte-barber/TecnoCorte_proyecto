@@ -346,7 +346,7 @@
                   >
                   <div class="flex items-start justify-between gap-3">
                     <h2 class="mb-2 font-headline text-xl text-on-surface"><a href="{% url 'sena:usuario_producto_detalle' producto.id %}" class="hover:text-primary">{{ producto.nombre }}</a></h2>
-                    <button type="button" class="producto-favorito rounded-full p-1 text-on-surface-variant hover:text-primary" data-producto-id="{{ producto.id }}" aria-label="Agregar {{ producto.nombre }} a favoritos" aria-pressed="false"><span class="material-symbols-outlined text-[20px]">favorite_border</span></button>
+                    <button type="button" class="producto-favorito rounded-full p-1 text-on-surface-variant hover:text-primary" data-producto-id="{{ producto.id }}" data-nombre="{{ producto.nombre }}" aria-label="Agregar {{ producto.nombre }} a favoritos" aria-pressed="false"><span class="material-symbols-outlined text-[20px]">favorite_border</span></button>
                   </div>
                   {% if producto.descripcion %}
                   <p class="mb-4 text-sm text-on-surface-variant">
@@ -568,74 +568,8 @@
           }
         });
 
-      document.addEventListener("submit", function (e) {
-        var form = e.target;
-        if (!form.classList.contains("add-to-cart-form")) return;
-        e.preventDefault();
-        var button = form.querySelector('button[type="submit"]');
-        // El indicador del carrito usa la clase .cart-count (no un id) y puede
-        // repetirse en la navegación de escritorio y móvil.
-        var badges = document.querySelectorAll(".cart-count");
-        // Estado de carga visible: el botón pasa a "Cargando..." con spinner
-        // mientras el servidor confirma que el producto se añadió.
-        button.disabled = true;
-        button.setAttribute("aria-busy", "true");
-        if (button.dataset.textoOriginal === undefined) {
-          button.dataset.textoOriginal = button.innerHTML;
-        }
-        button.innerHTML =
-          '<span class="tc-spin" aria-hidden="true"></span> Cargando...';
-        function restaurarBoton() {
-          button.disabled = false;
-          button.setAttribute("aria-busy", "false");
-          if (button.dataset.textoOriginal !== undefined) {
-            button.innerHTML = button.dataset.textoOriginal;
-          }
-        }
-        fetch(form.action, {
-          method: "POST",
-          headers: {
-            "X-CSRFToken": form.querySelector(
-              'input[name="csrfmiddlewaretoken"]',
-            ).value,
-            "X-Requested-With": "XMLHttpRequest",
-          },
-        })
-          .then(function (res) {
-            return res.json().then(function (data) {
-              if (!res.ok)
-                throw new Error(
-                  data.error || "No se pudo agregar el producto.",
-                );
-              return data;
-            });
-          })
-          .then(function (data) {
-            if (data && data.cantidad !== undefined) {
-              badges.forEach(function (badge) {
-                badge.textContent = data.cantidad;
-                badge.classList.remove("hidden");
-              });
-            }
-            restaurarBoton();
-            if (window.TecnoCorteNotify)
-              window.TecnoCorteNotify.success(
-                data.mensaje || "Producto agregado al carrito.",
-              );
-          })
-          .catch(function (error) {
-            var feedback = document.getElementById("tienda-feedback");
-            if (feedback) {
-              feedback.textContent = error.message;
-              feedback.classList.remove("hidden");
-              feedback.classList.add("flex");
-            }
-            if (window.TecnoCorteNotify)
-              window.TecnoCorteNotify.error(error.message);
-            restaurarBoton();
-          });
-      });
     </script>
+    {% include "includes/agregar_carrito_ajax.html" %}
   </body>
   <script>
     // Favoritos de la tienda: se guardan en el navegador y quedan siempre arriba.
@@ -710,15 +644,25 @@
       document.querySelectorAll(".producto-favorito").forEach(function (boton) {
         boton.addEventListener("click", function () {
           var id = String(boton.dataset.productoId);
-          favoritos =
-            favoritos.indexOf(id) === -1
-              ? favoritos.concat(id)
-              : favoritos.filter(function (item) {
-                  return item !== id;
-                });
+          var nombre = boton.dataset.nombre || "El producto";
+          var estaba = esFavorito(id);
+          favoritos = estaba
+            ? favoritos.filter(function (item) {
+                return item !== id;
+              })
+            : favoritos.concat(id);
           localStorage.setItem(clave, JSON.stringify(favoritos));
           pintar();
           ordenar();
+          // Aviso igual que al añadir al carrito: se nota que quedó guardado.
+          if (window.TecnoCorteNotify) {
+            if (estaba)
+              window.TecnoCorteNotify.info(nombre + " se quitó de favoritos.");
+            else
+              window.TecnoCorteNotify.success(
+                nombre + " se guardó en favoritos.",
+              );
+          }
         });
       });
 

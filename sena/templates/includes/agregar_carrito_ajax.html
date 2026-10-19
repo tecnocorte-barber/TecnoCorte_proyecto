@@ -1,0 +1,70 @@
+{# Añadir al carrito sin recargar la página: actualiza el contador del carrito
+   y avisa con un toast. Se incluye en cualquier plantilla que tenga formularios
+   con la clase .add-to-cart-form (tienda y detalle del producto). #}
+<script>
+  document.addEventListener("submit", function (e) {
+    var form = e.target;
+    if (!form.classList.contains("add-to-cart-form")) return;
+    e.preventDefault();
+    var button = form.querySelector('button[type="submit"]');
+    // El indicador del carrito usa la clase .cart-count (no un id) y puede
+    // repetirse en la navegación de escritorio y móvil.
+    var badges = document.querySelectorAll(".cart-count");
+    // Estado de carga visible: el botón pasa a "Cargando..." con spinner
+    // mientras el servidor confirma que el producto se añadió.
+    button.disabled = true;
+    button.setAttribute("aria-busy", "true");
+    if (button.dataset.textoOriginal === undefined) {
+      button.dataset.textoOriginal = button.innerHTML;
+    }
+    button.innerHTML =
+      '<span class="tc-spin" aria-hidden="true"></span> Cargando...';
+    function restaurarBoton() {
+      button.disabled = false;
+      button.setAttribute("aria-busy", "false");
+      if (button.dataset.textoOriginal !== undefined) {
+        button.innerHTML = button.dataset.textoOriginal;
+      }
+    }
+    fetch(form.action, {
+      method: "POST",
+      headers: {
+        "X-CSRFToken": form.querySelector(
+          'input[name="csrfmiddlewaretoken"]',
+        ).value,
+        "X-Requested-With": "XMLHttpRequest",
+      },
+    })
+      .then(function (res) {
+        return res.json().then(function (data) {
+          if (!res.ok)
+            throw new Error(data.error || "No se pudo agregar el producto.");
+          return data;
+        });
+      })
+      .then(function (data) {
+        if (data && data.cantidad !== undefined) {
+          badges.forEach(function (badge) {
+            badge.textContent = data.cantidad;
+            badge.classList.remove("hidden");
+          });
+        }
+        restaurarBoton();
+        if (window.TecnoCorteNotify)
+          window.TecnoCorteNotify.success(
+            data.mensaje || "Producto agregado al carrito.",
+          );
+      })
+      .catch(function (error) {
+        var feedback = document.getElementById("tienda-feedback");
+        if (feedback) {
+          feedback.textContent = error.message;
+          feedback.classList.remove("hidden");
+          feedback.classList.add("flex");
+        }
+        if (window.TecnoCorteNotify)
+          window.TecnoCorteNotify.error(error.message);
+        restaurarBoton();
+      });
+  });
+</script>

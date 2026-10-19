@@ -247,6 +247,30 @@ class FotosYConfiguracionTests(TestCase):
         ]
         self.assertEqual(sospechosas, [], "Deben usar .table-responsive: %s" % sospechosas)
 
+    def test_las_paginas_bajo_el_menu_fijo_dejan_aire_arriba(self):
+        """El menú pill es fijo: sin pt-32 el primer enlace queda tapado."""
+        import pathlib
+
+        plantillas = pathlib.Path(__file__).resolve().parent / "templates"
+        for nombre in (
+            "usuarios/usuario_notificaciones.html",
+            "usuarios/usuario_perfil.html",
+            "usuarios/usuario_configuracion.html",
+            "usuarios/usuario_producto_detalle.html",
+        ):
+            with self.subTest(plantilla=nombre):
+                html = (plantillas / nombre).read_text(encoding="utf-8")
+                self.assertIn("pt-32", html)
+
+    def test_el_buscador_de_barberias_avisa_cuando_no_hay_coincidencias(self):
+        """El directorio no se queda en blanco: avisa y ajusta el contador."""
+        r = self.client.get(reverse("sena:usuario_peluquerias"))
+        self.assertEqual(r.status_code, 200)
+        html = r.content.decode()
+        self.assertIn('id="peluquerias-sin-resultados"', html)
+        self.assertIn('id="peluquerias-contador"', html)
+        self.assertIn("No encontramos barberías con ese nombre o esa zona.", html)
+
     def test_borrar_foto_sin_motivo_no_elimina_y_avisa(self):
         """Sin motivo escrito no se borra ninguna foto."""
         self.login()

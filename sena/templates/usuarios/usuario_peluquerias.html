@@ -77,6 +77,7 @@
         >
           <h2 class="font-headline text-2xl text-on-surface">Directorio</h2>
           <span
+            id="peluquerias-contador"
             class="text-sm uppercase tracking-widest text-on-surface-variant"
             >{{ peluquerias|length }} locales disponibles</span
           >
@@ -169,6 +170,18 @@
           </p>
           {% endfor %}
         </div>
+
+        {# Aviso cuando la búsqueda no encuentra ninguna barbería #}
+        <p
+          id="peluquerias-sin-resultados"
+          class="hidden py-16 text-center text-on-surface-variant"
+        >
+          <span
+            class="material-symbols-outlined mb-2 block text-4xl text-primary/40"
+            >search_off</span
+          >
+          No encontramos barberías con ese nombre o esa zona.
+        </p>
       </section>
     </main>
 
@@ -208,19 +221,27 @@
   </body>
 
   <script>
+    // Búsqueda del directorio: avisa cuando no hay coincidencias y ajusta el
+    // contador de locales, en vez de dejar la página en blanco sin explicación.
     const buscador = document.getElementById("buscar-peluqueria");
-    if (buscador) {
-      buscador.addEventListener("input", function () {
-        const termino = this.value.toLowerCase().trim();
-        document
-          .querySelectorAll(".peluqueria-card")
-          .forEach(function (tarjeta) {
-            tarjeta.classList.toggle(
-              "hidden",
-              !tarjeta.dataset.busqueda.includes(termino),
-            );
-          });
+    const contador = document.getElementById("peluquerias-contador");
+    const sinResultados = document.getElementById("peluquerias-sin-resultados");
+    const tarjetas = Array.from(document.querySelectorAll(".peluqueria-card"));
+    function filtrarPeluquerias() {
+      const termino = (buscador ? buscador.value : "").toLowerCase().trim();
+      let visibles = 0;
+      tarjetas.forEach(function (tarjeta) {
+        const coincide = tarjeta.dataset.busqueda.includes(termino);
+        tarjeta.classList.toggle("hidden", !coincide);
+        if (coincide) visibles++;
       });
+      if (contador) {
+        contador.textContent =
+          visibles +
+          (visibles === 1 ? " local disponible" : " locales disponibles");
+      }
+      if (sinResultados) sinResultados.classList.toggle("hidden", visibles > 0);
     }
+    if (buscador) buscador.addEventListener("input", filtrarPeluquerias);
   </script>
 </html>
