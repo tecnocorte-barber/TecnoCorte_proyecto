@@ -1,0 +1,135 @@
+{# Fallos del sitio: tipo, ruta, persona afectada y traza, con estado de revisión. #}
+{% extends 'usuarios/dashboard_base.html' %}
+{% block title %}Errores - TecnoCorte{% endblock %}
+{% block body_class %}font-body antialiased flex bg-surface{% endblock %}
+{% block content %}
+{% include 'includes/admin_sidebar.html' with active='errores' %}
+<main class="ml-0 min-w-0 flex-1 p-4 pb-24 sm:p-6 md:ml-64 md:p-12 md:pb-12">
+  {% include "includes/panel_header.html" %}
+  <header class="mb-8 flex flex-col gap-4 pr-12 sm:flex-row sm:items-end sm:justify-between sm:pr-16">
+    <div>
+      <p class="text-xs font-bold uppercase tracking-[0.2em] text-primary">Soporte</p>
+      <h1 class="mt-2 font-headline text-3xl text-on-surface sm:text-4xl">Errores del sitio</h1>
+      <p class="mt-2 text-sm text-on-surface-variant">
+        Cada fallo queda aquí con su tipo, su ruta y su traza. Los fallos graves también llegan
+        como notificación, mensaje y correo.
+      </p>
+    </div>
+    {% if errores_pendientes %}
+    {# Cierra de una vez una tanda de fallos que ya se revisó #}
+    <form method="post" action="{% url 'sena:admin_errores' %}">
+      {% csrf_token %}
+      <input type="hidden" name="accion" value="revisar_todos" />
+      <button
+        type="submit"
+        class="inline-flex items-center gap-2 rounded-md border border-outline-variant/30 px-4 py-2 text-xs font-bold uppercase tracking-widest text-primary transition-colors hover:border-primary"
+      >
+        <span class="material-symbols-outlined text-base">done_all</span>Marcar todos como revisados
+      </button>
+    </form>
+    {% endif %}
+  </header>
+
+  {# Resumen: cuántos fallos hay y cuántos siguen sin revisar #}
+  <section class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+    <div class="rounded-2xl bg-surface-container-low p-5">
+      <p class="text-xs font-bold uppercase tracking-[0.2em] text-on-surface-variant">Registrados</p>
+      <p class="mt-1 font-headline text-3xl text-on-surface">{{ total_errores }}</p>
+    </div>
+    <div class="rounded-2xl bg-surface-container-low p-5">
+      <p class="text-xs font-bold uppercase tracking-[0.2em] text-on-surface-variant">Sin revisar</p>
+      <p class="mt-1 font-headline text-3xl {% if errores_pendientes %}text-error{% else %}text-on-surface{% endif %}">{{ errores_pendientes }}</p>
+    </div>
+  </section>
+
+  <div class="table-responsive rounded-2xl bg-surface-container-low">
+    <table class="tc-table text-left text-sm">
+      <thead class="border-b border-outline-variant/20 text-xs uppercase tracking-wider text-on-surface-variant">
+        <tr>
+          <th class="w-[8.5rem]">Fecha</th>
+          <th class="w-[7.5rem]">Estado</th>
+          <th class="w-[12rem]">Fallo</th>
+          <th>Ruta</th>
+          <th class="w-[11rem]">Persona</th>
+          <th class="w-[9.5rem]">Acción</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for error in errores %}
+        <tr class="border-b border-outline-variant/10 align-top last:border-0">
+          <td class="whitespace-nowrap">{{ error.fecha|date:"d/m/Y H:i" }}</td>
+          <td>
+            {% if error.estado == 'revisado' %}
+            <span class="tc-badge tc-badge--ok">Revisado</span>
+            {% else %}
+            <span class="tc-badge tc-badge--no">Pendiente</span>
+            {% endif %}
+          </td>
+          <td>
+            <span class="tc-truncate font-semibold text-primary" title="{{ error.tipo }}">{{ error.tipo }}</span>
+            <span class="tc-truncate text-xs text-on-surface-variant">HTTP {{ error.codigo_http }} · {{ error.codigo }}</span>
+          </td>
+          <td>
+            <span class="tc-truncate" title="{{ error.metodo }} {{ error.ruta }}">{{ error.metodo }} {{ error.ruta }}</span>
+            <span class="tc-truncate text-xs text-on-surface-variant" title="{{ error.mensaje }}">{{ error.mensaje|default:"Sin mensaje" }}</span>
+          </td>
+          <td>
+            <span class="tc-truncate" title="{% if error.usuario %}{{ error.usuario.email }}{% else %}Sin sesión{% endif %}">
+              {% if error.usuario %}{{ error.usuario.email }}{% else %}Sin sesión{% endif %}
+            </span>
+            <span class="tc-truncate text-xs text-on-surface-variant" title="{{ error.ip }}">{{ error.ip|default:"—" }}</span>
+          </td>
+          <td>
+            {# Cambia el estado del fallo: pendiente <-> revisado #}
+            <form method="post" action="{% url 'sena:admin_errores' %}">
+              {% csrf_token %}
+              <input type="hidden" name="registro_id" value="{{ error.id }}" />
+              {% if error.estado == 'revisado' %}
+              <input type="hidden" name="estado" value="pendiente" />
+              <button
+                type="submit"
+                class="inline-flex items-center gap-1 rounded-md border border-outline-variant/30 px-3 py-2 text-[0.65rem] font-bold uppercase tracking-widest text-on-surface-variant transition-colors hover:border-primary hover:text-primary"
+              >
+                <span class="material-symbols-outlined text-sm">undo</span>Reabrir
+              </button>
+              {% else %}
+              <input type="hidden" name="estado" value="revisado" />
+              <button
+                type="submit"
+                class="inline-flex items-center gap-1 rounded-md border border-outline-variant/30 px-3 py-2 text-[0.65rem] font-bold uppercase tracking-widest text-primary transition-colors hover:border-primary"
+              >
+                <span class="material-symbols-outlined text-sm">done</span>Revisado
+              </button>
+              {% endif %}
+            </form>
+          </td>
+        </tr>
+        {% if error.detalle %}
+        <tr class="tc-traza">
+          <td colspan="6">
+            <details>
+              <summary class="cursor-pointer text-xs font-bold uppercase tracking-widest text-on-surface-variant">
+                Ver detalle técnico
+              </summary>
+              <pre>{{ error.detalle }}</pre>
+            </details>
+          </td>
+        </tr>
+        {% endif %}
+        {% empty %}
+        <tr>
+          <td colspan="6" class="text-center text-on-surface-variant">
+            No hay fallos registrados. El sitio va bien.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <p class="mt-4 text-xs text-on-surface-variant">
+    Se muestran los <strong>200</strong> fallos más recientes. El listado completo está en el
+    administrador de Django, sección <em>Registros de error</em>.
+  </p>
+</main>
+{% include "includes/admin_mobile_nav.html" with active="errores" %}
+{% endblock %}

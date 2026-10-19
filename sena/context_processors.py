@@ -2,7 +2,7 @@
 
 from django.core.cache import cache
 
-from .models import Notificacion, MensajeContacto, Configuracion, SolicitudServicio
+from .models import Notificacion, MensajeContacto, Configuracion, RegistroError, SolicitudServicio
 
 
 def carrito_visible(request):
@@ -58,7 +58,12 @@ def notificaciones_contexto(request):
     sesion = request.session.get("logueado") or {}
     usuario_id = sesion.get("id")
     if not usuario_id:
-        return {"notificaciones_no_leidas": 0, "mensajes_no_leidos": 0, "solicitudes_servicio_pendientes": 0}
+        return {
+            "notificaciones_no_leidas": 0,
+            "mensajes_no_leidos": 0,
+            "solicitudes_servicio_pendientes": 0,
+            "errores_pendientes": 0,
+        }
     # Los contadores se guardan en caché 20 s para no pagar la latencia de la BD remota en cada página.
     clave_notif = f"contador_notificaciones_{usuario_id}"
     no_leidas = cache.get(clave_notif)
@@ -67,6 +72,7 @@ def notificaciones_contexto(request):
         cache.set(clave_notif, no_leidas, 20)
     mensajes_no_leidos = 0
     solicitudes_servicio_pendientes = 0
+    errores_pendientes = 0
     if sesion.get("rol") == "Admin":
         clave_mensajes = "contador_mensajes_admin"
         mensajes_no_leidos = cache.get(clave_mensajes)
@@ -78,10 +84,16 @@ def notificaciones_contexto(request):
         if solicitudes_servicio_pendientes is None:
             solicitudes_servicio_pendientes = SolicitudServicio.objects.filter(estado="pendiente").count()
             cache.set(clave_solicitudes, solicitudes_servicio_pendientes, 20)
+        clave_errores = "contador_errores_pendientes_admin"
+        errores_pendientes = cache.get(clave_errores)
+        if errores_pendientes is None:
+            errores_pendientes = RegistroError.objects.filter(estado="pendiente").count()
+            cache.set(clave_errores, errores_pendientes, 20)
     return {
         "notificaciones_no_leidas": no_leidas,
         "mensajes_no_leidos": mensajes_no_leidos,
         "solicitudes_servicio_pendientes": solicitudes_servicio_pendientes,
+        "errores_pendientes": errores_pendientes,
     }
 
 

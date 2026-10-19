@@ -215,9 +215,11 @@ PLANTILLA_ERROR = "errores/error.html"
 # vuelva a registrarla creyendo que es una página de error sin tratar.
 MARCA_AMIGABLE = "_tc_tarjeta_amigable"
 
+# Todas las tarjetas dicen lo mismo: hubo un fallo y el equipo ya fue avisado.
+# El 403 se mantiene aparte porque no es un fallo del sitio, sino una sección
+# sin permisos (el decorador de roles redirige al login, así que es raro verlo).
 _TITULOS = {
     403: "No tienes permiso para ver esta página",
-    404: "Esta página no existe o se movió",
 }
 
 

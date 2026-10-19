@@ -154,6 +154,18 @@
       <span class="font-label uppercase text-xs tracking-widest">Auditoría</span>
     </a>
     <a
+      class="panel-glass-link flex items-center space-x-4 px-4 py-3 {% if active == 'errores' %}panel-glass-link--active{% else %}text-on-surface-variant{% endif %}"
+      href="{% url 'sena:admin_errores' %}"
+      ><span class="material-symbols-outlined">bug_report</span
+      ><span class="font-label uppercase text-xs tracking-widest"
+        >Errores</span
+      {# Contador de fallos sin revisar #}
+  >{% if errores_pendientes %}<span
+        class="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-error px-1 text-[10px] font-bold text-on-error"
+        >{{ errores_pendientes }}</span
+      >{% endif %}</a
+    >
+    <a
       class="panel-glass-link flex items-center space-x-4 px-4 py-3 {% if active == 'horarios' %}panel-glass-link--active{% else %}text-on-surface-variant{% endif %}"
       href="{% url 'sena:admin_horarios' %}"
     >

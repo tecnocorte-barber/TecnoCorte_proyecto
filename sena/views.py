@@ -2789,6 +2789,37 @@ def admin_acciones(request):
     acciones = RegistroAccion.objects.select_related("actor").all()[:300]
     return render(request, "administrador/admin_acciones.html", {"acciones": acciones})
 
+@autorizacion(["Admin"])
+def admin_errores(request):
+    """Fallos registrados del sitio, para que el Admin los vea y los revise."""
+    from .models import RegistroError
+
+    if request.method == "POST":
+        estados = dict(RegistroError.ESTADOS)
+        if request.POST.get("accion") == "revisar_todos":
+            revisados = RegistroError.objects.filter(estado="pendiente").update(estado="revisado")
+            if revisados:
+                messages.success(request, f"Se marcaron {revisados} errores como revisados.")
+        else:
+            estado = request.POST.get("estado")
+            if estado in estados:
+                actualizados = RegistroError.objects.filter(
+                    id=request.POST.get("registro_id")
+                ).update(estado=estado)
+                if actualizados:
+                    messages.success(request, f"El error quedó como {estados[estado].lower()}.")
+        # El contador del panel está en caché: se limpia para que el aviso baje ya.
+        cache.delete("contador_errores_pendientes_admin")
+        return redirect("sena:admin_errores")
+
+    errores = RegistroError.objects.select_related("usuario").order_by("-fecha")[:200]
+    contexto = {
+        "errores": errores,
+        "total_errores": RegistroError.objects.count(),
+        "errores_pendientes": RegistroError.objects.filter(estado="pendiente").count(),
+    }
+    return render(request, "administrador/admin_errores.html", contexto)
+
 # ═══════════════════════════════════════════════════════════════════════════
 # GESTIÓN DE USUARIOS - SOLO ADMIN
 # ═══════════════════════════════════════════════════════════════════════════

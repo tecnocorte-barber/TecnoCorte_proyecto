@@ -168,6 +168,24 @@ html:not(.dark) .tc-badge--ok {
     min-width: 40rem;
   }
 }
+/* Traza de un fallo: se abre dentro de la tabla y hace su propio scroll */
+.tc-table .tc-traza td {
+  padding-top: 0;
+  padding-bottom: 1rem;
+}
+.tc-traza summary {
+  cursor: pointer;
+}
+.tc-traza pre {
+  margin-top: 0.6rem;
+  max-height: 15rem;
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 0.72rem;
+  line-height: 1.55;
+  color: var(--c-on-surface-variant);
+}
 
 /* ── 4. Barras de desplazamiento del tema ───────────────────────────────── */
 /* Fuera la barra gris nativa del sistema: fina, redondeada y del tema, tanto

@@ -5,6 +5,7 @@ from unittest import mock
 
 from django.conf import settings
 from django.core import mail
+from django.core.cache import cache
 from django.core.exceptions import PermissionDenied
 from django.test import TestCase, override_settings
 from django.urls import NoReverseMatch, include, path, reverse
@@ -72,11 +73,22 @@ class PaginasDeErrorTests(TestCase):
     def test_la_ruta_inexistente_muestra_la_pagina_amigable(self):
         r = self.client.get("/no-existe-esta-seccion/")
         self.assertEqual(r.status_code, 404)
-        self.assertContains(r, "Esta página no existe o se movió", status_code=404)
+        self.assertContains(r, "Estamos teniendo problemas", status_code=404)
+        self.assertContains(r, "Nuestro equipo ya recibió el aviso", status_code=404)
         # No debe verse ni el traceback ni el detalle técnico de Django.
         self.assertNotContains(r, "Traceback", status_code=404)
         self.assertNotContains(r, "Django tried these URL patterns", status_code=404)
         self.assertNotContains(r, "DEBUG = True", status_code=404)
+
+    def test_el_404_avisa_igual_que_el_500(self):
+        """Un enlace roto y un fallo interno muestran la misma tarjeta."""
+        r404 = self.client.get("/no-existe-esta-seccion/")
+        r500 = self._sin_captura().get("/__prueba__/revienta/")
+        for respuesta, estado in ((r404, 404), (r500, 500)):
+            self.assertContains(respuesta, "Estamos teniendo problemas", status_code=estado)
+            self.assertContains(
+                respuesta, "Nuestro equipo ya recibió el aviso de este fallo", status_code=estado
+            )
 
     def test_el_404_ofrece_un_codigo_para_reportar(self):
         r = self.client.get("/no-existe-esta-seccion/")
@@ -166,7 +178,7 @@ class PaginasDeErrorTests(TestCase):
         ):
             r = self.client.get("/no-existe-esta-seccion/")
         self.assertEqual(r.status_code, 404)
-        self.assertContains(r, "Esta página no existe", status_code=404)
+        self.assertContains(r, "Estamos teniendo problemas", status_code=404)
 
     def test_el_registro_de_errores_no_rompe_si_falla_la_base(self):
         """Si no se puede guardar, la persona igual ve la página amigable."""
@@ -229,7 +241,7 @@ class TarjetaDeErrorEnDesarrolloTests(TestCase):
     def test_un_enlace_roto_no_muestra_las_rutas_que_probo_django(self):
         r = self.client.get("/usuario/error/")
         self.assertEqual(r.status_code, 404)
-        self.assertContains(r, "Esta página no existe o se movió", status_code=404)
+        self.assertContains(r, "Estamos teniendo problemas", status_code=404)
         self.assertNotContains(r, "Django tried these URL patterns", status_code=404)
         self.assertNotContains(r, "DEBUG = True", status_code=404)
 
@@ -265,7 +277,97 @@ class TarjetaDeErrorEnDesarrolloTests(TestCase):
         """La API responde JSON: sustituirla por la tarjeta rompería al cliente."""
         r = self.client.get("/api/no-existe-esta-ruta/")
         self.assertEqual(r.status_code, 404)
-        self.assertNotContains(r, "Esta página no existe o se movió", status_code=404)
+        self.assertNotContains(r, "Estamos teniendo problemas", status_code=404)
+
+
+class PaginaDeErroresDelAdminTests(TestCase):
+    """El Admin revisa los fallos desde el panel, sin entrar al admin de Django."""
+
+    def setUp(self):
+        # El contador del panel vive en caché: se limpia para que cada prueba parta de cero.
+        cache.clear()
+        self.admin = Usuario.objects.create(
+            nombre="Admin", apellido="Tres", email="admin.lista.errores@test.com",
+            password="x", rol="Admin", activo=True,
+        )
+        self.fallo = RegistroError.objects.create(
+            codigo="E-PRUEBA1", codigo_http=500, ruta="/__prueba__/revienta/", metodo="GET",
+            tipo="RuntimeError", mensaje="fallo interno provocado en la prueba",
+            detalle="Traceback (most recent call last):\n  vista_que_revienta",
+            ip="127.0.0.1",
+        )
+
+    def _como_admin(self):
+        from django.test import Client
+
+        cliente = Client()
+        sesion = cliente.session
+        sesion["logueado"] = {
+            "id": self.admin.id,
+            "rol": "Admin",
+            "nombre": self.admin.nombre,
+            "sesion_version": self.admin.sesion_version,
+        }
+        sesion.save()
+        return cliente
+
+    def test_solo_el_admin_entra_a_la_lista(self):
+        r = self.client.get("/admin/errores/")
+        self.assertEqual(r.status_code, 302)
+        self.assertIn("/login/", r["Location"])
+
+    def test_la_lista_muestra_tipo_ruta_traza_y_el_enlace_del_panel(self):
+        r = self._como_admin().get("/admin/errores/")
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, "RuntimeError")
+        self.assertContains(r, "/__prueba__/revienta/")
+        self.assertContains(r, "E-PRUEBA1")
+        self.assertContains(r, "vista_que_revienta")
+        self.assertContains(r, 'href="/admin/errores/"')
+        self.assertContains(r, "Sin revisar")
+
+    def test_el_admin_marca_el_fallo_como_revisado(self):
+        r = self._como_admin().post(
+            "/admin/errores/", {"registro_id": self.fallo.id, "estado": "revisado"}
+        )
+        self.assertEqual(r.status_code, 302)
+        self.fallo.refresh_from_db()
+        self.assertEqual(self.fallo.estado, "revisado")
+        self.assertContains(self._como_admin().get("/admin/errores/"), "Revisado")
+
+    def test_un_estado_inventado_no_cambia_nada(self):
+        self._como_admin().post(
+            "/admin/errores/", {"registro_id": self.fallo.id, "estado": "inventado"}
+        )
+        self.fallo.refresh_from_db()
+        self.assertEqual(self.fallo.estado, "pendiente")
+
+    def test_el_admin_marca_todos_los_fallos_como_revisados(self):
+        segundo = RegistroError.objects.create(
+            codigo="E-PRUEBA2", codigo_http=404, ruta="/otra-ruta/", metodo="GET",
+            tipo="Http404", mensaje="sin página", ip="127.0.0.1",
+        )
+        r = self._como_admin().post("/admin/errores/", {"accion": "revisar_todos"})
+        self.assertEqual(r.status_code, 302)
+        self.fallo.refresh_from_db()
+        segundo.refresh_from_db()
+        self.assertEqual(self.fallo.estado, "revisado")
+        self.assertEqual(segundo.estado, "revisado")
+        self.assertEqual(
+            self._como_admin().get("/admin/errores/").context["errores_pendientes"], 0
+        )
+
+    def test_el_panel_avisa_cuantos_fallos_quedan_sin_revisar(self):
+        r = self._como_admin().get("/admin/errores/")
+        self.assertEqual(r.context["errores_pendientes"], 1)
+
+    def test_el_aviso_baja_al_marcar_el_fallo(self):
+        self._como_admin().get("/admin/errores/")  # deja el contador en caché
+        self._como_admin().post(
+            "/admin/errores/", {"registro_id": self.fallo.id, "estado": "revisado"}
+        )
+        r = self._como_admin().get("/admin/errores/")
+        self.assertEqual(r.context["errores_pendientes"], 0)
 
 
 # ── Auditorías que deben seguir cumpliéndose ────────────────────────────────

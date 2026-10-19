@@ -91,6 +91,7 @@ urlpatterns = [
     path('admin/cancelar_reserva/<int:id>/', views.admin_cancelar_reserva, name="admin_cancelar_reserva"),  # Cancelar reserva sin eliminar
     path('admin/ingresos/', views.admin_ingresos, name="admin_ingresos"),  # Historial de inicios de sesión
     path('admin/acciones/', views.admin_acciones, name="admin_acciones"),  # Historial de acciones sensibles
+    path('admin/errores/', views.admin_errores, name="admin_errores"),  # Fallos registrados del sitio
     path('admin/perfil/', views.admin_perfil, name="admin_perfil"),  # Perfil del admin
     path('admin/horarios/', views.admin_horarios, name="admin_horarios"),  # Gestionar horarios y bloqueos
     path('admin/eliminar_bloqueo/<int:id>/', views.admin_eliminar_bloqueo, name="admin_eliminar_bloqueo"),  # Quitar un bloqueo de horario

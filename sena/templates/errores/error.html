@@ -181,12 +181,7 @@ procesadores de contexto: debe funcionar aunque la base de datos esté caída.
         >Error {{ codigo }}{% if codigo_reporte %} · {{ codigo_reporte }}{% endif %}</span
       >
       <h1>{{ titulo }}</h1>
-      {% if codigo == 404 %}
-        <p>
-          Puede que el enlace esté desactualizado o que esa sección haya cambiado
-          de lugar.
-        </p>
-      {% elif codigo == 403 %}
+      {% if codigo == 403 %}
         <p>
           Esta sección es solo para cuentas con permisos. Si crees que es un
           error, inicia sesión con tu cuenta o contáctanos.
