@@ -19,9 +19,16 @@ SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', _default_secret)
 if not DEBUG and (not SECRET_KEY or SECRET_KEY == _default_secret):
     raise ImproperlyConfigured('DJANGO_SECRET_KEY debe configurarse con un valor secreto en producción.')
 _allowed_hosts_env = os.environ.get('DJANGO_ALLOWED_HOSTS', '')
+_vercel_deployment = os.environ.get('VERCEL_URL', '').strip()
+_en_vercel = bool(os.environ.get('VERCEL') or _vercel_deployment)
 if not DEBUG and not _allowed_hosts_env:
-    raise ImproperlyConfigured('DJANGO_ALLOWED_HOSTS debe configurarse en producción.')
-ALLOWED_HOSTS = [host.strip() for host in (_allowed_hosts_env or 'localhost,127.0.0.1').split(',') if host.strip()]
+    if not _en_vercel:
+        raise ImproperlyConfigured('DJANGO_ALLOWED_HOSTS debe configurarse en producción.')
+_hosts_base = _allowed_hosts_env or 'localhost,127.0.0.1'
+ALLOWED_HOSTS = [host.strip() for host in _hosts_base.split(',') if host.strip()]
+if _en_vercel:
+    # Vercel usa dominios de despliegue variables y el alias .vercel.app.
+    ALLOWED_HOSTS.extend(['.vercel.app'] + ([_vercel_deployment.split('/', 1)[0]] if _vercel_deployment else []))
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -169,6 +176,8 @@ CONTACT_EMAIL = os.environ.get('CONTACT_EMAIL', 'tecnocorte083@gmail.com')
 # URL pública opcional usada por los enlaces de correos enviados por comandos
 # programados, que no tienen un objeto request disponible.
 SITE_URL = os.environ.get('SITE_URL', '').rstrip('/')
+if not SITE_URL and _vercel_deployment:
+    SITE_URL = f'https://{_vercel_deployment}'
 # Desactivado temporalmente: las cuentas no requieren código para iniciar sesión.
 # La implementación queda disponible para activarla más adelante de forma controlada.
 REQUIRE_EMAIL_VERIFICATION = False
@@ -194,8 +203,11 @@ SECURE_CROSS_ORIGIN_OPENER_POLICY = 'same-origin'
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = 'Lax'
 CSRF_COOKIE_SAMESITE = 'Lax'
-CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in os.environ.get('DJANGO_CSRF_TRUSTED_ORIGINS', '').split(',') if origin.strip()]
-if os.environ.get('DJANGO_USE_PROXY_SSL', 'False').lower() == 'true':
+_csrf_origins = [origin.strip() for origin in os.environ.get('DJANGO_CSRF_TRUSTED_ORIGINS', '').split(',') if origin.strip()]
+if _en_vercel:
+    _csrf_origins.extend(['https://*.vercel.app'])
+CSRF_TRUSTED_ORIGINS = list(dict.fromkeys(_csrf_origins))
+if os.environ.get('DJANGO_USE_PROXY_SSL', 'False').lower() == 'true' or _en_vercel:
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 REST_FRAMEWORK = {
