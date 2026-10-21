@@ -12,8 +12,8 @@ USUARIOS_DEMO = [
     {"email": "admin@tecnocorte.com", "password": "Admin123!", "nombre": "Admin", "apellido": "TecnoCorte", "rol": "Admin"},
     {"email": "cliente1@tecnocorte.com", "password": "Cliente1!", "nombre": "Carlos", "apellido": "Cliente", "rol": "Cliente"},
     {"email": "cliente2@tecnocorte.com", "password": "Cliente2!", "nombre": "Laura", "apellido": "Cliente", "rol": "Cliente"},
-    {"email": "barbero1@tecnocorte.com", "password": "Barbero1!", "nombre": "Pedro", "apellido": "Barbero", "rol": "Barbero"},
-    {"email": "barbero2@tecnocorte.com", "password": "Barbero2!", "nombre": "Andrés", "apellido": "Barbero", "rol": "Barbero"},
+    {"email": "barbero.pedro.itagui@tecnocorte.com", "password": "barbero123", "nombre": "Pedro", "apellido": "Barbero", "rol": "Barbero"},
+    {"email": "barbero.andres.barbero.itagui@tecnocorte.com", "password": "barbero123", "nombre": "Andrés", "apellido": "Barbero", "rol": "Barbero"},
 ]
 
 
