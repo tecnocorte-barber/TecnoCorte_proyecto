@@ -6,7 +6,7 @@ from django.core.exceptions import PermissionDenied
 from django.http import Http404
 from django.shortcuts import render
 
-from .errores import es_amigable, tarjeta_de_fallo, ultima_excepcion
+from .errores import es_amigable, tarjeta_de_fallo, ultima_excepcion, RUTAS_404_RUIDO
 from .models import Configuracion
 
 
@@ -72,9 +72,15 @@ class ErroresAmigablesMiddleware:
     def _sin_tarjeta(self, request):
         return request.path.startswith(self.PREFIJOS_SIN_TARJETA)
 
+    def _ruido_404(self, request):
+        """Sondas externas conocidas: se responden 404 sin llenar la auditoría."""
+        return request.path_info in RUTAS_404_RUIDO
+
     def process_exception(self, request, exception):
         """Excepción de la vista: 404, 403 o fallo inesperado."""
         if not isinstance(exception, Exception) or self._sin_tarjeta(request):
+            return None
+        if isinstance(exception, Http404) and self._ruido_404(request):
             return None
         if isinstance(exception, Http404):
             codigo_http = 404
@@ -94,6 +100,7 @@ class ErroresAmigablesMiddleware:
             response.status_code in (404, 500)
             and not es_amigable(response)
             and not self._sin_tarjeta(request)
+            and not self._ruido_404(request)
             and "text/html" in response.get("Content-Type", "text/html")
         ):
             if response.status_code == 404:
