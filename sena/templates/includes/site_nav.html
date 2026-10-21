@@ -60,6 +60,21 @@
         href="{% url 'sena:ayuda' %}"
         >Contactos</a
       >
+      {% if not request.session.logueado %}
+      {# En móvil las opciones de autenticación viven dentro del menú desplegable. #}
+      <div class="mobile-auth-actions" aria-label="Acceso a tu cuenta">
+        <a
+          class="pill-nav-link mobile-auth-link"
+          href="{% url 'sena:login' %}"
+          >Iniciar sesión</a
+        >
+        <a
+          class="pill-nav-link mobile-auth-link mobile-auth-link-primary"
+          href="{% url 'sena:registro' %}"
+          >Registrarse</a
+        >
+      </div>
+      {% endif %}
     </div>
 
     {# Acciones: tema, notificaciones, carrito y sesión #}

@@ -465,6 +465,16 @@ select option {
   background: rgba(255, 255, 255, 0.08);
   color: var(--c-primary);
 }
+.mobile-auth-actions {
+  display: none;
+}
+.mobile-auth-link {
+  width: 100%;
+}
+.mobile-auth-link-primary {
+  color: var(--c-primary);
+  background: rgba(255, 255, 255, 0.08);
+}
 html:not(.dark) .pill-nav-highlight {
   background: rgba(79, 57, 8, 0.08);
 }
@@ -511,6 +521,14 @@ html:not(.dark) .pill-menu-toggle:hover {
   }
   .pill-nav-menu.is-open .pill-nav-link {
     justify-content: flex-start;
+  }
+  .pill-nav-menu.is-open .mobile-auth-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    margin-top: 0.35rem;
+    padding-top: 0.35rem;
+    border-top: 1px solid var(--glass-border);
   }
   .pill-nav {
     min-height: 3.5rem;
