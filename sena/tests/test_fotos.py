@@ -238,7 +238,7 @@ class FotosYConfiguracionTests(TestCase):
         """Los paneles usan .table-responsive, no un overflow-x-auto crudo."""
         import pathlib
 
-        plantillas = pathlib.Path(__file__).resolve().parent / "templates"
+        plantillas = pathlib.Path(__file__).resolve().parents[1] / "templates"
         sospechosas = [
             archivo.name
             for carpeta in ("administrador", "peluqueros")
@@ -251,7 +251,7 @@ class FotosYConfiguracionTests(TestCase):
         """El menú pill es fijo: sin pt-32 el primer enlace queda tapado."""
         import pathlib
 
-        plantillas = pathlib.Path(__file__).resolve().parent / "templates"
+        plantillas = pathlib.Path(__file__).resolve().parents[1] / "templates"
         for nombre in (
             "usuarios/usuario_notificaciones.html",
             "usuarios/usuario_perfil.html",

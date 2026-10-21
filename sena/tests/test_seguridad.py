@@ -218,7 +218,7 @@ class PaginasDeErrorTests(TestCase):
 
 @override_settings(
     DEBUG=True,
-    ROOT_URLCONF="sena.tests_seguridad",
+    ROOT_URLCONF="sena.tests.test_seguridad",
     ALLOWED_HOSTS=["testserver", "localhost", "127.0.0.1"],
     SECURE_SSL_REDIRECT=False,
     SESSION_COOKIE_SECURE=False,
