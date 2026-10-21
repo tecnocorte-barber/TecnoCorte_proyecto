@@ -10,8 +10,8 @@ from django.core.exceptions import PermissionDenied
 from django.test import TestCase, override_settings
 from django.urls import NoReverseMatch, include, path, reverse
 
-from .models import MensajeContacto, Notificacion, RegistroError, Usuario
-from .views import _json_seguro
+from ..models import MensajeContacto, Notificacion, RegistroError, Usuario
+from ..views import _json_seguro
 
 
 # ── URLconf de prueba ───────────────────────────────────────────────────────
@@ -46,7 +46,7 @@ AJUSTES_PRODUCCION = {
     "SECURE_SSL_REDIRECT": False,
     "SESSION_COOKIE_SECURE": False,
     "CSRF_COOKIE_SECURE": False,
-    "ROOT_URLCONF": "sena.tests_seguridad",
+    "ROOT_URLCONF": "sena.tests.test_seguridad",
 }
 
 
@@ -431,7 +431,7 @@ class AuditoriaDePermisosTests(TestCase):
     # Vistas públicas por diseño: no llevan @autorizacion y son correctas.
     VISTAS_PUBLICAS = {
         "inicio", "login", "solicitar_recuperacion", "restablecer_password",
-        "registro", "logout", "como_funciona", "sobre_nosotros", "politicas", "health_check",
+        "registro", "verificar_correo", "reenviar_verificacion", "logout", "como_funciona", "sobre_nosotros", "politicas", "health_check",
         "ayuda", "carrito", "agregar_carrito", "actualizar_carrito",
         "eliminar_carrito", "usuario_dashboard", "usuario_tienda",
         "usuario_servicios", "usuario_peluquerias", "usuario_peluqueria_detalle",

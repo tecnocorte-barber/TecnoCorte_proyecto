@@ -21,11 +21,11 @@ from django.core.exceptions import ValidationError  # Excepciones de validación
 from django.db.models.deletion import ProtectedError  # Relaciones protegidas al eliminar usuarios
 from datetime import datetime, time, timedelta  # Manejo de fechas, horas y duraciones
 from html import escape  # Escapa valores al generar reportes HTML compatibles con Excel
-from .models import Usuario, Peluqueria, ImagenPeluqueria, Producto, Reserva, Pedido, PedidoProducto, RegistroIngreso, Notificacion, HorarioTrabajo, BloqueoHorario, MensajeContacto, Calificacion, Configuracion, Servicio, SolicitudServicio, TIPOS_MENSAJE, TIPOS_MENSAJE_DICCIONARIO  # Todos los modelos
-from .utilidades import autorizacion, validar_password, validar_telefono, validar_imagen, registrar_accion, transicion_valida, TRANSICIONES_RESERVA, TRANSICIONES_PEDIDO  # Seguridad, auditoría, estados y validación
-from .context_processors import carrito_visible, guardar_carrito_activo, cargar_carrito_usuario  # Funciones del carrito por sesión
-from .services.correos import enviar_correo, enviar_correo_destino, enviar_correo_cita
-from .services.catalogo import SERVICIOS, DURACIONES_SERVICIO, catalogo_servicios, servicio_valido, minutos_servicio
+from ..models import Usuario, Peluqueria, ImagenPeluqueria, Producto, Reserva, Pedido, PedidoProducto, RegistroIngreso, Notificacion, HorarioTrabajo, BloqueoHorario, MensajeContacto, Calificacion, Configuracion, Servicio, SolicitudServicio, TIPOS_MENSAJE, TIPOS_MENSAJE_DICCIONARIO  # Todos los modelos
+from ..utilidades import autorizacion, validar_password, validar_telefono, validar_imagen, registrar_accion, transicion_valida, TRANSICIONES_RESERVA, TRANSICIONES_PEDIDO  # Seguridad, auditoría, estados y validación
+from ..context_processors import carrito_visible, guardar_carrito_activo, cargar_carrito_usuario  # Funciones del carrito por sesión
+from ..services.correos import enviar_correo, enviar_correo_destino, enviar_correo_cita
+from ..services.catalogo import SERVICIOS, DURACIONES_SERVICIO, catalogo_servicios, servicio_valido, minutos_servicio
 
 # Imagen de respaldo para las tarjetas del inicio. En los servicios se elige por
 # nombre y en los productos por categoría, porque pueden no tener foto propia.
@@ -2784,7 +2784,7 @@ def admin_ingresos(request):
 @autorizacion(["Admin"])
 def admin_acciones(request):
     """Consulta de auditoría de acciones sensibles, solo visible para Admin."""
-    from .models import RegistroAccion
+    from ..models import RegistroAccion
 
     acciones = RegistroAccion.objects.select_related("actor").all()[:300]
     return render(request, "administrador/admin_acciones.html", {"acciones": acciones})
@@ -2792,7 +2792,7 @@ def admin_acciones(request):
 @autorizacion(["Admin"])
 def admin_errores(request):
     """Fallos registrados del sitio, para que el Admin los vea y los revise."""
-    from .models import RegistroError
+    from ..models import RegistroError
 
     if request.method == "POST":
         estados = dict(RegistroError.ESTADOS)

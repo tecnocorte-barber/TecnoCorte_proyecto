@@ -1,6 +1,7 @@
 # Modelos de la base de datos de TecnoCorte (barbería):
 # usuarios, peluquerías, productos, reservas, pedidos, notificaciones, horarios y calificaciones.
 from django.db import models
+from django.db.models import Q
 
 # Usuario del sistema con rol Admin, Barbero o Cliente
 class Usuario(models.Model):
@@ -46,11 +47,20 @@ class Usuario(models.Model):
     # Cambia al modificar la contraseña para invalidar todas las sesiones
     # anteriores de la cuenta sin depender de Django Auth.
     sesion_version = models.PositiveIntegerField(default=1)
+    # Verificación de correo: el código se almacena como hash y expira.
+    # Las cuentas antiguas quedan verificadas para no bloquear usuarios existentes.
+    email_verificado = models.BooleanField(default=True)
+    codigo_verificacion_hash = models.CharField(max_length=128, blank=True, default="")
+    codigo_verificacion_expira = models.DateTimeField(null=True, blank=True)
     activo = models.BooleanField(default=True)
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     
     def __str__(self):
         return f"{self.nombre} - {self.rol}"
+
+    def save(self, *args, **kwargs):
+        self.email = (self.email or "").strip().lower()
+        super().save(*args, **kwargs)
 
 # Sede o barbería donde se atienden las citas
 class Peluqueria(models.Model):
@@ -101,6 +111,10 @@ class Producto(models.Model):
     class Meta:
         indexes = [
             models.Index(fields=["disponible"]),
+        ]
+        constraints = [
+            models.CheckConstraint(condition=Q(precio__gte=0), name="producto_precio_no_negativo"),
+            models.CheckConstraint(condition=Q(stock__gte=0), name="producto_stock_no_negativo"),
         ]
 
     def __str__(self):
@@ -155,6 +169,11 @@ class Pedido(models.Model):
     fecha_pago = models.DateTimeField(null=True, blank=True)
     fecha_entrega = models.DateTimeField(null=True, blank=True)
 
+    class Meta:
+        constraints = [
+            models.CheckConstraint(condition=Q(total__gte=0), name="pedido_total_no_negativo"),
+        ]
+
     def __str__(self):
         return f"Pedido {self.id} - {self.cliente.nombre}"
 
@@ -164,6 +183,12 @@ class PedidoProducto(models.Model):
     producto = models.ForeignKey(Producto, on_delete=models.PROTECT, related_name="pedidos_productos")
     cantidad = models.IntegerField(default=1)
     precio = models.IntegerField(default=0)
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(condition=Q(cantidad__gt=0), name="pedido_producto_cantidad_positiva"),
+            models.CheckConstraint(condition=Q(precio__gte=0), name="pedido_producto_precio_no_negativo"),
+        ]
 
     def __str__(self):
         return f"{self.producto.nombre} x{self.cantidad}"
@@ -182,6 +207,19 @@ class RegistroIngreso(models.Model):
 
     def __str__(self):
         return f"{self.usuario.nombre} ({self.rol}) - {self.fecha}"
+
+
+class JWTRefreshToken(models.Model):
+    """Refresh token vigente; solo se almacena el hash del identificador."""
+    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name="refresh_tokens")
+    jti_hash = models.CharField(max_length=64, unique=True)
+    expira = models.DateTimeField()
+    revocado = models.BooleanField(default=False)
+    creado = models.DateTimeField(auto_now_add=True)
+    revocado_en = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        indexes = [models.Index(fields=["usuario", "revocado"]), models.Index(fields=["expira"]) ]
 
 # Aviso que recibe un usuario sobre sus citas o pedidos
 class Notificacion(models.Model):
@@ -295,6 +333,9 @@ class Calificacion(models.Model):
 
     class Meta:
         ordering = ["-fecha"]
+        constraints = [
+            models.CheckConstraint(condition=Q(puntuacion__gte=1, puntuacion__lte=5), name="calificacion_entre_1_y_5"),
+        ]
 
     def __str__(self):
         destino = self.barbero.nombre if self.barbero else "TecnoCorte"

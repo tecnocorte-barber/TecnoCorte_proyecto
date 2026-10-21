@@ -7,7 +7,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.contrib.auth.hashers import make_password
 
-from .models import HorarioTrabajo, Pedido, Peluqueria, RegistroAccion, Reserva, Usuario
+from ..models import HorarioTrabajo, Pedido, Peluqueria, RegistroAccion, Reserva, Usuario
 
 
 @override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend", SITE_URL="https://tecnocorte.test")

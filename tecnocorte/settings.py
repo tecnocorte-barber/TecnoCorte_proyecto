@@ -92,7 +92,9 @@ DATABASES = {
         'USER': os.environ.get('DB_USER'),
         'PASSWORD': os.environ.get('DB_PASSWORD'),
         'HOST': os.environ.get('DB_HOST'),
-        'PORT': os.environ.get('DB_PORT', '6543'),
+        # El pooler en modo sesión (IPv4, compatible con PythonAnywhere) usa
+        # 5432. Se puede sobrescribir con DB_PORT si el proveedor lo requiere.
+        'PORT': os.environ.get('DB_PORT', '5432'),
         # Reutiliza la conexión entre peticiones para evitar el costo de reconexión por cada acción.
         # En desarrollo se cierran conexiones al terminar cada petición para
         # no agotar el pool compartido al abrir varios runserver. En producción
@@ -167,6 +169,16 @@ CONTACT_EMAIL = os.environ.get('CONTACT_EMAIL', 'tecnocorte083@gmail.com')
 # URL pública opcional usada por los enlaces de correos enviados por comandos
 # programados, que no tienen un objeto request disponible.
 SITE_URL = os.environ.get('SITE_URL', '').rstrip('/')
+# Desactivado temporalmente: las cuentas no requieren código para iniciar sesión.
+# La implementación queda disponible para activarla más adelante de forma controlada.
+REQUIRE_EMAIL_VERIFICATION = False
+EMAIL_VERIFICATION_MINUTES = int(os.environ.get('EMAIL_VERIFICATION_MINUTES', '15'))
+EMAIL_VERIFICATION_RESEND_SECONDS = int(os.environ.get('EMAIL_VERIFICATION_RESEND_SECONDS', '60'))
+BACKUP_EMAIL = os.environ.get('BACKUP_EMAIL', CONTACT_EMAIL)
+BACKUP_MAX_ATTACHMENT_BYTES = int(os.environ.get('BACKUP_MAX_ATTACHMENT_BYTES', str(20 * 1024 * 1024)))
+BACKUP_ENCRYPTION_KEY = os.environ.get('BACKUP_ENCRYPTION_KEY', '')
+JWT_ACCESS_MINUTES = int(os.environ.get('JWT_ACCESS_MINUTES', '15'))
+JWT_REFRESH_DAYS = int(os.environ.get('JWT_REFRESH_DAYS', '7'))
 
 SESSION_COOKIE_SECURE = not DEBUG #Cuando inicias sesión, el sistema te da un "carnet".
 CSRF_COOKIE_SECURE = not DEBUG #Es una marca de agua que confirma que un formulario realmente lo llenaste tú y no un virus.

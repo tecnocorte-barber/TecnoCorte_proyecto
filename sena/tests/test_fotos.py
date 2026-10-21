@@ -8,7 +8,7 @@ from django.test import TestCase, override_settings
 from django.urls import reverse, NoReverseMatch
 from PIL import Image
 
-from .models import Configuracion, ImagenPeluqueria, Peluqueria, Producto, Usuario
+from ..models import Configuracion, ImagenPeluqueria, Peluqueria, Producto, Usuario
 
 
 @override_settings(MEDIA_ROOT=tempfile.mkdtemp())
@@ -377,7 +377,7 @@ class ZonaConfiguracionTests(TestCase):
     """Zona de Configuración de cliente y barbero, header unificado y reserva inteligente."""
 
     def setUp(self):
-        from .models import Peluqueria
+        from ..models import Peluqueria
 
         self.peluqueria = Peluqueria.objects.create(
             nombre="Barberia Central", ubicacion="Calle 1", telefono="300-1111",
@@ -582,7 +582,7 @@ class ZonaConfiguracionTests(TestCase):
         self.assertEqual(r.context["servicio_inicial"], "")
 
     def test_barbero_no_puede_reservar_en_otra_sucursal(self):
-        from .models import Peluqueria
+        from ..models import Peluqueria
 
         otra = Peluqueria.objects.create(nombre="Otra", ubicacion="Calle 2", telefono="300-3333")
         self.sesion(self.cliente)
@@ -601,7 +601,7 @@ class ZonaConfiguracionTests(TestCase):
     # ---------- Contacto, mensajes y politicas ----------
 
     def test_ayuda_acepta_tipo(self):
-        from .models import MensajeContacto
+        from ..models import MensajeContacto
 
         r = self.client.post(reverse("sena:ayuda"), {
             "nombre": "Carla", "email": "carla@test.com", "tipo": "cita", "mensaje": "Hola",
@@ -610,7 +610,7 @@ class ZonaConfiguracionTests(TestCase):
         self.assertEqual(MensajeContacto.objects.get().tipo, "cita")
 
     def test_ayuda_respeta_el_asunto_libre_antiguo(self):
-        from .models import MensajeContacto
+        from ..models import MensajeContacto
 
         r = self.client.post(reverse("sena:ayuda"), {
             "nombre": "Pedro", "email": "pedro@test.com", "asunto": "Asunto libre", "mensaje": "Hola",
@@ -628,7 +628,7 @@ class ZonaConfiguracionTests(TestCase):
         self.assertRedirects(r, reverse("sena:admin_dashboard"))
 
     def test_admin_mensajes_muestra_tipo_y_abre_modal(self):
-        from .models import MensajeContacto
+        from ..models import MensajeContacto
 
         MensajeContacto.objects.create(
             nombre="Carla", email="carla@test.com", asunto="Cita", tipo="cita", mensaje="Detalle",

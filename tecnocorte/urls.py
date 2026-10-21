@@ -7,10 +7,15 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
+from sena import views as sena_views
 
 # Lista de rutas del proyecto: web principal, login de API, admin y documentación
 urlpatterns = [
     path('', include('sena.urls')),
+    # Compatibilidad con plantillas antiguas que todavía invierten "perfil"
+    # sin el namespace de la aplicación. El nombre canónico es
+    # ``sena:usuario_perfil``.
+    path('usuario/perfil/', sena_views.usuario_perfil, name='perfil'),
     path('api/auth/', include('rest_framework.urls')),
     path('admin/', admin.site.urls),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

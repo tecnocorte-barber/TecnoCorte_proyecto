@@ -512,6 +512,54 @@ input[type="time"]:focus {
   text-transform: uppercase;
   cursor: pointer;
 }
+
+/* Normalización visual de formularios: evita que el navegador o Tailwind
+   devuelvan controles blancos y cuadrados en alguna pantalla. Las casillas,
+   radios y botones conservan su diseño propio. */
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="submit"]):not([type="button"]):not([type="reset"]),
+select,
+textarea {
+  background-color: var(--c-surface-container-high, #2a2a2a) !important;
+  color: var(--c-on-surface, #f5f0e6) !important;
+  border: 1px solid var(--c-outline-variant, rgba(255, 255, 255, 0.15)) !important;
+  border-radius: 0.85rem !important;
+  background-clip: padding-box;
+}
+
+html.dark input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="submit"]):not([type="button"]):not([type="reset"]),
+html.dark select,
+html.dark textarea {
+  background-color: #242424 !important;
+}
+
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="submit"]):not([type="button"]):not([type="reset"]):focus,
+select:focus,
+textarea:focus {
+  border-color: var(--c-primary) !important;
+  box-shadow: 0 0 0 3px rgba(214, 173, 66, 0.18) !important;
+  outline: none !important;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--c-on-surface-variant, #a99f89) !important;
+  opacity: 0.8;
+}
+
+@media (max-width: 640px) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="submit"]):not([type="button"]):not([type="reset"]),
+  select,
+  textarea {
+    width: 100%;
+    max-width: 100%;
+    min-height: 44px;
+    font-size: 16px !important;
+  }
+
+  textarea {
+    min-height: 120px;
+  }
+}
 /* Interruptor (checkbox) premium */
 .tc-switch {
   display: inline-flex;

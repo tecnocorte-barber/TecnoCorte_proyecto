@@ -12,6 +12,9 @@ router.register(r"usuarios", api.UsuarioViewSet)  # CRUD de usuarios vía API
 router.register(r"peluquerias", api.PeluqueriaViewSet)  # CRUD de peluquerías vía API
 router.register(r"productos", api.ProductoViewSet)  # CRUD de productos vía API
 router.register(r"reservas", api.ReservaViewSet)  # CRUD de reservas vía API
+router.register(r"pedidos", api.PedidoViewSet)  # CRUD de pedidos vía API
+router.register(r"pedido-productos", api.PedidoProductoViewSet)  # Detalle de pedidos vía API
+router.register(r"notificaciones", api.NotificacionViewSet, basename="notificacion")  # Notificaciones propias
 
 urlpatterns = [
     # === PÁGINAS PÚBLICAS (sin login) ===
@@ -20,6 +23,8 @@ urlpatterns = [
     path('recuperar-password/', views.solicitar_recuperacion, name="solicitar_recuperacion"),  # Solicitar enlace de recuperación
     path('restablecer-password/<str:token>/', views.restablecer_password, name="restablecer_password"),  # Formulario con token de recuperación
     path('registro/', views.registro, name="registro"),  # Registro de nuevos clientes
+    path('verificar-correo/<int:usuario_id>/', views.verificar_correo, name="verificar_correo"),
+    path('reenviar-verificacion/<int:usuario_id>/', views.reenviar_verificacion, name="reenviar_verificacion"),
     path('logout/', views.logout, name="logout"),  # Cerrar sesión
     path('como_funciona/', views.como_funciona, name="como_funciona"),  # Página informativa
     path('sobre_nosotros/', views.sobre_nosotros, name="sobre_nosotros"),  # Página institucional
@@ -116,4 +121,7 @@ urlpatterns = [
 
     # === API REST (accesible con token o sesión) ===
     path('api/', include(router.urls)),  # Incluye las rutas del router de DRF
+    path('api/auth/token/', api.TokenView.as_view(), name='api_token'),
+    path('api/auth/refresh/', api.RefreshTokenView.as_view(), name='api_token_refresh'),
+    path('api/auth/logout/', api.LogoutTokenView.as_view(), name='api_token_logout'),
 ]

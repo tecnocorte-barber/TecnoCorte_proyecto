@@ -6,8 +6,8 @@ from django.core.cache import cache
 from django.test import TestCase
 from django.urls import reverse
 
-from .models import Calificacion, Configuracion, Peluqueria, Producto, Reserva, Usuario
-from .views import RESENAS_VISIBLES
+from ..models import Calificacion, Configuracion, Peluqueria, Producto, Reserva, Usuario
+from ..views import RESENAS_VISIBLES
 
 
 class InicioEditableTests(TestCase):

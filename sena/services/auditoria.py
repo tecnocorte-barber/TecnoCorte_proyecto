@@ -1,4 +1,8 @@
 """Servicio centralizado para registrar acciones sensibles."""
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 
 def registrar_accion(request, accion, entidad="", entidad_id=None, detalle=""):
@@ -6,8 +10,10 @@ def registrar_accion(request, accion, entidad="", entidad_id=None, detalle=""):
     try:
         from sena.models import RegistroAccion, Usuario
 
-        sesion = request.session.get("logueado", {}) if request else {}
-        actor = Usuario.objects.filter(id=sesion.get("id"), activo=True).first()
+        actor = getattr(getattr(request, "user", None), "usuario", None) if request else None
+        if actor is None:
+            sesion = request.session.get("logueado", {}) if request else {}
+            actor = Usuario.objects.filter(id=sesion.get("id"), activo=True).first()
         RegistroAccion.objects.create(
             actor=actor,
             accion=str(accion)[:80],
@@ -18,5 +24,6 @@ def registrar_accion(request, accion, entidad="", entidad_id=None, detalle=""):
             navegador=(request.META.get("HTTP_USER_AGENT", "") if request else "")[:200],
         )
     except Exception:
-        # La auditoría es complementaria; nunca debe romper la operación.
-        pass
+        # La auditoría es complementaria; nunca debe romper la operación,
+        # pero el fallo sí debe quedar visible para poder investigarlo.
+        logger.exception("No se pudo registrar la acción de auditoría: %s", accion)

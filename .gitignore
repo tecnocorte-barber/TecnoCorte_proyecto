@@ -2,6 +2,7 @@ __pycache__/
 *.pyc
 node_modules/
 *.sqlite3
+db_test.sqlite3
 .venv/
 venv/
 .env
@@ -12,8 +13,16 @@ media/
 DOCUMENTACION_PROYECTO.md
 .idea/
 ESTADO_DEL_PROYECTO.md
+GUIA_DE_DESPLIEGUE_DJANGO.md
 
 # Registros locales del servidor de desarrollo
 servidor.log
 servidor.err.log
 logs/
+
+# Backups y registros de respaldo nunca deben versionarse
+backups/
+*.sql
+*.sql.gz
+*.archive.gz
+backup.log

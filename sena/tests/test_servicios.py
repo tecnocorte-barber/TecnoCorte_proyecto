@@ -3,8 +3,8 @@ from django.core.cache import cache
 from django.test import TestCase
 from django.urls import reverse
 
-from .models import Notificacion, Peluqueria, Servicio, SolicitudServicio, Usuario
-from .views import catalogo_servicios, minutos_servicio, servicio_valido
+from ..models import Notificacion, Peluqueria, Servicio, SolicitudServicio, Usuario
+from ..views import catalogo_servicios, minutos_servicio, servicio_valido
 
 
 class ServiciosDeBarberoTests(TestCase):

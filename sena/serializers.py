@@ -1,7 +1,26 @@
 # Serializadores DRF: convierten los modelos a JSON y validan los datos de entrada
 from rest_framework import serializers  # Herramientas de serialización
 from django.contrib.auth.hashers import make_password  # Para cifrar contraseñas al crear/actualizar
-from .models import Usuario, Peluqueria, Producto, Reserva  # Modelos a serializar
+from .models import Usuario, Peluqueria, Producto, Reserva, Pedido, PedidoProducto, Notificacion  # Modelos a serializar
+
+
+class TokenRequestSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    password = serializers.CharField(write_only=True)
+
+
+class RefreshTokenRequestSerializer(serializers.Serializer):
+    refresh = serializers.CharField()
+
+
+class TokenResponseSerializer(serializers.Serializer):
+    access = serializers.CharField()
+    refresh = serializers.CharField(required=False)
+    expires_in = serializers.IntegerField()
+
+
+class MessageResponseSerializer(serializers.Serializer):
+    detail = serializers.CharField()
 
 
 # Serializador de Usuario: expone datos básicos, oculta contraseña en lectura
@@ -31,14 +50,15 @@ class UsuarioSerializer(serializers.ModelSerializer):
 class PeluqueriaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Peluqueria
-        fields = "__all__"  # Todos los campos del modelo
+        fields = ["id", "nombre", "ubicacion", "telefono", "dueno", "descripcion", "imagen"]
 
 
 # Serializador de Producto: expone todos los campos
 class ProductoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Producto
-        fields = "__all__"  # Todos los campos del modelo
+        fields = ["id", "nombre", "descripcion", "precio", "imagen", "categoria", "stock", "disponible", "fecha_creacion"]
+        read_only_fields = ["fecha_creacion"]
 
     def validate_precio(self, value):
         if value < 0:
@@ -139,3 +159,36 @@ class ReservaSerializer(serializers.ModelSerializer):
     # Devuelve el nombre de la peluquería para la respuesta JSON
     def get_peluqueria_nombre(self, obj) -> str:
         return obj.peluqueria.nombre
+
+
+class PedidoSerializer(serializers.ModelSerializer):
+    """Serializa pedidos sin permitir cambiar el cliente desde la API."""
+    class Meta:
+        model = Pedido
+        fields = ["id", "cliente", "fecha", "total", "estado", "pago_confirmado", "fecha_pago", "fecha_entrega"]
+        read_only_fields = ["cliente", "fecha"]
+
+
+class PedidoProductoSerializer(serializers.ModelSerializer):
+    """Serializa los productos incluidos en un pedido."""
+    class Meta:
+        model = PedidoProducto
+        fields = ["id", "pedido", "producto", "cantidad", "precio"]
+
+    def validate_cantidad(self, value):
+        if value <= 0:
+            raise serializers.ValidationError("La cantidad debe ser mayor que cero.")
+        return value
+
+    def validate_precio(self, value):
+        if value < 0:
+            raise serializers.ValidationError("El precio no puede ser negativo.")
+        return value
+
+
+class NotificacionSerializer(serializers.ModelSerializer):
+    """Las notificaciones se consultan y marcan como leídas, no se reasignan."""
+    class Meta:
+        model = Notificacion
+        fields = ["id", "usuario", "reserva", "mensaje", "leida", "fecha"]
+        read_only_fields = ["usuario", "fecha"]

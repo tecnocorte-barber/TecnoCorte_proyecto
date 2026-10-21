@@ -7,9 +7,9 @@ from django.test import TestCase  # Clase base para tests de Django
 from django.test import override_settings  # Para cambiar configuración temporalmente
 from django.urls import reverse  # Para generar URLs por nombre
 
-from .models import HorarioTrabajo, Notificacion, Peluqueria, Usuario  # Modelos usados en tests
-from .serializers import ReservaSerializer  # Serializer a probar
-from .views import cita_disponible  # Función de verificación de disponibilidad
+from ..models import HorarioTrabajo, Notificacion, Peluqueria, Usuario  # Modelos usados en tests
+from ..serializers import ReservaSerializer  # Serializer a probar
+from ..views import cita_disponible  # Función de verificación de disponibilidad
 
 
 # Suite principal de tests de TecnoCorte
