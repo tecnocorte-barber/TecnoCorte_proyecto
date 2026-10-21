@@ -215,6 +215,10 @@ PLANTILLA_ERROR = "errores/error.html"
 # vuelva a registrarla creyendo que es una página de error sin tratar.
 MARCA_AMIGABLE = "_tc_tarjeta_amigable"
 
+# Rutas de sondas automáticas que no pertenecen a TecnoCorte. Se responden con
+# 404, pero no se guardan como errores para no llenar el panel del Admin.
+RUTAS_404_RUIDO = {"/v1/models", "/api"}
+
 # Todas las tarjetas dicen lo mismo: hubo un fallo y el equipo ya fue avisado.
 # El 403 se mantiene aparte porque no es un fallo del sitio, sino una sección
 # sin permisos (el decorador de roles redirige al login, así que es raro verlo).
@@ -294,6 +298,8 @@ def pagina_no_encontrada(request, exception=None):
     Django lo invoca como callback(request, exception=...), por eso el
     parámetro se llama "exception" y no "excepcion".
     """
+    if request.path_info in RUTAS_404_RUIDO:
+        return pagina_amigable(request, 404)
     return tarjeta_de_fallo(request, exception or Http404("Página no encontrada"), 404)
 
 

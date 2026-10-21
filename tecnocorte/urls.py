@@ -6,6 +6,7 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from django.views.generic import RedirectView
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 from sena import views as sena_views
 
@@ -18,6 +19,7 @@ urlpatterns = [
     path('usuario/perfil/', sena_views.usuario_perfil, name='perfil'),
     path('api/auth/', include('rest_framework.urls')),
     path('admin/', admin.site.urls),
+    path('favicon.ico', RedirectView.as_view(url='/static/sena/images/Logo.webp', permanent=False)),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 # La documentación interactiva no se publica por defecto en producción.
