@@ -3,7 +3,7 @@
 from rest_framework import viewsets, filters, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.exceptions import AuthenticationFailed
+from rest_framework.exceptions import AuthenticationFailed, PermissionDenied
 from drf_spectacular.utils import extend_schema
 from django.conf import settings
 from django.contrib.auth.hashers import make_password
@@ -83,6 +83,24 @@ class UsuarioViewSet(AuditedModelViewSet):
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]  # Búsqueda y orden
     search_fields = ["nombre", "apellido", "email", "rol"]  # Campos buscables
     ordering_fields = ["nombre", "apellido", "fecha_creacion"]  # Campos ordenables
+
+    def _puede_gestionar_roles(self):
+        return getattr(self.request.user, "email", "").lower() == "tecnocorte083@gmail.com"
+
+    def perform_create(self, serializer):
+        rol = serializer.validated_data.get("rol", "Cliente")
+        if rol != "Cliente" and not self._puede_gestionar_roles():
+            raise PermissionDenied("Solo el administrador principal puede asignar roles.")
+        objeto = serializer.save(rol=rol)
+        registrar_accion(self.request, "api_crear", objeto.__class__.__name__, objeto.pk)
+
+    def perform_update(self, serializer):
+        if "rol" in serializer.validated_data and not self._puede_gestionar_roles():
+            if serializer.validated_data["rol"] != serializer.instance.rol:
+                raise PermissionDenied("Solo el administrador principal puede cambiar roles.")
+        if serializer.instance.email.lower() == "tecnocorte083@gmail.com":
+            serializer.validated_data["rol"] = "Admin"
+        super().perform_update(serializer)
 
     # Solo Admin ve todos los usuarios; otros no ven nada
     def get_queryset(self):
@@ -226,6 +244,7 @@ class RegistroView(APIView):
             nombre=valores["nombre"].strip(), apellido=valores["apellido"].strip(),
             email=email, telefono=valores.get("telefono", "").strip(),
             password=make_password(valores["password"]), rol="Cliente",
+            email_verificado=True,
         )
         return Response({"access": crear_token(usuario), "refresh": crear_token(usuario, "refresh"),
                          "expires_in": settings.JWT_ACCESS_MINUTES * 60}, status=status.HTTP_201_CREATED)

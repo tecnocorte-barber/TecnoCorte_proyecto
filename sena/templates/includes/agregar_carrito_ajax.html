@@ -1,6 +1,3 @@
-{# Añadir al carrito sin recargar la página: actualiza el contador del carrito
-   y avisa con un toast. Se incluye en cualquier plantilla que tenga formularios
-   con la clase .add-to-cart-form (tienda y detalle del producto). #}
 <script>
   document.addEventListener("submit", function (e) {
     var form = e.target;
@@ -10,7 +7,7 @@
     // El indicador del carrito usa la clase .cart-count (no un id) y puede
     // repetirse en la navegación de escritorio y móvil.
     var badges = document.querySelectorAll(".cart-count");
-    // Estado de carga visible: el botón pasa a "Cargando..." con spinner
+     // Estado de carga visible: el botón pasa a "Procesando..." con spinner
     // mientras el servidor confirma que el producto se añadió.
     button.disabled = true;
     button.setAttribute("aria-busy", "true");
@@ -18,7 +15,7 @@
       button.dataset.textoOriginal = button.innerHTML;
     }
     button.innerHTML =
-      '<span class="tc-spin" aria-hidden="true"></span> Cargando...';
+       '<span class="tc-spin" aria-hidden="true"></span> Procesando...';
     function restaurarBoton() {
       button.disabled = false;
       button.setAttribute("aria-busy", "false");

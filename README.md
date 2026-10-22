@@ -25,6 +25,16 @@ python manage.py createsuperuser
 El archivo `.env` es local y no debe compartirse. Se puede copiar
 `.env.example` como base para configurar otro entorno.
 
+El registro exige verificar el correo antes de crear la cuenta. En producción
+configura `SITE_URL` con el dominio público exacto (incluyendo `https://`) para
+que los enlaces de verificación funcionen aunque el servidor use un proxy o
+cambie el host interno:
+
+```env
+SITE_URL=https://tu-dominio-publico.com
+EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
+```
+
 ## Comandos útiles
 
 ```bash

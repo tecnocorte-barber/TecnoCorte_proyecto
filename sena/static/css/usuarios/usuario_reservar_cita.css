@@ -263,3 +263,19 @@
   .tc-booking-step > .flex.items-center { padding-right: .55rem; }
   .tc-booking-step > .flex.items-center .tc-step__rule { display: none; }
 }
+.tc-rating-inline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .45rem;
+  margin-top: .35rem;
+  color: var(--c-on-surface-variant);
+  font-size: .78rem;
+  white-space: nowrap;
+}
+.tc-rating-inline__stars {
+  color: var(--c-primary);
+  letter-spacing: .08em;
+  font-size: .9rem;
+  line-height: 1;
+}

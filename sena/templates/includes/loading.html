@@ -59,8 +59,7 @@
     }
     if (form.method && form.method.toUpperCase() === "GET") return;
     var btn = form.querySelector("[type=submit], button:not([type=button])");
-    var label = btn ? (btn.textContent || "Cargando...").trim() : "Cargando...";
-    showLoading(label);
+    showLoading("Procesando...");
     if (btn) {
       restoreButton();
       btn.disabled = true;

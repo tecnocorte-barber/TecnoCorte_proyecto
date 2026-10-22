@@ -25,7 +25,7 @@ from django.http import (
 from django.shortcuts import render
 from django.utils import timezone
 
-from .models import MensajeContacto, Notificacion, RegistroError, Usuario
+from .models import Notificacion, RegistroError, Usuario
 
 logger = logging.getLogger("sena.errores")
 
@@ -129,30 +129,7 @@ def _avisar_admins(request, registro, codigo, tipo, mensaje, codigo_http):
     except Exception:
         logger.error("No se pudieron crear las notificaciones de error [%s]", codigo, exc_info=True)
 
-    # 2. Mensaje de contacto, para que también aparezca en la bandeja de mensajes.
-    try:
-        MensajeContacto.objects.create(
-            nombre="Sistema TecnoCorte",
-            email=settings.CONTACT_EMAIL,
-            asunto=f"{titulo} [{codigo}]",
-            tipo="soporte",
-            mensaje=(
-                f"{titulo}\n\n"
-                f"Código: {codigo}\n"
-                f"Estado HTTP: {codigo_http}\n"
-                f"Ruta: {(registro.ruta if registro else '/')} ({(registro.metodo if registro else '')})\n"
-                f"Error: {tipo}: {mensaje}\n"
-                f"Persona: {(registro.usuario.email if registro and registro.usuario else 'sin sesión')}\n"
-                f"IP: {(registro.ip if registro else '')}\n"
-                f"Fecha: {timezone.localtime().isoformat()}\n\n"
-                "La traza completa está guardada con este mismo código en el\n"
-                "administrador de Django (sena > Registros de error)."
-            )[:8000],
-        )
-    except Exception:
-        logger.error("No se pudo crear el MensajeContacto de error [%s]", codigo, exc_info=True)
-
-    # 3. Correo al contacto oficial del sitio.
+    # 2. Correo al contacto oficial del sitio.
     try:
         send_mail(
             subject=f"[TecnoCorte] {titulo} [{codigo}]",

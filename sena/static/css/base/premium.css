@@ -394,7 +394,8 @@ html:not(.dark) .tc-form {
 }
 .tc-field__input {
   width: 100%;
-  padding: 1.55rem 0.95rem 0.62rem;
+  min-height: 3.75rem;
+  padding: 1.8rem 0.95rem 0.7rem;
   border-radius: 0.85rem;
   border: 1px solid var(--c-outline-variant, #4d4635);
   background: color-mix(in srgb, var(--c-surface-container-high, #2a2a2a) 82%, transparent);
@@ -461,7 +462,7 @@ input[type="time"]:focus {
 .tc-field__label {
   position: absolute;
   left: 0.95rem;
-  top: 1rem;
+  top: 1.1rem;
   color: var(--c-on-surface-variant);
   font: 700 0.7rem/1 "Manrope", sans-serif;
   letter-spacing: 0.16em;
@@ -474,13 +475,13 @@ input[type="time"]:focus {
 /* La etiqueta sube al enfocar o cuando ya hay contenido */
 .tc-field__input:focus ~ .tc-field__label,
 .tc-field__input:not(:placeholder-shown) ~ .tc-field__label {
-  transform: translateY(-0.62rem) scale(0.92);
+  transform: translateY(-0.72rem) scale(0.9);
   color: var(--c-primary);
   letter-spacing: 0.22em;
 }
 /* Variantes donde :placeholder-shown no funciona (select, fecha, archivo) */
 .tc-field--always .tc-field__label {
-  transform: translateY(-0.62rem) scale(0.92);
+  transform: translateY(-0.72rem) scale(0.9);
   color: var(--c-on-surface-variant);
   letter-spacing: 0.22em;
 }
@@ -497,7 +498,7 @@ input[type="time"]:focus {
 }
 /* Caja de archivo: se disfraza de campo normal */
 .tc-field__input[type="file"] {
-  padding-top: 1.7rem;
+  padding-top: 1.85rem;
   cursor: pointer;
 }
 .tc-field__input[type="file"]::file-selector-button {

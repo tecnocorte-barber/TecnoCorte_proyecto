@@ -142,7 +142,7 @@ class PaginasDeErrorTests(TestCase):
         self.assertIn("vista_que_revienta", registro.detalle)
         self.assertEqual(registro.ruta, "/__prueba__/revienta/")
 
-    def test_el_500_le_llega_al_admin_como_notificacion_y_mensaje(self):
+    def test_el_500_le_llega_al_admin_como_notificacion_y_no_mensaje(self):
         Notificacion.objects.all().delete()
         MensajeContacto.objects.all().delete()
         self._sin_captura().get("/__prueba__/revienta/")
@@ -151,10 +151,7 @@ class PaginasDeErrorTests(TestCase):
         self.assertIsNotNone(notificacion)
         self.assertIn("Error inesperado", notificacion.mensaje)
 
-        mensaje = MensajeContacto.objects.filter(nombre="Sistema TecnoCorte").first()
-        self.assertIsNotNone(mensaje)
-        self.assertIn("RuntimeError", mensaje.mensaje)
-        self.assertIn("/__prueba__/revienta/", mensaje.mensaje)
+        self.assertFalse(MensajeContacto.objects.filter(nombre="Sistema TecnoCorte").exists())
 
     def test_el_500_tambien_envia_un_correo_al_contacto_oficial(self):
         with self.settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend"):

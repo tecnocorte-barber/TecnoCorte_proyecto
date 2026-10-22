@@ -215,10 +215,14 @@
                   <span class="material-symbols-outlined text-3xl text-primary"
                     >content_cut</span
                   >
-                  <span class="font-body text-sm font-semibold"
-                    >{{ peluquero.nombre }} {{ peluquero.apellido }}</span
-                  >
-                </div>
+                   <span class="font-body text-sm font-semibold"
+                     >{{ peluquero.nombre }} {{ peluquero.apellido }}</span
+                   >
+                   <span class="tc-rating-inline" aria-label="Calificación {% if peluquero.calificacion_promedio %}{{ peluquero.calificacion_promedio|floatformat:1 }}{% else %}5.0{% endif %} de 5">
+                     <span class="tc-rating-inline__stars" aria-hidden="true">★★★★★</span>
+                     <strong>{% if peluquero.calificacion_promedio %}{{ peluquero.calificacion_promedio|floatformat:1 }}{% else %}5.0{% endif %}</strong>
+                   </span>
+                 </div>
               </div>
               {% endfor %}
               <p id="sin-barberos" class="text-on-surface-variant">

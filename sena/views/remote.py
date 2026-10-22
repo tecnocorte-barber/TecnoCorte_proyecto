@@ -2,6 +2,8 @@
 # Incluye: autenticación, carrito, reservas, paneles de cliente/barbero/admin, y más
 import json  # Para serializar horarios y reservas a JSON para JavaScript
 import hmac  # Para comparar tokens de forma segura (recuperación de contraseña)
+import hashlib
+import secrets
 
 from django.shortcuts import render, redirect, get_object_or_404  # Renderizar plantillas, redirigir, buscar objeto o 404
 from django.urls import reverse  # Generar URLs por nombre
@@ -21,10 +23,11 @@ from django.core.exceptions import ValidationError  # Excepciones de validación
 from django.db.models.deletion import ProtectedError  # Relaciones protegidas al eliminar usuarios
 from datetime import datetime, time, timedelta  # Manejo de fechas, horas y duraciones
 from html import escape  # Escapa valores al generar reportes HTML compatibles con Excel
-from ..models import Usuario, Peluqueria, ImagenPeluqueria, Producto, Reserva, Pedido, PedidoProducto, RegistroIngreso, Notificacion, HorarioTrabajo, BloqueoHorario, MensajeContacto, Calificacion, Configuracion, Servicio, SolicitudServicio, TIPOS_MENSAJE, TIPOS_MENSAJE_DICCIONARIO  # Todos los modelos
+from ..models import Usuario, RegistroPendiente, Peluqueria, ImagenPeluqueria, Producto, Reserva, Pedido, PedidoProducto, RegistroIngreso, Notificacion, HorarioTrabajo, BloqueoHorario, MensajeContacto, Calificacion, Configuracion, Servicio, SolicitudServicio, TIPOS_MENSAJE, TIPOS_MENSAJE_DICCIONARIO  # Todos los modelos
 from ..utilidades import autorizacion, validar_password, validar_telefono, validar_imagen, registrar_accion, transicion_valida, TRANSICIONES_RESERVA, TRANSICIONES_PEDIDO  # Seguridad, auditoría, estados y validación
 from ..context_processors import carrito_visible, guardar_carrito_activo, cargar_carrito_usuario  # Funciones del carrito por sesión
 from ..services.correos import enviar_correo, enviar_correo_destino, enviar_correo_cita
+from ..services.autenticacion import enviar_codigo_verificacion, url_publica
 from ..services.catalogo import SERVICIOS, DURACIONES_SERVICIO, catalogo_servicios, servicio_valido, minutos_servicio
 
 # Imagen de respaldo para las tarjetas del inicio. En los servicios se elige por
@@ -53,6 +56,22 @@ RESENAS_VISIBLES = 5
 
 # Cada cliente puede publicar como máximo dos reseñas en el inicio.
 RESENAS_POR_PERSONA = 2
+
+# Única cuenta autorizada para asignar o cambiar roles. El resto de
+# administradores puede gestionar datos, imágenes y estados, pero no escalar
+# cuentas a Admin ni convertir usuarios en Barberos.
+ADMIN_PRINCIPAL_EMAIL = "tecnocorte083@gmail.com"
+
+
+def puede_gestionar_roles(request):
+    """Comprueba el permiso real desde la BD, no desde datos manipulables de sesión."""
+    usuario_id = (request.session.get("logueado") or {}).get("id")
+    return bool(
+        usuario_id
+        and Usuario.objects.filter(
+            id=usuario_id, activo=True, rol="Admin", email__iexact=ADMIN_PRINCIPAL_EMAIL
+        ).exists()
+    )
 
 
 def resenas_restantes(cliente_id):
@@ -641,45 +660,31 @@ def registro(request):
             return render(request, "publicos/registro.html", {"error": "Ya existe una cuenta con ese correo."})
 
         try:
-            usuario = Usuario.objects.create(
-                nombre=nombre,
-                apellido=apellido,
+            pendiente, _ = RegistroPendiente.objects.update_or_create(
                 email=email,
-                telefono=telefono,
-                password=make_password(password),
-                rol="Cliente"
+                defaults={
+                    "nombre": nombre,
+                    "apellido": apellido,
+                    "telefono": telefono,
+                    "password": make_password(password),
+                    "codigo_hash": hashlib.sha256(secrets.token_bytes(16)).hexdigest(),
+                    "codigo_expira": timezone.now(),
+                    "token_hash": hashlib.sha256(secrets.token_bytes(16)).hexdigest(),
+                    "token_expira": timezone.now(),
+                    "ultimo_envio": None,
+                },
             )
         except IntegrityError:
             return render(request, "publicos/registro.html", {"error": "Ya existe una cuenta con ese correo."})
-        admins = list(Usuario.objects.filter(rol="Admin", activo=True).only("id"))  # Una sola consulta
-        if admins:
-            Notificacion.objects.bulk_create([  # Una sola inserción para todos los admins
-                Notificacion(usuario=admin, mensaje=f"Nuevo cliente registrado: {usuario.nombre} {usuario.apellido}.")
-                for admin in admins
-            ])
-        enviar_correo(
-            usuario,
-            "Bienvenido a TecnoCorte",
-            f"Hola {usuario.nombre},\n\nTu cuenta de TecnoCorte fue creada correctamente. Ya puedes reservar citas y comprar productos.",
-            request=request,
-            enlace=request.build_absolute_uri(reverse('sena:usuario_perfil')),
-            texto_enlace="Ir a mi cuenta",
+        ruta = reverse("sena:verificar_correo")
+        enviado, token = enviar_codigo_verificacion(
+            request, pendiente, lambda value: url_publica(request, f"{ruta}?token={value}")
         )
-        guardar_carrito_activo(request)
-        request.session["logueado"] = {
-            "id": usuario.id,
-            "nombre": usuario.nombre,
-            "rol": usuario.rol,
-            "sesion_version": usuario.sesion_version,
-        }
-        cargar_carrito_usuario(request, usuario.id)
-        registrar_ingreso(request, usuario)
-        messages.success(request, f"Cuenta creada. Bienvenido a TecnoCorte, {usuario.nombre}.")
-        if proximo and url_has_allowed_host_and_scheme(proximo, {request.get_host()}, require_https=request.is_secure()):
-            return redirect(proximo)
-        if proximo == "carrito":
-            return redirect("sena:carrito")
-        return redirect("sena:inicio")
+        request.session["registro_pendiente_token"] = token
+        request.session["registro_pendiente_next"] = proximo
+        return render(request, "publicos/verificar_correo.html", {
+            "pendiente": pendiente, "token": token, "proximo": proximo, "enviado": enviado,
+        })
 
     return render(request, "publicos/registro.html", {"proximo": request.GET.get("next", "")})
 def como_funciona(request):
@@ -2015,10 +2020,13 @@ def _respuesta_reporte_excel(titulo, subtitulo, encabezados, filas, nombre_archi
 @autorizacion(["Admin"])
 def admin_peluqueros(request):
     peluqueros = Usuario.objects.filter(rol="Barbero")
-    return render(request, "administrador/admin_listar_peluqueros.html", {"datos": peluqueros})
+    return render(request, "administrador/admin_listar_peluqueros.html", {"datos": peluqueros, "puede_gestionar_roles": puede_gestionar_roles(request)})
 
 @autorizacion(["Admin"])
 def admin_crear_peluquero(request):
+    if request.method == "POST" and not puede_gestionar_roles(request):
+        messages.error(request, "Solo el administrador principal puede crear usuarios con rol Barbero.")
+        return redirect("sena:admin_peluqueros")
     if request.method == "POST":
         nombre = request.POST.get("nombre", "").strip()
         apellido = request.POST.get("apellido", "").strip()
@@ -2746,7 +2754,17 @@ def admin_perfil(request):
     if request.method == "POST":
         usuario.nombre = request.POST.get("nombre", usuario.nombre)
         usuario.apellido = request.POST.get("apellido", usuario.apellido)
+        telefono = request.POST.get("telefono", usuario.telefono).strip()
+        error_telefono = validar_telefono(telefono)
+        if error_telefono:
+            messages.error(request, error_telefono)
+            return redirect("sena:admin_perfil")
         foto = request.FILES.get("foto")
+        error_imagen = validar_imagen(foto)
+        if error_imagen:
+            messages.error(request, error_imagen)
+            return redirect("sena:admin_perfil")
+        usuario.telefono = telefono
         if foto:
             usuario.foto = foto
         usuario.save()
@@ -2847,13 +2865,22 @@ def admin_usuarios(request):
 @autorizacion(["Admin"])
 def admin_crear_usuario(request):
     """Crear nuevo usuario"""
+    administra_roles = puede_gestionar_roles(request)
     if request.method == "POST":
         nombre = request.POST.get("nombre", "").strip()
         apellido = request.POST.get("apellido", "").strip()
         email = request.POST.get("email", "").strip().lower()
         password = request.POST.get("password", "").strip()
         telefono = request.POST.get("telefono", "").strip()
-        rol = request.POST.get("rol", "Cliente")
+        rol_solicitado = request.POST.get("rol", "Cliente")
+        if not administra_roles and rol_solicitado != "Cliente":
+            return render(request, "administrador/admin_formulario_usuario.html", {
+                "error": "No tienes permiso para asignar ese rol. Solo el administrador principal puede hacerlo.",
+                "roles": Usuario.ROLES,
+                "peluquerias": Peluqueria.objects.all(),
+                "puede_gestionar_roles": False,
+            })
+        rol = rol_solicitado if administra_roles else "Cliente"
 
         # Validaciones
         if not all([nombre, apellido, email, password, rol]) or rol not in dict(Usuario.ROLES):
@@ -2861,10 +2888,11 @@ def admin_crear_usuario(request):
                 "error": "Todos los campos son obligatorios",
                 "roles": Usuario.ROLES,
                 "peluquerias": Peluqueria.objects.all(),
+                "puede_gestionar_roles": administra_roles,
             })
         error_telefono = validar_telefono(telefono)
         if error_telefono:
-            return render(request, "administrador/admin_formulario_usuario.html", {"error": error_telefono, "roles": Usuario.ROLES, "peluquerias": Peluqueria.objects.all()})
+            return render(request, "administrador/admin_formulario_usuario.html", {"error": error_telefono, "roles": Usuario.ROLES, "peluquerias": Peluqueria.objects.all(), "puede_gestionar_roles": administra_roles})
 
         try:
             validate_email(email)
@@ -2873,6 +2901,7 @@ def admin_crear_usuario(request):
                 "error": "Ese correo no tiene un formato válido",
                 "roles": Usuario.ROLES,
                 "peluquerias": Peluqueria.objects.all(),
+                "puede_gestionar_roles": administra_roles,
             })
 
         error_password = validar_password(password)
@@ -2881,6 +2910,7 @@ def admin_crear_usuario(request):
                 "error": error_password,
                 "roles": Usuario.ROLES,
                 "peluquerias": Peluqueria.objects.all(),
+                "puede_gestionar_roles": administra_roles,
             })
 
         if Usuario.objects.filter(email__iexact=email).exists():
@@ -2888,6 +2918,7 @@ def admin_crear_usuario(request):
                 "error": f"Ya existe un usuario con el email {email}",
                 "roles": Usuario.ROLES,
                 "peluquerias": Peluqueria.objects.all(),
+                "puede_gestionar_roles": administra_roles,
             })
 
         peluqueria_id = _id_entero(request.POST.get("peluqueria"))
@@ -2900,7 +2931,7 @@ def admin_crear_usuario(request):
         foto = request.FILES.get("foto")
         error_imagen = validar_imagen(foto)
         if error_imagen:
-            return render(request, "administrador/admin_formulario_usuario.html", {"error": error_imagen, "roles": Usuario.ROLES, "peluquerias": Peluqueria.objects.all()})
+            return render(request, "administrador/admin_formulario_usuario.html", {"error": error_imagen, "roles": Usuario.ROLES, "peluquerias": Peluqueria.objects.all(), "puede_gestionar_roles": administra_roles})
         # Crear usuario
         usuario = Usuario.objects.create(
             nombre=nombre,
@@ -2920,12 +2951,14 @@ def admin_crear_usuario(request):
     return render(request, "administrador/admin_formulario_usuario.html", {
         "roles": Usuario.ROLES,
         "peluquerias": Peluqueria.objects.all(),
+        "puede_gestionar_roles": administra_roles,
     })
 
 @autorizacion(["Admin"])
 def admin_editar_usuario(request, id):
     """Editar usuario existente"""
     usuario = get_object_or_404(Usuario, id=id)
+    administra_roles = puede_gestionar_roles(request)
     
     if request.method == "POST":
         email = request.POST.get("email", usuario.email).strip().lower()
@@ -2944,24 +2977,24 @@ def admin_editar_usuario(request, id):
         if error_telefono:
             return render(request, "administrador/admin_formulario_usuario.html", {"usuario": usuario, "roles": Usuario.ROLES, "editar": True, "error": error_telefono, "peluquerias": Peluqueria.objects.all()})
         usuario.telefono = telefono
-        nuevo_rol = request.POST.get("rol", usuario.rol)
-        # El rol de un administrador no se puede modificar
-        if usuario.rol == "Admin":
+        nuevo_rol = request.POST.get("rol", usuario.rol) if administra_roles else usuario.rol
+        # La cuenta principal nunca puede perder su rol, ni siquiera por sí misma.
+        if usuario.email.lower() == ADMIN_PRINCIPAL_EMAIL:
             nuevo_rol = "Admin"
         if nuevo_rol not in dict(Usuario.ROLES):
-            return render(request, "administrador/admin_formulario_usuario.html", {"usuario": usuario, "roles": Usuario.ROLES, "editar": True, "error": "El rol seleccionado no es válido.", "peluquerias": Peluqueria.objects.all()})
+            return render(request, "administrador/admin_formulario_usuario.html", {"usuario": usuario, "roles": Usuario.ROLES, "editar": True, "error": "El rol seleccionado no es válido.", "peluquerias": Peluqueria.objects.all(), "puede_gestionar_roles": administra_roles})
         usuario.rol = nuevo_rol
         peluqueria_id = _id_entero(request.POST.get("peluqueria"))
         if nuevo_rol == "Barbero":
             if not peluqueria_id or not Peluqueria.objects.filter(id=peluqueria_id).exists():
-                return render(request, "administrador/admin_formulario_usuario.html", {"usuario": usuario, "roles": Usuario.ROLES, "editar": True, "error": "Para un barbero debes seleccionar la barbería a la que pertenece.", "peluquerias": Peluqueria.objects.all()})
+                return render(request, "administrador/admin_formulario_usuario.html", {"usuario": usuario, "roles": Usuario.ROLES, "editar": True, "error": "Para un barbero debes seleccionar la barbería a la que pertenece.", "peluquerias": Peluqueria.objects.all(), "puede_gestionar_roles": administra_roles})
             usuario.peluqueria_id = peluqueria_id
         else:
             usuario.peluqueria = None
         foto = request.FILES.get("foto")
         error_imagen = validar_imagen(foto)
         if error_imagen:
-            return render(request, "administrador/admin_formulario_usuario.html", {"usuario": usuario, "roles": Usuario.ROLES, "editar": True, "error": error_imagen, "peluquerias": Peluqueria.objects.all()})
+            return render(request, "administrador/admin_formulario_usuario.html", {"usuario": usuario, "roles": Usuario.ROLES, "editar": True, "error": error_imagen, "peluquerias": Peluqueria.objects.all(), "puede_gestionar_roles": administra_roles})
         if foto:
             usuario.foto = foto
         elif request.POST.get("quitar_foto") and usuario.foto:
@@ -2974,7 +3007,7 @@ def admin_editar_usuario(request, id):
         if password:
             error_password = validar_password(password)
             if error_password:
-                return render(request, "administrador/admin_formulario_usuario.html", {"usuario": usuario, "roles": Usuario.ROLES, "editar": True, "error": error_password})
+                return render(request, "administrador/admin_formulario_usuario.html", {"usuario": usuario, "roles": Usuario.ROLES, "editar": True, "error": error_password, "peluquerias": Peluqueria.objects.all(), "puede_gestionar_roles": administra_roles})
             usuario.password = make_password(password)
         
         usuario.save()
@@ -2986,6 +3019,7 @@ def admin_editar_usuario(request, id):
         "roles": Usuario.ROLES,
         "editar": True,
         "peluquerias": Peluqueria.objects.all(),
+        "puede_gestionar_roles": administra_roles,
     })
 
 @autorizacion(["Admin"])

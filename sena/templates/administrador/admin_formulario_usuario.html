@@ -103,18 +103,26 @@
         </label>
       </div>
 
+      {% if puede_gestionar_roles and usuario.email != 'tecnocorte083@gmail.com' %}
       <label class="tc-field tc-field--always tc-field--full">
         <select id="rol" name="rol" onchange="togglePeluqueriaField()" required class="tc-field__input">
-          {# Selección del rol del usuario #}
           <option value="">-- Selecciona un rol --</option>
           {% for value, label in roles %}
-          <option value="{{ value }}" {% if usuario.rol == value %}selected{% endif %}>
-            {{ label }}
-          </option>
+          <option value="{{ value }}" {% if usuario.rol == value %}selected{% endif %}>{{ label }}</option>
           {% endfor %}
         </select>
         <span class="tc-field__label">Rol</span>
       </label>
+      {% else %}
+      <div class="tc-field--full rounded-xl border border-outline-variant/20 bg-surface-container-high/40 p-4">
+        <input type="hidden" name="rol" value="{% if editar %}{{ usuario.rol }}{% else %}Cliente{% endif %}" />
+        <p class="text-xs font-bold uppercase tracking-widest text-primary">Rol</p>
+        <p class="mt-2 text-sm text-on-surface-variant">
+          {% if editar %}{{ usuario.get_rol_display }}{% else %}Cliente{% endif %}
+          <span class="block mt-1 text-xs">Solo el administrador principal puede asignar o cambiar roles.</span>
+        </p>
+      </div>
+      {% endif %}
 
       {# Barbería (solo para rol Barbero) #}
       <div id="campo-peluqueria" class="tc-field--full" style="display: none">

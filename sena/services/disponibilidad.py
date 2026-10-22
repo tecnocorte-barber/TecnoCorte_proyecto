@@ -6,6 +6,7 @@ serializadores, sin cambiar las URLs públicas del proyecto.
 from datetime import datetime, timedelta
 
 from django.utils import timezone
+from django.db.models import Avg
 
 from ..models import BloqueoHorario, HorarioTrabajo, Reserva, Usuario
 from .catalogo import minutos_servicio
@@ -17,6 +18,8 @@ def cita_disponible(fecha_texto, hora_texto, peluqueria_id=None, servicio=None):
         hora = datetime.strptime(hora_texto, "%H:%M").time()
     except (TypeError, ValueError):
         return False, "La fecha o la hora no son válidas."
+    if hora.minute % 30:
+        return False, "Las citas solo pueden comenzar en intervalos de 30 minutos (00 o 30)."
     if fecha < timezone.localdate():
         return False, "No puedes reservar una fecha pasada."
     ahora = timezone.localtime()
@@ -49,7 +52,12 @@ def cita_disponible(fecha_texto, hora_texto, peluqueria_id=None, servicio=None):
 
 
 def barberos_disponibles():
-    return Usuario.objects.filter(rol="Barbero", activo=True, peluqueria__isnull=False).select_related("peluqueria")
+    return (
+        Usuario.objects.filter(rol="Barbero", activo=True, peluqueria__isnull=False)
+        .select_related("peluqueria")
+        .annotate(calificacion_promedio=Avg("calificaciones_recibidas__puntuacion"))
+        .order_by("nombre", "apellido")
+    )
 
 
 def formato_cita(reserva):

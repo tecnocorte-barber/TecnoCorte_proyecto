@@ -62,6 +62,33 @@ class Usuario(models.Model):
         self.email = (self.email or "").strip().lower()
         super().save(*args, **kwargs)
 
+
+class RegistroPendiente(models.Model):
+    """Datos de registro que aún no se convierten en una cuenta activa.
+
+    La contraseña se almacena ya cifrada y los códigos nunca se guardan en
+    texto plano. Esto permite completar la verificación desde otro navegador
+    o después de reiniciar el servidor.
+    """
+    nombre = models.CharField(max_length=100)
+    apellido = models.CharField(max_length=100)
+    email = models.EmailField(unique=True)
+    password = models.CharField(max_length=128)
+    telefono = models.CharField(max_length=20, blank=True)
+    codigo_hash = models.CharField(max_length=64)
+    codigo_expira = models.DateTimeField()
+    token_hash = models.CharField(max_length=64, unique=True)
+    token_expira = models.DateTimeField()
+    ultimo_envio = models.DateTimeField(null=True, blank=True)
+    creado = models.DateTimeField(auto_now_add=True)
+    actualizado = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        indexes = [models.Index(fields=["email"]), models.Index(fields=["token_hash"])]
+
+    def __str__(self):
+        return f"Registro pendiente: {self.email}"
+
 # Sede o barbería donde se atienden las citas
 class Peluqueria(models.Model):
     nombre = models.CharField(max_length=100)
@@ -622,4 +649,3 @@ class SolicitudServicio(models.Model):
     @property
     def pendiente(self):
         return self.estado == "pendiente"
-

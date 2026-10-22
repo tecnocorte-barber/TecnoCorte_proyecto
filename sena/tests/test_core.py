@@ -1,5 +1,6 @@
 # Tests unitarios de la app sena: verifican login, registro, reservas, permisos y más
 from datetime import date, time, timedelta  # Para fechas y horas en las pruebas
+import re
 
 from django.contrib.auth.hashers import check_password, make_password  # Para verificar/cifrar contraseñas
 from django.core import mail  # Bandeja de correos simulada en tests
@@ -7,7 +8,7 @@ from django.test import TestCase  # Clase base para tests de Django
 from django.test import override_settings  # Para cambiar configuración temporalmente
 from django.urls import reverse  # Para generar URLs por nombre
 
-from ..models import HorarioTrabajo, Notificacion, Peluqueria, Usuario  # Modelos usados en tests
+from ..models import HorarioTrabajo, Notificacion, Peluqueria, RegistroPendiente, Usuario  # Modelos usados en tests
 from ..serializers import ReservaSerializer  # Serializer a probar
 from ..views import cita_disponible  # Función de verificación de disponibilidad
 
@@ -88,13 +89,31 @@ class TecnoCorteTests(TestCase):
             "password": "Cliente123!",
         })
 
-        self.assertRedirects(response, reverse("sena:inicio"))  # Debe redirigir al inicio
+        self.assertEqual(response.status_code, 200)  # Debe mostrar el paso de verificación
+        self.assertTrue(RegistroPendiente.objects.filter(email="nuevo@test.com").exists())
+        self.assertFalse(Usuario.objects.filter(email="nuevo@test.com").exists())
         self.assertEqual(len(mail.outbox), 1)  # Debe haber enviado 1 correo
         self.assertEqual(len(mail.outbox[0].alternatives), 1)  # Debe tener versión HTML
         html = mail.outbox[0].alternatives[0][0]  # Extrae el contenido HTML
         self.assertIn("background: #090909", html)  # Verifica estilo del diseño
         self.assertIn("cid:tecnocorte-logo", html)  # Verifica que el logo está embebido
         self.assertEqual(mail.outbox[0].attachments[0].get("Content-ID"), "<tecnocorte-logo>")  # Verifica el Content-ID del logo
+
+    @override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
+    def test_verificacion_por_codigo_crea_usuario_solo_al_confirmar(self):
+        email = "verificacion@test.com"
+        response = self.client.post(reverse("sena:registro"), {
+            "nombre": "Verificado", "apellido": "Cliente", "email": email,
+            "password": "Cliente123!",
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(Usuario.objects.filter(email=email).exists())
+        codigo = re.search(r"\b(\d{6})\b", mail.outbox[0].body).group(1)
+        token = response.context["token"]
+        confirmado = self.client.post(reverse("sena:verificar_correo"), {"token": token, "codigo": codigo})
+        self.assertRedirects(confirmado, reverse("sena:inicio"))
+        self.assertTrue(Usuario.objects.filter(email=email, email_verificado=True).exists())
+        self.assertFalse(RegistroPendiente.objects.filter(email=email).exists())
 
     # Verifica que no se puede reservar en una fecha pasada
     def test_no_permite_reservar_fecha_pasada(self):

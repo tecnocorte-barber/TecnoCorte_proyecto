@@ -1,7 +1,5 @@
 # Procesadores de contexto compartidos para las plantillas.
 
-from django.core.cache import cache
-
 from .models import Notificacion, MensajeContacto, Configuracion, RegistroError, SolicitudServicio
 
 
@@ -64,31 +62,16 @@ def notificaciones_contexto(request):
             "solicitudes_servicio_pendientes": 0,
             "errores_pendientes": 0,
         }
-    # Los contadores se guardan en caché 20 s para no pagar la latencia de la BD remota en cada página.
-    clave_notif = f"contador_notificaciones_{usuario_id}"
-    no_leidas = cache.get(clave_notif)
-    if no_leidas is None:
-        no_leidas = Notificacion.objects.filter(usuario_id=usuario_id, leida=False).count()
-        cache.set(clave_notif, no_leidas, 20)
+    # Estos contadores deben reflejar inmediatamente una lectura o una nueva
+    # notificación. No se cachean para evitar badges atrasados en el panel.
+    no_leidas = Notificacion.objects.filter(usuario_id=usuario_id, leida=False).count()
     mensajes_no_leidos = 0
     solicitudes_servicio_pendientes = 0
     errores_pendientes = 0
     if sesion.get("rol") == "Admin":
-        clave_mensajes = "contador_mensajes_admin"
-        mensajes_no_leidos = cache.get(clave_mensajes)
-        if mensajes_no_leidos is None:
-            mensajes_no_leidos = MensajeContacto.objects.filter(leido=False).count()
-            cache.set(clave_mensajes, mensajes_no_leidos, 20)
-        clave_solicitudes = "contador_solicitudes_servicio_admin"
-        solicitudes_servicio_pendientes = cache.get(clave_solicitudes)
-        if solicitudes_servicio_pendientes is None:
-            solicitudes_servicio_pendientes = SolicitudServicio.objects.filter(estado="pendiente").count()
-            cache.set(clave_solicitudes, solicitudes_servicio_pendientes, 20)
-        clave_errores = "contador_errores_pendientes_admin"
-        errores_pendientes = cache.get(clave_errores)
-        if errores_pendientes is None:
-            errores_pendientes = RegistroError.objects.filter(estado="pendiente").count()
-            cache.set(clave_errores, errores_pendientes, 20)
+        mensajes_no_leidos = MensajeContacto.objects.filter(leido=False).count()
+        solicitudes_servicio_pendientes = SolicitudServicio.objects.filter(estado="pendiente").count()
+        errores_pendientes = RegistroError.objects.filter(estado="pendiente").count()
     return {
         "notificaciones_no_leidas": no_leidas,
         "mensajes_no_leidos": mensajes_no_leidos,

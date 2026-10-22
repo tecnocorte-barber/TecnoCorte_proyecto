@@ -751,11 +751,11 @@ def datos_producto(request, producto=None):
 
 
 # Implementaciones trasladadas por dominio; se importan al final para conservar compatibilidad.
-from .autenticacion import login, solicitar_recuperacion, restablecer_password, logout, registro, verificar_correo, reenviar_verificacion, cambiar_password
+# La fachada activa (`sena.views`) importa la autenticación después de cargar
+# este módulo; importar aquí de vuelta provocaría un ciclo al verificar correo.
 from .publicas import inicio, como_funciona, sobre_nosotros, politicas, health_check, ayuda
 from .carrito import carrito, _cliente_o_invitado, agregar_carrito, actualizar_carrito, eliminar_carrito, finalizar_pedido, pedido_exitoso
 from .clientes import usuario_dashboard, usuario_tienda, usuario_producto_detalle, usuario_servicios, usuario_peluquerias, usuario_peluqueria_detalle, usuario_perfil, usuario_configuracion, usuario_notificaciones, usuario_marcar_notificaciones_leidas
 from .reservas import usuario_reservar_cita, usuario_pre_confirmar, usuario_confirmar_reserva, usuario_cancelar_reserva, usuario_editar_reserva, usuario_confirmar_cita_peluquero, usuario_calificar
 from .barberos import peluquero_dashboard, peluquero_configuracion, peluquero_cambiar_estado, peluquero_perfil, peluquero_crear_cita, peluquero_notificaciones, peluquero_editar_peluqueria, peluquero_galeria, peluquero_agregar_imagen, peluquero_eliminar_imagen
 from .administrador import admin_editar_inicio, admin_dashboard, admin_exportar_reservas, admin_exportar_pedidos, admin_peluqueros, admin_crear_peluquero, admin_editar_peluquero, admin_eliminar_peluquero, admin_reservas, admin_pedidos, admin_actualizar_pedido, admin_crear_reserva, admin_editar_reserva, admin_eliminar_reserva, admin_cancelar_reserva, admin_horarios, admin_eliminar_bloqueo, admin_peluquerias, admin_crear_peluqueria, admin_editar_peluqueria, admin_eliminar_peluqueria, admin_quitar_foto_peluqueria, admin_galeria, admin_eliminar_imagen_galeria, admin_productos, admin_crear_producto, admin_editar_producto, admin_eliminar_producto, admin_quitar_imagen_producto, admin_mensajes, admin_solicitudes_servicios, admin_notificaciones, admin_perfil, admin_ingresos, admin_acciones, admin_usuarios, admin_crear_usuario, admin_editar_usuario, admin_eliminar_usuario, admin_suspender_usuario, admin_quitar_foto_usuario, admin_configuracion
-

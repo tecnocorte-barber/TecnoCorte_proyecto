@@ -1,5 +1,19 @@
-"""Implementaci?n de vistas agrupadas."""
+"""Autenticación web y verificación de registros por correo."""
+import hashlib
+import hmac
+import secrets
+
+from django.db import IntegrityError, transaction
+from django.utils import timezone
+
 from .core import *  # Reutiliza configuraci?n, modelos y helpers compartidos.
+from ..models import RegistroPendiente
+from ..services.autenticacion import (
+    crear_codigo_verificacion,
+    enviar_codigo_verificacion,
+    url_publica,
+)
+from ..services.correos import enviar_correo_destino
 
 def login(request):
     if request.method == "POST":
@@ -175,91 +189,109 @@ def registro(request):
             return render(request, "publicos/registro.html", {"error": "Ya existe una cuenta con ese correo."})
 
         try:
-            usuario = Usuario.objects.create(
-                nombre=nombre,
-                apellido=apellido,
+            pendiente, _ = RegistroPendiente.objects.update_or_create(
                 email=email,
-                telefono=telefono,
-                password=make_password(password),
-                rol="Cliente",
-                email_verificado=not settings.REQUIRE_EMAIL_VERIFICATION,
+                defaults={
+                    "nombre": nombre,
+                    "apellido": apellido,
+                    "telefono": telefono,
+                    "password": make_password(password),
+                    "codigo_hash": hashlib.sha256(secrets.token_bytes(16)).hexdigest(),
+                    "codigo_expira": timezone.now(),
+                    "token_hash": hashlib.sha256(secrets.token_bytes(16)).hexdigest(),
+                    "token_expira": timezone.now(),
+                    "ultimo_envio": None,
+                },
             )
         except IntegrityError:
             return render(request, "publicos/registro.html", {"error": "Ya existe una cuenta con ese correo."})
-        admins = list(Usuario.objects.filter(rol="Admin", activo=True).only("id"))  # Una sola consulta
-        if admins:
-            Notificacion.objects.bulk_create([  # Una sola inserción para todos los admins
-                Notificacion(usuario=admin, mensaje=f"Nuevo cliente registrado: {usuario.nombre} {usuario.apellido}.")
-                for admin in admins
-            ])
-        enviar_correo(
-            usuario,
-            "Bienvenido a TecnoCorte",
-            f"Hola {usuario.nombre},\n\nTu cuenta de TecnoCorte fue creada correctamente.\n\n"
-            + (f"Tu código de verificación es: {_crear_codigo_verificacion(usuario)}\n\n"
-               f"El código vence en {settings.EMAIL_VERIFICATION_MINUTES} minutos.\n\n"
-               if settings.REQUIRE_EMAIL_VERIFICATION else
-               "Ya puedes reservar citas y comprar productos.\n\n"),
-            request=request,
-            enlace=(request.build_absolute_uri(reverse('sena:verificar_correo', args=[usuario.id]))
-                    if settings.REQUIRE_EMAIL_VERIFICATION else
-                    request.build_absolute_uri(reverse('sena:usuario_perfil'))),
-            texto_enlace=("Verificar mi correo" if settings.REQUIRE_EMAIL_VERIFICATION else "Ir a mi cuenta"),
+        ruta = reverse("sena:verificar_correo")
+        enviado, token = enviar_codigo_verificacion(
+            request, pendiente, lambda value: url_publica(request, f"{ruta}?token={value}")
         )
-        guardar_carrito_activo(request)
-        request.session["logueado"] = {
-            "id": usuario.id,
-            "nombre": usuario.nombre,
-            "rol": usuario.rol,
-            "sesion_version": usuario.sesion_version,
-        }
-        cargar_carrito_usuario(request, usuario.id)
-        registrar_ingreso(request, usuario)
-        messages.success(request, f"Cuenta creada. Bienvenido a TecnoCorte, {usuario.nombre}.")
-        if proximo and url_has_allowed_host_and_scheme(proximo, {request.get_host()}, require_https=request.is_secure()):
-            return redirect(proximo)
-        if proximo == "carrito":
-            return redirect("sena:carrito")
-        return redirect("sena:inicio")
+        request.session["registro_pendiente_token"] = token
+        request.session["registro_pendiente_next"] = proximo
+        return render(request, "publicos/verificar_correo.html", {
+            "pendiente": pendiente,
+            "token": token,
+            "proximo": proximo,
+            "enviado": enviado,
+        })
 
     return render(request, "publicos/registro.html", {"proximo": request.GET.get("next", "")})
 
 
-def verificar_correo(request, usuario_id):
-    usuario = get_object_or_404(Usuario, id=usuario_id, activo=True)
-    if usuario.email_verificado:
-        return redirect("sena:login")
+def _pendiente_por_token(token):
+    if not token:
+        return None
+    hash_token = hashlib.sha256(token.encode()).hexdigest()
+    candidatos = RegistroPendiente.objects.all()
+    return next((item for item in candidatos if hmac.compare_digest(item.token_hash, hash_token)), None)
+
+
+def _iniciar_usuario_verificado(request, pendiente, proximo=""):
+    with transaction.atomic():
+        pendiente = RegistroPendiente.objects.select_for_update().get(pk=pendiente.pk)
+        if Usuario.objects.filter(email__iexact=pendiente.email).exists():
+            pendiente.delete()
+            return redirect("sena:login")
+        usuario = Usuario.objects.create(
+            nombre=pendiente.nombre, apellido=pendiente.apellido,
+            email=pendiente.email, telefono=pendiente.telefono,
+            password=pendiente.password, rol="Cliente", email_verificado=True,
+        )
+        pendiente.delete()
+    admins = list(Usuario.objects.filter(rol="Admin", activo=True).only("id"))
+    if admins:
+        Notificacion.objects.bulk_create([
+            Notificacion(usuario=admin, mensaje=f"Nuevo cliente registrado: {usuario.nombre} {usuario.apellido}.")
+            for admin in admins
+        ])
+    guardar_carrito_activo(request)
+    request.session["logueado"] = {"id": usuario.id, "nombre": usuario.nombre, "rol": usuario.rol, "sesion_version": usuario.sesion_version}
+    cargar_carrito_usuario(request, usuario.id)
+    registrar_ingreso(request, usuario)
+    messages.success(request, f"Correo verificado. Bienvenido a TecnoCorte, {usuario.nombre}.")
+    if proximo and url_has_allowed_host_and_scheme(proximo, {request.get_host()}, require_https=request.is_secure()):
+        return redirect(proximo)
+    return redirect("sena:inicio")
+
+
+def verificar_correo(request):
+    token = request.POST.get("token") or request.GET.get("token") or request.session.get("registro_pendiente_token", "")
+    pendiente = _pendiente_por_token(token)
+    proximo = request.POST.get("next") or request.GET.get("next") or request.session.get("registro_pendiente_next", "")
+    if pendiente is None:
+        return render(request, "publicos/verificar_correo.html", {"error": "El enlace de verificación no es válido o ya expiró."})
+    if pendiente.token_expira <= timezone.now():
+        return render(request, "publicos/verificar_correo.html", {"pendiente": pendiente, "token": token, "proximo": proximo, "error": "El enlace expiró. Puedes solicitar un nuevo código."})
+    if request.method == "GET" and request.GET.get("token"):
+        return render(request, "publicos/verificar_correo.html", {"pendiente": pendiente, "token": token, "proximo": proximo, "enlace_directo": True})
     if request.method == "POST":
+        if request.POST.get("confirmar_enlace") == "1":
+            return _iniciar_usuario_verificado(request, pendiente, proximo)
         codigo = request.POST.get("codigo", "").strip()
         hash_codigo = hashlib.sha256(codigo.encode()).hexdigest()
-        if (not usuario.codigo_verificacion_expira or
-                usuario.codigo_verificacion_expira <= timezone.now() or
-                not hmac.compare_digest(hash_codigo, usuario.codigo_verificacion_hash)):
-            return render(request, "publicos/verificar_correo.html", {
-                "usuario": usuario, "error": "El código no es válido o ya expiró."
-            })
-        usuario.email_verificado = True
-        usuario.codigo_verificacion_hash = ""
-        usuario.codigo_verificacion_expira = None
-        usuario.save(update_fields=["email_verificado", "codigo_verificacion_hash", "codigo_verificacion_expira"])
-        messages.success(request, "Correo verificado. Ya puedes iniciar sesión.")
-        return redirect("sena:login")
-    return render(request, "publicos/verificar_correo.html", {"usuario": usuario})
+        if (not pendiente.codigo_expira or pendiente.codigo_expira <= timezone.now() or
+                not hmac.compare_digest(hash_codigo, pendiente.codigo_hash)):
+            return render(request, "publicos/verificar_correo.html", {"pendiente": pendiente, "token": token, "proximo": proximo, "error": "El código no es válido o ya expiró."})
+        return _iniciar_usuario_verificado(request, pendiente, proximo)
+    return render(request, "publicos/verificar_correo.html", {"pendiente": pendiente, "token": token, "proximo": proximo})
 
 
-def reenviar_verificacion(request, usuario_id):
-    usuario = get_object_or_404(Usuario, id=usuario_id, activo=True)
-    clave = f"verificacion_reenvio_{usuario.id}_{request.META.get('REMOTE_ADDR', '')}"
+def reenviar_verificacion(request):
+    token = request.POST.get("token") or request.GET.get("token") or request.session.get("registro_pendiente_token", "")
+    pendiente = _pendiente_por_token(token)
+    if pendiente is None:
+        return render(request, "publicos/verificar_correo.html", {"error": "El registro pendiente ya no es válido. Vuelve a registrarte."})
+    clave = f"verificacion_reenvio_{pendiente.email}_{request.META.get('REMOTE_ADDR', '')}"
     if cache.get(clave):
-        return render(request, "publicos/verificar_correo.html", {
-            "usuario": usuario, "error": "Espera un minuto antes de solicitar otro código."
-        })
-    if not usuario.email_verificado:
-        _enviar_codigo_verificacion(request, usuario)
-        cache.set(clave, True, settings.EMAIL_VERIFICATION_RESEND_SECONDS)
-    return render(request, "publicos/verificar_correo.html", {
-        "usuario": usuario, "enviado": True
-    })
+        return render(request, "publicos/verificar_correo.html", {"pendiente": pendiente, "token": token, "error": "Espera un minuto antes de solicitar otro código."})
+    ruta = reverse("sena:verificar_correo")
+    enviado, nuevo_token = enviar_codigo_verificacion(request, pendiente, lambda value: url_publica(request, f"{ruta}?token={value}"))
+    cache.set(clave, True, settings.EMAIL_VERIFICATION_RESEND_SECONDS)
+    request.session["registro_pendiente_token"] = nuevo_token
+    return render(request, "publicos/verificar_correo.html", {"pendiente": pendiente, "token": nuevo_token, "enviado": enviado})
 
 
 @autorizacion(["Cliente", "Barbero"])
@@ -302,4 +334,3 @@ def cambiar_password(request):
         messages.success(request, "Contraseña actualizada correctamente.")
         return redirect(destino)
     return render(request, "usuarios/cambiar_password.html", {"rol": rol, "usuario": usuario})
-
