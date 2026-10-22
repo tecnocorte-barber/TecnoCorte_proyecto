@@ -122,6 +122,9 @@ urlpatterns = [
     # === API REST (accesible con token o sesión) ===
     path('api/', include(router.urls)),  # Incluye las rutas del router de DRF
     path('api/auth/token/', api.TokenView.as_view(), name='api_token'),
+    path('api/auth/register/', api.RegistroView.as_view(), name='api_register'),
     path('api/auth/refresh/', api.RefreshTokenView.as_view(), name='api_token_refresh'),
     path('api/auth/logout/', api.LogoutTokenView.as_view(), name='api_token_logout'),
+    path('api/servicios/', api.ServicioListView.as_view(), name='api_servicios'),
+    path('api/barberos/', api.BarberoListView.as_view(), name='api_barberos'),
 ]

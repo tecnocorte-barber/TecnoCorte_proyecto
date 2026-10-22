@@ -19,6 +19,14 @@ class TokenResponseSerializer(serializers.Serializer):
     expires_in = serializers.IntegerField()
 
 
+class RegistroRequestSerializer(serializers.Serializer):
+    nombre = serializers.CharField(max_length=100)
+    apellido = serializers.CharField(max_length=100)
+    email = serializers.EmailField()
+    password = serializers.CharField(write_only=True, min_length=8)
+    telefono = serializers.CharField(max_length=20, required=False, allow_blank=True)
+
+
 class MessageResponseSerializer(serializers.Serializer):
     detail = serializers.CharField()
 
@@ -80,7 +88,7 @@ class ProductoSerializer(serializers.ModelSerializer):
 # Serializador de Reserva: con validaciones de servicio, cliente y barbero
 class ReservaSerializer(serializers.ModelSerializer):
     # Solo permite seleccionar clientes (rol Cliente) y barberos activos
-    cliente = serializers.PrimaryKeyRelatedField(queryset=Usuario.objects.filter(rol="Cliente"))
+    cliente = serializers.PrimaryKeyRelatedField(queryset=Usuario.objects.filter(rol="Cliente"), required=False)
     peluquero = serializers.PrimaryKeyRelatedField(queryset=Usuario.objects.filter(rol="Barbero", activo=True))
     peluqueria = serializers.PrimaryKeyRelatedField(queryset=Peluqueria.objects.all(), write_only=True)
     # Campos calculados para mostrar nombres en la respuesta

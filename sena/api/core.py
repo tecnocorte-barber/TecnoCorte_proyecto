@@ -6,15 +6,16 @@ from rest_framework.response import Response
 from rest_framework.exceptions import AuthenticationFailed
 from drf_spectacular.utils import extend_schema
 from django.conf import settings
+from django.contrib.auth.hashers import make_password
 from django.utils import timezone
 from rest_framework.authentication import SessionAuthentication, TokenAuthentication  # Dos métodos de autenticación
 from rest_framework.permissions import IsAuthenticated  # Permisos base de DRF
 from rest_framework.permissions import BasePermission  # Para crear permiso personalizado
 from ..models import Usuario, Peluqueria, Producto, Reserva, Pedido, PedidoProducto, Notificacion  # Modelos que expone la API
 from ..serializers import (UsuarioSerializer, PeluqueriaSerializer, ProductoSerializer, ReservaSerializer,
-                          PedidoSerializer, PedidoProductoSerializer, NotificacionSerializer,
-                          TokenRequestSerializer, RefreshTokenRequestSerializer, TokenResponseSerializer,
-                          MessageResponseSerializer)
+                           PedidoSerializer, PedidoProductoSerializer, NotificacionSerializer,
+                           TokenRequestSerializer, RefreshTokenRequestSerializer, TokenResponseSerializer,
+                           MessageResponseSerializer, RegistroRequestSerializer)
 from ..utilidades import registrar_accion
 from ..jwt_auth import JWTAuthentication, crear_token, decodificar_token, revocar_refresh
 
@@ -48,6 +49,11 @@ class ApiPermission(BasePermission):
             return False  # Sin autenticación, no hay acceso
         # Escritura (POST/PUT/PATCH/DELETE) solo para Admin o staff
         if request.method not in ("GET", "HEAD", "OPTIONS"):
+            # Los clientes pueden crear citas propias; el resto de escrituras
+            # conserva la restricción administrativa.
+            if (request.method == "POST" and isinstance(view, ReservaViewSet)
+                    and role == "Cliente"):
+                return True
             return role == "Admin" or bool(getattr(request.user, "is_staff", False))
         return True  # Lectura permitida para cualquier autenticado
 
@@ -126,6 +132,14 @@ class ReservaViewSet(AuditedModelViewSet):
             return self.queryset.filter(peluquero=app_usuario(self.request))  # Solo sus citas
         return self.queryset.none()  # Sin rol válido, no ve nada
 
+    def perform_create(self, serializer):
+        usuario = app_usuario(self.request)
+        if app_role(self.request) == "Cliente":
+            objeto = serializer.save(cliente=usuario, estado="Pendiente")
+        else:
+            objeto = serializer.save()
+        registrar_accion(self.request, "api_crear", objeto.__class__.__name__, objeto.pk)
+
 
 class PedidoViewSet(AuditedModelViewSet):
     """Pedidos equivalentes al endpoint de pedidos de Node.js."""
@@ -188,6 +202,54 @@ class TokenView(APIView):
             return Response({"detail": "Credenciales inválidas."}, status=status.HTTP_401_UNAUTHORIZED)
         return Response({"access": crear_token(usuario), "refresh": crear_token(usuario, "refresh"),
                          "expires_in": settings.JWT_ACCESS_MINUTES * 60})
+
+
+class RegistroView(APIView):
+    """Registro público de clientes para la aplicación móvil."""
+    authentication_classes = []
+    permission_classes = []
+
+    @extend_schema(request=RegistroRequestSerializer, responses={201: TokenResponseSerializer,
+                                                                  400: MessageResponseSerializer})
+    def post(self, request):
+        datos = RegistroRequestSerializer(data=request.data)
+        datos.is_valid(raise_exception=True)
+        valores = datos.validated_data
+        email = valores["email"].strip().lower()
+        if Usuario.objects.filter(email__iexact=email).exists():
+            return Response({"detail": "Ya existe una cuenta con ese correo."}, status=status.HTTP_400_BAD_REQUEST)
+        from ..utilidades import validar_password
+        error = validar_password(valores["password"])
+        if error:
+            return Response({"detail": error}, status=status.HTTP_400_BAD_REQUEST)
+        usuario = Usuario.objects.create(
+            nombre=valores["nombre"].strip(), apellido=valores["apellido"].strip(),
+            email=email, telefono=valores.get("telefono", "").strip(),
+            password=make_password(valores["password"]), rol="Cliente",
+        )
+        return Response({"access": crear_token(usuario), "refresh": crear_token(usuario, "refresh"),
+                         "expires_in": settings.JWT_ACCESS_MINUTES * 60}, status=status.HTTP_201_CREATED)
+
+
+class ServicioListView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        from ..services.catalogo import catalogo_servicios
+        return Response(catalogo_servicios())
+
+
+class BarberoListView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        barberos = Usuario.objects.filter(rol="Barbero", activo=True,
+                                          peluqueria__isnull=False).select_related("peluqueria")
+        return Response([{"id": b.id, "nombre": f"{b.nombre} {b.apellido}",
+                          "telefono": b.telefono, "peluqueria": b.peluqueria_id,
+                          "peluqueria_nombre": b.peluqueria.nombre} for b in barberos])
 
 
 class RefreshTokenView(APIView):
