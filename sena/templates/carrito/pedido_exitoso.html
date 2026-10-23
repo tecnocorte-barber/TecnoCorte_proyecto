@@ -21,24 +21,11 @@
   </head>
 
   <body
-    class="bg-surface text-on-surface font-body antialiased min-h-screen flex items-center justify-center"
+    class="bg-surface text-on-surface font-body antialiased min-h-screen flex flex-col items-center justify-center px-4 py-28"
   >
-    <div class="fixed right-6 top-6 z-10 flex items-center gap-5">
-      {% include "includes/notificaciones_indicator.html" %} {% include "includes/carrito_indicator.html" %}
-      <button
-        data-theme-toggle
-        onclick="toggleTheme()"
-        class="flex h-11 w-11 items-center justify-center rounded-full border border-outline-variant/30 bg-surface-container-high text-primary shadow-lg"
-        aria-label="Activar tema claro"
-        aria-pressed="true"
-        title="Activar tema claro"
-        type="button"
-      >
-        <span class="material-symbols-outlined theme-icon">light_mode</span>
-      </button>
-    </div>
+    {% include "includes/site_nav.html" with active="tienda" %}
     {# Tarjeta de confirmación con datos del pedido y acciones #}
-    <main class="w-full max-w-md px-6">
+    <main class="relative z-10 w-full max-w-md px-2">
       <div
         class="bg-surface-container-low rounded-xl p-10 text-center ambient-glow ghost-border"
       >

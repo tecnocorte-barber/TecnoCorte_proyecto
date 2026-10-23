@@ -33,7 +33,10 @@ html.dark body::before {
 }
 
 /* El contenido siempre por encima del ambiente */
-body > *:not(script):not(style):not(link):not(.site-header) {
+body > main,
+body > .page,
+body > section,
+body > footer {
   position: relative;
   z-index: 1;
 }
@@ -66,9 +69,7 @@ footer nav a {
   max-width: 100%;
   overflow-wrap: anywhere;
 }
-.tc-toast-region {
-  box-sizing: border-box;
-}
+.tc-toast-region { box-sizing: border-box; }
 
 /* ── 2. Tipografía de exhibición ────────────────────────────────────────── */
 .tc-display {
