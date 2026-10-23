@@ -225,28 +225,38 @@ def _pendiente_por_token(token):
     if not token:
         return None
     hash_token = hashlib.sha256(token.encode()).hexdigest()
-    candidatos = RegistroPendiente.objects.all()
-    return next((item for item in candidatos if hmac.compare_digest(item.token_hash, hash_token)), None)
+    # El hash aleatorio tiene suficiente entropía para una búsqueda exacta;
+    # evitar cargar y recorrer todos los registros pendientes en cada visita.
+    return RegistroPendiente.objects.filter(token_hash=hash_token).first()
 
 
 def _iniciar_usuario_verificado(request, pendiente, proximo=""):
-    with transaction.atomic():
-        pendiente = RegistroPendiente.objects.select_for_update().get(pk=pendiente.pk)
-        if Usuario.objects.filter(email__iexact=pendiente.email).exists():
+    try:
+        with transaction.atomic():
+            pendiente = RegistroPendiente.objects.select_for_update().get(pk=pendiente.pk)
+            if Usuario.objects.filter(email__iexact=pendiente.email).exists():
+                pendiente.delete()
+                return redirect("sena:login")
+            usuario = Usuario.objects.create(
+                nombre=pendiente.nombre, apellido=pendiente.apellido,
+                email=pendiente.email, telefono=pendiente.telefono,
+                password=pendiente.password, rol="Cliente", email_verificado=True,
+            )
             pendiente.delete()
-            return redirect("sena:login")
-        usuario = Usuario.objects.create(
-            nombre=pendiente.nombre, apellido=pendiente.apellido,
-            email=pendiente.email, telefono=pendiente.telefono,
-            password=pendiente.password, rol="Cliente", email_verificado=True,
-        )
-        pendiente.delete()
+    except (IntegrityError, RegistroPendiente.DoesNotExist):
+        # Una segunda petición puede completar el mismo token a la vez. La
+        # restricción única del correo decide cuál gana; no se deja un 500.
+        messages.info(request, "La cuenta ya fue verificada. Ya puedes iniciar sesión.")
+        return redirect("sena:login")
     admins = list(Usuario.objects.filter(rol="Admin", activo=True).only("id"))
     if admins:
         Notificacion.objects.bulk_create([
             Notificacion(usuario=admin, mensaje=f"Nuevo cliente registrado: {usuario.nombre} {usuario.apellido}.")
             for admin in admins
         ])
+    # Tras validar un enlace/código, inicia sesión con una cookie nueva para
+    # no reutilizar una sesión anónima previa.
+    request.session.cycle_key()
     guardar_carrito_activo(request)
     request.session["logueado"] = {"id": usuario.id, "nombre": usuario.nombre, "rol": usuario.rol, "sesion_version": usuario.sesion_version}
     cargar_carrito_usuario(request, usuario.id)
@@ -286,12 +296,19 @@ def reenviar_verificacion(request):
         return render(request, "publicos/verificar_correo.html", {"error": "El registro pendiente ya no es válido. Vuelve a registrarte."})
     clave = f"verificacion_reenvio_{pendiente.email}_{request.META.get('REMOTE_ADDR', '')}"
     if cache.get(clave):
-        return render(request, "publicos/verificar_correo.html", {"pendiente": pendiente, "token": token, "error": "Espera un minuto antes de solicitar otro código."})
+        return render(request, "publicos/verificar_correo.html", {
+            "pendiente": pendiente, "token": token,
+            "proximo": request.POST.get("next", ""),
+            "error": "Espera un minuto antes de solicitar otro código.",
+        })
     ruta = reverse("sena:verificar_correo")
     enviado, nuevo_token = enviar_codigo_verificacion(request, pendiente, lambda value: url_publica(request, f"{ruta}?token={value}"))
     cache.set(clave, True, settings.EMAIL_VERIFICATION_RESEND_SECONDS)
     request.session["registro_pendiente_token"] = nuevo_token
-    return render(request, "publicos/verificar_correo.html", {"pendiente": pendiente, "token": nuevo_token, "enviado": enviado})
+    return render(request, "publicos/verificar_correo.html", {
+        "pendiente": pendiente, "token": nuevo_token,
+        "proximo": request.POST.get("next", ""), "enviado": enviado,
+    })
 
 
 @autorizacion(["Cliente", "Barbero"])

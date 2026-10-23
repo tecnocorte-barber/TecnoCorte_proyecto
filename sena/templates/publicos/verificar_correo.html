@@ -27,6 +27,10 @@
         <div class="mt-6 rounded-lg border border-primary/30 bg-primary/10 p-4 text-sm text-on-surface">Código enviado. Revisa también la carpeta de spam.</div>
         {% endif %}
 
+        {% if pendiente and enviado is False %}
+        <div class="mt-6 rounded-lg border border-error/40 bg-error-container/20 p-4 text-sm text-error">No pudimos enviar el correo. Tu registro sigue guardado; revisa la configuración del correo e intenta reenviar el código.</div>
+        {% endif %}
+
         {% if pendiente %}
         {% if enlace_directo %}
         <form method="post" action="{% url 'sena:verificar_correo' %}" class="mt-8">
@@ -47,7 +51,7 @@
           <button class="gold-gradient w-full rounded-lg py-4 text-xs font-bold uppercase tracking-[0.15em] text-on-primary" type="submit">Verificar correo</button>
         </form>
         <form method="post" action="{% url 'sena:reenviar_verificacion' %}" class="mt-4">
-          {% csrf_token %}<input type="hidden" name="token" value="{{ token }}" />
+          {% csrf_token %}<input type="hidden" name="token" value="{{ token }}" /><input type="hidden" name="next" value="{{ proximo|default:'' }}" />
           <button class="w-full rounded-lg border border-primary/30 px-4 py-3 text-xs font-bold uppercase tracking-widest text-primary hover:bg-primary/10" type="submit">Reenviar código</button>
         </form>
         {% endif %}

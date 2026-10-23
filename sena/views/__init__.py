@@ -6,16 +6,15 @@ from .remote import (
     _datos_notificacion, _datos_descargables, _respuesta_reporte_excel,
     _peluqueria_del_barbero, _motivo_eliminacion,
 )
-# Compatibilidad con la funcionalidad de verificación que permanece desactivada.
-# Se importa de forma diferida para evitar un ciclo entre core y autenticación.
-def verificar_correo(*args, **kwargs):
-    from .autenticacion import verificar_correo as implementacion
-    return implementacion(*args, **kwargs)
-
-
-def reenviar_verificacion(*args, **kwargs):
-    from .autenticacion import reenviar_verificacion as implementacion
-    return implementacion(*args, **kwargs)
+# Registro, inicio de sesión y verificación deben compartir el mismo flujo:
+# el registro pendiente vive en la base de datos y se recupera por token, no
+# desde la sesión del navegador ni desde la caché de una instancia.
+from .autenticacion import (  # noqa: E402
+    login, registro, verificar_correo, reenviar_verificacion,
+)
+# Importar las vistas modulares de autenticación carga también módulos cuyo
+# nombre coincide con una vista histórica expuesta desde este paquete.
+from .remote import carrito as carrito  # noqa: E402,F401
 for _nombre, _objeto in list(globals().items()):
     if callable(_objeto) and getattr(_objeto, "__module__", "") == "sena.views.remote":
         _objeto.__module__ = __name__
