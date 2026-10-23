@@ -44,15 +44,14 @@ def usuario_desde_token(token):
 
 def crear_codigo_verificacion(registro):
     """Genera un código nuevo para un registro pendiente y devuelve el código."""
+    emitido = timezone.now()
     codigo = f"{secrets.randbelow(1_000_000):06d}"
     registro.codigo_hash = hashlib.sha256(codigo.encode()).hexdigest()
-    registro.codigo_expira = timezone.now() + timedelta(
-        minutes=settings.EMAIL_VERIFICATION_MINUTES
-    )
+    registro.codigo_expira = emitido + timedelta(minutes=15)
     token = secrets.token_urlsafe(48)
     registro.token_hash = hashlib.sha256(token.encode()).hexdigest()
     registro.token_expira = timezone.now() + timedelta(hours=24)
-    registro.ultimo_envio = timezone.now()
+    registro.ultimo_envio = emitido
     registro.save(update_fields=["codigo_hash", "codigo_expira", "token_hash", "token_expira", "ultimo_envio", "actualizado"])
     return codigo, token
 

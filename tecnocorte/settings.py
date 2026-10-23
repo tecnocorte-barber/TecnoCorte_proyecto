@@ -181,7 +181,7 @@ if not SITE_URL and _vercel_deployment:
 # Desactivado temporalmente: las cuentas no requieren código para iniciar sesión.
 # La implementación queda disponible para activarla más adelante de forma controlada.
 REQUIRE_EMAIL_VERIFICATION = True
-EMAIL_VERIFICATION_MINUTES = int(os.environ.get('EMAIL_VERIFICATION_MINUTES', '15'))
+EMAIL_VERIFICATION_MINUTES = 15
 EMAIL_VERIFICATION_RESEND_SECONDS = int(os.environ.get('EMAIL_VERIFICATION_RESEND_SECONDS', '60'))
 BACKUP_EMAIL = os.environ.get('BACKUP_EMAIL', CONTACT_EMAIL)
 BACKUP_MAX_ATTACHMENT_BYTES = int(os.environ.get('BACKUP_MAX_ATTACHMENT_BYTES', str(20 * 1024 * 1024)))

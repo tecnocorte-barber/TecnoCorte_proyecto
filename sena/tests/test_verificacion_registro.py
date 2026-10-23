@@ -1,9 +1,12 @@
 import re
+from datetime import timedelta
+from unittest.mock import patch
 from urllib.parse import parse_qs, urlsplit
 
 from django.contrib.auth.hashers import check_password
 from django.core import mail
 from django.test import TestCase, override_settings
+from django.utils import timezone
 from django.urls import reverse
 
 from ..models import RegistroPendiente, Usuario
@@ -87,6 +90,29 @@ class VerificacionRegistroTests(TestCase):
         })
         self.assertRedirects(respuesta, reverse("sena:inicio"))
         self.assertTrue(Usuario.objects.filter(email=self.datos["email"]).exists())
+
+    def test_codigo_dura_quince_minutos_exactos(self):
+        respuesta, pendiente = self.iniciar_registro()
+        codigo = re.search(r"(?<!\d)\d{6}(?!\d)", mail.outbox[0].body).group()
+        emitido = pendiente.codigo_expira - timedelta(minutes=15)
+
+        with patch("sena.views.autenticacion.timezone.now", return_value=emitido + timedelta(minutes=14, seconds=59)):
+            respuesta = self.client.post(reverse("sena:verificar_correo"), {
+                "token": respuesta.context["token"], "codigo": codigo,
+            })
+        self.assertRedirects(respuesta, reverse("sena:inicio"))
+
+    def test_codigo_expira_al_cumplir_quince_minutos(self):
+        respuesta, pendiente = self.iniciar_registro()
+        codigo = re.search(r"(?<!\d)\d{6}(?!\d)", mail.outbox[0].body).group()
+        emitido = pendiente.codigo_expira - timedelta(minutes=15)
+
+        with patch("sena.views.autenticacion.timezone.now", return_value=emitido + timedelta(minutes=15)):
+            respuesta = self.client.post(reverse("sena:verificar_correo"), {
+                "token": respuesta.context["token"], "codigo": codigo,
+            })
+        self.assertContains(respuesta, "El código no es válido o ya expiró")
+        self.assertFalse(Usuario.objects.filter(email=self.datos["email"]).exists())
 
     def test_login_no_permite_entrar_a_una_cuenta_sin_verificar(self):
         from django.contrib.auth.hashers import make_password
