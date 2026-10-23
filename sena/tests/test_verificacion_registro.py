@@ -64,6 +64,42 @@ class VerificacionRegistroTests(TestCase):
         self.assertRedirects(respuesta, reverse("sena:inicio"))
         self.assertTrue(Usuario.objects.get(email=self.datos["email"]).email_verificado)
 
+    def test_token_del_enlace_se_conserva_en_cookie_en_otro_navegador(self):
+        self.iniciar_registro()
+        contenido_html = mail.outbox[0].alternatives[0][0]
+        enlace = re.search(r'href="(https?://[^\"]+)"', contenido_html).group(1)
+        partes = urlsplit(enlace)
+        token = parse_qs(partes.query)["token"][0]
+        otro_navegador = self.client.__class__()
+
+        respuesta = otro_navegador.get(partes.path, {"token": token})
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertEqual(respuesta.cookies["registro_pendiente_token"].value, token)
+
+        respuesta = otro_navegador.post(reverse("sena:verificar_correo"), {
+            "codigo": re.search(r"(?<!\d)\d{6}(?!\d)", mail.outbox[0].body).group(),
+        })
+        self.assertRedirects(respuesta, reverse("sena:inicio"))
+        self.assertTrue(Usuario.objects.filter(email=self.datos["email"]).exists())
+
+    def test_repetir_registro_no_invalida_codigo_ya_enviado(self):
+        respuesta, pendiente = self.iniciar_registro()
+        token_original = respuesta.context["token"]
+        codigo_original = re.search(r"(?<!\d)\d{6}(?!\d)", mail.outbox[0].body).group()
+
+        respuesta = self.client.post(reverse("sena:registro"), self.datos)
+
+        self.assertEqual(respuesta.templates[0].name, "publicos/verificar_correo.html")
+        pendiente.refresh_from_db()
+        self.assertEqual(RegistroPendiente.objects.count(), 1)
+        self.assertEqual(respuesta.context["token"], token_original)
+        self.assertEqual(len(mail.outbox), 1)
+        respuesta = self.client.post(reverse("sena:verificar_correo"), {
+            "token": token_original, "codigo": codigo_original,
+        })
+        self.assertRedirects(respuesta, reverse("sena:inicio"))
+        self.assertTrue(Usuario.objects.filter(email=self.datos["email"]).exists())
+
     def test_reenvio_emite_codigo_y_enlace_nuevos(self):
         respuesta, _ = self.iniciar_registro()
         token_anterior = respuesta.context["token"]

@@ -189,20 +189,36 @@ def registro(request):
             return render(request, "publicos/registro.html", {"error": "Ya existe una cuenta con ese correo."})
 
         try:
-            pendiente, _ = RegistroPendiente.objects.update_or_create(
-                email=email,
-                defaults={
-                    "nombre": nombre,
-                    "apellido": apellido,
-                    "telefono": telefono,
-                    "password": make_password(password),
-                    "codigo_hash": hashlib.sha256(secrets.token_bytes(16)).hexdigest(),
-                    "codigo_expira": timezone.now(),
-                    "token_hash": hashlib.sha256(secrets.token_bytes(16)).hexdigest(),
-                    "token_expira": timezone.now(),
-                    "ultimo_envio": None,
-                },
-            )
+            pendiente = RegistroPendiente.objects.filter(email__iexact=email).first()
+            if pendiente and pendiente.token_expira > timezone.now():
+                token_guardado = request.session.get("registro_pendiente_token", "")
+                if not token_guardado or not hmac.compare_digest(
+                    hashlib.sha256(token_guardado.encode()).hexdigest(), pendiente.token_hash
+                ):
+                    return render(request, "publicos/registro.html", {
+                        "error": "Ya hay un registro pendiente para este correo. Abre el enlace del correo más reciente o vuelve a la verificación en este navegador.",
+                    })
+                if pendiente.codigo_expira > timezone.now():
+                    return render(request, "publicos/verificar_correo.html", {
+                        "pendiente": pendiente,
+                        "token": token_guardado,
+                        "proximo": proximo,
+                        "enviado": True,
+                    })
+            else:
+                pendiente = None
+            if pendiente is None:
+                pendiente = RegistroPendiente.objects.create(
+                    email=email,
+                    nombre=nombre,
+                    apellido=apellido,
+                    telefono=telefono,
+                    password=make_password(password),
+                    codigo_hash=hashlib.sha256(secrets.token_bytes(16)).hexdigest(),
+                    codigo_expira=timezone.now(),
+                    token_hash=hashlib.sha256(secrets.token_bytes(16)).hexdigest(),
+                    token_expira=timezone.now(),
+                )
         except IntegrityError:
             return render(request, "publicos/registro.html", {"error": "Ya existe una cuenta con ese correo."})
         ruta = reverse("sena:verificar_correo")
@@ -269,6 +285,8 @@ def _iniciar_usuario_verificado(request, pendiente, proximo=""):
 
 def verificar_correo(request):
     token = request.POST.get("token") or request.GET.get("token") or request.session.get("registro_pendiente_token", "")
+    if not token:
+        token = request.COOKIES.get("registro_pendiente_token", "")
     pendiente = _pendiente_por_token(token)
     proximo = request.POST.get("next") or request.GET.get("next") or request.session.get("registro_pendiente_next", "")
     if pendiente is None:
@@ -276,21 +294,38 @@ def verificar_correo(request):
     if pendiente.token_expira <= timezone.now():
         return render(request, "publicos/verificar_correo.html", {"pendiente": pendiente, "token": token, "proximo": proximo, "error": "El enlace expiró. Puedes solicitar un nuevo código."})
     if request.method == "GET" and request.GET.get("token"):
-        return render(request, "publicos/verificar_correo.html", {"pendiente": pendiente, "token": token, "proximo": proximo, "enlace_directo": True})
+        response = render(request, "publicos/verificar_correo.html", {"pendiente": pendiente, "token": token, "proximo": proximo, "enlace_directo": True})
+        response.set_cookie(
+            "registro_pendiente_token", token, max_age=15 * 60,
+            httponly=True, secure=request.is_secure(), samesite="Lax",
+        )
+        return response
     if request.method == "POST":
         if request.POST.get("confirmar_enlace") == "1":
-            return _iniciar_usuario_verificado(request, pendiente, proximo)
+            response = _iniciar_usuario_verificado(request, pendiente, proximo)
+            response.delete_cookie("registro_pendiente_token")
+            return response
         codigo = request.POST.get("codigo", "").strip()
         hash_codigo = hashlib.sha256(codigo.encode()).hexdigest()
         if (not pendiente.codigo_expira or pendiente.codigo_expira <= timezone.now() or
                 not hmac.compare_digest(hash_codigo, pendiente.codigo_hash)):
             return render(request, "publicos/verificar_correo.html", {"pendiente": pendiente, "token": token, "proximo": proximo, "error": "El código no es válido o ya expiró."})
-        return _iniciar_usuario_verificado(request, pendiente, proximo)
-    return render(request, "publicos/verificar_correo.html", {"pendiente": pendiente, "token": token, "proximo": proximo})
+        response = _iniciar_usuario_verificado(request, pendiente, proximo)
+        response.delete_cookie("registro_pendiente_token")
+        return response
+    response = render(request, "publicos/verificar_correo.html", {"pendiente": pendiente, "token": token, "proximo": proximo})
+    if token:
+        response.set_cookie(
+            "registro_pendiente_token", token, max_age=15 * 60,
+            httponly=True, secure=request.is_secure(), samesite="Lax",
+        )
+    return response
 
 
 def reenviar_verificacion(request):
     token = request.POST.get("token") or request.GET.get("token") or request.session.get("registro_pendiente_token", "")
+    if not token:
+        token = request.COOKIES.get("registro_pendiente_token", "")
     pendiente = _pendiente_por_token(token)
     if pendiente is None:
         return render(request, "publicos/verificar_correo.html", {"error": "El registro pendiente ya no es válido. Vuelve a registrarte."})
@@ -305,10 +340,15 @@ def reenviar_verificacion(request):
     enviado, nuevo_token = enviar_codigo_verificacion(request, pendiente, lambda value: url_publica(request, f"{ruta}?token={value}"))
     cache.set(clave, True, settings.EMAIL_VERIFICATION_RESEND_SECONDS)
     request.session["registro_pendiente_token"] = nuevo_token
-    return render(request, "publicos/verificar_correo.html", {
+    response = render(request, "publicos/verificar_correo.html", {
         "pendiente": pendiente, "token": nuevo_token,
         "proximo": request.POST.get("next", ""), "enviado": enviado,
     })
+    response.set_cookie(
+        "registro_pendiente_token", nuevo_token, max_age=15 * 60,
+        httponly=True, secure=request.is_secure(), samesite="Lax",
+    )
+    return response
 
 
 @autorizacion(["Cliente", "Barbero"])
