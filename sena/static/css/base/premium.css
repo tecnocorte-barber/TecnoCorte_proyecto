@@ -33,9 +33,41 @@ html.dark body::before {
 }
 
 /* El contenido siempre por encima del ambiente */
-body > *:not(script):not(style):not(link) {
+body > *:not(script):not(style):not(link):not(.site-header) {
   position: relative;
   z-index: 1;
+}
+
+/* Los estilos globales de las páginas públicas no deben alterar el ancho
+   del encabezado fijo compartido ni permitir que una imagen rota lo expanda. */
+.site-header {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+}
+.site-header .pill-nav {
+  min-width: 0;
+  box-sizing: border-box;
+}
+.site-header .brand-logo {
+  width: 2.5rem;
+  height: 2.5rem;
+  flex: 0 0 2.5rem;
+}
+
+/* Evita que elementos auxiliares amplíen el lienzo en móviles. */
+html,
+body {
+  max-width: 100%;
+  overflow-x: clip;
+}
+footer nav a {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+.tc-toast-region {
+  box-sizing: border-box;
 }
 
 /* ── 2. Tipografía de exhibición ────────────────────────────────────────── */
