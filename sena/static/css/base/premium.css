@@ -32,15 +32,6 @@ html.dark body::before {
   -webkit-mask-image: radial-gradient(circle at 50% 30%, #000 0%, transparent 78%);
 }
 
-/* El contenido siempre por encima del ambiente */
-body > main,
-body > .page,
-body > section,
-body > footer {
-  position: relative;
-  z-index: 1;
-}
-
 /* Los estilos globales de las páginas públicas no deben alterar el ancho
    del encabezado fijo compartido ni permitir que una imagen rota lo expanda. */
 .site-header {
@@ -57,19 +48,6 @@ body > footer {
   height: 2.5rem;
   flex: 0 0 2.5rem;
 }
-
-/* Evita que elementos auxiliares amplíen el lienzo en móviles. */
-html,
-body {
-  max-width: 100%;
-  overflow-x: clip;
-}
-footer nav a {
-  min-width: 0;
-  max-width: 100%;
-  overflow-wrap: anywhere;
-}
-.tc-toast-region { box-sizing: border-box; }
 
 /* ── 2. Tipografía de exhibición ────────────────────────────────────────── */
 .tc-display {
