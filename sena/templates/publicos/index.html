@@ -294,10 +294,10 @@
           </div>
 
           {% if inicio_resenas %}
-          <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div class="flex flex-wrap justify-center gap-6">
             {% for resena in inicio_resenas %}
             <article
-              class="tc-glass flex h-full flex-col rounded-2xl p-6"
+              class="tc-glass flex h-full w-full flex-col rounded-2xl p-6 md:w-[calc(50%-0.75rem)] lg:w-[calc(33.333%-1rem)]"
               {% if forloop.counter > resenas_visibles %}hidden data-resena-extra{% endif %}
             >
               <div class="mb-3 flex items-center gap-1">
