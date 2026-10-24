@@ -22,6 +22,7 @@ TRANSICIONES_PEDIDO = {
     "Pendiente": {"Pendiente", "Listo", "Entregado", "Cancelado"},
     "Listo": {"Listo", "Entregado", "Cancelado"},
     "Entregado": {"Entregado"},
+    "Completado": {"Completado"},
     "Cancelado": {"Cancelado"},
 }
 

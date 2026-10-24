@@ -183,6 +183,7 @@ class Pedido(models.Model):
         ("Pendiente", "Pendiente"),
         ("Listo", "Listo para recoger"),
         ("Entregado", "Entregado"),
+        ("Completado", "Completado"),
         ("Cancelado", "Cancelado"),
     )
 

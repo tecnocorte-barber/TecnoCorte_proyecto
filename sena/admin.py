@@ -46,7 +46,11 @@ class ReservaAdmin(admin.ModelAdmin):
 class PedidoAdmin(admin.ModelAdmin):
     list_display = ("id", "cliente", "total", "estado", "pago_confirmado", "fecha")
     list_filter = ("estado", "pago_confirmado")
-    list_editable = ("estado", "pago_confirmado")
+
+    def get_readonly_fields(self, request, obj=None):
+        if obj and obj.estado == "Completado":
+            return tuple(field.name for field in self.model._meta.fields)
+        return super().get_readonly_fields(request, obj)
 
 
 # Admin del detalle de pedidos: productos y cantidades de cada compra

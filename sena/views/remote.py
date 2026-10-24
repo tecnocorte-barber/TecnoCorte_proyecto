@@ -28,6 +28,7 @@ from ..utilidades import autorizacion, validar_password, validar_telefono, valid
 from ..context_processors import carrito_visible, guardar_carrito_activo, cargar_carrito_usuario  # Funciones del carrito por sesión
 from ..services.correos import enviar_correo, enviar_correo_destino, enviar_correo_cita
 from ..services.autenticacion import enviar_codigo_verificacion, url_publica
+from ..services.pedidos import actualizar_pedido
 from ..services.catalogo import SERVICIOS, DURACIONES_SERVICIO, catalogo_servicios, servicio_valido, minutos_servicio
 
 # Imagen de respaldo para las tarjetas del inicio. En los servicios se elige por
@@ -2135,7 +2136,12 @@ def admin_pedidos(request):
     return render(
         request,
         "administrador/admin_pedidos.html",
-        {"pedidos": pedidos, "estados_pedido": Pedido.ESTADOS},
+        {
+            "pedidos": pedidos,
+            "estados_pedido": tuple(
+                estado for estado in Pedido.ESTADOS if estado[0] != "Completado"
+            ),
+        },
     )
 
 
@@ -2145,31 +2151,16 @@ def admin_actualizar_pedido(request, id):
     if request.method != "POST":
         return redirect("sena:admin_pedidos")
 
-    pedido = Pedido.objects.select_related("cliente").filter(id=id).first()
-    if pedido is None:
-        messages.error(request, "El pedido no existe.")
-        return redirect("sena:admin_pedidos")
-
-    estado = request.POST.get("estado", pedido.estado)
-    estados_validos = {opcion[0] for opcion in Pedido.ESTADOS}
-    if estado not in estados_validos:
-        messages.error(request, "El estado seleccionado no es válido.")
-        return redirect("sena:admin_pedidos")
-    if not transicion_valida(TRANSICIONES_PEDIDO, pedido.estado, estado):
-        messages.error(request, f"No se puede pasar un pedido de {pedido.get_estado_display()} a ese estado.")
-        return redirect("sena:admin_pedidos")
-
-    ahora = timezone.now()
     pago_confirmado = request.POST.get("pago_confirmado") == "on"
-    pedido.estado = estado
-    pedido.pago_confirmado = pago_confirmado
-    pedido.fecha_pago = ahora if pago_confirmado and pedido.fecha_pago is None else pedido.fecha_pago
-    if not pago_confirmado:
-        pedido.fecha_pago = None
-    pedido.fecha_entrega = ahora if estado == "Entregado" and pedido.fecha_entrega is None else pedido.fecha_entrega
-    if estado != "Entregado":
-        pedido.fecha_entrega = None
-    pedido.save(update_fields=["estado", "pago_confirmado", "fecha_pago", "fecha_entrega"])
+    pedido, error = actualizar_pedido(
+        id, request.POST.get("estado"), pago_confirmado
+    )
+    if error:
+        if pedido and pedido.estado == "Completado":
+            messages.info(request, error)
+        else:
+            messages.error(request, error)
+        return redirect("sena:admin_pedidos")
     registrar_accion(
         request,
         "actualizar_pedido",

@@ -53,7 +53,7 @@ class PedidosYRecordatoriosTests(TestCase):
         call_command("enviar_recordatorios")
         self.assertEqual(len(mail.outbox), 1)
 
-    def test_admin_actualiza_estado_y_pago_del_pedido(self):
+    def test_admin_completa_pedido_al_entregarlo_y_confirmar_pago(self):
         pedido = Pedido.objects.create(cliente=self.cliente, total=40000)
         self.client.post(
             reverse("sena:login"),
@@ -67,11 +67,57 @@ class PedidosYRecordatoriosTests(TestCase):
 
         self.assertRedirects(response, reverse("sena:admin_pedidos"))
         pedido.refresh_from_db()
-        self.assertEqual(pedido.estado, "Entregado")
+        self.assertEqual(pedido.estado, "Completado")
         self.assertTrue(pedido.pago_confirmado)
         self.assertIsNotNone(pedido.fecha_pago)
         self.assertIsNotNone(pedido.fecha_entrega)
         self.assertTrue(RegistroAccion.objects.filter(accion="actualizar_pedido", entidad_id=pedido.id).exists())
+
+    def test_pedido_entregado_se_completa_al_confirmar_pago_despues(self):
+        pedido = Pedido.objects.create(cliente=self.cliente, total=40000)
+        self.client.post(
+            reverse("sena:login"),
+            {"user": self.admin.email, "password": "ClaveSegura1!"},
+        )
+
+        self.client.post(
+            reverse("sena:admin_actualizar_pedido", args=[pedido.id]),
+            {"estado": "Entregado"},
+        )
+        pedido.refresh_from_db()
+        self.assertEqual(pedido.estado, "Entregado")
+        self.assertFalse(pedido.pago_confirmado)
+
+        self.client.post(
+            reverse("sena:admin_actualizar_pedido", args=[pedido.id]),
+            {"estado": "Entregado", "pago_confirmado": "on"},
+        )
+        pedido.refresh_from_db()
+        self.assertEqual(pedido.estado, "Completado")
+        self.assertTrue(pedido.pago_confirmado)
+
+    def test_pedido_completado_no_muestra_controles_ni_admite_cambios(self):
+        pedido = Pedido.objects.create(
+            cliente=self.cliente, total=40000, estado="Completado",
+            pago_confirmado=True, fecha_pago=timezone.now(), fecha_entrega=timezone.now(),
+        )
+        self.client.post(
+            reverse("sena:login"),
+            {"user": self.admin.email, "password": "ClaveSegura1!"},
+        )
+
+        respuesta = self.client.get(reverse("sena:admin_pedidos"))
+        self.assertContains(respuesta, "Pedido completado")
+        self.assertNotContains(respuesta, f'name="estado"')
+        self.assertNotContains(respuesta, f'name="pago_confirmado"')
+
+        self.client.post(
+            reverse("sena:admin_actualizar_pedido", args=[pedido.id]),
+            {"estado": "Pendiente"},
+        )
+        pedido.refresh_from_db()
+        self.assertEqual(pedido.estado, "Completado")
+        self.assertTrue(pedido.pago_confirmado)
 
     def test_cliente_puede_confirmar_una_reserva_desde_la_vista(self):
         # Cubre el flujo completo que usa la pantalla: preconfirmar y luego
