@@ -2096,11 +2096,34 @@ def admin_editar_peluquero(request, id):
         return redirect("sena:admin_peluqueros")
     return render(request, "administrador/admin_formulario_peluquero.html", {"datos": peluquero, "peluquerias": Peluqueria.objects.all()})
 
+
+def _compromisos_activos_usuario(usuario):
+    """Devuelve una descripción si la cuenta tiene una gestión en curso."""
+    tiene_cita = Reserva.objects.filter(
+        Q(cliente=usuario) | Q(peluquero=usuario),
+        estado__in=["Pendiente", "Confirmada"],
+    ).exists()
+    tiene_pedido = Pedido.objects.filter(
+        cliente=usuario,
+        estado__in=["Pendiente", "Listo", "Entregado"],
+    ).exists()
+    if tiene_cita and tiene_pedido:
+        return "una cita pendiente/confirmada y un pedido en curso"
+    if tiene_cita:
+        return "una cita pendiente o confirmada"
+    if tiene_pedido:
+        return "un pedido en curso"
+    return None
+
 @autorizacion(["Admin"])
 def admin_eliminar_peluquero(request, id):
     if request.method == "POST":
         barbero = Usuario.objects.filter(id=id, rol="Barbero").first()
         if barbero:
+            compromiso = _compromisos_activos_usuario(barbero)
+            if compromiso:
+                messages.error(request, f"No se puede suspender a este barbero porque tiene {compromiso}.")
+                return redirect("sena:admin_peluqueros")
             estaba_activo = barbero.activo
             barbero.activo = False
             barbero.save(update_fields=["activo"])
@@ -3013,10 +3036,17 @@ def admin_eliminar_usuario(request, id):
     if request.method == "POST":
         usuario = Usuario.objects.filter(id=id).exclude(id=request.session["logueado"]["id"]).first()
         if usuario and usuario.rol != "Admin":
-            usuario.activo = False
-            usuario.save(update_fields=["activo"])
-            registrar_accion(request, "suspender_usuario", "Usuario", id, f"Usuario suspendido: {usuario.nombre} {usuario.apellido}")
-            messages.success(request, f"El usuario {usuario.nombre} {usuario.apellido} fue suspendido. Se conservó todo su historial.")
+            compromiso = _compromisos_activos_usuario(usuario)
+            if compromiso:
+                messages.error(request, f"No se puede eliminar este usuario porque tiene {compromiso}.")
+                return redirect("sena:admin_usuarios")
+            nombre = f"{usuario.nombre} {usuario.apellido}"
+            try:
+                usuario.delete()
+                registrar_accion(request, "eliminar_usuario", "Usuario", id, f"Usuario eliminado: {nombre}")
+                messages.success(request, f"El usuario {nombre} fue eliminado correctamente.")
+            except ProtectedError:
+                messages.error(request, "No se puede eliminar este usuario porque conserva citas o pedidos en el historial. Puedes suspenderlo.")
         else:
             messages.error(request, "No puedes eliminar o suspender tu propia cuenta ni una cuenta de administrador.")
     return redirect("sena:admin_usuarios")
@@ -3028,6 +3058,11 @@ def admin_suspender_usuario(request, id):
         usuario = Usuario.objects.filter(id=id).first()
         if usuario and usuario.rol != "Admin":
             estaba_activo = usuario.activo
+            if estaba_activo:
+                compromiso = _compromisos_activos_usuario(usuario)
+                if compromiso:
+                    messages.error(request, f"No se puede suspender este usuario porque tiene {compromiso}.")
+                    return redirect("sena:admin_usuarios")
             usuario.activo = not usuario.activo
             usuario.save()
             if usuario.rol == "Barbero" and estaba_activo and not usuario.activo:
