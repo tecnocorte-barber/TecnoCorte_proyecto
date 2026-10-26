@@ -18,6 +18,10 @@ class UsuarioAdmin(admin.ModelAdmin):
     list_editable = ("activo",)
     exclude = ("password",)
 
+    def has_delete_permission(self, request, obj=None):
+        # Las cuentas se suspenden para conservar citas, pedidos y auditoría.
+        return False
+
 
 # Admin de peluquerías: sedes con su ubicación y teléfono
 @admin.register(Peluqueria)

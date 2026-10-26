@@ -95,6 +95,10 @@ class UsuarioViewSet(AuditedModelViewSet):
         registrar_accion(self.request, "api_crear", objeto.__class__.__name__, objeto.pk)
 
     def perform_update(self, serializer):
+        if "password" in serializer.validated_data:
+            raise PermissionDenied(
+                "Los administradores no pueden cambiar contraseñas de usuarios."
+            )
         if "rol" in serializer.validated_data and not self._puede_gestionar_roles():
             if serializer.validated_data["rol"] != serializer.instance.rol:
                 raise PermissionDenied("Solo el administrador principal puede cambiar roles.")

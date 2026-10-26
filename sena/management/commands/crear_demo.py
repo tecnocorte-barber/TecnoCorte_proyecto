@@ -1,4 +1,4 @@
-# Comando TEMPORAL para crear usuarios de prueba (2 clientes, 2 barberos y 1 admin).
+# Comando TEMPORAL para crear usuarios de prueba (admin y barberos mostrados en el login).
 # Uso:  python manage.py crear_demo
 # Es idempotente: si el usuario ya existe, actualiza sus datos y contraseña.
 from django.core.management.base import BaseCommand
@@ -12,13 +12,17 @@ USUARIOS_DEMO = [
     {"email": "admin@tecnocorte.com", "password": "Admin123!", "nombre": "Admin", "apellido": "TecnoCorte", "rol": "Admin"},
     {"email": "cliente1@tecnocorte.com", "password": "Cliente1!", "nombre": "Carlos", "apellido": "Cliente", "rol": "Cliente"},
     {"email": "cliente2@tecnocorte.com", "password": "Cliente2!", "nombre": "Laura", "apellido": "Cliente", "rol": "Cliente"},
+    {"email": "barbero.carlos.itagui@tecnocorte.com", "password": "barbero123", "nombre": "Carlos", "apellido": "Barbero", "rol": "Barbero"},
+    {"email": "barbero.juan.centro@tecnocorte.com", "password": "barbero123", "nombre": "Juan", "apellido": "Barbero", "rol": "Barbero"},
+    {"email": "barbero.andres.quintero.envigado@tecnocorte.com", "password": "barbero123", "nombre": "Andrés Quintero", "apellido": "Barbero", "rol": "Barbero"},
+    {"email": "barbero.miguel.laureles@tecnocorte.com", "password": "barbero123", "nombre": "Miguel", "apellido": "Barbero", "rol": "Barbero"},
     {"email": "barbero.pedro.itagui@tecnocorte.com", "password": "barbero123", "nombre": "Pedro", "apellido": "Barbero", "rol": "Barbero"},
     {"email": "barbero.andres.barbero.itagui@tecnocorte.com", "password": "barbero123", "nombre": "Andrés", "apellido": "Barbero", "rol": "Barbero"},
 ]
 
 
 class Command(BaseCommand):
-    help = "Crea o actualiza usuarios de prueba (2 clientes, 2 barberos y 1 admin)."
+    help = "Crea o actualiza los usuarios de prueba mostrados en el login."
 
     def handle(self, *args, **options):
         # Se necesita una barbería para asociar a los barberos.

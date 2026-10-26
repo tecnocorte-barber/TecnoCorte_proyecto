@@ -2089,12 +2089,8 @@ def admin_editar_peluquero(request, id):
             # El Admin puede quitar la foto actual desde el formulario.
             _borrar_archivo(peluquero.foto)
             peluquero.foto = None
-        if request.POST.get("password"):
-            # Solo se actualiza si la nueva contraseña cumple las reglas
-            error_password = validar_password(request.POST.get("password"))
-            if error_password:
-                return render(request, "administrador/admin_formulario_peluquero.html", {"datos": peluquero, "error": error_password, "peluquerias": Peluqueria.objects.all()})
-            peluquero.password = make_password(request.POST.get("password"))
+        # La contraseña solo puede cambiarla el propio usuario desde su cuenta
+        # o mediante recuperación. El administrador no puede modificarla.
         peluquero.save()
         messages.success(request, "Datos del barbero actualizados.")
         return redirect("sena:admin_peluqueros")
@@ -2308,13 +2304,18 @@ def admin_editar_reserva(request, id):
 def admin_eliminar_reserva(request, id):
     if request.method == "POST":
         reserva = Reserva.objects.select_related("cliente", "peluquero").filter(id=id).first()
-        if reserva:
-            Notificacion.objects.create(usuario=reserva.cliente, mensaje=f"La reserva #{reserva.id} fue eliminada por el administrador.")
-            Notificacion.objects.create(usuario=reserva.peluquero, mensaje=f"La reserva #{reserva.id} fue eliminada por el administrador.")
-            enviar_correo_cita(request, reserva.cliente, "Reserva eliminada en TecnoCorte", f"Tu reserva #{reserva.id} del {formato_cita(reserva)} fue eliminada por el administrador.")
-            enviar_correo_cita(request, reserva.peluquero, "Reserva eliminada en TecnoCorte", f"La reserva #{reserva.id} del {formato_cita(reserva)} fue eliminada por el administrador.")
-            reserva.delete()
-            messages.info(request, "La reserva fue eliminada y se notificó a sus participantes.")
+        if reserva and reserva.estado != "Cancelada":
+            # Las reservas son historial comercial: se cancelan, nunca se
+            # eliminan, para conservar auditoría, calificaciones y avisos.
+            reserva.estado = "Cancelada"
+            reserva.save(update_fields=["estado"])
+            Notificacion.objects.create(usuario=reserva.cliente, reserva=reserva, mensaje=f"Tu reserva #{reserva.id} del {formato_cita(reserva)} fue cancelada por el administrador.")
+            Notificacion.objects.create(usuario=reserva.peluquero, reserva=reserva, mensaje=f"La reserva #{reserva.id} del {formato_cita(reserva)} fue cancelada por el administrador.")
+            enviar_correo_cita(request, reserva.cliente, "Reserva cancelada en TecnoCorte", f"Tu reserva #{reserva.id} del {formato_cita(reserva)} fue cancelada por el administrador.")
+            enviar_correo_cita(request, reserva.peluquero, "Reserva cancelada en TecnoCorte", f"La reserva #{reserva.id} del {formato_cita(reserva)} fue cancelada por el administrador.")
+            messages.info(request, "La reserva fue cancelada y conservada en el historial.")
+        elif reserva:
+            messages.info(request, "La reserva ya estaba cancelada y se conservó en el historial.")
     _invalidar_cache_disponibilidad()
     return redirect("sena:admin_reservas")
 
@@ -2993,14 +2994,8 @@ def admin_editar_usuario(request, id):
             _borrar_archivo(usuario.foto)
             usuario.foto = None
 
-        # Actualizar contraseña si se proporciona y cumple las reglas
-        password = request.POST.get("password", "").strip()
-        if password:
-            error_password = validar_password(password)
-            if error_password:
-                return render(request, "administrador/admin_formulario_usuario.html", {"usuario": usuario, "roles": Usuario.ROLES, "editar": True, "error": error_password, "peluquerias": Peluqueria.objects.all(), "puede_gestionar_roles": administra_roles})
-            usuario.password = make_password(password)
-        
+        # La contraseña de una cuenta existente no se modifica desde el panel
+        # administrativo, aunque llegue un campo password en el POST.
         usuario.save()
         messages.success(request, "Usuario actualizado correctamente.")
         return redirect("sena:admin_usuarios")
@@ -3017,19 +3012,13 @@ def admin_editar_usuario(request, id):
 def admin_eliminar_usuario(request, id):
     if request.method == "POST":
         usuario = Usuario.objects.filter(id=id).exclude(id=request.session["logueado"]["id"]).first()
-        if usuario:
-            nombre = f"{usuario.nombre} {usuario.apellido}"
-            try:
-                foto_archivo = usuario.foto
-                usuario.delete()
-                if foto_archivo:
-                    _borrar_archivo(foto_archivo)
-                registrar_accion(request, "eliminar_usuario", "Usuario", id, f"Usuario eliminado: {nombre}")
-                messages.success(request, f"El usuario {nombre} fue eliminado correctamente.")
-            except ProtectedError:
-                messages.error(request, "No se puede eliminar este usuario porque tiene citas o pedidos asociados. Puedes suspenderlo para conservar el historial.")
+        if usuario and usuario.rol != "Admin":
+            usuario.activo = False
+            usuario.save(update_fields=["activo"])
+            registrar_accion(request, "suspender_usuario", "Usuario", id, f"Usuario suspendido: {usuario.nombre} {usuario.apellido}")
+            messages.success(request, f"El usuario {usuario.nombre} {usuario.apellido} fue suspendido. Se conservó todo su historial.")
         else:
-            messages.error(request, "No puedes eliminar tu propia cuenta o el usuario no existe.")
+            messages.error(request, "No puedes eliminar o suspender tu propia cuenta ni una cuenta de administrador.")
     return redirect("sena:admin_usuarios")
 
 @autorizacion(["Admin"])

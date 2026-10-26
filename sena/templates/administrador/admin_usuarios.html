@@ -277,12 +277,6 @@ flex bg-surface{% endblock %} {% block content %} {% include "includes/admin_sid
                     </button>
                     {% endif %}
                   </form>
-                  <form method="post" action="{% url 'sena:admin_eliminar_usuario' usuario.id %}" class="inline">
-                    {% csrf_token %}
-                    <button class="text-on-surface-variant hover:text-error transition-colors" type="submit" data-confirm="Esta acción eliminará permanentemente a {{ usuario.nombre }} {{ usuario.apellido }}. Si tiene citas o pedidos, el sistema conservará el usuario y mostrará un aviso." title="Eliminar usuario" aria-label="Eliminar usuario {{ usuario.nombre }} {{ usuario.apellido }}">
-                      <span class="material-symbols-outlined text-[20px]">delete</span>
-                    </button>
-                  </form>
                   {% endif %}
                 </div>
               </td>

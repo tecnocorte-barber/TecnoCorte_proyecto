@@ -58,6 +58,7 @@
         <span class="tc-field__label">Apellido</span>
       </label>
 
+      {% if not editar %}
       <label class="tc-field tc-field--full">
         <input
           required
@@ -154,12 +155,14 @@
         <span class="tc-field__label">Contraseña</span>
       </label>
       <span class="tc-field__hint tc-field--full">
-        {% if editar %}
-          Déjala vacía para conservar la contraseña actual.
-        {% else %}
-          Mínimo 8 caracteres, con mayúscula, minúscula y número.
-        {% endif %}
+        Mínimo 8 caracteres, con mayúscula, minúscula y número.
       </span>
+      {% else %}
+      <p class="tc-field__hint tc-field--full">
+        La contraseña no puede ser modificada por un administrador. El usuario
+        puede cambiarla desde su cuenta o recuperar el acceso por correo.
+      </p>
+      {% endif %}
 
       <div class="tc-form__actions">
         <button class="tc-btn tc-btn--gold" type="submit">

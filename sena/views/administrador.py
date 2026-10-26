@@ -158,12 +158,9 @@ def admin_editar_peluquero(request, id):
             # El Admin puede quitar la foto actual desde el formulario.
             _borrar_archivo(peluquero.foto)
             peluquero.foto = None
-        if request.POST.get("password"):
-            # Solo se actualiza si la nueva contraseña cumple las reglas
-            error_password = validar_password(request.POST.get("password"))
-            if error_password:
-                return render(request, "administrador/admin_formulario_peluquero.html", {"datos": peluquero, "error": error_password, "peluquerias": Peluqueria.objects.all()})
-            peluquero.password = make_password(request.POST.get("password"))
+        # La contraseña solo puede cambiarla el propio usuario desde su cuenta
+        # o mediante el flujo de recuperación. El administrador no puede
+        # modificar contraseñas existentes, aunque envíe el campo manualmente.
         peluquero.save()
         messages.success(request, "Datos del barbero actualizados.")
         return redirect("sena:admin_peluqueros")
@@ -945,14 +942,8 @@ def admin_editar_usuario(request, id):
             _borrar_archivo(usuario.foto)
             usuario.foto = None
 
-        # Actualizar contraseña si se proporciona y cumple las reglas
-        password = request.POST.get("password", "").strip()
-        if password:
-            error_password = validar_password(password)
-            if error_password:
-                return render(request, "administrador/admin_formulario_usuario.html", {"usuario": usuario, "roles": Usuario.ROLES, "editar": True, "error": error_password})
-            usuario.password = make_password(password)
-        
+        # La contraseña de una cuenta existente no se modifica desde el panel
+        # administrativo, ni siquiera si llega un campo password en el POST.
         usuario.save()
         messages.success(request, "Usuario actualizado correctamente.")
         return redirect("sena:admin_usuarios")
