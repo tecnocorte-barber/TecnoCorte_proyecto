@@ -1,8 +1,22 @@
+<style>
+  .tc-inline-spinner {
+    display: inline-block;
+    width: .9rem;
+    height: .9rem;
+    margin-right: .35rem;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    vertical-align: -.12rem;
+    animation: tc-inline-spin .7s linear infinite;
+  }
+  @keyframes tc-inline-spin { to { transform: rotate(360deg); } }
+</style>
 <script>
 (function () {
   if (window.TecnoCorteCargando) return;
   window.TecnoCorteCargando = true;
-  var ICONO = '<span class="material-symbols-outlined animate-spin" aria-hidden="true">progress_activity</span> ';
+  var ICONO = '<span class="tc-inline-spinner" aria-hidden="true"></span>';
   var TEXTO = 'Procesando…';
   var REINTENTAR_EN_MS = 15000;
   var EXCLUIDOS = ['sin-cargando'];

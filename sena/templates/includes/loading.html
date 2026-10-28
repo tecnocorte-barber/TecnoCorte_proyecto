@@ -7,6 +7,20 @@
   </div>
 </div>
 <link rel="stylesheet" href="{% static 'css/includes/loading.css' %}" />
+<style>
+  .tc-inline-spinner {
+    display: inline-block;
+    width: .9rem;
+    height: .9rem;
+    margin-right: .35rem;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    vertical-align: -.12rem;
+    animation: tc-inline-spin .7s linear infinite;
+  }
+  @keyframes tc-inline-spin { to { transform: rotate(360deg); } }
+</style>
 <script>
 (function () {
   var overlay = document.getElementById("tc-loading");
@@ -66,7 +80,7 @@
       btn.dataset.loadingBackup = btn.innerHTML;
       btn.setAttribute("aria-busy", "true");
       activeButton = btn;
-      btn.innerHTML = '<span class="material-symbols-outlined" style="animation:tc-spin .7s linear infinite;font-size:1.1rem">progress_activity</span> Procesando...';
+      btn.innerHTML = '<span class="tc-inline-spinner" aria-hidden="true"></span>Procesando...';
     }
   }, true);
 
