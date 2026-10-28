@@ -152,7 +152,19 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 # Vercel es efímero: usa Cloudinary para todas las imágenes subidas.
-if os.environ.get('CLOUDINARY_URL'):
+# Se acepta CLOUDINARY_URL o las tres variables separadas.
+_cloudinary_url = os.environ.get('CLOUDINARY_URL', '').strip()
+_cloudinary_name = os.environ.get('CLOUDINARY_CLOUD_NAME', '').strip()
+_cloudinary_key = os.environ.get('CLOUDINARY_API_KEY', '').strip()
+_cloudinary_secret = os.environ.get('CLOUDINARY_API_SECRET', '').strip()
+if _cloudinary_url or all((_cloudinary_name, _cloudinary_key, _cloudinary_secret)):
+    if not _cloudinary_url:
+        CLOUDINARY_STORAGE = {
+            'CLOUD_NAME': _cloudinary_name,
+            'API_KEY': _cloudinary_key,
+            'API_SECRET': _cloudinary_secret,
+            'SECURE': True,
+        }
     STORAGES = {
         'default': {'BACKEND': 'cloudinary_storage.storage.MediaCloudinaryStorage'},
         'staticfiles': {'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage'},
