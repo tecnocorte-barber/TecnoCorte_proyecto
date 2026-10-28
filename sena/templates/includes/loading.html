@@ -92,8 +92,10 @@
     if (link.target === "_blank" || link.hasAttribute("data-no-loading")) return;
     if (link.closest(".tc-loading-overlay") || link.closest("[data-confirm]")) return;
     if (link.closest("form")) return;
-    var label = (link.textContent || "Cargando...").trim();
-    showLoading(label.length > 30 ? "Cargando, por favor espera..." : label);
+    // No usamos el texto del enlace: algunos menús tienen etiquetas técnicas
+    // o en inglés (por ejemplo Dashboard). El estado de navegación siempre se
+    // muestra en español.
+    showLoading("Cargando, por favor espera...");
   }, true);
 
   window.tcShowLoading = showLoading;
