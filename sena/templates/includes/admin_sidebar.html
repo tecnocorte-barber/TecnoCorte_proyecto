@@ -35,16 +35,6 @@
       >
     </a>
     <a
-      class="panel-glass-link flex items-center space-x-4 px-4 py-3 text-primary"
-      href="{% url 'sena:inicio' %}?vista=publica"
-      target="_blank"
-      rel="noopener"
-      title="Abrir el sitio público"
-    >
-      <span class="material-symbols-outlined">open_in_new</span>
-      <span class="font-label uppercase text-xs tracking-widest">Ver sitio</span>
-    </a>
-    <a
       class="panel-glass-link flex items-center space-x-4 px-4 py-3 {% if active == 'reservas' %}panel-glass-link--active{% else %}text-on-surface-variant{% endif %}"
       href="{% url 'sena:admin_reservas' %}"
     >

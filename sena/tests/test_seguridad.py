@@ -4,7 +4,6 @@ import tempfile
 from unittest import mock
 
 from django.conf import settings
-from django.core import mail
 from django.core.cache import cache
 from django.core.exceptions import PermissionDenied
 from django.test import TestCase, override_settings
@@ -142,22 +141,15 @@ class PaginasDeErrorTests(TestCase):
         self.assertIn("vista_que_revienta", registro.detalle)
         self.assertEqual(registro.ruta, "/__prueba__/revienta/")
 
-    def test_el_500_le_llega_al_admin_como_notificacion_y_no_mensaje(self):
+    def test_el_500_no_crea_notificacion_y_se_consulta_en_errores(self):
         Notificacion.objects.all().delete()
         MensajeContacto.objects.all().delete()
         self._sin_captura().get("/__prueba__/revienta/")
 
         notificacion = Notificacion.objects.filter(usuario=self.admin).first()
-        self.assertIsNotNone(notificacion)
-        self.assertIn("Error inesperado", notificacion.mensaje)
+        self.assertIsNone(notificacion)
 
         self.assertFalse(MensajeContacto.objects.filter(nombre="Sistema TecnoCorte").exists())
-
-    def test_el_500_tambien_envia_un_correo_al_contacto_oficial(self):
-        with self.settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend"):
-            self._sin_captura().get("/__prueba__/revienta/")
-        self.assertTrue(mail.outbox)
-        self.assertIn(settings.CONTACT_EMAIL, mail.outbox[0].to)
 
     def test_el_codigo_que_ve_la_persona_coincide_con_el_registro(self):
         r = self._sin_captura().get("/__prueba__/revienta/")

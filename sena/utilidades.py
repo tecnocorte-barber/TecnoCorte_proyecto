@@ -104,9 +104,14 @@ def autorizacion(roles=[]):
                 return redirect("sena:login")
             
             # Si se indicaron roles, comprueba que el rol del usuario esté permitido
+            rol_actual = usuario.rol
+            if request.session["logueado"].get("rol") != rol_actual:
+                request.session["logueado"] = {**request.session["logueado"], "rol": rol_actual}
             if roles:
-                rol = request.session["logueado"]["rol"]
-                if rol not in roles:
+                roles_efectivos = set(roles)
+                if "Admin" in roles_efectivos:
+                    roles_efectivos.add("SuperAdmin")
+                if rol_actual not in roles_efectivos:
                     return redirect("sena:login")
             
             return vista(request, *args, **kwargs)

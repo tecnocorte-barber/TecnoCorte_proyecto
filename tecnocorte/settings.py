@@ -151,6 +151,12 @@ STATICFILES_DIRS = [os.path.join(BASE_DIR, 'sena', 'static')]
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
+# Vercel es efímero: usa Cloudinary para todas las imágenes subidas.
+if os.environ.get('CLOUDINARY_URL'):
+    STORAGES = {
+        'default': {'BACKEND': 'cloudinary_storage.storage.MediaCloudinaryStorage'},
+        'staticfiles': {'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage'},
+    }
 LOGIN_URL = 'sena:login'
 
 # En desarrollo los correos se muestran en la consola. En producción se activa

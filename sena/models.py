@@ -6,6 +6,7 @@ from django.db.models import Q
 # Usuario del sistema con rol Admin, Barbero o Cliente
 class Usuario(models.Model):
     ROLES = (
+        ("SuperAdmin", "SUPER ADMINISTRADOR"),
         ("Admin", "ADMINISTRADOR"),
         ("Barbero", "BARBERO"),
         ("Cliente", "CLIENTE"),

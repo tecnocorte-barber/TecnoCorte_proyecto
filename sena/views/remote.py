@@ -70,7 +70,7 @@ def puede_gestionar_roles(request):
     return bool(
         usuario_id
         and Usuario.objects.filter(
-            id=usuario_id, activo=True, rol="Admin", email__iexact=ADMIN_PRINCIPAL_EMAIL
+            id=usuario_id, activo=True, rol__in=("Admin", "SuperAdmin")
         ).exists()
     )
 
@@ -2888,14 +2888,13 @@ def admin_crear_usuario(request):
         password = request.POST.get("password", "").strip()
         telefono = request.POST.get("telefono", "").strip()
         rol_solicitado = request.POST.get("rol", "Cliente")
-        if not administra_roles and rol_solicitado != "Cliente":
-            return render(request, "administrador/admin_formulario_usuario.html", {
-                "error": "No tienes permiso para asignar ese rol. Solo el administrador principal puede hacerlo.",
-                "roles": Usuario.ROLES,
-                "peluquerias": Peluqueria.objects.all(),
-                "puede_gestionar_roles": False,
-            })
-        rol = rol_solicitado if administra_roles else "Cliente"
+        actor_rol = (request.session.get("logueado") or {}).get("rol")
+        roles_permitidos = {"Cliente", "Barbero"}
+        if actor_rol == "SuperAdmin":
+            roles_permitidos.add("Admin")
+        if rol_solicitado not in roles_permitidos:
+            return render(request, "administrador/admin_formulario_usuario.html", {"error": "No tienes permiso para asignar ese rol.", "roles": Usuario.ROLES, "peluquerias": Peluqueria.objects.all(), "puede_gestionar_roles": True})
+        rol = rol_solicitado
 
         # Validaciones
         if not all([nombre, apellido, email, password, rol]) or rol not in dict(Usuario.ROLES):
@@ -2993,9 +2992,14 @@ def admin_editar_usuario(request, id):
             return render(request, "administrador/admin_formulario_usuario.html", {"usuario": usuario, "roles": Usuario.ROLES, "editar": True, "error": error_telefono, "peluquerias": Peluqueria.objects.all()})
         usuario.telefono = telefono
         nuevo_rol = request.POST.get("rol", usuario.rol) if administra_roles else usuario.rol
-        # La cuenta principal nunca puede perder su rol, ni siquiera por sí misma.
-        if usuario.email.lower() == ADMIN_PRINCIPAL_EMAIL:
-            nuevo_rol = "Admin"
+        actor_rol = (request.session.get("logueado") or {}).get("rol")
+        roles_permitidos = {"Cliente", "Barbero"}
+        if actor_rol == "SuperAdmin":
+            roles_permitidos.add("Admin")
+        if actor_rol != "SuperAdmin" and usuario.rol in ("Admin", "SuperAdmin"):
+            nuevo_rol = usuario.rol
+        if nuevo_rol not in roles_permitidos and nuevo_rol != usuario.rol:
+            return render(request, "administrador/admin_formulario_usuario.html", {"usuario": usuario, "roles": Usuario.ROLES, "editar": True, "error": "No tienes permiso para asignar ese rol.", "peluquerias": Peluqueria.objects.all(), "puede_gestionar_roles": True})
         if nuevo_rol not in dict(Usuario.ROLES):
             return render(request, "administrador/admin_formulario_usuario.html", {"usuario": usuario, "roles": Usuario.ROLES, "editar": True, "error": "El rol seleccionado no es válido.", "peluquerias": Peluqueria.objects.all(), "puede_gestionar_roles": administra_roles})
         usuario.rol = nuevo_rol

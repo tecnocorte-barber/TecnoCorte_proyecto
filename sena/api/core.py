@@ -47,14 +47,14 @@ class ApiPermission(BasePermission):
         authenticated = bool(app_usuario(request)) or bool(getattr(request.user, "is_authenticated", False))  # Sesión o token
         if not authenticated:
             return False  # Sin autenticación, no hay acceso
-        # Escritura (POST/PUT/PATCH/DELETE) solo para Admin o staff
+        # Escritura (POST/PUT/PATCH/DELETE) solo para Admin/SuperAdmin o staff
         if request.method not in ("GET", "HEAD", "OPTIONS"):
             # Los clientes pueden crear citas propias; el resto de escrituras
             # conserva la restricción administrativa.
             if (request.method == "POST" and isinstance(view, ReservaViewSet)
                     and role == "Cliente"):
                 return True
-            return role == "Admin" or bool(getattr(request.user, "is_staff", False))
+            return role in ("Admin", "SuperAdmin") or bool(getattr(request.user, "is_staff", False))
         return True  # Lectura permitida para cualquier autenticado
 
 
@@ -85,12 +85,19 @@ class UsuarioViewSet(AuditedModelViewSet):
     ordering_fields = ["nombre", "apellido", "fecha_creacion"]  # Campos ordenables
 
     def _puede_gestionar_roles(self):
-        return getattr(self.request.user, "email", "").lower() == "tecnocorte083@gmail.com"
+        usuario = app_usuario(self.request)
+        return bool(usuario and usuario.rol in ("Admin", "SuperAdmin"))
+
+    def _roles_permitidos(self):
+        usuario = app_usuario(self.request)
+        if usuario and usuario.rol == "SuperAdmin":
+            return {"Cliente", "Barbero", "Admin"}
+        return {"Cliente", "Barbero"}
 
     def perform_create(self, serializer):
         rol = serializer.validated_data.get("rol", "Cliente")
-        if rol != "Cliente" and not self._puede_gestionar_roles():
-            raise PermissionDenied("Solo el administrador principal puede asignar roles.")
+        if rol not in self._roles_permitidos():
+            raise PermissionDenied("No tienes permiso para asignar ese rol.")
         objeto = serializer.save(rol=rol)
         registrar_accion(self.request, "api_crear", objeto.__class__.__name__, objeto.pk)
 
@@ -99,16 +106,18 @@ class UsuarioViewSet(AuditedModelViewSet):
             raise PermissionDenied(
                 "Los administradores no pueden cambiar contraseñas de usuarios."
             )
-        if "rol" in serializer.validated_data and not self._puede_gestionar_roles():
-            if serializer.validated_data["rol"] != serializer.instance.rol:
-                raise PermissionDenied("Solo el administrador principal puede cambiar roles.")
-        if serializer.instance.email.lower() == "tecnocorte083@gmail.com":
-            serializer.validated_data["rol"] = "Admin"
+        if "rol" in serializer.validated_data:
+            nuevo_rol = serializer.validated_data["rol"]
+            actor = app_usuario(self.request)
+            if nuevo_rol not in self._roles_permitidos():
+                raise PermissionDenied("No tienes permiso para asignar ese rol.")
+            if actor and actor.rol != "SuperAdmin" and serializer.instance.rol in ("Admin", "SuperAdmin"):
+                raise PermissionDenied("Un Admin no puede modificar permisos administrativos.")
         super().perform_update(serializer)
 
     # Solo Admin ve todos los usuarios; otros no ven nada
     def get_queryset(self):
-        return self.queryset if app_role(self.request) == "Admin" or self.request.user.is_staff else self.queryset.none()
+        return self.queryset if app_role(self.request) in ("Admin", "SuperAdmin") or self.request.user.is_staff else self.queryset.none()
 
 
 # CRUD de peluquerías (sedes): visible para cualquier autenticado

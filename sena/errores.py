@@ -1,8 +1,8 @@
-# Registro y aviso de errores inesperados.
+# Registro y almacenamiento de errores inesperados.
 #
 # Cuando algo falla, la persona que navega solo ve una página amigable con un
 # código corto. El detalle completo queda aquí, en RegistroError, y los
-# administradores reciben una notificación, un mensaje de contacto y un correo.
+# administradores consultan los detalles exclusivamente en el apartado Errores.
 #
 # Todo lo que toca la base de datos o el correo va envuelto en try/except: si se
 # cayó la BD, el aviso no puede empeorar la caída.
@@ -12,9 +12,7 @@ import sys
 import threading
 import traceback
 
-from django.conf import settings
 from django.core.exceptions import PermissionDenied
-from django.core.mail import send_mail
 from django.core.signals import got_request_exception
 from django.http import (
     Http404,
@@ -25,7 +23,7 @@ from django.http import (
 from django.shortcuts import render
 from django.utils import timezone
 
-from .models import Notificacion, RegistroError, Usuario
+from .models import RegistroError, Usuario
 
 logger = logging.getLogger("sena.errores")
 
@@ -59,11 +57,10 @@ def _usuario_de(request):
 
 
 def registrar_error(request, excepcion, codigo_http):
-    """Guarda el error, avisa a los Admin si procede y devuelve el código corto.
+    """Guarda el error en RegistroError y devuelve el código corto.
 
-    Solo los fallos 5xx se notifican: avisar también por cada 404 inundaría al
-    Admin, porque los rastreadores generan enlaces inexistentes sin parar.
-    Los 4xx quedan igualmente registrados y en el log.
+    Los errores no generan notificaciones ni correos. Se consultan desde el
+    apartado Errores del panel administrativo para evitar saturar la campana.
 
     Devuelve una cadena siempre; nunca lanza excepción.
     """
@@ -103,56 +100,8 @@ def registrar_error(request, excepcion, codigo_http):
         logger.warning("Aviso %s [%s] %s %s: %s", codigo_http, codigo,
                        request.method if request else "", request.path_info if request else "/", tipo)
 
-    # Solo los 5xx se notifican: un 404 no debe inundar al Admin.
-    if codigo_http >= 500:
-        _avisar_admins(request, registro, codigo, tipo, mensaje, codigo_http)
+
     return codigo
-
-
-def _avisar_admins(request, registro, codigo, tipo, mensaje, codigo_http):
-    """Notificación + mensaje de contacto + correo para los administradores.
-
-    Se usa solo con fallos 5xx; los 4xx no generan avisos.
-    """
-    titulo = registro.titulo if registro else "Error inesperado"
-    resumen = f"{titulo} [{codigo}]: {tipo} en {(registro.ruta if registro else '/')}"
-    notificado = False
-
-    # 1. Notificación dentro del panel (aparece en la campana del Admin).
-    try:
-        admins = list(Usuario.objects.filter(rol="Admin", activo=True).only("id"))
-        if admins:
-            Notificacion.objects.bulk_create(
-                [Notificacion(usuario=admin, mensaje=resumen[:255]) for admin in admins]
-            )
-            notificado = True
-    except Exception:
-        logger.error("No se pudieron crear las notificaciones de error [%s]", codigo, exc_info=True)
-
-    # 2. Correo al contacto oficial del sitio.
-    try:
-        send_mail(
-            subject=f"[TecnoCorte] {titulo} [{codigo}]",
-            message=(
-                f"{titulo}\n\n"
-                f"Código: {codigo}\n"
-                f"Estado HTTP: {codigo_http}\n"
-                f"Ruta: {(registro.ruta if registro else '/')} ({(registro.metodo if registro else '')})\n"
-                f"Error: {tipo}: {mensaje}\n"
-                f"Persona: {(registro.usuario.email if registro and registro.usuario else 'sin sesión')}\n"
-                f"IP: {(registro.ip if registro else '')}\n\n"
-                "La traza completa está en el administrador de Django,\n"
-                "sección Registros de error."
-            ),
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[settings.CONTACT_EMAIL],
-            fail_silently=True,
-        )
-    except Exception:
-        logger.error("No se pudo enviar el correo de error [%s]", codigo, exc_info=True)
-
-    if registro is not None and notificado:
-        RegistroError.objects.filter(pk=registro.pk).update(notificado=True)
 
 
 # ── Captura de la traza para el handler de 500 ──────────────────────────────

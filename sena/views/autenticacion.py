@@ -17,7 +17,7 @@ from ..services.correos import enviar_correo_destino
 
 def login(request):
     if request.method == "POST":
-        email = request.POST.get("user")
+        email = (request.POST.get("user") or "").strip().lower()
         password = request.POST.get("password")
         proximo = request.POST.get("next", "")
 
@@ -30,7 +30,7 @@ def login(request):
             return render(request, "publicos/login.html", {"error": "Demasiados intentos fallidos. Espera 5 minutos e inténtalo de nuevo.", "proximo": proximo})
 
         try:
-            usuario = Usuario.objects.get(email=email)
+            usuario = Usuario.objects.get(email__iexact=email)
             if not check_password(password, usuario.password):
                 raise Usuario.DoesNotExist
             if not usuario.activo:
@@ -66,7 +66,7 @@ def login(request):
             if proximo == "carrito":
                 return redirect("sena:carrito")
 
-            if usuario.rol == "Admin":
+            if usuario.rol in ("Admin", "SuperAdmin"):
                 return redirect("sena:admin_dashboard")
             elif usuario.rol == "Barbero":
                 return redirect("sena:peluquero_dashboard")

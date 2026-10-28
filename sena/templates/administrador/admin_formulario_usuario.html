@@ -109,7 +109,9 @@
         <select id="rol" name="rol" onchange="togglePeluqueriaField()" required class="tc-field__input">
           <option value="">-- Selecciona un rol --</option>
           {% for value, label in roles %}
+          {% if value != 'SuperAdmin' and value != 'Admin' or request.session.logueado.rol == 'SuperAdmin' and value != 'SuperAdmin' %}
           <option value="{{ value }}" {% if usuario.rol == value %}selected{% endif %}>{{ label }}</option>
+          {% endif %}
           {% endfor %}
         </select>
         <span class="tc-field__label">Rol</span>
@@ -158,10 +160,7 @@
         Mínimo 8 caracteres, con mayúscula, minúscula y número.
       </span>
       {% else %}
-      <p class="tc-field__hint tc-field--full">
-        La contraseña no puede ser modificada por un administrador. El usuario
-        puede cambiarla desde su cuenta o recuperar el acceso por correo.
-      </p>
+
       {% endif %}
 
       <div class="tc-form__actions">
