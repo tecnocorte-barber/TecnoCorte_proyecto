@@ -207,7 +207,9 @@
               required
               minlength="8"
               autocomplete="new-password"
+              data-password-strength
             />
+            {% include "includes/password_strength.html" %}
           </div>
 
           <div class="pt-2">

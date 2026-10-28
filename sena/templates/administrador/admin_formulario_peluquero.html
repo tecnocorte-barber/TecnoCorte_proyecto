@@ -128,10 +128,12 @@
           name="password"
           placeholder=" "
            required
-          class="tc-field__input"
-        />
+           data-password-strength
+           class="tc-field__input"
+         />
         <span class="tc-field__label">Contraseña</span>
-      </label>
+       </label>
+       {% if not datos %}{% include "includes/password_strength.html" %}{% endif %}
       <span class="tc-field__hint tc-field--full">
         Mínimo 8 caracteres, con mayúscula, minúscula y número.
       </span>
