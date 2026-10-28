@@ -3,7 +3,7 @@
 <div id="tc-loading" class="tc-loading-overlay" aria-hidden="true" role="status">
   <div class="tc-loading-card">
     <div class="tc-loading-spinner"></div>
-    <p class="tc-loading-text">Cargando...</p>
+    <p class="tc-loading-text">Cargando, por favor espera...</p>
   </div>
 </div>
 <link rel="stylesheet" href="{% static 'css/includes/loading.css' %}" />
@@ -73,14 +73,14 @@
     }
     if (form.method && form.method.toUpperCase() === "GET") return;
     var btn = form.querySelector("[type=submit], button:not([type=button])");
-    showLoading("Procesando...");
+    showLoading("Procesando, por favor espera...");
     if (btn) {
       restoreButton();
       btn.disabled = true;
       btn.dataset.loadingBackup = btn.innerHTML;
       btn.setAttribute("aria-busy", "true");
       activeButton = btn;
-      btn.innerHTML = '<span class="tc-inline-spinner" aria-hidden="true"></span>Procesando...';
+      btn.innerHTML = '<span class="tc-inline-spinner" aria-hidden="true"></span>Procesando, por favor espera...';
     }
   }, true);
 
@@ -93,7 +93,7 @@
     if (link.closest(".tc-loading-overlay") || link.closest("[data-confirm]")) return;
     if (link.closest("form")) return;
     var label = (link.textContent || "Cargando...").trim();
-    showLoading(label.length > 30 ? "Cargando..." : label);
+    showLoading(label.length > 30 ? "Cargando, por favor espera..." : label);
   }, true);
 
   window.tcShowLoading = showLoading;
