@@ -18,7 +18,7 @@ class JWTUser:
         self.usuario = usuario
         self.id, self.rol, self.email = usuario.id, usuario.rol, usuario.email
         self.pk = usuario.pk
-        self.is_staff = usuario.rol == "Admin"
+        self.is_staff = usuario.rol in ("Admin", "SuperAdmin")
         self.is_authenticated = True
 
 def crear_token(usuario, tipo="access"):

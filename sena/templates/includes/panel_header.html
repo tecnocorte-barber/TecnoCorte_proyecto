@@ -7,7 +7,7 @@ menú del perfil que trae "includes/panel_header_actions.html".{% endcomment %}
   {# En móvil se muestra el logo para volver al inicio del panel #}
   <a
     class="inline-flex md:hidden"
-    href="{% if request.session.logueado.rol == 'Admin' %}{% url 'sena:admin_dashboard' %}{% elif request.session.logueado.rol == 'Barbero' %}{% url 'sena:peluquero_dashboard' %}{% else %}{% url 'sena:usuario_dashboard' %}{% endif %}"
+    href="{% if request.session.logueado.rol == 'Admin' or request.session.logueado.rol == 'SuperAdmin' %}{% url 'sena:admin_dashboard' %}{% elif request.session.logueado.rol == 'Barbero' %}{% url 'sena:peluquero_dashboard' %}{% else %}{% url 'sena:usuario_dashboard' %}{% endif %}"
     aria-label="TecnoCorte"
     >{% include "includes/logo.html" %}</a
   >

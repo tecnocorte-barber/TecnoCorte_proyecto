@@ -6,7 +6,7 @@ def inicio(request):
     # inicio con ?vista=publica para revisarlo o usar el botón "Editar inicio".
     if request.session.get("logueado") and request.GET.get("vista") != "publica":
         rol = request.session["logueado"]["rol"]
-        if rol == "Admin":
+        if rol in ("Admin", "SuperAdmin"):
             return redirect("sena:admin_dashboard")
         elif rol == "Barbero":
             return redirect("sena:peluquero_dashboard")

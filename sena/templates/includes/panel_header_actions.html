@@ -1,7 +1,7 @@
 {% comment %}Acciones de la cabecera de panel: iconos de Dashboard y Notificaciones más
 el desplegable del perfil (Mi perfil, Configuración, Tema, Cerrar sesión).
 Se usa solo o dentro de "includes/panel_header.html".{% endcomment %}
-{% if request.session.logueado.rol == "Admin" %}
+{% if request.session.logueado.rol == "Admin" or request.session.logueado.rol == "SuperAdmin" %}
   {% url 'sena:admin_dashboard' as url_dashboard %}
   {% url 'sena:admin_notificaciones' as url_notificaciones %}
   {% url 'sena:admin_perfil' as url_perfil %}

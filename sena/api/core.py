@@ -155,7 +155,7 @@ class ReservaViewSet(AuditedModelViewSet):
     # Filtra reservas según el rol: Admin ve todo, cliente/barbero solo las suyas
     def get_queryset(self):
         role = app_role(self.request)
-        if role == "Admin" or self.request.user.is_staff:
+        if role in ("Admin", "SuperAdmin") or self.request.user.is_staff:
             return self.queryset  # Admin ve todo
         if role == "Cliente":
             return self.queryset.filter(cliente=app_usuario(self.request))  # Solo sus citas
@@ -182,7 +182,7 @@ class PedidoViewSet(AuditedModelViewSet):
     ordering_fields = ["fecha", "estado", "total"]
 
     def get_queryset(self):
-        if app_role(self.request) == "Admin" or self.request.user.is_staff:
+        if app_role(self.request) in ("Admin", "SuperAdmin") or self.request.user.is_staff:
             return self.queryset
         usuario = app_usuario(self.request)
         return self.queryset.filter(cliente=usuario) if usuario else self.queryset.none()
@@ -201,7 +201,7 @@ class PedidoProductoViewSet(AuditedModelViewSet):
     serializer_class = PedidoProductoSerializer
 
     def get_queryset(self):
-        if app_role(self.request) == "Admin" or self.request.user.is_staff:
+        if app_role(self.request) in ("Admin", "SuperAdmin") or self.request.user.is_staff:
             return self.queryset
         usuario = app_usuario(self.request)
         return self.queryset.filter(pedido__cliente=usuario) if usuario else self.queryset.none()

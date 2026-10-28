@@ -184,6 +184,109 @@
             >¿Olvidaste tu contraseña?</a
           >
         </footer>
+      <aside
+        class="rounded-[28px] border border-dashed border-primary/40 bg-surface-container-low p-8"
+      >
+        <div class="mb-6 flex items-center gap-3">
+          <span class="material-symbols-outlined text-primary">key</span>
+          <div>
+            <h2 class="font-headline text-xl text-primary">Accesos de prueba</h2>
+            <p class="text-xs text-on-surface-variant">
+              Usuarios temporales para probar la aplicaci├│n.
+            </p>
+          </div>
+        </div>
+
+        <p class="mb-4 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
+          Administrador
+        </p>
+        <button
+          type="button"
+          onclick="rellenarLogin('admin@tecnocorte.com', 'Admin123!')"
+          class="mb-6 flex w-full items-center justify-between rounded-lg bg-surface-container-high px-4 py-3 text-left transition-colors hover:bg-surface-container-highest"
+        >
+          <span class="flex flex-col">
+            <span class="text-sm text-on-surface">admin@tecnocorte.com</span>
+            <span class="text-xs text-on-surface-variant">Admin123!</span>
+          </span>
+          <span class="material-symbols-outlined text-primary text-lg">login</span>
+        </button>
+
+        <p class="mb-4 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
+          Barberos
+        </p>
+        <button
+          type="button"
+          onclick="rellenarLogin('barbero.carlos.itagui@tecnocorte.com', 'barbero123')"
+          class="mb-3 flex w-full items-center justify-between rounded-lg bg-surface-container-high px-4 py-3 text-left transition-colors hover:bg-surface-container-highest"
+        >
+          <span class="flex flex-col">
+            <span class="text-sm text-on-surface">Carlos ┬À Itag├╝├¡</span>
+            <span class="text-xs text-on-surface-variant">barbero.carlos.itagui@tecnocorte.com</span>
+          </span>
+          <span class="material-symbols-outlined text-primary text-lg">login</span>
+        </button>
+        <button
+          type="button"
+          onclick="rellenarLogin('barbero.juan.centro@tecnocorte.com', 'barbero123')"
+          class="mb-3 flex w-full items-center justify-between rounded-lg bg-surface-container-high px-4 py-3 text-left transition-colors hover:bg-surface-container-highest"
+        >
+          <span class="flex flex-col">
+            <span class="text-sm text-on-surface">Juan ┬À Centro</span>
+            <span class="text-xs text-on-surface-variant">barbero.juan.centro@tecnocorte.com</span>
+          </span>
+          <span class="material-symbols-outlined text-primary text-lg">login</span>
+        </button>
+        <button
+          type="button"
+          onclick="rellenarLogin('barbero.andres.quintero.envigado@tecnocorte.com', 'barbero123')"
+          class="mb-3 flex w-full items-center justify-between rounded-lg bg-surface-container-high px-4 py-3 text-left transition-colors hover:bg-surface-container-highest"
+        >
+          <span class="flex flex-col">
+            <span class="text-sm text-on-surface">Andr├®s Quintero ┬À Envigado</span>
+            <span class="text-xs text-on-surface-variant">barbero.andres.quintero.envigado@tecnocorte.com</span>
+          </span>
+          <span class="material-symbols-outlined text-primary text-lg">login</span>
+        </button>
+        <button
+          type="button"
+          onclick="rellenarLogin('barbero.miguel.laureles@tecnocorte.com', 'barbero123')"
+          class="mb-3 flex w-full items-center justify-between rounded-lg bg-surface-container-high px-4 py-3 text-left transition-colors hover:bg-surface-container-highest"
+        >
+          <span class="flex flex-col">
+            <span class="text-sm text-on-surface">Miguel ┬À Laureles</span>
+            <span class="text-xs text-on-surface-variant">barbero.miguel.laureles@tecnocorte.com</span>
+          </span>
+          <span class="material-symbols-outlined text-primary text-lg">login</span>
+        </button>
+        <button
+          type="button"
+          onclick="rellenarLogin('barbero.pedro.itagui@tecnocorte.com', 'barbero123')"
+          class="mb-3 flex w-full items-center justify-between rounded-lg bg-surface-container-high px-4 py-3 text-left transition-colors hover:bg-surface-container-highest"
+        >
+          <span class="flex flex-col">
+            <span class="text-sm text-on-surface">Pedro ┬À Itag├╝├¡</span>
+            <span class="text-xs text-on-surface-variant">barbero.pedro.itagui@tecnocorte.com</span>
+          </span>
+          <span class="material-symbols-outlined text-primary text-lg">login</span>
+        </button>
+        <button
+          type="button"
+          onclick="rellenarLogin('barbero.andres.barbero.itagui@tecnocorte.com', 'barbero123')"
+          class="flex w-full items-center justify-between rounded-lg bg-surface-container-high px-4 py-3 text-left transition-colors hover:bg-surface-container-highest"
+        >
+          <span class="flex flex-col">
+            <span class="text-sm text-on-surface">Andr├®s Barbero ┬À Itag├╝├¡</span>
+            <span class="text-xs text-on-surface-variant">barbero.andres.barbero.itagui@tecnocorte.com</span>
+          </span>
+          <span class="material-symbols-outlined text-primary text-lg">login</span>
+        </button>
+
+        <p class="mt-6 text-xs text-on-surface-variant">
+          Toca un acceso para rellenar el formulario autom├íticamente.
+        </p>
+      </aside>
+
       </div>
 
       <div class="mt-8 flex h-12 items-center justify-center">
@@ -209,6 +312,11 @@
         }
       }
 
-    </script>
+      function rellenarLogin(email, password) {
+        var campoEmail = document.querySelector('input[name="user"]');
+        var campoPassword = document.getElementById("password-field");
+        if (campoEmail) campoEmail.value = email;
+        if (campoPassword) campoPassword.value = password;
+      }    </script>
   </body>
 </html>
