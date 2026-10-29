@@ -25,24 +25,36 @@ class Command(BaseCommand):
     help = "Crea o actualiza los usuarios de prueba mostrados en el login."
 
     def handle(self, *args, **options):
-        # Se necesita una barbería para asociar a los barberos.
-        peluqueria = Peluqueria.objects.order_by("id").first()
-        if peluqueria is None:
-            peluqueria = Peluqueria.objects.create(
-                nombre="Barbería Demo",
-                ubicacion="Centro, Ciudad Demo",
-                telefono="3000000000",
-                descripcion="Sede creada por el comando de demostración.",
+        # Peluquerías demo por sede, para que cada barbero quede en la suya.
+        sedes_demo = [
+            {"clave": "itagui", "nombre": "Barbería Itagüí", "ubicacion": "Calle 10 # 42-15, Itagüí"},
+            {"clave": "centro", "nombre": "Barbería Centro", "ubicacion": "Carrera 45 # 20-30, Medellín"},
+            {"clave": "envigado", "nombre": "Barbería Envigado", "ubicacion": "Calle 37 Sur # 43-10, Envigado"},
+            {"clave": "laureles", "nombre": "Barbería Laureles", "ubicacion": "Carrera 74 # 30-50, Laureles"},
+        ]
+        sedes = {}
+        for sede in sedes_demo:
+            peluqueria, _ = Peluqueria.objects.get_or_create(
+                nombre=sede["nombre"],
+                defaults={"ubicacion": sede["ubicacion"], "telefono": "3000000000"},
             )
-        # Horario por defecto (lunes a sábado) para poder agendar citas.
-        for dia in range(6):
-            HorarioTrabajo.objects.get_or_create(
-                peluqueria=peluqueria,
-                dia_semana=dia,
-                defaults={"activo": True, "hora_inicio": "09:00", "hora_fin": "18:00"},
-            )
+            sedes[sede["clave"]] = peluqueria
+            for dia in range(6):
+                HorarioTrabajo.objects.get_or_create(
+                    peluqueria=peluqueria,
+                    dia_semana=dia,
+                    defaults={"activo": True, "hora_inicio": "09:00", "hora_fin": "18:00"},
+                )
+
+        def sede_de_barbero(email):
+            email = email.lower()
+            for clave in sedes:
+                if clave in email:
+                    return sedes[clave]
+            return sedes["itagui"]
 
         for datos in USUARIOS_DEMO:
+            peluqueria = sede_de_barbero(datos["email"]) if datos["rol"] == "Barbero" else None
             usuario, creado = Usuario.objects.update_or_create(
                 email=datos["email"],
                 defaults={
@@ -52,7 +64,7 @@ class Command(BaseCommand):
                     "rol": datos["rol"],
                     "activo": True,
                     "telefono": "3000000000",
-                    "peluqueria": peluqueria if datos["rol"] == "Barbero" else None,
+                    "peluqueria": peluqueria,
                 },
             )
             estado = "creado" if creado else "actualizado"
