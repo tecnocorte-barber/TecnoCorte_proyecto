@@ -15,3 +15,8 @@ body {
 .ambient-glow {
   box-shadow: 0 20px 40px rgba(242, 202, 80, 0.06);
 }
+
+#password-field::-ms-reveal,
+#password-field::-ms-clear {
+  display: none;
+}
