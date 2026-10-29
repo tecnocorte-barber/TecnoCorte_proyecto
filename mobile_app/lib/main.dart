@@ -604,10 +604,23 @@ class _BookingPageState extends State<BookingPage> {
   TimeOfDay? time;
   dynamic shop, barber;
   List<dynamic> shops = [], barbers = [];
+  List<dynamic> services = [];
+  String? serviceName;
+  String? serviceError;
+  bool loadingServices = false;
   bool busy = false;
+  int _servicesRequest = 0;
+
+  dynamic get selectedService => services.firstWhere(
+    (item) => item['nombre'] == serviceName,
+    orElse: () => widget.service,
+  );
+
   @override
   void initState() {
     super.initState();
+    services = [widget.service];
+    serviceName = widget.service['nombre'] as String?;
     load();
   }
 
@@ -624,10 +637,45 @@ class _BookingPageState extends State<BookingPage> {
     } catch (_) {}
   }
 
+  Future<void> loadServicesForBarber(dynamic selectedBarber) async {
+    final requestId = ++_servicesRequest;
+    if (selectedBarber == null) {
+      setState(() {
+        services = [widget.service];
+        serviceName = widget.service['nombre'] as String?;
+        serviceError = null;
+        loadingServices = false;
+      });
+      return;
+    }
+    setState(() {
+      loadingServices = true;
+      serviceError = null;
+    });
+    try {
+      final result = await api.get('/servicios/?barbero=${selectedBarber['id']}');
+      final available = result as List<dynamic>;
+      if (!mounted || requestId != _servicesRequest) return;
+      setState(() {
+        services = available;
+        if (!available.any((item) => item['nombre'] == serviceName)) {
+          serviceName = null;
+        }
+        loadingServices = false;
+      });
+    } catch (_) {
+      if (!mounted || requestId != _servicesRequest) return;
+      setState(() {
+        serviceError = 'No pudimos cargar los servicios de este barbero.';
+        loadingServices = false;
+      });
+    }
+  }
+
   Future<void> send() async {
-    if (date == null || shop == null || barber == null) {
+    if (date == null || shop == null || barber == null || serviceName == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Elige sede, barbero y fecha.')),
+        const SnackBar(content: Text('Elige sede, barbero, servicio y fecha.')),
       );
       return;
     }
@@ -640,7 +688,7 @@ class _BookingPageState extends State<BookingPage> {
         'hora': time == null
             ? '10:00'
             : '${time!.hour.toString().padLeft(2, '0')}:${time!.minute.toString().padLeft(2, '0')}',
-        'servicio': widget.service['nombre'],
+        'servicio': serviceName,
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -668,12 +716,12 @@ class _BookingPageState extends State<BookingPage> {
         padding: const EdgeInsets.all(20),
         children: [
           Text(
-            widget.service['nombre'],
+            selectedService['nombre'],
             style: const TextStyle(fontSize: 27, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
           Text(
-            widget.service['descripcion'] ?? '',
+            selectedService['descripcion'] ?? '',
             style: const TextStyle(color: Colors.white60),
           ),
           const SizedBox(height: 28),
@@ -687,8 +735,13 @@ class _BookingPageState extends State<BookingPage> {
                 )
                 .toList(),
             onChanged: (v) => setState(() {
+              _servicesRequest++;
               shop = v;
               barber = null;
+              services = [widget.service];
+              serviceName = widget.service['nombre'] as String?;
+              serviceError = null;
+              loadingServices = false;
             }),
             decoration: const InputDecoration(hintText: 'Selecciona una sede'),
           ),
@@ -703,11 +756,44 @@ class _BookingPageState extends State<BookingPage> {
                   (x) => DropdownMenuItem(value: x, child: Text(x['nombre'])),
                 )
                 .toList(),
-            onChanged: (v) => setState(() => barber = v),
+            onChanged: (v) {
+              setState(() {
+                barber = v;
+                services = [widget.service];
+                serviceName = widget.service['nombre'] as String?;
+              });
+              loadServicesForBarber(v);
+            },
             decoration: const InputDecoration(
               hintText: 'Selecciona un barbero',
             ),
           ),
+          const SizedBox(height: 18),
+          const Text('Servicio', style: TextStyle(fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          DropdownButtonFormField<String>(
+            initialValue: services.any((item) => item['nombre'] == serviceName)
+                ? serviceName
+                : null,
+            items: services
+                .map((item) => DropdownMenuItem<String>(
+                      value: item['nombre'] as String,
+                      child: Text(item['nombre'] as String),
+                    ))
+                .toList(),
+            onChanged: loadingServices
+                ? null
+                : (value) => setState(() => serviceName = value),
+            decoration: InputDecoration(
+              hintText: loadingServices
+                  ? 'Cargando servicios...'
+                  : 'Selecciona un servicio',
+            ),
+          ),
+          if (serviceError != null) ...[
+            const SizedBox(height: 6),
+            Text(serviceError!, style: const TextStyle(color: Colors.redAccent)),
+          ],
           const SizedBox(height: 18),
           const Text('Fecha', style: TextStyle(fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),

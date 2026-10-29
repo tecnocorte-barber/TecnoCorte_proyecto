@@ -86,11 +86,13 @@
             <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
               {% for servicio in servicios %}
               <div
-                class="opt tc-glass tc-opt tc-servicio-card rounded-2xl p-6"
+                class="opt tc-glass tc-opt tc-servicio-card rounded-2xl p-6 {% if servicio.barbero_id %}hidden{% endif %}"
                 data-servicio="{{ servicio.nombre }}"
                 data-precio="{{ servicio.precio }}"
                 data-minutos="{{ servicio.minutos }}"
                 data-duracion="{{ servicio.duracion }}"
+                data-barbero-id="{{ servicio.barbero_id|default:'' }}"
+                {% if servicio.barbero_id %}hidden{% endif %}
                 onclick="seleccionarServicio(this)"
               >
                 <div class="flex items-start justify-between gap-4">
@@ -399,6 +401,7 @@
       const DATOS_ENVIADOS = new URLSearchParams("{{ form_post|escapejs }}");
       const SERVICIO_INICIAL = "{{ servicio_inicial|escapejs }}";
       const PELUQUERIA_INICIAL = "{{ peluqueria_inicial|escapejs }}";
+      const PELUQUERO_INICIAL = "{{ peluquero_inicial|escapejs }}";
       let seleccion = { servicio: "", precio: 0, duracion: "", minutos: 30, peluquero: "", peluqueria: "", fecha: "", hora: "" };
       function refrescar() {
         document.getElementById("res-servicio").textContent = seleccion.servicio || "Por elegir";
@@ -431,7 +434,27 @@
         el.classList.add("opt-selected");
         seleccion.peluquero = el.dataset.peluquero;
         seleccion.peluqueroNombre = el.dataset.nombre;
+        actualizarServiciosDisponibles();
         if (seleccion.fecha) buildHoras();
+        refrescar();
+      }
+      function actualizarServiciosDisponibles() {
+        var barberoId = String(seleccion.peluquero || "");
+        document.querySelectorAll(".tc-servicio-card").forEach(function (servicio) {
+          var propietarioId = String(servicio.dataset.barberoId || "");
+          var visible = !propietarioId || propietarioId === barberoId;
+          servicio.hidden = !visible;
+          servicio.classList.toggle("hidden", !visible);
+          if (!visible && servicio.classList.contains("opt-selected")) {
+            servicio.classList.remove("opt-selected");
+            servicio.querySelector(".icon-muted").textContent = "circle";
+            seleccion.servicio = "";
+            seleccion.precio = 0;
+            seleccion.duracion = "";
+            seleccion.minutos = 30;
+            seleccion.hora = "";
+          }
+        });
         refrescar();
       }
       function actualizarBarberosDisponibles() {
@@ -461,6 +484,7 @@
         seleccion.fecha = "";
         seleccion.hora = "";
         seleccion.diaSemana = "";
+        actualizarServiciosDisponibles();
         actualizarBarberosDisponibles();
         buildFechas();
         buildHoras();
@@ -579,12 +603,12 @@
         });
       }
       function restaurarSeleccionEnviada() {
-        var servicio = document.querySelector('.opt[data-servicio="' + CSS.escape(DATOS_ENVIADOS.get("servicio") || "") + '"]');
         var peluqueria = document.querySelector('.opt[data-peluqueria="' + CSS.escape(DATOS_ENVIADOS.get("peluqueria") || "") + '"]');
-        if (servicio) seleccionarServicio(servicio);
         if (peluqueria) seleccionarPeluqueria(peluqueria);
         var peluquero = document.querySelector('.opt[data-peluquero="' + CSS.escape(DATOS_ENVIADOS.get("peluquero") || "") + '"]');
         if (peluquero) seleccionarPeluquero(peluquero);
+        var servicio = document.querySelector('.opt[data-servicio="' + CSS.escape(DATOS_ENVIADOS.get("servicio") || "") + '"]');
+        if (servicio && !servicio.hidden) seleccionarServicio(servicio);
         var fecha = document.querySelector('#fechas .opt[data-fecha="' + CSS.escape(DATOS_ENVIADOS.get("fecha") || "") + '"]');
         if (fecha) fecha.click();
         var horaEnviada = DATOS_ENVIADOS.get("hora");
@@ -593,14 +617,19 @@
       }
       buildFechas();
       buildHoras();
-      if (SERVICIO_INICIAL && !DATOS_ENVIADOS.has("servicio")) {
-        var servicioInicial = Array.from(document.querySelectorAll('.opt[data-servicio]')).find(function (card) { return card.dataset.servicio === SERVICIO_INICIAL; });
-        if (servicioInicial) seleccionarServicio(servicioInicial);
-      }
       if (PELUQUERIA_INICIAL && !DATOS_ENVIADOS.has("peluqueria")) {
         var peluqueriaInicial = document.querySelector('.opt[data-peluqueria="' + CSS.escape(PELUQUERIA_INICIAL) + '"]');
         if (peluqueriaInicial) seleccionarPeluqueria(peluqueriaInicial);
       }
+      if (PELUQUERO_INICIAL && !DATOS_ENVIADOS.has("peluquero")) {
+        var peluqueroInicial = document.querySelector('.opt[data-peluquero="' + CSS.escape(PELUQUERO_INICIAL) + '"]');
+        if (peluqueroInicial) seleccionarPeluquero(peluqueroInicial);
+      }
+      if (SERVICIO_INICIAL && !DATOS_ENVIADOS.has("servicio")) {
+        var servicioInicial = Array.from(document.querySelectorAll('.opt[data-servicio]')).find(function (card) { return card.dataset.servicio === SERVICIO_INICIAL; });
+        if (servicioInicial && !servicioInicial.hidden) seleccionarServicio(servicioInicial);
+      }
+      actualizarServiciosDisponibles();
       if (DATOS_ENVIADOS.has("servicio") || DATOS_ENVIADOS.has("peluquero") || DATOS_ENVIADOS.has("peluqueria")) restaurarSeleccionEnviada();
       document.getElementById("form-reserva").addEventListener("submit", function (e) {
         if (!seleccion.servicio || !seleccion.peluquero || !seleccion.peluqueria || !seleccion.fecha || !seleccion.hora) {

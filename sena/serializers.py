@@ -109,13 +109,6 @@ class ReservaSerializer(serializers.ModelSerializer):
             "peluqueria": {"write_only": True},  # La peluquería solo se envía, no se lee
         }
 
-    # Valida que el servicio esté en el catálogo (base o aprobado a un barbero)
-    def validate_servicio(self, value):
-        from .views import servicio_valido  # Importa el validador del catálogo
-        if not servicio_valido(value):
-            raise serializers.ValidationError("El servicio seleccionado no es válido.")
-        return value
-
     # Valida que el usuario tenga rol Cliente
     def validate_cliente(self, value):
         if value.rol != "Cliente":
@@ -146,6 +139,12 @@ class ReservaSerializer(serializers.ModelSerializer):
         fecha = attrs.get("fecha", getattr(self.instance, "fecha", None))
         hora = attrs.get("hora", getattr(self.instance, "hora", None))
         servicio = attrs.get("servicio", getattr(self.instance, "servicio", ""))
+        if peluquero and servicio:
+            from .services.catalogo import servicio_valido
+            if not servicio_valido(servicio, peluquero.id):
+                raise serializers.ValidationError(
+                    {"servicio": "El servicio seleccionado no está disponible para ese barbero."}
+                )
         if peluquero and peluqueria and peluquero.peluqueria_id != peluqueria.id:
             raise serializers.ValidationError("El barbero no pertenece a la peluquería seleccionada.")
         if fecha and hora and peluqueria and servicio:
@@ -153,7 +152,9 @@ class ReservaSerializer(serializers.ModelSerializer):
 
             fecha_texto = fecha.isoformat()
             hora_texto = hora.strftime("%H:%M")
-            disponible, mensaje = cita_disponible(fecha_texto, hora_texto, peluqueria.id, servicio)
+            disponible, mensaje = cita_disponible(
+                fecha_texto, hora_texto, peluqueria.id, servicio, peluquero.id
+            )
             if not disponible:
                 raise serializers.ValidationError(mensaje)
             disponible, mensaje = barbero_esta_disponible(

@@ -57,6 +57,8 @@
           {% for servicio in servicios %}
           <option
             value="{{ servicio.nombre }}"
+            data-barbero-id="{{ servicio.barbero_id|default:'' }}"
+            {% if servicio.barbero_id %}hidden{% endif %}
             {% if datos.servicio == servicio.nombre %}selected{% endif %}
           >
             {{ servicio.nombre }} ({{ servicio.duracion }})
@@ -150,5 +152,23 @@
     </form>
   </div>
 </main>
+<script>
+  (function () {
+    var barbero = document.querySelector('select[name="peluquero"]');
+    var servicio = document.querySelector('select[name="servicio"]');
+    if (!barbero || !servicio) return;
+    function filtrarServicios() {
+      Array.from(servicio.options).forEach(function (opcion) {
+        var propietario = opcion.dataset.barberoId || "";
+        opcion.hidden = Boolean(propietario && propietario !== barbero.value);
+      });
+      if (servicio.selectedOptions.length && servicio.selectedOptions[0].hidden) {
+        servicio.value = "";
+      }
+    }
+    barbero.addEventListener("change", filtrarServicios);
+    filtrarServicios();
+  })();
+</script>
 {% include "includes/admin_mobile_nav.html" with active="reservas" %}
 {% endblock %}

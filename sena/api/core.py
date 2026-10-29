@@ -295,7 +295,16 @@ class ServicioListView(APIView):
 
     def get(self, request):
         from ..services.catalogo import catalogo_servicios
-        return Response(catalogo_servicios())
+        barbero_param = request.query_params.get("barbero")
+        if barbero_param is None:
+            return Response(catalogo_servicios())
+        try:
+            barbero_id = int(barbero_param)
+        except (TypeError, ValueError):
+            return Response({"detail": "El identificador del barbero no es válido."}, status=status.HTTP_400_BAD_REQUEST)
+        if not Usuario.objects.filter(id=barbero_id, rol="Barbero", activo=True).exists():
+            return Response({"detail": "El barbero solicitado no está disponible."}, status=status.HTTP_404_NOT_FOUND)
+        return Response(catalogo_servicios(barbero_id=barbero_id))
 
 
 class BarberoListView(APIView):

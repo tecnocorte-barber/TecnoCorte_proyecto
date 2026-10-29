@@ -137,7 +137,7 @@ def _reservas_para_template():
                 "barbero": reserva.peluquero_id,  # ID del barbero
                 "fecha": reserva.fecha.isoformat(),  # Fecha en formato ISO
                 "hora": reserva.hora.strftime("%H:%M"),  # Hora en formato HH:MM
-                "minutos": minutos_servicio(reserva.servicio),  # Duración del servicio
+                "minutos": minutos_servicio(reserva.servicio, reserva.peluquero_id),  # Duración del servicio
             })
         datos = {"reservas_json": _json_seguro(reservas)}  # Reservas seguras para JavaScript
         cache.set("reservas_json", datos, 10)  # TTL corto: refleja citas nuevas con rapidez
@@ -213,7 +213,7 @@ def registrar_ingreso(request, usuario):
 
 
 # Verifica si una fecha/hora está disponible para agendar una cita
-def cita_disponible(fecha_texto, hora_texto, peluqueria_id=None, servicio=None):
+def cita_disponible(fecha_texto, hora_texto, peluqueria_id=None, servicio=None, barbero_id=None):
     """Revisa horarios de trabajo, bloqueos y fecha/hora válida antes de crear una cita."""
     try:
         fecha = datetime.strptime(fecha_texto, "%Y-%m-%d").date()  # Convierte texto a fecha
@@ -234,7 +234,7 @@ def cita_disponible(fecha_texto, hora_texto, peluqueria_id=None, servicio=None):
         return False, "Esta barbería todavía no tiene horarios configurados."  # Sin horarios configurados
     if not horario.activo:
         return False, "Ese día no se trabaja. Elige otra fecha."  # Día inactivo
-    duracion = minutos_servicio(servicio)  # Obtiene la duración del servicio
+    duracion = minutos_servicio(servicio, barbero_id)  # Obtiene la duración del servicio
     hora_fin_servicio = (datetime.combine(fecha, hora) + timedelta(minutes=duracion)).time()  # Calcula hora de fin
     if hora < horario.hora_inicio or hora_fin_servicio > horario.hora_fin:
         return False, "La hora elegida está por fuera del horario de atención."  # Fuera del horario
@@ -335,13 +335,13 @@ def barbero_esta_disponible(barbero_id, fecha_texto, hora_texto, servicio, reser
         inicio = datetime.combine(datetime.strptime(fecha_texto, "%Y-%m-%d").date(), datetime.strptime(hora_texto, "%H:%M").time())  # Inicio propuesto
     except (TypeError, ValueError):
         return False, "La fecha o la hora no son válidas."  # Formato inválido
-    fin = inicio + timedelta(minutes=minutos_servicio(servicio))  # Fin propuesto según duración del servicio
+    fin = inicio + timedelta(minutes=minutos_servicio(servicio, barbero_id))  # Fin propuesto según duración del servicio
     citas = Reserva.objects.filter(peluquero_id=barbero_id, fecha=fecha_texto).exclude(estado="Cancelada")  # Todas las citas del barbero ese día
     if reserva_actual:
         citas = citas.exclude(id=reserva_actual.id)  # Excluye la reserva actual si se está editando
     for cita in citas:
         inicio_existente = datetime.combine(cita.fecha, cita.hora)  # Inicio de la cita existente
-        fin_existente = inicio_existente + timedelta(minutes=minutos_servicio(cita.servicio))  # Fin de la cita existente
+        fin_existente = inicio_existente + timedelta(minutes=minutos_servicio(cita.servicio, cita.peluquero_id))  # Fin de la cita existente
         if inicio < fin_existente and fin > inicio_existente:
             return False, "El barbero ya tiene una cita que ocupa ese horario."  # Hay cruce de horarios
     return True, ""  # No hay conflicto, el barbero está disponible
@@ -1275,9 +1275,13 @@ def usuario_peluqueria_detalle(request, id):
 def usuario_reservar_cita(request):
     contexto = contexto_carrito(request)
     contexto["peluqueros"] = barberos_disponibles()
-    contexto["servicios"] = catalogo_servicios()
+    contexto["servicios"] = catalogo_servicios(incluir_personalizados=True)
     servicio_inicial = request.GET.get("servicio", "").strip()
-    contexto["servicio_inicial"] = servicio_inicial if servicio_valido(servicio_inicial) else ""
+    peluquero_id = _id_entero(request.GET.get("peluquero"))
+    contexto["servicio_inicial"] = (
+        servicio_inicial if servicio_valido(servicio_inicial, peluquero_id) else ""
+    )
+    contexto["peluquero_inicial"] = str(peluquero_id or "")
     peluqueria_id = _id_entero(request.GET.get("peluqueria"))
     peluqueria_inicial = Peluqueria.objects.filter(id=peluqueria_id).first() if peluqueria_id else None
     contexto["peluqueria_inicial"] = str(peluqueria_inicial.id) if peluqueria_inicial else ""
@@ -1304,7 +1308,13 @@ def usuario_pre_confirmar(request):
     fecha = request.POST.get("fecha", "")
     hora = request.POST.get("hora", "")
     servicio = request.POST.get("servicio", "").strip()
-    datos_validos = peluquero is not None and peluqueria is not None and bool(fecha) and bool(hora) and servicio in {item["nombre"] for item in catalogo_servicios()}
+    datos_validos = (
+        peluquero is not None
+        and peluqueria is not None
+        and bool(fecha)
+        and bool(hora)
+        and servicio_valido(servicio, peluquero.id if peluquero else None)
+    )
     # El barbero debe pertenecer a la peluquería elegida.
     if datos_validos and peluquero.peluqueria_id != peluqueria.id:
         datos_validos = False
@@ -1313,12 +1323,12 @@ def usuario_pre_confirmar(request):
     if not datos_validos:
         mensaje = "Faltan datos o el barbero no pertenece a la barbería elegida. Completa todos los datos antes de continuar."
     if disponible:
-        disponible, mensaje = cita_disponible(fecha, hora, peluqueria_id, servicio)
+        disponible, mensaje = cita_disponible(fecha, hora, peluqueria_id, servicio, peluquero.id)
     if disponible:
         disponible, mensaje = barbero_esta_disponible(peluquero_id, fecha, hora, servicio)
     if not disponible:
         contexto = contexto_carrito(request)
-        contexto.update({"error": mensaje, "peluqueros": barberos_disponibles(), "peluquerias": Peluqueria.objects.all(), "servicios": catalogo_servicios(), "servicio_inicial": servicio})
+        contexto.update({"error": mensaje, "peluqueros": barberos_disponibles(), "peluquerias": Peluqueria.objects.all(), "servicios": catalogo_servicios(incluir_personalizados=True), "servicio_inicial": servicio, "peluquero_inicial": str(peluquero_id)})
         contexto.update(_horarios_para_template())
         contexto.update(_reservas_para_template())
         return render(request, "usuarios/usuario_reservar_cita.html", contexto)
@@ -1328,7 +1338,7 @@ def usuario_pre_confirmar(request):
         "peluqueria": peluqueria,
         "fecha": fecha,
         "hora": hora,
-        "duracion": minutos_servicio(servicio),
+        "duracion": minutos_servicio(servicio, peluquero.id),
     }
     contexto = contexto_carrito(request)
     contexto["datos"] = datos
@@ -1345,7 +1355,13 @@ def usuario_confirmar_reserva(request):
     fecha = request.POST.get("fecha", "").strip()
     hora = request.POST.get("hora", "").strip()
     servicio = request.POST.get("servicio", "").strip()
-    datos_validos = peluquero is not None and peluqueria is not None and bool(fecha) and bool(hora) and servicio in {item["nombre"] for item in catalogo_servicios()}
+    datos_validos = (
+        peluquero is not None
+        and peluqueria is not None
+        and bool(fecha)
+        and bool(hora)
+        and servicio_valido(servicio, peluquero.id if peluquero else None)
+    )
     # El barbero debe pertenecer a la peluquería elegida.
     if datos_validos and peluquero.peluqueria_id != peluqueria.id:
         datos_validos = False
@@ -1355,23 +1371,23 @@ def usuario_confirmar_reserva(request):
         disponible = False
         mensaje = "Faltan datos o el barbero no pertenece a la barbería elegida. Elige servicio, barbero, barbería, fecha y hora antes de confirmar."
     if disponible:
-        disponible, mensaje = cita_disponible(fecha, hora, peluqueria_id, servicio)
+        disponible, mensaje = cita_disponible(fecha, hora, peluqueria_id, servicio, peluquero.id)
     if disponible:
         disponible, mensaje = barbero_esta_disponible(peluquero_id, fecha, hora, servicio)
     if not disponible:
         contexto = contexto_carrito(request)
-        contexto.update({"error": mensaje, "peluqueros": barberos_disponibles(), "peluquerias": Peluqueria.objects.all(), "servicios": catalogo_servicios(), "servicio_inicial": servicio})
+        contexto.update({"error": mensaje, "peluqueros": barberos_disponibles(), "peluquerias": Peluqueria.objects.all(), "servicios": catalogo_servicios(incluir_personalizados=True), "servicio_inicial": servicio, "peluquero_inicial": str(peluquero_id)})
         contexto.update(_horarios_para_template())
         contexto.update(_reservas_para_template())
         return render(request, "usuarios/usuario_reservar_cita.html", contexto)
     with transaction.atomic():
         Usuario.objects.select_for_update().get(id=peluquero_id)
-        disponible, mensaje = cita_disponible(fecha, hora, peluqueria_id, servicio)
+        disponible, mensaje = cita_disponible(fecha, hora, peluqueria_id, servicio, peluquero.id)
         if disponible:
             disponible, mensaje = barbero_esta_disponible(peluquero_id, fecha, hora, servicio)
         if not disponible:
             contexto = contexto_carrito(request)
-            contexto.update({"error": mensaje, "peluqueros": barberos_disponibles(), "peluquerias": Peluqueria.objects.all(), "servicios": catalogo_servicios(), "servicio_inicial": servicio})
+            contexto.update({"error": mensaje, "peluqueros": barberos_disponibles(), "peluquerias": Peluqueria.objects.all(), "servicios": catalogo_servicios(incluir_personalizados=True), "servicio_inicial": servicio, "peluquero_inicial": str(peluquero_id)})
             contexto.update(_horarios_para_template())
             contexto.update(_reservas_para_template())
             return render(request, "usuarios/usuario_reservar_cita.html", contexto)
@@ -1493,12 +1509,16 @@ def usuario_editar_reserva(request, reserva_id):
         peluqueria_id = _id_entero(request.POST.get("peluqueria"))
         barbero = Usuario.objects.filter(id=barbero_id, rol="Barbero", activo=True).first() if barbero_id else None
         peluqueria = Peluqueria.objects.filter(id=peluqueria_id).first() if peluqueria_id else None
-        disponible = bool(barbero and peluqueria and servicio in {item["nombre"] for item in catalogo_servicios()})
+        disponible = bool(
+            barbero and peluqueria and servicio_valido(servicio, barbero.id)
+        )
         mensaje = None
         if barbero and peluqueria and barbero.peluqueria_id != peluqueria.id:
             disponible, mensaje = False, "El barbero elegido no pertenece a la barbería seleccionada."
         if disponible:
-            disponible, mensaje = cita_disponible(fecha, hora, peluqueria.id, servicio)
+            disponible, mensaje = cita_disponible(
+                fecha, hora, peluqueria.id, servicio, barbero.id
+            )
         if disponible and barbero:
             disponible, mensaje = barbero_esta_disponible(barbero.id, fecha, hora, servicio, reserva)
         if disponible:
@@ -1525,8 +1545,8 @@ def usuario_editar_reserva(request, reserva_id):
             _invalidar_cache_disponibilidad()
             messages.success(request, "La cita fue modificada correctamente.")
             return redirect("sena:usuario_perfil")
-        return render(request, "usuarios/usuario_editar_reserva.html", {"reserva": reserva, "peluqueros": barberos_disponibles(), "peluquerias": Peluqueria.objects.all(), "servicios": catalogo_servicios(), "error": mensaje or "Datos inválidos."})
-    return render(request, "usuarios/usuario_editar_reserva.html", {"reserva": reserva, "peluqueros": barberos_disponibles(), "peluquerias": Peluqueria.objects.all(), "servicios": catalogo_servicios()})
+        return render(request, "usuarios/usuario_editar_reserva.html", {"reserva": reserva, "peluqueros": barberos_disponibles(), "peluquerias": Peluqueria.objects.all(), "servicios": catalogo_servicios(incluir_personalizados=True), "error": mensaje or "Datos inválidos."})
+    return render(request, "usuarios/usuario_editar_reserva.html", {"reserva": reserva, "peluqueros": barberos_disponibles(), "peluquerias": Peluqueria.objects.all(), "servicios": catalogo_servicios(incluir_personalizados=True)})
 
 @autorizacion(["Cliente"])
 def usuario_notificaciones(request):
@@ -1668,7 +1688,7 @@ def cambiar_password(request):
 def peluquero_dashboard(request):
     barbero_id = request.session["logueado"]["id"]
     peluqueria = _peluqueria_del_barbero(barbero_id)
-    precios = {item["nombre"]: item["precio"] for item in catalogo_servicios()}
+    precios = {item["nombre"]: item["precio"] for item in catalogo_servicios(barbero_id=barbero_id)}
     # Las métricas agregadas se cachean 20 s para no pagar la latencia en cada recarga.
     clave_metricas = f"barbero_dashboard_metricas_{barbero_id}"
     metricas = cache.get(clave_metricas)
@@ -1816,20 +1836,23 @@ def peluquero_crear_cita(request):
             or peluqueria is None
             or barbero is None
             or peluqueria.id != barbero.peluqueria_id
-            or servicio not in {item["nombre"] for item in catalogo_servicios()}
+            or not servicio_valido(servicio, barbero.id if barbero else None)
         ):
             return render(request, "peluqueros/peluquero_crear_cita.html", {
                 "clientes": Usuario.objects.filter(rol="Cliente", activo=True),
                 "peluquerias": peluquerias,
-                "servicios": catalogo_servicios(),
+                "servicios": catalogo_servicios(barbero_id=barbero.id if barbero else None),
                 "reserva_estados": Reserva.ESTADOS,
                 "error": "Selecciona un cliente, un servicio y la peluquería asignada a tu cuenta.",
             })
-        disponible, mensaje = cita_disponible(request.POST.get("fecha"), request.POST.get("hora"), peluqueria.id, servicio)
+        disponible, mensaje = cita_disponible(
+            request.POST.get("fecha"), request.POST.get("hora"),
+            peluqueria.id, servicio, barbero.id,
+        )
         if disponible:
             disponible, mensaje = barbero_esta_disponible(barbero.id, request.POST.get("fecha"), request.POST.get("hora"), servicio)
         if not disponible:
-            contexto = {"clientes": Usuario.objects.filter(rol="Cliente", activo=True), "peluquerias": peluquerias, "servicios": catalogo_servicios(), "reserva_estados": Reserva.ESTADOS, "error": mensaje}
+            contexto = {"clientes": Usuario.objects.filter(rol="Cliente", activo=True), "peluquerias": peluquerias, "servicios": catalogo_servicios(barbero_id=barbero.id), "reserva_estados": Reserva.ESTADOS, "error": mensaje}
             return render(request, "peluqueros/peluquero_crear_cita.html", contexto)
         reserva = Reserva.objects.create(
             cliente=cliente,
@@ -1858,7 +1881,7 @@ def peluquero_crear_cita(request):
     contexto = {
         "clientes": Usuario.objects.filter(rol="Cliente", activo=True),
         "peluquerias": peluquerias,
-        "servicios": catalogo_servicios(),
+        "servicios": catalogo_servicios(barbero_id=barbero.id if barbero else None),
         "reserva_estados": Reserva.ESTADOS,
     }
     return render(request, "peluqueros/peluquero_crear_cita.html", contexto)
@@ -1979,11 +2002,17 @@ def admin_dashboard(request):
     clave = "admin_dashboard_metricas"
     metricas = cache.get(clave)
     if metricas is None:
-        precios = {item["nombre"]: item["precio"] for item in catalogo_servicios()}
+        precios = {
+            (item.get("barbero_id"), item["nombre"]): item["precio"]
+            for item in catalogo_servicios(incluir_personalizados=True)
+        }
         todas_reservas = list(Reserva.objects.select_related("cliente", "peluquero"))
         total_reservas = len(todas_reservas)
         estados = {estado[0]: sum(1 for r in todas_reservas if r.estado == estado[0]) for estado in Reserva.ESTADOS}
-        ventas_servicios = sum(precios.get(r.servicio, 0) for r in todas_reservas if r.estado == "Completada")
+        ventas_servicios = sum(
+            precios.get((r.peluquero_id, r.servicio), precios.get((None, r.servicio), 0))
+            for r in todas_reservas if r.estado == "Completada"
+        )
         # Solo se contabilizan pedidos pagados en la tienda; un pedido
         # pendiente todavía no representa un ingreso confirmado.
         ventas_productos = sum(
@@ -2265,14 +2294,14 @@ def admin_crear_reserva(request):
             or peluquero is None
             or peluqueria is None
             or peluquero.peluqueria_id != peluqueria.id
-            or servicio not in {item["nombre"] for item in catalogo_servicios()}
+            or not servicio_valido(servicio, peluquero.id if peluquero else None)
         ):
             return render(request, "administrador/admin_formulario_reserva.html", {
                 "error": "Selecciona un cliente activo, un servicio válido y un barbero activo de la peluquería elegida.",
                 "clientes": Usuario.objects.filter(rol="Cliente", activo=True),
                 "peluqueros": barberos_disponibles(),
                 "peluquerias": Peluqueria.objects.all(),
-                "servicios": catalogo_servicios(),
+                "servicios": catalogo_servicios(incluir_personalizados=True),
                 "reserva_estados": estados_nueva_reserva,
             })
         if estado not in {valor for valor, _etiqueta in estados_nueva_reserva}:
@@ -2281,14 +2310,17 @@ def admin_crear_reserva(request):
                 "clientes": Usuario.objects.filter(rol="Cliente", activo=True),
                 "peluqueros": barberos_disponibles(),
                 "peluquerias": Peluqueria.objects.all(),
-                "servicios": catalogo_servicios(),
+                "servicios": catalogo_servicios(incluir_personalizados=True),
                 "reserva_estados": estados_nueva_reserva,
             })
-        disponible, mensaje = cita_disponible(request.POST.get("fecha"), request.POST.get("hora"), peluqueria_id, servicio)
+        disponible, mensaje = cita_disponible(
+            request.POST.get("fecha"), request.POST.get("hora"),
+            peluqueria_id, servicio, peluquero.id,
+        )
         if disponible:
             disponible, mensaje = barbero_esta_disponible(peluquero.id, request.POST.get("fecha"), request.POST.get("hora"), request.POST.get("servicio"))
         if not disponible:
-            return render(request, "administrador/admin_formulario_reserva.html", {"error": mensaje, "clientes": Usuario.objects.filter(rol="Cliente", activo=True), "peluqueros": barberos_disponibles(), "peluquerias": Peluqueria.objects.all(), "servicios": catalogo_servicios(), "reserva_estados": estados_nueva_reserva})
+            return render(request, "administrador/admin_formulario_reserva.html", {"error": mensaje, "clientes": Usuario.objects.filter(rol="Cliente", activo=True), "peluqueros": barberos_disponibles(), "peluquerias": Peluqueria.objects.all(), "servicios": catalogo_servicios(incluir_personalizados=True), "reserva_estados": estados_nueva_reserva})
         reserva = Reserva.objects.create(
             cliente=cliente,
             peluquero=peluquero,
@@ -2313,7 +2345,7 @@ def admin_crear_reserva(request):
         "clientes": clientes,
         "peluqueros": peluqueros,
         "peluquerias": peluquerias,
-        "servicios": catalogo_servicios(),
+        "servicios": catalogo_servicios(incluir_personalizados=True),
         "reserva_estados": estados_nueva_reserva
     })
 
@@ -2329,7 +2361,12 @@ def admin_editar_reserva(request, id):
         peluquero = Usuario.objects.filter(id=peluquero_id, rol="Barbero", activo=True).first() if peluquero_id else None
         peluqueria = Peluqueria.objects.filter(id=peluqueria_id).first() if peluqueria_id else None
         servicio = request.POST.get("servicio", "").strip()
-        if cliente is None or peluquero is None or peluqueria is None or servicio not in {item["nombre"] for item in catalogo_servicios()}:
+        if (
+            cliente is None
+            or peluquero is None
+            or peluqueria is None
+            or not servicio_valido(servicio, peluquero.id if peluquero else None)
+        ):
             messages.error(request, "Selecciona un cliente activo, un servicio válido y un barbero activo.")
             return redirect("sena:admin_editar_reserva", id=id)
         if peluquero.peluqueria_id != peluqueria.id:
@@ -2349,11 +2386,14 @@ def admin_editar_reserva(request, id):
         reserva.estado = estado_nuevo
         # Al cambiar la agenda se reinicia el aviso automático de la cita.
         reserva.recordatorio_correo_enviado = None
-        disponible, mensaje = cita_disponible(request.POST.get("fecha"), request.POST.get("hora"), peluqueria_id, servicio)
+        disponible, mensaje = cita_disponible(
+            request.POST.get("fecha"), request.POST.get("hora"),
+            peluqueria_id, servicio, peluquero.id,
+        )
         if disponible:
             disponible, mensaje = barbero_esta_disponible(peluquero.id, request.POST.get("fecha"), request.POST.get("hora"), request.POST.get("servicio"), reserva)
         if not disponible:
-            return render(request, "administrador/admin_formulario_reserva.html", {"datos": reserva, "error": mensaje, "clientes": Usuario.objects.filter(rol="Cliente", activo=True), "peluqueros": barberos_disponibles(), "peluquerias": Peluqueria.objects.all(), "servicios": catalogo_servicios(), "reserva_estados": Reserva.ESTADOS})
+            return render(request, "administrador/admin_formulario_reserva.html", {"datos": reserva, "error": mensaje, "clientes": Usuario.objects.filter(rol="Cliente", activo=True), "peluqueros": barberos_disponibles(), "peluquerias": Peluqueria.objects.all(), "servicios": catalogo_servicios(incluir_personalizados=True), "reserva_estados": Reserva.ESTADOS})
         reserva.save()
         registrar_accion(request, "actualizar_cita", "Reserva", reserva.id, f"Estado: {estado_anterior} → {estado_nuevo}")
         Notificacion.objects.create(usuario=reserva.cliente, reserva=reserva, mensaje=f"Tu cita fue actualizada por el administrador para el {formato_cita(reserva)}.")
@@ -2377,7 +2417,7 @@ def admin_editar_reserva(request, id):
         "clientes": clientes,
         "peluqueros": peluqueros,
         "peluquerias": peluquerias,
-        "servicios": catalogo_servicios(),
+        "servicios": catalogo_servicios(incluir_personalizados=True),
         "reserva_estados": Reserva.ESTADOS
     })
 
@@ -2765,13 +2805,48 @@ def admin_mensajes(request):
 def admin_solicitudes_servicios(request):
     """El Admin revisa lo que los barberos piden y les crea el servicio o lo rechaza."""
     if request.method == "POST":
+        accion = (request.POST.get("accion") or "aprobar").strip().lower()
+        if accion == "eliminar_servicio":
+            nota = request.POST.get("nota_admin", "").strip()
+            servicio_id = _id_entero(request.POST.get("servicio_id"))
+            if not nota:
+                messages.error(request, "Escribe una nota para el barbero antes de retirar el servicio.")
+                return redirect("sena:admin_solicitudes_servicios")
+            if len(nota) > 300:
+                messages.error(request, "La nota no puede superar 300 caracteres.")
+                return redirect("sena:admin_solicitudes_servicios")
+            with transaction.atomic():
+                servicio = get_object_or_404(
+                    Servicio.objects.select_for_update(), id=servicio_id, activo=True
+                )
+                servicio.activo = False
+                servicio.save(update_fields=["activo"])
+                solicitud = SolicitudServicio.objects.filter(
+                    barbero_id=servicio.barbero_id,
+                    nombre__iexact=servicio.nombre,
+                    estado="aprobada",
+                ).order_by("-resuelta", "-id").first()
+                if solicitud:
+                    solicitud.nota_admin = nota
+                    solicitud.resuelta = timezone.now()
+                    solicitud.save(update_fields=["nota_admin", "resuelta"])
+                Notificacion.objects.create(
+                    usuario_id=servicio.barbero_id,
+                    mensaje=(
+                        f"El administrador retiró tu servicio «{servicio.nombre}». "
+                        f"Nota: {nota}"
+                    ),
+                )
+            _invalidar_cache_disponibilidad()
+            messages.success(request, f"El servicio «{servicio.nombre}» fue retirado y el barbero recibió la nota.")
+            return redirect("sena:admin_solicitudes_servicios")
+
         solicitud = get_object_or_404(SolicitudServicio, id=_id_entero(request.POST.get("solicitud_id")))
         nota = request.POST.get("nota_admin", "").strip()[:300]
         if solicitud.estado != "pendiente":
             messages.info(request, "Esa solicitud ya fue resuelta.")
             return redirect("sena:admin_solicitudes_servicios")
 
-        accion = (request.POST.get("accion") or "aprobar").strip().lower()
         if accion == "aprobar":
             servicio_existente = Servicio.objects.filter(
                 barbero=solicitud.barbero,
@@ -2830,7 +2905,7 @@ def admin_solicitudes_servicios(request):
     contexto = {
         "pendientes": SolicitudServicio.objects.filter(estado="pendiente").select_related("barbero", "barbero__peluqueria"),
         "resueltas": SolicitudServicio.objects.exclude(estado="pendiente").select_related("barbero")[:30],
-        "servicios_barberos": Servicio.objects.select_related("barbero", "peluqueria").order_by("barbero__nombre", "nombre"),
+        "servicios_barberos": Servicio.objects.filter(activo=True).select_related("barbero", "peluqueria").order_by("barbero__nombre", "nombre"),
     }
     return render(request, "administrador/admin_solicitudes_servicios.html", contexto)
 

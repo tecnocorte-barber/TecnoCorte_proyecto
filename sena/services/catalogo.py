@@ -9,25 +9,38 @@ SERVICIOS = [
 DURACIONES_SERVICIO = [15, 20, 30, 45, 60, 75, 90, 120]
 
 
-def catalogo_servicios():
-    """Combina servicios base con servicios propios aprobados."""
+def catalogo_servicios(barbero_id=None, incluir_personalizados=False):
+    """Devuelve servicios base y, cuando se solicita, los propios de un barbero."""
     from sena.models import Servicio
 
     lista, vistos = [], set()
     for item in SERVICIOS:
-        vistos.add(item["nombre"])
+        vistos.add(item["nombre"].casefold())
         lista.append(item)
-    for servicio in Servicio.objects.filter(activo=True).select_related("barbero"):
-        if servicio.nombre in vistos:
+    if barbero_id is None and not incluir_personalizados:
+        return lista
+    servicios = Servicio.objects.filter(activo=True).select_related("barbero")
+    if barbero_id is not None:
+        servicios = servicios.filter(barbero_id=barbero_id)
+    for servicio in servicios:
+        if servicio.nombre.casefold() in vistos:
             continue
-        vistos.add(servicio.nombre)
-        lista.append(servicio.a_dict())
+        lista.append({**servicio.a_dict(), "barbero_id": servicio.barbero_id})
     return lista
 
 
-def servicio_valido(nombre):
-    return bool(nombre) and nombre in {item["nombre"] for item in catalogo_servicios()}
+def servicio_valido(nombre, barbero_id=None):
+    return bool(nombre) and nombre in {
+        item["nombre"] for item in catalogo_servicios(barbero_id=barbero_id)
+    }
 
 
-def minutos_servicio(servicio):
-    return next((item["minutos"] for item in catalogo_servicios() if item["nombre"] == servicio), 30)
+def minutos_servicio(servicio, barbero_id=None):
+    return next(
+        (
+            item["minutos"]
+            for item in catalogo_servicios(barbero_id=barbero_id)
+            if item["nombre"] == servicio
+        ),
+        30,
+    )

@@ -126,6 +126,7 @@
                 <th class="px-5 py-4 font-semibold">Barbería</th>
                 <th class="px-5 py-4 font-semibold">Duración</th>
                 <th class="px-5 py-4 text-right font-semibold">Precio</th>
+                <th class="px-5 py-4 font-semibold">Acción</th>
               </tr>
             </thead>
             <tbody>
@@ -142,10 +143,34 @@
                 <td class="px-5 py-4 text-right font-headline text-primary">
                   ${{ s.precio|floatformat:"0g" }} COP
                 </td>
+                <td class="px-5 py-4">
+                  <form
+                    method="post"
+                    action="{% url 'sena:admin_solicitudes_servicios' %}"
+                    class="space-y-2"
+                    onsubmit="return confirm('¿Retirar este servicio? El barbero recibirá la nota.');"
+                  >
+                    {% csrf_token %}
+                    <input type="hidden" name="accion" value="eliminar_servicio" />
+                    <input type="hidden" name="servicio_id" value="{{ s.id }}" />
+                    <input
+                      name="nota_admin"
+                      required
+                      maxlength="300"
+                      placeholder="Nota obligatoria para el barbero"
+                      aria-label="Nota obligatoria para {{ s.barbero.nombre }}"
+                      class="w-56 rounded-lg border border-outline-variant/30 bg-surface-container-high px-3 py-2 text-sm text-on-surface"
+                    />
+                    <button type="submit" class="tc-btn tc-btn--ghost">
+                      <span class="material-symbols-outlined text-[18px]">delete</span>
+                      Retirar servicio
+                    </button>
+                  </form>
+                </td>
               </tr>
               {% empty %}
               <tr>
-                <td colspan="5" class="px-5 py-10 text-center text-on-surface-variant">
+                <td colspan="6" class="px-5 py-10 text-center text-on-surface-variant">
                   Todavía no se ha creado ningún servicio propio.
                 </td>
               </tr>

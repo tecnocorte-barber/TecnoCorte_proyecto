@@ -12,7 +12,7 @@ from ..models import BloqueoHorario, HorarioTrabajo, Reserva, Usuario
 from .catalogo import minutos_servicio
 
 
-def cita_disponible(fecha_texto, hora_texto, peluqueria_id=None, servicio=None):
+def cita_disponible(fecha_texto, hora_texto, peluqueria_id=None, servicio=None, barbero_id=None):
     try:
         fecha = datetime.strptime(fecha_texto, "%Y-%m-%d").date()
         hora = datetime.strptime(hora_texto, "%H:%M").time()
@@ -33,7 +33,7 @@ def cita_disponible(fecha_texto, hora_texto, peluqueria_id=None, servicio=None):
         return False, "Esta barbería todavía no tiene horarios configurados."
     if not horario.activo:
         return False, "Ese día no se trabaja. Elige otra fecha."
-    duracion = minutos_servicio(servicio)
+    duracion = minutos_servicio(servicio, barbero_id)
     hora_fin_servicio = (datetime.combine(fecha, hora) + timedelta(minutes=duracion)).time()
     if hora < horario.hora_inicio or hora_fin_servicio > horario.hora_fin:
         return False, "La hora elegida está por fuera del horario de atención."
@@ -71,13 +71,15 @@ def barbero_esta_disponible(barbero_id, fecha_texto, hora_texto, servicio, reser
         inicio = datetime.combine(datetime.strptime(fecha_texto, "%Y-%m-%d").date(), datetime.strptime(hora_texto, "%H:%M").time())
     except (TypeError, ValueError):
         return False, "La fecha o la hora no son válidas."
-    fin = inicio + timedelta(minutes=minutos_servicio(servicio))
+    fin = inicio + timedelta(minutes=minutos_servicio(servicio, barbero_id))
     citas = Reserva.objects.filter(peluquero_id=barbero_id, fecha=fecha_texto).exclude(estado="Cancelada")
     if reserva_actual:
         citas = citas.exclude(id=reserva_actual.id)
     for cita in citas:
         inicio_existente = datetime.combine(cita.fecha, cita.hora)
-        fin_existente = inicio_existente + timedelta(minutes=minutos_servicio(cita.servicio))
+        fin_existente = inicio_existente + timedelta(
+            minutes=minutos_servicio(cita.servicio, cita.peluquero_id)
+        )
         if inicio < fin_existente and fin > inicio_existente:
             return False, "El barbero ya tiene una cita que ocupa ese horario."
     return True, ""

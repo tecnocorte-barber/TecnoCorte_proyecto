@@ -3,7 +3,8 @@ from django.core.cache import cache
 from django.test import TestCase
 from django.urls import reverse
 
-from ..models import Notificacion, Peluqueria, Servicio, SolicitudServicio, Usuario
+from ..models import Notificacion, Peluqueria, Reserva, Servicio, SolicitudServicio, Usuario
+from ..serializers import ReservaSerializer
 from ..views import catalogo_servicios, minutos_servicio, servicio_valido
 
 
@@ -23,6 +24,11 @@ class ServiciosDeBarberoTests(TestCase):
         self.admin = Usuario.objects.create(
             nombre="Root", apellido="Admin", email="root@test.com", password="x",
             rol="Admin", activo=True,
+        )
+
+        self.cliente = Usuario.objects.create(
+            nombre="Ana", apellido="Lopez", email="ana@test.com", password="unused",
+            rol="Cliente", activo=True,
         )
 
     def tearDown(self):
@@ -218,30 +224,144 @@ class ServiciosDeBarberoTests(TestCase):
 
     # ---------- El servicio aprobado entra al catálogo de reservas ----------
 
-    def test_el_servicio_aprobado_entra_al_catalogo_y_a_la_reserva(self):
+    def test_el_servicio_aprobado_solo_entra_en_la_reserva_de_su_barbero(self):
         Servicio.objects.create(
             nombre="Afeitado Premium", descripcion="d", duracion="30 Minutos",
             minutos=30, precio=25000, barbero=self.barbero, peluqueria=self.peluqueria,
         )
-        nombres = {item["nombre"] for item in catalogo_servicios()}
+        nombres = {
+            item["nombre"]
+            for item in catalogo_servicios(barbero_id=self.barbero.id)
+        }
         self.assertIn("Afeitado Premium", nombres)
         self.assertIn("Corte de Cabello", nombres)  # Los base siguen ahí
-        self.assertEqual(minutos_servicio("Afeitado Premium"), 30)
-        self.assertTrue(servicio_valido("Afeitado Premium"))
+        self.assertNotIn(
+            "Afeitado Premium",
+            {item["nombre"] for item in catalogo_servicios(barbero_id=self.otro_barbero.id)},
+        )
+        self.assertEqual(minutos_servicio("Afeitado Premium", self.barbero.id), 30)
+        self.assertTrue(servicio_valido("Afeitado Premium", self.barbero.id))
         self.assertFalse(servicio_valido("Servicio Que No Existe"))
 
         # La reserva del cliente ya lo ofrece y permite preseleccionarlo.
         r = self.client.get(
-            reverse("sena:usuario_reservar_cita") + "?servicio=Afeitado%20Premium"
+            reverse("sena:usuario_reservar_cita")
+            + f"?servicio=Afeitado%20Premium&peluquero={self.barbero.id}&peluqueria={self.peluqueria.id}"
         )
         self.assertEqual(r.status_code, 200)
         self.assertEqual(r.context["servicio_inicial"], "Afeitado Premium")
         self.assertContains(r, "Afeitado Premium")
+        self.assertContains(r, f'data-barbero-id="{self.barbero.id}"')
 
     def test_un_servicio_inactivo_no_aparece(self):
         Servicio.objects.create(nombre="Retirado", barbero=self.barbero, activo=False, minutos=45)
         self.assertFalse(servicio_valido("Retirado"))
         self.assertNotIn("Retirado", {i["nombre"] for i in catalogo_servicios()})
+
+    def test_servicio_personalizado_solo_esta_disponible_para_su_barbero(self):
+        Servicio.objects.create(
+            nombre="Afeitado Premium", barbero=self.barbero,
+            peluqueria=self.peluqueria, minutos=60, precio=25000,
+        )
+
+        self.assertIn(
+            "Afeitado Premium",
+            {item["nombre"] for item in catalogo_servicios(barbero_id=self.barbero.id)},
+        )
+        self.assertNotIn(
+            "Afeitado Premium",
+            {item["nombre"] for item in catalogo_servicios(barbero_id=self.otro_barbero.id)},
+        )
+        self.assertNotIn(
+            "Afeitado Premium",
+            {item["nombre"] for item in catalogo_servicios()},
+        )
+        self.assertTrue(servicio_valido("Afeitado Premium", self.barbero.id))
+        self.assertFalse(servicio_valido("Afeitado Premium", self.otro_barbero.id))
+        self.assertEqual(minutos_servicio("Afeitado Premium", self.barbero.id), 60)
+
+    def test_no_se_puede_reservar_servicio_de_otro_barbero(self):
+        Servicio.objects.create(
+            nombre="Afeitado Premium", barbero=self.barbero,
+            peluqueria=self.peluqueria, minutos=60, precio=25000,
+        )
+        self.sesion(self.cliente)
+
+        response = self.client.post(reverse("sena:usuario_pre_confirmar"), {
+            "servicio": "Afeitado Premium",
+            "peluquero": self.otro_barbero.id,
+            "peluqueria": self.peluqueria.id,
+            "fecha": "2035-06-15",
+            "hora": "11:00",
+        })
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Faltan datos")
+        self.assertFalse(Reserva.objects.exists())
+
+    def test_api_no_acepta_servicio_propietario_de_otro_barbero(self):
+        Servicio.objects.create(
+            nombre="Afeitado Premium", barbero=self.barbero,
+            peluqueria=self.peluqueria, minutos=60, precio=25000,
+        )
+
+        serializer = ReservaSerializer(data={
+            "cliente": self.cliente.id,
+            "peluquero": self.otro_barbero.id,
+            "peluqueria": self.peluqueria.id,
+            "fecha": "2035-06-15",
+            "hora": "11:00",
+            "servicio": "Afeitado Premium",
+        })
+
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("servicio", serializer.errors)
+
+    def test_el_admin_no_puede_retirar_un_servicio_sin_nota(self):
+        servicio = Servicio.objects.create(
+            nombre="Afeitado Premium", barbero=self.barbero,
+            peluqueria=self.peluqueria, minutos=30,
+        )
+        self.sesion(self.admin)
+        pagina = self.client.get(reverse("sena:admin_solicitudes_servicios"))
+        self.assertContains(pagina, "Nota obligatoria para el barbero")
+        self.assertContains(pagina, 'name="nota_admin"', html=False)
+
+        response = self.client.post(reverse("sena:admin_solicitudes_servicios"), {
+            "accion": "eliminar_servicio",
+            "servicio_id": servicio.id,
+        })
+
+        servicio.refresh_from_db()
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(servicio.activo)
+        self.assertFalse(Notificacion.objects.filter(usuario=self.barbero).exists())
+
+    def test_el_admin_retirar_servicio_desactiva_y_notifica_con_nota(self):
+        solicitud = SolicitudServicio.objects.create(
+            barbero=self.barbero, nombre="Afeitado Premium", minutos=30,
+            precio=25000, estado="aprobada",
+        )
+        servicio = Servicio.objects.create(
+            nombre="Afeitado Premium", barbero=self.barbero,
+            peluqueria=self.peluqueria, minutos=30, precio=25000,
+        )
+        self.sesion(self.admin)
+
+        response = self.client.post(reverse("sena:admin_solicitudes_servicios"), {
+            "accion": "eliminar_servicio",
+            "servicio_id": servicio.id,
+            "nota_admin": "No cumple los requisitos",
+        })
+
+        servicio.refresh_from_db()
+        solicitud.refresh_from_db()
+        aviso = Notificacion.objects.get(usuario=self.barbero)
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(servicio.activo)
+        self.assertEqual(solicitud.nota_admin, "No cumple los requisitos")
+        self.assertIn("No cumple los requisitos", aviso.mensaje)
+        self.assertFalse(servicio_valido("Afeitado Premium", self.barbero.id))
 
     # ---------- Paneles ----------
 
