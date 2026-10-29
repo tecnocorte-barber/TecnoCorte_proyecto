@@ -912,7 +912,9 @@ def peluquero_configuracion(request):
             if minutos not in DURACIONES_SERVICIO:
                 messages.error(request, "Elige una duración válida de la lista.")
                 return redirect(destino)
-            if Servicio.objects.filter(barbero=usuario, nombre__iexact=nombre).exists():
+            if Servicio.objects.filter(
+                barbero=usuario, nombre__iexact=nombre, activo=True
+            ).exists():
                 messages.info(request, f"Ya ofreces el servicio «{nombre}».")
                 return redirect(destino)
             if SolicitudServicio.objects.filter(barbero=usuario, estado="pendiente", nombre__iexact=nombre).exists():
@@ -2821,16 +2823,15 @@ def admin_solicitudes_servicios(request):
                 )
                 servicio.activo = False
                 servicio.save(update_fields=["activo"])
-                solicitud = SolicitudServicio.objects.filter(
+                SolicitudServicio.objects.filter(
                     barbero_id=servicio.barbero_id,
                     nombre__iexact=servicio.nombre,
                     estado="aprobada",
-                ).order_by("-resuelta", "-id").first()
-                if solicitud:
-                    solicitud.estado = "eliminada"
-                    solicitud.nota_admin = nota
-                    solicitud.resuelta = timezone.now()
-                    solicitud.save(update_fields=["estado", "nota_admin", "resuelta"])
+                ).update(
+                    estado="eliminada",
+                    nota_admin=nota,
+                    resuelta=timezone.now(),
+                )
                 Notificacion.objects.create(
                     usuario_id=servicio.barbero_id,
                     mensaje=(

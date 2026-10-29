@@ -61,6 +61,20 @@ class ServiciosDeBarberoTests(TestCase):
         # Todavía no existe como servicio real.
         self.assertFalse(Servicio.objects.exists())
 
+    def test_el_barbero_puede_solicitar_un_servicio_que_fue_retirado(self):
+        Servicio.objects.create(
+            nombre="Afeitado Premium", barbero=self.barbero,
+            peluqueria=self.peluqueria, activo=False,
+        )
+        self.sesion(self.barbero)
+
+        response = self.solicitar()
+
+        self.assertEqual(response.status_code, 302)
+        solicitud = SolicitudServicio.objects.get()
+        self.assertEqual(solicitud.estado, "pendiente")
+        self.assertEqual(solicitud.nombre, "Afeitado Premium")
+
     def test_el_admin_recibe_aviso_de_la_solicitud(self):
         self.sesion(self.barbero)
         self.solicitar()
@@ -357,6 +371,10 @@ class ServiciosDeBarberoTests(TestCase):
             barbero=self.barbero, nombre="Afeitado Premium", minutos=30,
             precio=25000, estado="aprobada",
         )
+        solicitud_anterior = SolicitudServicio.objects.create(
+            barbero=self.barbero, nombre="Afeitado Premium", minutos=30,
+            precio=25000, estado="aprobada",
+        )
         servicio = Servicio.objects.create(
             nombre="Afeitado Premium", barbero=self.barbero,
             peluqueria=self.peluqueria, minutos=30, precio=25000,
@@ -371,11 +389,13 @@ class ServiciosDeBarberoTests(TestCase):
 
         servicio.refresh_from_db()
         solicitud.refresh_from_db()
+        solicitud_anterior.refresh_from_db()
         aviso = Notificacion.objects.get(usuario=self.barbero)
         self.assertEqual(response.status_code, 302)
         self.assertFalse(servicio.activo)
         self.assertEqual(solicitud.nota_admin, "No cumple los requisitos")
         self.assertEqual(solicitud.estado, "eliminada")
+        self.assertEqual(solicitud_anterior.estado, "eliminada")
         self.assertIn("No cumple los requisitos", aviso.mensaje)
         self.assertFalse(servicio_valido("Afeitado Premium", self.barbero.id))
         pagina_admin = self.client.get(reverse("sena:admin_solicitudes_servicios"))
