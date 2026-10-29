@@ -252,6 +252,12 @@ class ServiciosDeBarberoTests(TestCase):
         self.assertEqual(r.context["servicio_inicial"], "Afeitado Premium")
         self.assertContains(r, "Afeitado Premium")
         self.assertContains(r, f'data-barbero-id="{self.barbero.id}"')
+        self.assertContains(r, 'class="tc-sede-change shrink-0"')
+        contenido = r.content.decode()
+        self.assertLess(
+            contenido.index("Elige el barbero"),
+            contenido.index("Elige el servicio"),
+        )
 
     def test_un_servicio_inactivo_no_aparece(self):
         Servicio.objects.create(nombre="Retirado", barbero=self.barbero, activo=False, minutos=45)

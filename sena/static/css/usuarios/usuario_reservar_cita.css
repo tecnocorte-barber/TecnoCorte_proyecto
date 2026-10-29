@@ -76,6 +76,9 @@
 .tc-servicio-card {
   display: block;
 }
+.tc-servicio-card[hidden] {
+  display: none !important;
+}
 .tc-servicio-card__price {
   font-family: "Noto Serif", serif;
   font-weight: 800;
@@ -124,6 +127,31 @@
   background: linear-gradient(140deg, rgba(214, 173, 66, 0.22), rgba(214, 173, 66, 0.05));
   border: 1px solid rgba(214, 173, 66, 0.35);
   color: var(--c-primary);
+}
+.tc-sede-change {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  border: 1px solid #241a00;
+  border-radius: 999px;
+  background: #241a00;
+  color: #f0cf72;
+  padding: 0.65rem 1rem;
+  font: 800 0.75rem/1 "Manrope", sans-serif;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+.tc-sede-change:hover {
+  background: #3a2a04;
+  color: #fff1bf;
+  transform: translateY(-1px);
+}
+.tc-sede-change:focus-visible {
+  outline: 3px solid #241a00;
+  outline-offset: 3px;
 }
 
 /* ── Calendario ─────────────────────────────────────────────────────────── */

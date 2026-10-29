@@ -76,13 +76,127 @@
 
       <div class="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:gap-12">
         <div class="flex flex-col gap-12 lg:col-span-8">
-          {# ── Paso 01 · Servicio ── #}
+          {# ── Paso 01 · Barbería (aislada si ya se eligió una) ── #}
           <section class="tc-booking-step flex flex-col gap-6">
             <div class="flex items-center gap-4">
               <span class="tc-step__num">01</span>
+              <h2 class="tc-step__title">
+                {% if peluqueria_inicial_obj %}Tu barbería{% else %}Elige la barbería{% endif %}
+              </h2>
+              <span class="tc-step__rule"></span>
+            </div>
+
+            {% if peluqueria_inicial_obj %}
+            {# Una sola sede: la reserva no muestra ninguna otra #}
+            <div
+              class="opt opt-selected tc-glass tc-sede-card rounded-2xl"
+              data-peluqueria="{{ peluqueria_inicial_obj.id }}"
+              data-nombre="{{ peluqueria_inicial_obj.nombre }}"
+              onclick="seleccionarPeluqueria(this)"
+            >
+              <span class="tc-sede-card__avatar material-symbols-outlined text-3xl"
+                >storefront</span
+              >
+              <div class="min-w-0 flex-1">
+                <p class="text-[11px] uppercase tracking-[0.22em] text-on-surface-variant">
+                  Reservando aquí
+                </p>
+                <h3 class="font-body text-lg font-bold">
+                  {{ peluqueria_inicial_obj.nombre }}
+                </h3>
+                {% if peluqueria_inicial_obj.ubicacion %}
+                <p class="text-sm text-on-surface-variant mt-0.5">
+                  {{ peluqueria_inicial_obj.ubicacion }}
+                </p>
+                {% endif %}
+              </div>
+              <a
+                href="{% url 'sena:usuario_peluquerias' %}"
+                class="tc-sede-change shrink-0"
+                title="Elegir otra barbería"
+                aria-label="Cambiar de barbería"
+                >Cambiar sede</a
+              >
+            </div>
+            {% else %}
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+              {% for peluqueria in peluquerias %}
+              <div
+                class="opt tc-glass tc-opt rounded-2xl p-6"
+                data-peluqueria="{{ peluqueria.id }}"
+                data-nombre="{{ peluqueria.nombre }}"
+                onclick="seleccionarPeluqueria(this)"
+              >
+                <div class="flex flex-col items-center gap-3 text-center">
+                  <div
+                    class="flex h-16 w-16 items-center justify-center rounded-full border border-primary/30 bg-primary/10"
+                  >
+                    <span class="material-symbols-outlined text-3xl text-primary"
+                      >storefront</span
+                    >
+                  </div>
+                  <span class="font-body text-sm font-semibold"
+                    >{{ peluqueria.nombre }}</span
+                  >
+                  <span class="flex items-center gap-1 text-xs text-on-surface-variant">
+                    <span class="material-symbols-outlined text-[14px]">location_on</span>
+                    {{ peluqueria.ubicacion }}
+                  </span>
+                </div>
+              </div>
+              {% empty %}
+              <p class="text-on-surface-variant">No hay barberías disponibles.</p>
+              {% endfor %}
+            </div>
+            {% endif %}
+          </section>
+
+          {# ── Paso 02 · Barbero ── #}
+          <section class="tc-booking-step flex flex-col gap-6">
+            <div class="flex items-center gap-4">
+              <span class="tc-step__num">02</span>
+              <h2 class="tc-step__title">Elige el barbero</h2>
+              <span class="tc-step__rule"></span>
+            </div>
+            <div id="barberos" class="grid grid-cols-1 gap-4 md:grid-cols-3">
+              {% for peluquero in peluqueros %}
+              <div
+                class="opt barbero-option hidden tc-glass tc-opt rounded-2xl p-6"
+                data-peluquero="{{ peluquero.id }}"
+                data-peluqueria-id="{{ peluquero.peluqueria_id|default:'' }}"
+                data-nombre="{{ peluquero.nombre }} {{ peluquero.apellido }}"
+                onclick="seleccionarPeluquero(this)"
+              >
+                <div class="flex flex-col items-center gap-2 text-center">
+                  <span class="material-symbols-outlined text-3xl text-primary"
+                    >content_cut</span
+                  >
+                   <span class="font-body text-sm font-semibold"
+                     >{{ peluquero.nombre }} {{ peluquero.apellido }}</span
+                   >
+                   <span class="tc-rating-inline" aria-label="Calificación {% if peluquero.calificacion_promedio %}{{ peluquero.calificacion_promedio|floatformat:1 }}{% else %}5.0{% endif %} de 5">
+                     <span class="tc-rating-inline__stars" aria-hidden="true">★★★★★</span>
+                     <strong>{% if peluquero.calificacion_promedio %}{{ peluquero.calificacion_promedio|floatformat:1 }}{% else %}5.0{% endif %}</strong>
+                   </span>
+                 </div>
+              </div>
+              {% endfor %}
+              <p id="sin-barberos" class="text-on-surface-variant">
+                Selecciona primero una barbería para ver sus barberos disponibles.
+              </p>
+            </div>
+          </section>
+
+          {# ── Paso 03 · Servicio ── #}
+          <section class="tc-booking-step flex flex-col gap-6">
+            <div class="flex items-center gap-4">
+              <span class="tc-step__num">03</span>
               <h2 class="tc-step__title">Elige el servicio</h2>
               <span class="tc-step__rule"></span>
             </div>
+            <p class="text-sm text-on-surface-variant">
+              Los servicios exclusivos se muestran al elegir al barbero que los ofrece.
+            </p>
             <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
               {% for servicio in servicios %}
               <div
@@ -120,116 +234,6 @@
                 </div>
               </div>
               {% endfor %}
-            </div>
-          </section>
-
-          {# ── Paso 02 · Barbería (aislada si ya se eligió una) ── #}
-          <section class="tc-booking-step flex flex-col gap-6">
-            <div class="flex items-center gap-4">
-              <span class="tc-step__num">02</span>
-              <h2 class="tc-step__title">
-                {% if peluqueria_inicial_obj %}Tu barbería{% else %}Elige la barbería{% endif %}
-              </h2>
-              <span class="tc-step__rule"></span>
-            </div>
-
-            {% if peluqueria_inicial_obj %}
-            {# Una sola sede: la reserva no muestra ninguna otra #}
-            <div
-              class="opt opt-selected tc-glass tc-sede-card rounded-2xl"
-              data-peluqueria="{{ peluqueria_inicial_obj.id }}"
-              data-nombre="{{ peluqueria_inicial_obj.nombre }}"
-              onclick="seleccionarPeluqueria(this)"
-            >
-              <span class="tc-sede-card__avatar material-symbols-outlined text-3xl"
-                >storefront</span
-              >
-              <div class="min-w-0 flex-1">
-                <p class="text-[11px] uppercase tracking-[0.22em] text-on-surface-variant">
-                  Reservando aquí
-                </p>
-                <h3 class="font-body text-lg font-bold">
-                  {{ peluqueria_inicial_obj.nombre }}
-                </h3>
-                {% if peluqueria_inicial_obj.ubicacion %}
-                <p class="text-sm text-on-surface-variant mt-0.5">
-                  {{ peluqueria_inicial_obj.ubicacion }}
-                </p>
-                {% endif %}
-              </div>
-              <a
-                href="{% url 'sena:usuario_peluquerias' %}"
-                class="tc-chip shrink-0"
-                title="Elegir otra barbería"
-                >Cambiar</a
-              >
-            </div>
-            {% else %}
-            <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-              {% for peluqueria in peluquerias %}
-              <div
-                class="opt tc-glass tc-opt rounded-2xl p-6"
-                data-peluqueria="{{ peluqueria.id }}"
-                data-nombre="{{ peluqueria.nombre }}"
-                onclick="seleccionarPeluqueria(this)"
-              >
-                <div class="flex flex-col items-center gap-3 text-center">
-                  <div
-                    class="flex h-16 w-16 items-center justify-center rounded-full border border-primary/30 bg-primary/10"
-                  >
-                    <span class="material-symbols-outlined text-3xl text-primary"
-                      >storefront</span
-                    >
-                  </div>
-                  <span class="font-body text-sm font-semibold"
-                    >{{ peluqueria.nombre }}</span
-                  >
-                  <span class="flex items-center gap-1 text-xs text-on-surface-variant">
-                    <span class="material-symbols-outlined text-[14px]">location_on</span>
-                    {{ peluqueria.ubicacion }}
-                  </span>
-                </div>
-              </div>
-              {% empty %}
-              <p class="text-on-surface-variant">No hay barberías disponibles.</p>
-              {% endfor %}
-            </div>
-            {% endif %}
-          </section>
-
-          {# ── Paso 03 · Barbero ── #}
-          <section class="tc-booking-step flex flex-col gap-6">
-            <div class="flex items-center gap-4">
-              <span class="tc-step__num">03</span>
-              <h2 class="tc-step__title">Elige el barbero</h2>
-              <span class="tc-step__rule"></span>
-            </div>
-            <div id="barberos" class="grid grid-cols-1 gap-4 md:grid-cols-3">
-              {% for peluquero in peluqueros %}
-              <div
-                class="opt barbero-option hidden tc-glass tc-opt rounded-2xl p-6"
-                data-peluquero="{{ peluquero.id }}"
-                data-peluqueria-id="{{ peluquero.peluqueria_id|default:'' }}"
-                data-nombre="{{ peluquero.nombre }} {{ peluquero.apellido }}"
-                onclick="seleccionarPeluquero(this)"
-              >
-                <div class="flex flex-col items-center gap-2 text-center">
-                  <span class="material-symbols-outlined text-3xl text-primary"
-                    >content_cut</span
-                  >
-                   <span class="font-body text-sm font-semibold"
-                     >{{ peluquero.nombre }} {{ peluquero.apellido }}</span
-                   >
-                   <span class="tc-rating-inline" aria-label="Calificación {% if peluquero.calificacion_promedio %}{{ peluquero.calificacion_promedio|floatformat:1 }}{% else %}5.0{% endif %} de 5">
-                     <span class="tc-rating-inline__stars" aria-hidden="true">★★★★★</span>
-                     <strong>{% if peluquero.calificacion_promedio %}{{ peluquero.calificacion_promedio|floatformat:1 }}{% else %}5.0{% endif %}</strong>
-                   </span>
-                 </div>
-              </div>
-              {% endfor %}
-              <p id="sin-barberos" class="text-on-surface-variant">
-                Selecciona primero una barbería para ver sus barberos disponibles.
-              </p>
             </div>
           </section>
 
@@ -623,7 +627,13 @@
       }
       if (PELUQUERO_INICIAL && !DATOS_ENVIADOS.has("peluquero")) {
         var peluqueroInicial = document.querySelector('.opt[data-peluquero="' + CSS.escape(PELUQUERO_INICIAL) + '"]');
-        if (peluqueroInicial) seleccionarPeluquero(peluqueroInicial);
+        if (peluqueroInicial) {
+          var sedeDelBarbero = document.querySelector(
+            '.opt[data-peluqueria="' + CSS.escape(peluqueroInicial.dataset.peluqueriaId || "") + '"]'
+          );
+          if (sedeDelBarbero && !seleccion.peluqueria) seleccionarPeluqueria(sedeDelBarbero);
+          seleccionarPeluquero(peluqueroInicial);
+        }
       }
       if (SERVICIO_INICIAL && !DATOS_ENVIADOS.has("servicio")) {
         var servicioInicial = Array.from(document.querySelectorAll('.opt[data-servicio]')).find(function (card) { return card.dataset.servicio === SERVICIO_INICIAL; });
