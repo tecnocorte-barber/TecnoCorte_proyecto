@@ -25,6 +25,9 @@
           <p class="text-xs font-bold uppercase tracking-widest text-primary">Pedido #{{ pedido.id }}</p>
           <h2 class="mt-1 text-lg font-bold text-on-surface">{{ pedido.cliente.nombre }} {{ pedido.cliente.apellido }}</h2>
           <p class="text-sm text-on-surface-variant">{{ pedido.fecha|date:"d/m/Y H:i" }} · {{ pedido.cliente.email }}</p>
+          {% if pedido.estado == "Cancelado" %}
+          <span class="mt-2 inline-flex rounded-full border border-error/30 bg-error/10 px-3 py-1 text-xs font-bold uppercase tracking-wider text-error">Cancelado</span>
+          {% endif %}
         </div>
         <div class="text-left sm:text-right">
           <p class="font-headline text-2xl text-primary">${{ pedido.total|floatformat:"0g" }} COP</p>
@@ -49,6 +52,14 @@
         <div>
           <p class="font-bold text-green-500">Pedido completado</p>
           <p class="mt-1 text-on-surface-variant">Entregado y pagado en tienda. Este pedido quedó cerrado y ya no admite cambios.</p>
+        </div>
+      </div>
+      {% elif pedido.estado == "Cancelado" %}
+      <div class="flex items-start gap-3 rounded-xl border border-error/20 bg-error/10 p-4 text-sm text-on-surface">
+        <span class="material-symbols-outlined text-error" aria-hidden="true">cancel</span>
+        <div>
+          <p class="font-bold text-error">Pedido cancelado</p>
+          <p class="mt-1 text-on-surface-variant">Los artículos de este pedido fueron devueltos al inventario. Este pedido quedó cerrado.</p>
         </div>
       </div>
       {% else %}

@@ -1,4 +1,4 @@
-{# Configuración general del sitio: privacidad, datos y mantenimiento #}
+{# Configuración general del sitio: privacidad y datos #}
 {% extends "usuarios/dashboard_base.html" %}
 {% block title %}Configuración - TecnoCorte{% endblock %}
 {% block body_class %}font-body antialiased flex bg-surface{% endblock %}
@@ -13,7 +13,7 @@
         Configuración del <span class="tc-gold-text">sitio</span>
       </h1>
       <p class="mt-3 text-on-surface-variant">
-        Ajusta la privacidad, los datos generales y el modo mantenimiento.
+        Ajusta la privacidad y los datos generales.
       </p>
     </div>
 
@@ -79,22 +79,6 @@
             </span>
           </label>
         </div>
-      </section>
-
-      {# Mantenimiento #}
-      <section class="tc-field--full">
-        <h2 class="tc-eyebrow mb-4">Mantenimiento</h2>
-        <label class="tc-switch items-start">
-          <input type="checkbox" name="modo_mantenimiento" {% if config.modo_mantenimiento %}checked{% endif %} />
-          <span>
-            <span class="block font-semibold text-on-surface">Activar modo mantenimiento</span>
-            <span class="block text-sm font-normal text-on-surface-variant">Solo el Admin podrá navegar el sitio; el resto verá un aviso.</span>
-          </span>
-        </label>
-        <label class="tc-field tc-field--always mt-4">
-          <input name="mensaje_mantenimiento" value="{{ config.mensaje_mantenimiento }}" placeholder=" " class="tc-field__input" />
-          <span class="tc-field__label">Mensaje de mantenimiento</span>
-        </label>
       </section>
 
       <div class="tc-form__actions">

@@ -336,6 +336,7 @@ class FotosYConfiguracionTests(TestCase):
         self.login()
         r = self.client.get(reverse("sena:admin_configuracion"))
         self.assertEqual(r.status_code, 200)
+        self.assertNotContains(r, "Activar modo mantenimiento")
         self.client.post(reverse("sena:admin_configuracion"), {
             "sitio_nombre": "Mi Corte", "correo_contacto": "a@b.com",
             "texto_aviso": "hola", "mensaje_mantenimiento": "vuelvo",
@@ -358,9 +359,12 @@ class FotosYConfiguracionTests(TestCase):
 
     def test_modo_mantenimiento_bloquea_visitantes_pero_no_admin(self):
         self.login()
+        config = Configuracion.cargar()
+        config.modo_mantenimiento = True
+        config.mensaje_mantenimiento = "en obras"
+        config.save()
         self.client.post(reverse("sena:admin_configuracion"), {
             "sitio_nombre": "TecnoCorte", "correo_contacto": "a@b.com",
-            "mensaje_mantenimiento": "en obras", "modo_mantenimiento": "on",
         })
         self.assertTrue(Configuracion.cargar().modo_mantenimiento)
         # El admin sigue navegando (su dashboard responde).

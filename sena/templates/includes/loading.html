@@ -27,8 +27,15 @@
   if (!overlay) return;
   var hideTimer = null;
   var activeButton = null;
+  var activeSubmitterInput = null;
+  var activeSubmitterInputCreated = false;
 
   function restoreButton() {
+    if (activeSubmitterInputCreated && activeSubmitterInput) {
+      activeSubmitterInput.remove();
+    }
+    activeSubmitterInput = null;
+    activeSubmitterInputCreated = false;
     if (!activeButton) return;
     activeButton.disabled = false;
     if (activeButton.dataset.loadingBackup !== undefined) {
@@ -37,6 +44,24 @@
     }
     activeButton.removeAttribute("aria-busy");
     activeButton = null;
+  }
+
+  function preserveSubmitter(form, submitter) {
+    if (!submitter || !submitter.name || submitter.disabled) return;
+    var hiddenInputs = form.querySelectorAll('input[type="hidden"][name]');
+    for (var i = 0; i < hiddenInputs.length; i++) {
+      if (hiddenInputs[i].name === submitter.name) {
+        hiddenInputs[i].value = submitter.value;
+        return;
+      }
+    }
+    var hidden = document.createElement("input");
+    hidden.type = "hidden";
+    hidden.name = submitter.name;
+    hidden.value = submitter.value;
+    form.appendChild(hidden);
+    activeSubmitterInput = hidden;
+    activeSubmitterInputCreated = true;
   }
 
   function showLoading(msg) {
@@ -57,6 +82,11 @@
     clearTimeout(hideTimer);
   }
 
+  document.addEventListener("click", function (e) {
+    var submitter = e.target.closest('button[type="submit"], input[type="submit"]');
+    if (submitter && submitter.form) submitter.form._tcSubmitter = submitter;
+  }, true);
+
   document.addEventListener("submit", function (e) {
     var form = e.target;
     // Los formularios AJAX gestionan su propio estado de carga y notifican
@@ -72,10 +102,11 @@
       if (reservaIncompleta) return;
     }
     if (form.method && form.method.toUpperCase() === "GET") return;
-    var btn = form.querySelector("[type=submit], button:not([type=button])");
+    var btn = e.submitter || form._tcSubmitter || form.querySelector("[type=submit], button:not([type=button])");
+    restoreButton();
+    preserveSubmitter(form, btn);
     showLoading("Procesando, por favor espera...");
     if (btn) {
-      restoreButton();
       btn.disabled = true;
       btn.dataset.loadingBackup = btn.innerHTML;
       btn.setAttribute("aria-busy", "true");

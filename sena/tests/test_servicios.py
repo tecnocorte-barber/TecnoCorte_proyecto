@@ -126,6 +126,53 @@ class ServiciosDeBarberoTests(TestCase):
         # El barbero recibe la buena noticia.
         self.assertTrue(Notificacion.objects.filter(usuario=self.barbero).exists())
 
+    def test_el_admin_reactiva_servicio_inactivo_al_aprobar_sin_accion(self):
+        solicitud = SolicitudServicio.objects.create(
+            barbero=self.barbero, nombre="Afeitado Premium",
+            descripcion="Descripción actualizada", duracion="45 Minutos",
+            minutos=45, precio=30000,
+        )
+        servicio = Servicio.objects.create(
+            nombre="Afeitado Premium", descripcion="Antigua",
+            duracion="30 Minutos", minutos=30, precio=25000,
+            barbero=self.barbero, peluqueria=self.peluqueria, activo=False,
+        )
+        self.sesion(self.admin)
+
+        response = self.client.post(
+            reverse("sena:admin_solicitudes_servicios"),
+            {"solicitud_id": solicitud.id},
+        )
+
+        self.assertEqual(response.status_code, 302)
+        solicitud.refresh_from_db()
+        servicio.refresh_from_db()
+        self.assertEqual(solicitud.estado, "aprobada")
+        self.assertTrue(servicio.activo)
+        self.assertEqual(servicio.descripcion, "Descripción actualizada")
+        self.assertEqual(servicio.minutos, 45)
+        self.assertEqual(servicio.precio, 30000)
+        self.assertEqual(Servicio.objects.count(), 1)
+
+    def test_formulario_admin_de_solicitudes_tiene_url_y_accion_oculta(self):
+        solicitud = SolicitudServicio.objects.create(
+            barbero=self.barbero, nombre="Afeitado Premium",
+            minutos=30, precio=25000,
+        )
+        self.sesion(self.admin)
+
+        response = self.client.get(reverse("sena:admin_solicitudes_servicios"))
+
+        self.assertContains(
+            response,
+            f'action="{reverse("sena:admin_solicitudes_servicios")}"',
+        )
+        self.assertContains(
+            response,
+            f'name="accion" value="aprobar"',
+        )
+        self.assertContains(response, f'id="accion-solicitud-{solicitud.id}"')
+
     def test_el_admin_rechaza_con_nota_y_no_crea_nada(self):
         solicitud = SolicitudServicio.objects.create(
             barbero=self.barbero, nombre="Afeitado Premium", minutos=30, precio=25000,

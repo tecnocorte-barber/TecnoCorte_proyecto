@@ -34,6 +34,26 @@
 
   function bloquear(boton) {
     if (!sePuedeBloquear(boton) || boton.dataset.cargando === 'true') return false;
+    if (boton.name && boton.form) {
+      var ocultos = boton.form.querySelectorAll('input[type="hidden"][name]');
+      var campoExistente = null;
+      for (var i = 0; i < ocultos.length; i++) {
+        if (ocultos[i].name === boton.name) {
+          campoExistente = ocultos[i];
+          break;
+        }
+      }
+      if (campoExistente) {
+        campoExistente.value = boton.value;
+      } else {
+        var campoSubmitter = document.createElement('input');
+        campoSubmitter.type = 'hidden';
+        campoSubmitter.name = boton.name;
+        campoSubmitter.value = boton.value;
+        boton.form.appendChild(campoSubmitter);
+        boton._tcCampoSubmitter = campoSubmitter;
+      }
+    }
     var contenedor = boton.tagName === 'INPUT' ? boton.parentNode : boton;
     if (contenedor) contenedor.style.pointerEvents = 'none';
     boton.dataset.textoOriginal = boton.innerHTML;
@@ -51,11 +71,20 @@
     boton.dataset.cargando = 'false';
     boton.removeAttribute('aria-busy');
     boton.disabled = false;
+    if (boton._tcCampoSubmitter) {
+      boton._tcCampoSubmitter.remove();
+      delete boton._tcCampoSubmitter;
+    }
     if (boton.dataset.textoOriginal) boton.innerHTML = boton.dataset.textoOriginal;
     if (boton.tagName === 'BUTTON' && boton.parentNode && boton.parentNode.style.pointerEvents === 'none') {
       boton.parentNode.style.pointerEvents = '';
     }
   }
+
+  document.addEventListener('click', function (evento) {
+    var submitter = evento.target.closest('button[type="submit"], input[type="submit"]');
+    if (submitter && submitter.form) submitter.form._tcSubmitter = submitter;
+  }, true);
 
   document.addEventListener('submit', function (evento) {
     if (evento.defaultPrevented) return;
@@ -63,7 +92,7 @@
     // Cuando existe el overlay global, ese sistema controla el botón y el
     // estado de carga. Evita que ambos scripts compitan por el mismo formulario.
     if (document.getElementById('tc-loading')) return;
-    var boton = botonDeFormulario(evento.target, evento.submitter);
+    var boton = botonDeFormulario(evento.target, evento.submitter || evento.target._tcSubmitter);
     if (!boton) return;
     if (boton.dataset.cargando === 'true' || boton.disabled) {
       evento.preventDefault();

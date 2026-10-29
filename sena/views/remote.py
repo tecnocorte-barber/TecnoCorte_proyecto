@@ -1460,6 +1460,9 @@ def usuario_cancelar_reserva(request, reserva_id):
     reserva = Reserva.objects.filter(id=reserva_id, cliente_id=request.session["logueado"]["id"]).first()
     if reserva is None or request.method != "POST":
         return redirect("sena:usuario_perfil")
+    if reserva.estado not in {"Pendiente", "Confirmada"}:
+        messages.error(request, "Esta cita ya no se puede cancelar.")
+        return redirect("sena:usuario_perfil")
     fecha_cita = datetime.combine(reserva.fecha, reserva.hora)
     ahora = timezone.localtime().replace(tzinfo=None)
     if fecha_cita - ahora >= timedelta(hours=2):
@@ -1793,33 +1796,48 @@ def peluquero_perfil(request):
 
 @autorizacion(["Barbero"])
 def peluquero_crear_cita(request):
+    barbero = Usuario.objects.filter(
+        id=request.session["logueado"]["id"], rol="Barbero", activo=True
+    ).first()
+    peluquerias = (
+        Peluqueria.objects.filter(id=barbero.peluqueria_id)
+        if barbero and barbero.peluqueria_id
+        else Peluqueria.objects.none()
+    )
     if request.method == "POST":
         # Los ids se validan como enteros para evitar errores con valores no numéricos
         cliente_id = _id_entero(request.POST.get("cliente"))
         peluqueria_id = _id_entero(request.POST.get("peluqueria"))
-        cliente = Usuario.objects.filter(id=cliente_id, rol="Cliente").first() if cliente_id else None
+        cliente = Usuario.objects.filter(id=cliente_id, rol="Cliente", activo=True).first() if cliente_id else None
         peluqueria = Peluqueria.objects.filter(id=peluqueria_id).first() if peluqueria_id else None
-        if cliente is None or peluqueria is None:
+        servicio = request.POST.get("servicio", "").strip()
+        if (
+            cliente is None
+            or peluqueria is None
+            or barbero is None
+            or peluqueria.id != barbero.peluqueria_id
+            or servicio not in {item["nombre"] for item in catalogo_servicios()}
+        ):
             return render(request, "peluqueros/peluquero_crear_cita.html", {
-                "clientes": Usuario.objects.filter(rol="Cliente"),
-                "peluquerias": Peluqueria.objects.all(),
+                "clientes": Usuario.objects.filter(rol="Cliente", activo=True),
+                "peluquerias": peluquerias,
                 "servicios": catalogo_servicios(),
                 "reserva_estados": Reserva.ESTADOS,
-                "error": "Selecciona un cliente y una peluquería válidos.",
+                "error": "Selecciona un cliente, un servicio y la peluquería asignada a tu cuenta.",
             })
-        disponible, mensaje = cita_disponible(request.POST.get("fecha"), request.POST.get("hora"), peluqueria.id, request.POST.get("servicio"))
+        disponible, mensaje = cita_disponible(request.POST.get("fecha"), request.POST.get("hora"), peluqueria.id, servicio)
         if disponible:
-            disponible, mensaje = barbero_esta_disponible(request.session["logueado"]["id"], request.POST.get("fecha"), request.POST.get("hora"), request.POST.get("servicio"))
+            disponible, mensaje = barbero_esta_disponible(barbero.id, request.POST.get("fecha"), request.POST.get("hora"), servicio)
         if not disponible:
-            contexto = {"clientes": Usuario.objects.filter(rol="Cliente"), "peluquerias": Peluqueria.objects.all(), "servicios": catalogo_servicios(), "reserva_estados": Reserva.ESTADOS, "error": mensaje}
+            contexto = {"clientes": Usuario.objects.filter(rol="Cliente", activo=True), "peluquerias": peluquerias, "servicios": catalogo_servicios(), "reserva_estados": Reserva.ESTADOS, "error": mensaje}
             return render(request, "peluqueros/peluquero_crear_cita.html", contexto)
         reserva = Reserva.objects.create(
             cliente=cliente,
-            peluquero_id=request.session["logueado"]["id"],
+            peluquero=barbero,
             peluqueria=peluqueria,
             fecha=request.POST.get("fecha"),
             hora=request.POST.get("hora"),
-            servicio=request.POST.get("servicio", "Corte de Cabello"),
+            servicio=servicio,
             estado="Pendiente",
         )
         Notificacion.objects.create(
@@ -1834,11 +1852,12 @@ def peluquero_crear_cita(request):
             f"El barbero {request.session['logueado']['nombre']} agendó tu cita de {reserva.servicio} para el {formato_cita(reserva)} en {reserva.peluqueria.nombre}.",
             request.build_absolute_uri(reverse("sena:usuario_editar_reserva", args=[reserva.id])),
         )
+        _invalidar_cache_disponibilidad()
         messages.success(request, "La cita fue agendada y el cliente recibió una notificación.")
         return redirect("sena:peluquero_dashboard")
     contexto = {
-        "clientes": Usuario.objects.filter(rol="Cliente"),
-        "peluquerias": Peluqueria.objects.all(),
+        "clientes": Usuario.objects.filter(rol="Cliente", activo=True),
+        "peluquerias": peluquerias,
         "servicios": catalogo_servicios(),
         "reserva_estados": Reserva.ESTADOS,
     }
@@ -2188,20 +2207,35 @@ def admin_actualizar_pedido(request, id):
         f"Estado: {pedido.get_estado_display()}; pago confirmado: {pedido.pago_confirmado}",
     )
 
+    if pedido.estado == "Cancelado":
+        detalle_pago = (
+            " El pago permanece registrado para que la tienda revise cualquier devolución."
+            if pedido.pago_confirmado
+            else " No se registró ningún pago."
+        )
+        mensaje_pedido = (
+            f"Tu pedido #{pedido.id} fue cancelado. "
+            f"Los artículos se devolvieron al inventario.{detalle_pago}"
+        )
+    else:
+        mensaje_pedido = (
+            f"Tu pedido #{pedido.id} está: {pedido.get_estado_display()}. "
+            + (
+                "Pago confirmado en tienda."
+                if pedido.pago_confirmado
+                else "Pago pendiente en tienda."
+            )
+        )
     Notificacion.objects.create(
         usuario=pedido.cliente,
-        mensaje=(
-            f"Tu pedido #{pedido.id} está: {pedido.get_estado_display()}. "
-            + ("Pago confirmado en tienda." if pedido.pago_confirmado else "Pago pendiente en tienda.")
-        ),
+        mensaje=mensaje_pedido,
     )
     enviar_correo(
         pedido.cliente,
         f"Actualización de tu pedido #{pedido.id}",
         (
             f"Hola {pedido.cliente.nombre},\n\n"
-            f"Tu pedido #{pedido.id} ahora está: {pedido.get_estado_display()}.\n"
-            + ("El pago fue confirmado en tienda." if pedido.pago_confirmado else "El pago se realizará en tienda al recogerlo.")
+            + mensaje_pedido
         ),
         request=request,
         enlace=request.build_absolute_uri(reverse("sena:usuario_perfil")),
@@ -2212,29 +2246,49 @@ def admin_actualizar_pedido(request, id):
 
 @autorizacion(["Admin"])
 def admin_crear_reserva(request):
+    estados_nueva_reserva = (
+        ("Pendiente", "Pendiente"),
+        ("Confirmada", "Confirmada"),
+    )
     if request.method == "POST":
         # Los ids se validan como enteros para evitar errores con valores no numéricos
         cliente_id = _id_entero(request.POST.get("cliente"))
         peluquero_id = _id_entero(request.POST.get("peluquero"))
         peluqueria_id = _id_entero(request.POST.get("peluqueria"))
-        cliente = Usuario.objects.filter(id=cliente_id, rol="Cliente").first() if cliente_id else None
+        cliente = Usuario.objects.filter(id=cliente_id, rol="Cliente", activo=True).first() if cliente_id else None
         peluquero = Usuario.objects.filter(id=peluquero_id, rol="Barbero", activo=True).first() if peluquero_id else None
         peluqueria = Peluqueria.objects.filter(id=peluqueria_id).first() if peluqueria_id else None
-        servicio = request.POST.get("servicio", "")
-        if cliente is None or peluquero is None or peluqueria is None or servicio not in {item["nombre"] for item in catalogo_servicios()}:
+        servicio = request.POST.get("servicio", "").strip()
+        estado = request.POST.get("estado", "Pendiente").strip()
+        if (
+            cliente is None
+            or peluquero is None
+            or peluqueria is None
+            or peluquero.peluqueria_id != peluqueria.id
+            or servicio not in {item["nombre"] for item in catalogo_servicios()}
+        ):
             return render(request, "administrador/admin_formulario_reserva.html", {
-                "error": "Completa todos los datos de la cita.",
-                "clientes": Usuario.objects.filter(rol="Cliente"),
+                "error": "Selecciona un cliente activo, un servicio válido y un barbero activo de la peluquería elegida.",
+                "clientes": Usuario.objects.filter(rol="Cliente", activo=True),
                 "peluqueros": barberos_disponibles(),
                 "peluquerias": Peluqueria.objects.all(),
                 "servicios": catalogo_servicios(),
-                "reserva_estados": Reserva.ESTADOS,
+                "reserva_estados": estados_nueva_reserva,
+            })
+        if estado not in {valor for valor, _etiqueta in estados_nueva_reserva}:
+            return render(request, "administrador/admin_formulario_reserva.html", {
+                "error": "Una reserva nueva solo puede quedar Pendiente o Confirmada.",
+                "clientes": Usuario.objects.filter(rol="Cliente", activo=True),
+                "peluqueros": barberos_disponibles(),
+                "peluquerias": Peluqueria.objects.all(),
+                "servicios": catalogo_servicios(),
+                "reserva_estados": estados_nueva_reserva,
             })
         disponible, mensaje = cita_disponible(request.POST.get("fecha"), request.POST.get("hora"), peluqueria_id, servicio)
         if disponible:
             disponible, mensaje = barbero_esta_disponible(peluquero.id, request.POST.get("fecha"), request.POST.get("hora"), request.POST.get("servicio"))
         if not disponible:
-            return render(request, "administrador/admin_formulario_reserva.html", {"error": mensaje, "clientes": Usuario.objects.filter(rol="Cliente"), "peluqueros": barberos_disponibles(), "peluquerias": Peluqueria.objects.all(), "servicios": catalogo_servicios(), "reserva_estados": Reserva.ESTADOS})
+            return render(request, "administrador/admin_formulario_reserva.html", {"error": mensaje, "clientes": Usuario.objects.filter(rol="Cliente", activo=True), "peluqueros": barberos_disponibles(), "peluquerias": Peluqueria.objects.all(), "servicios": catalogo_servicios(), "reserva_estados": estados_nueva_reserva})
         reserva = Reserva.objects.create(
             cliente=cliente,
             peluquero=peluquero,
@@ -2242,7 +2296,7 @@ def admin_crear_reserva(request):
             fecha=request.POST.get("fecha"),
             hora=request.POST.get("hora"),
             servicio=servicio,
-            estado=request.POST.get("estado", "Pendiente")
+            estado=estado
         )
         registrar_accion(request, "crear_cita", "Reserva", reserva.id, f"Cita de {reserva.servicio} para {reserva.cliente.email}")
         Notificacion.objects.create(usuario=cliente, reserva=reserva, mensaje=f"El administrador agendó tu cita de {reserva.servicio} para el {formato_cita(reserva)} en {reserva.peluqueria.nombre}.")
@@ -2252,7 +2306,7 @@ def admin_crear_reserva(request):
         messages.success(request, "La cita fue creada y ambas partes recibieron una notificación.")
         _invalidar_cache_disponibilidad()
         return redirect("sena:admin_reservas")
-    clientes = Usuario.objects.filter(rol="Cliente")
+    clientes = Usuario.objects.filter(rol="Cliente", activo=True)
     peluqueros = barberos_disponibles()
     peluquerias = Peluqueria.objects.all()
     return render(request, "administrador/admin_formulario_reserva.html", {
@@ -2260,7 +2314,7 @@ def admin_crear_reserva(request):
         "peluqueros": peluqueros,
         "peluquerias": peluquerias,
         "servicios": catalogo_servicios(),
-        "reserva_estados": Reserva.ESTADOS
+        "reserva_estados": estados_nueva_reserva
     })
 
 @autorizacion(["Admin"])
@@ -2271,11 +2325,15 @@ def admin_editar_reserva(request, id):
         cliente_id = _id_entero(request.POST.get("cliente"))
         peluquero_id = _id_entero(request.POST.get("peluquero"))
         peluqueria_id = _id_entero(request.POST.get("peluqueria"))
-        cliente = Usuario.objects.filter(id=cliente_id, rol="Cliente").first() if cliente_id else None
+        cliente = Usuario.objects.filter(id=cliente_id, rol="Cliente", activo=True).first() if cliente_id else None
         peluquero = Usuario.objects.filter(id=peluquero_id, rol="Barbero", activo=True).first() if peluquero_id else None
         peluqueria = Peluqueria.objects.filter(id=peluqueria_id).first() if peluqueria_id else None
         servicio = request.POST.get("servicio", "").strip()
         if cliente is None or peluquero is None or peluqueria is None or servicio not in {item["nombre"] for item in catalogo_servicios()}:
+            messages.error(request, "Selecciona un cliente activo, un servicio válido y un barbero activo.")
+            return redirect("sena:admin_editar_reserva", id=id)
+        if peluquero.peluqueria_id != peluqueria.id:
+            messages.error(request, "El barbero no pertenece a la peluquería seleccionada.")
             return redirect("sena:admin_editar_reserva", id=id)
         estado_anterior = reserva.estado
         estado_nuevo = request.POST.get("estado")
@@ -2295,7 +2353,7 @@ def admin_editar_reserva(request, id):
         if disponible:
             disponible, mensaje = barbero_esta_disponible(peluquero.id, request.POST.get("fecha"), request.POST.get("hora"), request.POST.get("servicio"), reserva)
         if not disponible:
-            return render(request, "administrador/admin_formulario_reserva.html", {"datos": reserva, "error": mensaje, "clientes": Usuario.objects.filter(rol="Cliente"), "peluqueros": barberos_disponibles(), "peluquerias": Peluqueria.objects.all(), "servicios": catalogo_servicios(), "reserva_estados": Reserva.ESTADOS})
+            return render(request, "administrador/admin_formulario_reserva.html", {"datos": reserva, "error": mensaje, "clientes": Usuario.objects.filter(rol="Cliente", activo=True), "peluqueros": barberos_disponibles(), "peluquerias": Peluqueria.objects.all(), "servicios": catalogo_servicios(), "reserva_estados": Reserva.ESTADOS})
         reserva.save()
         registrar_accion(request, "actualizar_cita", "Reserva", reserva.id, f"Estado: {estado_anterior} → {estado_nuevo}")
         Notificacion.objects.create(usuario=reserva.cliente, reserva=reserva, mensaje=f"Tu cita fue actualizada por el administrador para el {formato_cita(reserva)}.")
@@ -2311,7 +2369,7 @@ def admin_editar_reserva(request, id):
         messages.success(request, "La cita fue actualizada y se notificó a cliente y barbero.")
         _invalidar_cache_disponibilidad()
         return redirect("sena:admin_reservas")
-    clientes = Usuario.objects.filter(rol="Cliente")
+    clientes = Usuario.objects.filter(rol="Cliente", activo=True)
     peluqueros = barberos_disponibles()
     peluquerias = Peluqueria.objects.all()
     return render(request, "administrador/admin_formulario_reserva.html", {
@@ -2327,7 +2385,7 @@ def admin_editar_reserva(request, id):
 def admin_eliminar_reserva(request, id):
     if request.method == "POST":
         reserva = Reserva.objects.select_related("cliente", "peluquero").filter(id=id).first()
-        if reserva and reserva.estado != "Cancelada":
+        if reserva and reserva.estado in {"Pendiente", "Confirmada"}:
             # Las reservas son historial comercial: se cancelan, nunca se
             # eliminan, para conservar auditoría, calificaciones y avisos.
             reserva.estado = "Cancelada"
@@ -2338,7 +2396,7 @@ def admin_eliminar_reserva(request, id):
             enviar_correo_cita(request, reserva.peluquero, "Reserva cancelada en TecnoCorte", f"La reserva #{reserva.id} del {formato_cita(reserva)} fue cancelada por el administrador.")
             messages.info(request, "La reserva fue cancelada y conservada en el historial.")
         elif reserva:
-            messages.info(request, "La reserva ya estaba cancelada y se conservó en el historial.")
+            messages.info(request, "La reserva ya no se puede cancelar y se conservó en el historial.")
     _invalidar_cache_disponibilidad()
     return redirect("sena:admin_reservas")
 
@@ -2346,7 +2404,7 @@ def admin_eliminar_reserva(request, id):
 def admin_cancelar_reserva(request, id):
     if request.method == "POST":
         reserva = Reserva.objects.select_related("cliente", "peluquero").filter(id=id).first()
-        if reserva and reserva.estado != "Cancelada":
+        if reserva and reserva.estado in {"Pendiente", "Confirmada"}:
             reserva.estado = "Cancelada"
             reserva.save(update_fields=["estado"])
             Notificacion.objects.create(usuario=reserva.cliente, reserva=reserva, mensaje=f"Tu cita de {reserva.servicio} del {formato_cita(reserva)} fue cancelada por el administrador.")
@@ -2354,6 +2412,8 @@ def admin_cancelar_reserva(request, id):
             enviar_correo_cita(request, reserva.cliente, "Cita cancelada en TecnoCorte", f"Tu cita de {reserva.servicio} del {formato_cita(reserva)} fue cancelada por el administrador.")
             enviar_correo_cita(request, reserva.peluquero, "Cita cancelada en TecnoCorte", f"La cita de {reserva.cliente.nombre} del {formato_cita(reserva)} fue cancelada por el administrador.")
             messages.success(request, "La cita fue cancelada y se notificó a cliente y barbero.")
+        elif reserva:
+            messages.info(request, "La cita ya no se puede cancelar.")
     _invalidar_cache_disponibilidad()
     return redirect("sena:admin_reservas")
 
@@ -2711,19 +2771,36 @@ def admin_solicitudes_servicios(request):
             messages.info(request, "Esa solicitud ya fue resuelta.")
             return redirect("sena:admin_solicitudes_servicios")
 
-        if request.POST.get("accion") == "aprobar":
-            if Servicio.objects.filter(barbero=solicitud.barbero, nombre__iexact=solicitud.nombre).exists():
+        accion = (request.POST.get("accion") or "aprobar").strip().lower()
+        if accion == "aprobar":
+            servicio_existente = Servicio.objects.filter(
+                barbero=solicitud.barbero,
+                nombre__iexact=solicitud.nombre,
+            ).first()
+            if servicio_existente and servicio_existente.activo:
                 messages.error(request, f"«{solicitud.nombre}» ya existe para {solicitud.barbero.nombre}.")
             else:
-                Servicio.objects.create(
-                    nombre=solicitud.nombre,
-                    descripcion=solicitud.descripcion,
-                    duracion=solicitud.duracion,
-                    minutos=solicitud.minutos,
-                    precio=solicitud.precio,
-                    barbero=solicitud.barbero,
-                    peluqueria=_peluqueria_del_barbero(solicitud.barbero_id),
-                )
+                if servicio_existente:
+                    servicio_existente.descripcion = solicitud.descripcion
+                    servicio_existente.duracion = solicitud.duracion
+                    servicio_existente.minutos = solicitud.minutos
+                    servicio_existente.precio = solicitud.precio
+                    servicio_existente.peluqueria = _peluqueria_del_barbero(solicitud.barbero_id)
+                    servicio_existente.activo = True
+                    servicio_existente.save(update_fields=[
+                        "descripcion", "duracion", "minutos", "precio",
+                        "peluqueria", "activo",
+                    ])
+                else:
+                    Servicio.objects.create(
+                        nombre=solicitud.nombre,
+                        descripcion=solicitud.descripcion,
+                        duracion=solicitud.duracion,
+                        minutos=solicitud.minutos,
+                        precio=solicitud.precio,
+                        barbero=solicitud.barbero,
+                        peluqueria=_peluqueria_del_barbero(solicitud.barbero_id),
+                    )
                 solicitud.estado = "aprobada"
                 solicitud.resuelta = timezone.now()
                 solicitud.nota_admin = nota
@@ -2734,7 +2811,7 @@ def admin_solicitudes_servicios(request):
                 )
                 messages.success(request, f"Servicio «{solicitud.nombre}» creado para {solicitud.barbero.nombre}.")
 
-        elif request.POST.get("accion") == "rechazar":
+        elif accion == "rechazar":
             solicitud.estado = "rechazada"
             solicitud.resuelta = timezone.now()
             solicitud.nota_admin = nota
@@ -2744,6 +2821,8 @@ def admin_solicitudes_servicios(request):
                 mensaje += f" Motivo: {nota}"
             Notificacion.objects.create(usuario=solicitud.barbero, mensaje=mensaje)
             messages.info(request, f"Solicitud de «{solicitud.nombre}» rechazada.")
+        else:
+            messages.error(request, "La acción de la solicitud no es válida.")
 
         cache.delete("contador_solicitudes_servicio_admin")
         return redirect("sena:admin_solicitudes_servicios")
@@ -2941,6 +3020,7 @@ def admin_crear_usuario(request):
                 "error": "Para crear un barbero debes seleccionar la barbería a la que pertenece.",
                 "roles": Usuario.ROLES,
                 "peluquerias": Peluqueria.objects.all(),
+                "puede_gestionar_roles": administra_roles,
             })
         foto = request.FILES.get("foto")
         error_imagen = validar_imagen(foto)
@@ -2973,6 +3053,10 @@ def admin_editar_usuario(request, id):
     """Editar usuario existente"""
     usuario = get_object_or_404(Usuario, id=id)
     administra_roles = puede_gestionar_roles(request)
+    actor_rol = (request.session.get("logueado") or {}).get("rol")
+    if actor_rol != "SuperAdmin" and usuario.rol in ("Admin", "SuperAdmin"):
+        messages.info(request, "Solo un SuperAdmin puede editar una cuenta de administrador.")
+        return redirect("sena:admin_usuarios")
     
     if request.method == "POST":
         email = request.POST.get("email", usuario.email).strip().lower()
@@ -2980,19 +3064,18 @@ def admin_editar_usuario(request, id):
         try:
             validate_email(email)
         except ValidationError:
-            return render(request, "administrador/admin_formulario_usuario.html", {"usuario": usuario, "roles": Usuario.ROLES, "editar": True, "error": "Ese correo no tiene un formato válido.", "peluquerias": Peluqueria.objects.all()})
+            return render(request, "administrador/admin_formulario_usuario.html", {"usuario": usuario, "roles": Usuario.ROLES, "editar": True, "error": "Ese correo no tiene un formato válido.", "peluquerias": Peluqueria.objects.all(), "puede_gestionar_roles": administra_roles})
         if Usuario.objects.exclude(id=id).filter(email__iexact=email).exists():
-            return render(request, "administrador/admin_formulario_usuario.html", {"usuario": usuario, "roles": Usuario.ROLES, "editar": True, "error": "Ese correo ya está registrado por otro usuario.", "peluquerias": Peluqueria.objects.all()})
+            return render(request, "administrador/admin_formulario_usuario.html", {"usuario": usuario, "roles": Usuario.ROLES, "editar": True, "error": "Ese correo ya está registrado por otro usuario.", "peluquerias": Peluqueria.objects.all(), "puede_gestionar_roles": administra_roles})
         usuario.nombre = request.POST.get("nombre", usuario.nombre).strip()
         usuario.apellido = request.POST.get("apellido", usuario.apellido).strip()
         usuario.email = email
         telefono = request.POST.get("telefono", usuario.telefono).strip()
         error_telefono = validar_telefono(telefono)
         if error_telefono:
-            return render(request, "administrador/admin_formulario_usuario.html", {"usuario": usuario, "roles": Usuario.ROLES, "editar": True, "error": error_telefono, "peluquerias": Peluqueria.objects.all()})
+            return render(request, "administrador/admin_formulario_usuario.html", {"usuario": usuario, "roles": Usuario.ROLES, "editar": True, "error": error_telefono, "peluquerias": Peluqueria.objects.all(), "puede_gestionar_roles": administra_roles})
         usuario.telefono = telefono
         nuevo_rol = request.POST.get("rol", usuario.rol) if administra_roles else usuario.rol
-        actor_rol = (request.session.get("logueado") or {}).get("rol")
         roles_permitidos = {"Cliente", "Barbero"}
         if actor_rol == "SuperAdmin":
             roles_permitidos.add("Admin")
@@ -3002,6 +3085,7 @@ def admin_editar_usuario(request, id):
             return render(request, "administrador/admin_formulario_usuario.html", {"usuario": usuario, "roles": Usuario.ROLES, "editar": True, "error": "No tienes permiso para asignar ese rol.", "peluquerias": Peluqueria.objects.all(), "puede_gestionar_roles": True})
         if nuevo_rol not in dict(Usuario.ROLES):
             return render(request, "administrador/admin_formulario_usuario.html", {"usuario": usuario, "roles": Usuario.ROLES, "editar": True, "error": "El rol seleccionado no es válido.", "peluquerias": Peluqueria.objects.all(), "puede_gestionar_roles": administra_roles})
+        usuario_rol_anterior = usuario.rol
         usuario.rol = nuevo_rol
         peluqueria_id = _id_entero(request.POST.get("peluqueria"))
         if nuevo_rol == "Barbero":
@@ -3023,7 +3107,10 @@ def admin_editar_usuario(request, id):
 
         # La contraseña de una cuenta existente no se modifica desde el panel
         # administrativo, aunque llegue un campo password en el POST.
-        usuario.save()
+        with transaction.atomic():
+            usuario.save()
+            if usuario.rol != usuario_rol_anterior:
+                Notificacion.objects.filter(usuario=usuario).delete()
         messages.success(request, "Usuario actualizado correctamente.")
         return redirect("sena:admin_usuarios")
     
@@ -3102,7 +3189,7 @@ def admin_quitar_foto_usuario(request, id):
 
 @autorizacion(["Admin"])
 def admin_configuracion(request):
-    """Permite al Admin ajustar privacidad, datos generales y mantenimiento."""
+    """Permite al Admin ajustar privacidad y datos generales del sitio."""
     config = Configuracion.cargar()
     if request.method == "POST":
         config.sitio_nombre = request.POST.get("sitio_nombre", config.sitio_nombre).strip() or "TecnoCorte"
@@ -3120,8 +3207,10 @@ def admin_configuracion(request):
         config.mostrar_ubicaciones = request.POST.get("mostrar_ubicaciones") == "on"
         config.mostrar_galeria = request.POST.get("mostrar_galeria") == "on"
         config.mostrar_calificaciones = request.POST.get("mostrar_calificaciones") == "on"
-        config.modo_mantenimiento = request.POST.get("modo_mantenimiento") == "on"
-        config.mensaje_mantenimiento = request.POST.get("mensaje_mantenimiento", "").strip()
+        if "modo_mantenimiento" in request.POST:
+            config.modo_mantenimiento = request.POST.get("modo_mantenimiento") == "on"
+        if "mensaje_mantenimiento" in request.POST:
+            config.mensaje_mantenimiento = request.POST.get("mensaje_mantenimiento", "").strip()
         config.save()
         messages.success(request, "Configuración guardada correctamente.")
         return redirect("sena:admin_configuracion")

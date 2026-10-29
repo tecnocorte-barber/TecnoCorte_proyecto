@@ -1,5 +1,6 @@
 # Serializadores DRF: convierten los modelos a JSON y validan los datos de entrada
 from rest_framework import serializers  # Herramientas de serialización
+from .utilidades import TRANSICIONES_RESERVA, transicion_valida
 from django.contrib.auth.hashers import make_password  # Para cifrar contraseñas al crear/actualizar
 from .models import Usuario, Peluqueria, Producto, Reserva, Pedido, PedidoProducto, Notificacion  # Modelos a serializar
 
@@ -88,7 +89,7 @@ class ProductoSerializer(serializers.ModelSerializer):
 # Serializador de Reserva: con validaciones de servicio, cliente y barbero
 class ReservaSerializer(serializers.ModelSerializer):
     # Solo permite seleccionar clientes (rol Cliente) y barberos activos
-    cliente = serializers.PrimaryKeyRelatedField(queryset=Usuario.objects.filter(rol="Cliente"), required=False)
+    cliente = serializers.PrimaryKeyRelatedField(queryset=Usuario.objects.filter(rol="Cliente", activo=True), required=False)
     peluquero = serializers.PrimaryKeyRelatedField(queryset=Usuario.objects.filter(rol="Barbero", activo=True))
     peluqueria = serializers.PrimaryKeyRelatedField(queryset=Peluqueria.objects.all(), write_only=True)
     # Campos calculados para mostrar nombres en la respuesta
@@ -134,6 +135,12 @@ class ReservaSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         """Aplica las reglas de sede, horario y cruces también en la API."""
+        if self.instance and "estado" in attrs and not transicion_valida(
+            TRANSICIONES_RESERVA, self.instance.estado, attrs["estado"]
+        ):
+            raise serializers.ValidationError(
+                {"estado": f"No se puede pasar una cita de {self.instance.estado} a {attrs['estado']}."}
+            )
         peluquero = attrs.get("peluquero", getattr(self.instance, "peluquero", None))
         peluqueria = attrs.get("peluqueria", getattr(self.instance, "peluqueria", None))
         fecha = attrs.get("fecha", getattr(self.instance, "fecha", None))
@@ -174,7 +181,7 @@ class PedidoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Pedido
         fields = ["id", "cliente", "fecha", "total", "estado", "pago_confirmado", "fecha_pago", "fecha_entrega"]
-        read_only_fields = ["cliente", "fecha"]
+        read_only_fields = ["cliente", "fecha", "total", "fecha_pago", "fecha_entrega"]
 
 
 class PedidoProductoSerializer(serializers.ModelSerializer):

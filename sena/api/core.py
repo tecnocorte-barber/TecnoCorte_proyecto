@@ -3,7 +3,7 @@
 from rest_framework import viewsets, filters, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.exceptions import AuthenticationFailed, PermissionDenied
+from rest_framework.exceptions import AuthenticationFailed, PermissionDenied, ValidationError
 from drf_spectacular.utils import extend_schema
 from django.conf import settings
 from django.contrib.auth.hashers import make_password
@@ -17,6 +17,7 @@ from ..serializers import (UsuarioSerializer, PeluqueriaSerializer, ProductoSeri
                            TokenRequestSerializer, RefreshTokenRequestSerializer, TokenResponseSerializer,
                            MessageResponseSerializer, RegistroRequestSerializer)
 from ..utilidades import registrar_accion
+from ..services.pedidos import actualizar_pedido
 from ..jwt_auth import JWTAuthentication, crear_token, decodificar_token, revocar_refresh
 
 
@@ -168,6 +169,11 @@ class ReservaViewSet(AuditedModelViewSet):
         if app_role(self.request) == "Cliente":
             objeto = serializer.save(cliente=usuario, estado="Pendiente")
         else:
+            estado = serializer.validated_data.get("estado", "Pendiente")
+            if estado not in {"Pendiente", "Confirmada"}:
+                raise ValidationError(
+                    {"estado": "Una reserva nueva solo puede quedar Pendiente o Confirmada."}
+                )
             objeto = serializer.save()
         registrar_accion(self.request, "api_crear", objeto.__class__.__name__, objeto.pk)
 
@@ -188,13 +194,33 @@ class PedidoViewSet(AuditedModelViewSet):
         return self.queryset.filter(cliente=usuario) if usuario else self.queryset.none()
 
     def perform_create(self, serializer):
-        usuario = app_usuario(self.request)
-        objeto = serializer.save(cliente=usuario)
-        registrar_accion(self.request, "api_crear", objeto.__class__.__name__, objeto.pk)
+        raise PermissionDenied(
+            "Los pedidos deben crearse desde el checkout para descontar el inventario correctamente."
+        )
+
+    def perform_update(self, serializer):
+        pedido, error = actualizar_pedido(
+            serializer.instance.id,
+            serializer.validated_data.get("estado", serializer.instance.estado),
+            serializer.validated_data.get(
+                "pago_confirmado", serializer.instance.pago_confirmado
+            ),
+        )
+        if error:
+            raise ValidationError({"detail": error})
+        serializer.instance = pedido
+        registrar_accion(
+            self.request, "api_actualizar", pedido.__class__.__name__, pedido.pk
+        )
+
+    def perform_destroy(self, instance):
+        raise PermissionDenied(
+            "Los pedidos no se eliminan; cámbialos a Cancelado para devolver sus artículos al inventario."
+        )
 
 
-class PedidoProductoViewSet(AuditedModelViewSet):
-    """Detalle de productos de los pedidos."""
+class PedidoProductoViewSet(viewsets.ReadOnlyModelViewSet):
+    """Detalle de pedidos; las escrituras se hacen desde el checkout."""
     authentication_classes = [JWTAuthentication, TokenAuthentication, SessionAuthentication]
     permission_classes = [ApiPermission]
     queryset = PedidoProducto.objects.select_related("pedido", "producto").all()

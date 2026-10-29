@@ -103,6 +103,7 @@
           <span class="tc-field__label">Imagen (JPG, PNG o WEBP)</span>
         </label>
       </div>
+      {% endif %}
 
       {% if puede_gestionar_roles %}
       <label class="tc-field tc-field--always tc-field--full">
@@ -145,6 +146,7 @@
         </label>
       </div>
 
+      {% if not editar %}
       <label class="tc-field tc-field--full">
         <input
           type="password"
@@ -161,8 +163,6 @@
       <span class="tc-field__hint tc-field--full">
         Mínimo 8 caracteres, con mayúscula, minúscula y número.
       </span>
-      {% else %}
-
       {% endif %}
 
       <div class="tc-form__actions">

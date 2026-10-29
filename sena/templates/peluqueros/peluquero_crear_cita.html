@@ -75,20 +75,6 @@ bg-background text-on-surface{% endblock %} {% block content %} {% include "incl
         <span class="tc-field__label">Hora</span>
       </label>
 
-      <label class="tc-field tc-field--always tc-field--full">
-        <select name="estado" class="tc-field__input">
-          {% for estado in reserva_estados %}
-          <option
-            value="{{ estado.0 }}"
-            {% if estado.0 == 'Pendiente' %}selected{% endif %}
-          >
-            {{ estado.1 }}
-          </option>
-          {% endfor %}
-        </select>
-        <span class="tc-field__label">Estado de la cita</span>
-      </label>
-
       <div class="tc-form__actions">
         <button type="submit" class="tc-btn tc-btn--gold">
           <span class="material-symbols-outlined text-[18px]">event_available</span>

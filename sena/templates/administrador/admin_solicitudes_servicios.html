@@ -65,9 +65,10 @@
       </p>
       {% endif %}
 
-      <form method="post" class="space-y-4">
+      <form method="post" action="{% url 'sena:admin_solicitudes_servicios' %}" class="solicitud-servicio-form space-y-4">
         {% csrf_token %}
         <input type="hidden" name="solicitud_id" value="{{ s.id }}" />
+        <input type="hidden" id="accion-solicitud-{{ s.id }}" name="accion" value="aprobar" />
         <label class="tc-field tc-field--always">
           <input
             name="nota_admin"
@@ -211,5 +212,13 @@
     </section>
   </div>
 </main>
+<script>
+  document.addEventListener("click", function (event) {
+    var boton = event.target.closest(".solicitud-servicio-form button[name='accion']");
+    if (!boton) return;
+    var accion = boton.form.querySelector("input[type='hidden'][name='accion']");
+    if (accion) accion.value = boton.value;
+  });
+</script>
 {% include "includes/admin_mobile_nav.html" with active="servicios" %}
 {% endblock %}

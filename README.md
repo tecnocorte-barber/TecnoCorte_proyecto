@@ -43,6 +43,12 @@ python manage.py test
 python manage.py collectstatic --noinput
 ```
 
+## Pedidos por API
+
+La API permite consultar los pedidos y cambiar su estado. La creación del
+pedido y la edición de sus artículos se realizan desde el checkout para
+mantener sincronizados el inventario y el total.
+
 ## Producción
 
 El servidor WSGI usa `tecnocorte.settings`, que espera PostgreSQL y las
