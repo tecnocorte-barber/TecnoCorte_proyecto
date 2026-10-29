@@ -1,9 +1,10 @@
 # Middleware del proyecto TecnoCorte.
 # Aplica el modo mantenimiento configurado por el Admin y garantiza que
 # cualquier fallo termine en la tarjeta de error amigable.
+import os
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
-from django.http import Http404
+from django.http import Http404, HttpResponse
 from django.shortcuts import render
 
 from .errores import es_amigable, tarjeta_de_fallo, ultima_excepcion, RUTAS_404_RUIDO
@@ -111,4 +112,33 @@ class ErroresAmigablesMiddleware:
                     "Error 500 sin traza registrada"
                 )
             return tarjeta_de_fallo(request, excepcion, response.status_code)
+        return response
+
+
+class CorsMiddleware:
+    """Permite que la app Flutter (web) consuma la API durante el desarrollo."""
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        origin = request.META.get("HTTP_ORIGIN", "")
+        allowed = False
+        if getattr(settings, "DEBUG", False):
+            allowed = bool(origin)
+        else:
+            allowed_origins = [
+                item.strip() for item in os.environ.get("CORS_ALLOWED_ORIGINS", "").split(",") if item.strip()
+            ]
+            allowed = origin in allowed_origins
+        if request.method == "OPTIONS" and request.path.startswith("/api/"):
+            response = HttpResponse(status=204)
+        else:
+            response = self.get_response(request)
+        if allowed and origin:
+            response["Access-Control-Allow-Origin"] = origin
+            response["Access-Control-Allow-Methods"] = "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+            response["Access-Control-Allow-Headers"] = "Authorization, Content-Type"
+            response["Access-Control-Max-Age"] = "86400"
+            response["Vary"] = "Origin"
         return response

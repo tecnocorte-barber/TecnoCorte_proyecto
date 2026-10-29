@@ -41,9 +41,28 @@ class Api {
     return data;
   }
 
-  String _message(dynamic d) => d is Map
-      ? (d['detail'] ?? d.values.first).toString()
-      : 'Ocurrió un error.';
+  String _message(dynamic d) {
+    if (d is Map) {
+      if (d['detail'] != null) return d['detail'].toString();
+      if (d['error'] != null) return d['error'].toString();
+      if (d.values.isNotEmpty) {
+        final first = d.values.first;
+        if (first is List && first.isNotEmpty) return first.first.toString();
+        return first.toString();
+      }
+    }
+    return 'Ocurrió un error.';
+  }
+}
+
+
+
+List<dynamic> asList(dynamic value) {
+  if (value is List) return value;
+  if (value is Map && value['results'] is List) {
+    return value['results'] as List<dynamic>;
+  }
+  return <dynamic>[];
 }
 
 class TecnoCorteApp extends StatelessWidget {
@@ -181,6 +200,16 @@ class _AuthPageState extends State<AuthPage> {
 
   String? req(String? v) =>
       (v == null || v.trim().isEmpty) ? 'Campo obligatorio' : null;
+  String? passReq(String? v) {
+    if (req(v) != null) return 'Campo obligatorio';
+    if (v!.length < 8) return 'Mínimo 8 caracteres';
+    if (!RegExp(r'[A-Z]').hasMatch(v)) return 'Debe tener una mayúscula';
+    if (!RegExp(r'[0-9]').hasMatch(v)) return 'Debe tener un número';
+    if (!RegExp(r'[^A-Za-z0-9]').hasMatch(v)) {
+      return 'Debe tener un símbolo';
+    }
+    return null;
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -235,7 +264,7 @@ class _AuthPageState extends State<AuthPage> {
                           (v!.contains('@') ? null : 'Correo no válido'),
                     ),
                     const SizedBox(height: 14),
-                    field(pass, 'Contraseña', req, obscure: true),
+                    field(pass, 'Contraseña', register ? passReq : req, obscure: true),
                     const SizedBox(height: 24),
                     SizedBox(
                       width: double.infinity,
@@ -296,9 +325,9 @@ class _HomePageState extends State<HomePage> {
   }
 
   void reload() {
-    services = api.get('/servicios/').then((x) => x as List);
-    shops = api.get('/peluquerias/').then((x) => x['results'] ?? x as List);
-    appointments = api.get('/reservas/').then((x) => x['results'] ?? x as List);
+    services = api.get('/servicios/').then(asList);
+    shops = api.get('/peluquerias/').then(asList);
+    appointments = api.get('/reservas/').then(asList);
   }
 
   Future<void> logout() async {
@@ -630,8 +659,8 @@ class _BookingPageState extends State<BookingPage> {
       final b = await api.get('/barberos/');
       if (mounted) {
         setState(() {
-          shops = a['results'] ?? a;
-          barbers = b;
+          shops = asList(a);
+          barbers = asList(b);
         });
       }
     } catch (_) {}
