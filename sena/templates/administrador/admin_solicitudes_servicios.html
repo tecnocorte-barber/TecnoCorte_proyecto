@@ -144,28 +144,17 @@
                   ${{ s.precio|floatformat:"0g" }} COP
                 </td>
                 <td class="px-5 py-4">
-                  <form
-                    method="post"
-                    action="{% url 'sena:admin_solicitudes_servicios' %}"
-                    class="space-y-2"
-                    onsubmit="return confirm('¿Retirar este servicio? El barbero recibirá la nota.');"
+                  <button
+                    type="button"
+                    class="tc-btn tc-btn--ghost"
+                    data-retirar-servicio
+                    data-servicio-id="{{ s.id }}"
+                    data-servicio-nombre="{{ s.nombre }}"
+                    data-barbero-nombre="{{ s.barbero.nombre }} {{ s.barbero.apellido }}"
                   >
-                    {% csrf_token %}
-                    <input type="hidden" name="accion" value="eliminar_servicio" />
-                    <input type="hidden" name="servicio_id" value="{{ s.id }}" />
-                    <input
-                      name="nota_admin"
-                      required
-                      maxlength="300"
-                      placeholder="Nota obligatoria para el barbero"
-                      aria-label="Nota obligatoria para {{ s.barbero.nombre }}"
-                      class="w-56 rounded-lg border border-outline-variant/30 bg-surface-container-high px-3 py-2 text-sm text-on-surface"
-                    />
-                    <button type="submit" class="tc-btn tc-btn--ghost">
-                      <span class="material-symbols-outlined text-[18px]">delete</span>
-                      Retirar servicio
-                    </button>
-                  </form>
+                    <span class="material-symbols-outlined text-[18px]">delete</span>
+                    Retirar servicio
+                  </button>
                 </td>
               </tr>
               {% empty %}
@@ -237,7 +226,113 @@
     </section>
   </div>
 </main>
+<div id="modal-retirar-servicio" class="fixed inset-0 z-50 hidden" aria-hidden="true">
+  <button
+    type="button"
+    class="absolute inset-0 h-full w-full cursor-default border-0 bg-black/60 backdrop-blur-sm"
+    data-cerrar-modal-retirar
+    aria-label="Cerrar diálogo"
+  ></button>
+  <section
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="modal-retirar-titulo"
+    class="tc-glass tc-modal rounded-3xl p-6 shadow-2xl md:p-8"
+  >
+    <header class="mb-5 flex items-start justify-between gap-4">
+      <div>
+        <p class="tc-eyebrow mb-2">Retirar servicio</p>
+        <h2 id="modal-retirar-titulo" class="font-headline text-2xl text-on-surface">
+          Confirmar eliminación
+        </h2>
+      </div>
+      <button
+        type="button"
+        class="rounded-full p-2 text-on-surface-variant transition-colors hover:bg-surface-container-high hover:text-on-surface"
+        data-cerrar-modal-retirar
+        aria-label="Cerrar"
+      >
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </header>
+    <p class="mb-5 text-sm text-on-surface-variant">
+      Vas a retirar <strong id="modal-retirar-servicio-nombre" class="text-on-surface"></strong>.
+      El barbero <strong id="modal-retirar-barbero-nombre" class="text-on-surface"></strong>
+      recibirá la nota.
+    </p>
+    <form method="post" action="{% url 'sena:admin_solicitudes_servicios' %}" id="form-retirar-servicio">
+      {% csrf_token %}
+      <input type="hidden" name="accion" value="eliminar_servicio" />
+      <input type="hidden" name="servicio_id" id="modal-retirar-servicio-id" />
+      <label for="modal-retirar-nota" class="mb-2 block text-sm font-semibold text-on-surface">
+        Nota para el barbero <span class="text-error">*</span>
+      </label>
+      <textarea
+        id="modal-retirar-nota"
+        name="nota_admin"
+        required
+        maxlength="300"
+        rows="4"
+        placeholder="Explica por qué se retira este servicio"
+        class="w-full rounded-xl border border-outline-variant/30 bg-surface-container-high px-4 py-3 text-sm text-on-surface placeholder:text-on-surface-variant"
+      ></textarea>
+      <div class="mt-6 flex flex-wrap justify-end gap-3">
+        <button type="button" class="tc-btn tc-btn--ghost" data-cerrar-modal-retirar>
+          Cancelar
+        </button>
+        <button type="submit" class="tc-btn tc-btn--gold">
+          <span class="material-symbols-outlined text-[18px]">delete</span>
+          Confirmar retirada
+        </button>
+      </div>
+    </form>
+  </section>
+</div>
 <script>
+  (function () {
+    var modal = document.getElementById("modal-retirar-servicio");
+    var form = document.getElementById("form-retirar-servicio");
+    var nota = document.getElementById("modal-retirar-nota");
+    var botonAnterior = null;
+    if (!modal || !form || !nota) return;
+
+    function cerrar() {
+      modal.classList.add("hidden");
+      modal.setAttribute("aria-hidden", "true");
+      document.body.style.overflow = "";
+      if (botonAnterior) botonAnterior.focus();
+    }
+
+    document.querySelectorAll("[data-retirar-servicio]").forEach(function (boton) {
+      boton.addEventListener("click", function () {
+        botonAnterior = boton;
+        document.getElementById("modal-retirar-servicio-id").value = boton.dataset.servicioId;
+        document.getElementById("modal-retirar-servicio-nombre").textContent = boton.dataset.servicioNombre;
+        document.getElementById("modal-retirar-barbero-nombre").textContent = boton.dataset.barberoNombre;
+        nota.value = "";
+        modal.classList.remove("hidden");
+        modal.setAttribute("aria-hidden", "false");
+        document.body.style.overflow = "hidden";
+        nota.focus();
+      });
+    });
+
+    modal.querySelectorAll("[data-cerrar-modal-retirar]").forEach(function (boton) {
+      boton.addEventListener("click", cerrar);
+    });
+    form.addEventListener("submit", function (evento) {
+      if (!nota.value.trim()) {
+        evento.preventDefault();
+        nota.setCustomValidity("Escribe una nota para el barbero.");
+        nota.reportValidity();
+      }
+    });
+    nota.addEventListener("input", function () { nota.setCustomValidity(""); });
+    document.addEventListener("keydown", function (evento) {
+      if (evento.key === "Escape" && !modal.classList.contains("hidden")) cerrar();
+    });
+  })();
+
   document.addEventListener("click", function (event) {
     var boton = event.target.closest(".solicitud-servicio-form button[name='accion']");
     if (!boton) return;

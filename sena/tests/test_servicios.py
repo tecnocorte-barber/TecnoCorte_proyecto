@@ -330,8 +330,11 @@ class ServiciosDeBarberoTests(TestCase):
         )
         self.sesion(self.admin)
         pagina = self.client.get(reverse("sena:admin_solicitudes_servicios"))
-        self.assertContains(pagina, "Nota obligatoria para el barbero")
-        self.assertContains(pagina, 'name="nota_admin"', html=False)
+        self.assertContains(pagina, 'role="dialog"', html=False)
+        self.assertContains(pagina, 'data-retirar-servicio', html=False)
+        self.assertContains(pagina, "Nota para el barbero")
+        self.assertContains(pagina, "Confirmar retirada")
+        self.assertNotContains(pagina, "placeholder=\"Nota obligatoria para el barbero\"")
 
         response = self.client.post(reverse("sena:admin_solicitudes_servicios"), {
             "accion": "eliminar_servicio",
