@@ -11,7 +11,7 @@ MAX_IMAGEN_BYTES = 5 * 1024 * 1024
 FORMATOS_IMAGEN_PERMITIDOS = {"JPEG", "PNG", "WEBP"}
 
 TRANSICIONES_RESERVA = {
-    "Pendiente": {"Pendiente", "Confirmada", "Cancelada"},
+    "Pendiente": {"Pendiente", "Confirmada", "Completada", "Cancelada"},
     "Confirmada": {"Confirmada", "Completada", "Cancelada"},
     "Completada": {"Completada"},
     # El Admin puede devolver una cita cancelada a Pendiente para reagendarla.
