@@ -199,6 +199,10 @@
                   <span class="tc-badge tc-badge--ok">
                     <span class="material-symbols-outlined text-sm">check_circle</span>Aprobada
                   </span>
+                  {% elif s.estado == "eliminada" %}
+                  <span class="tc-badge tc-badge--no">
+                    <span class="material-symbols-outlined text-sm">delete</span>Eliminada
+                  </span>
                   {% else %}
                   <span class="tc-badge tc-badge--no">
                     <span class="material-symbols-outlined text-sm">cancel</span>Rechazada

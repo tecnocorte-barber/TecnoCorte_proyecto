@@ -206,6 +206,7 @@
                 data-minutos="{{ servicio.minutos }}"
                 data-duracion="{{ servicio.duracion }}"
                 data-barbero-id="{{ servicio.barbero_id|default:'' }}"
+                data-peluqueria-id="{{ servicio.peluqueria_id|default:'' }}"
                 {% if servicio.barbero_id %}hidden{% endif %}
                 onclick="seleccionarServicio(this)"
               >
@@ -421,6 +422,16 @@
         document.getElementById("h-hora").value = seleccion.hora;
       }
       function seleccionarServicio(el) {
+        var propietarioId = String(el.dataset.barberoId || "");
+        if (propietarioId && propietarioId !== String(seleccion.peluquero || "")) {
+          var propietario = Array.from(
+            document.querySelectorAll(".barbero-option")
+          ).find(function (barbero) {
+            return String(barbero.dataset.peluquero) === propietarioId;
+          });
+          if (!propietario || propietario.hidden) return;
+          seleccionarPeluquero(propietario);
+        }
         document.querySelectorAll(".opt[data-servicio]").forEach(o => { o.classList.remove("opt-selected"); o.querySelector(".icon-muted").textContent = "circle"; });
         el.classList.add("opt-selected");
         el.querySelector(".icon-muted").textContent = "check_circle";
@@ -444,9 +455,15 @@
       }
       function actualizarServiciosDisponibles() {
         var barberoId = String(seleccion.peluquero || "");
+        var peluqueriaId = String(seleccion.peluqueria || "");
         document.querySelectorAll(".tc-servicio-card").forEach(function (servicio) {
           var propietarioId = String(servicio.dataset.barberoId || "");
-          var visible = !propietarioId || propietarioId === barberoId;
+          var servicioPeluqueriaId = String(servicio.dataset.peluqueriaId || "");
+          var visible = !propietarioId || (
+            barberoId
+              ? propietarioId === barberoId
+              : peluqueriaId !== "" && servicioPeluqueriaId === peluqueriaId
+          );
           servicio.hidden = !visible;
           servicio.classList.toggle("hidden", !visible);
           if (!visible && servicio.classList.contains("opt-selected")) {

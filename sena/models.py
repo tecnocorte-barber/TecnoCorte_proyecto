@@ -622,6 +622,7 @@ class SolicitudServicio(models.Model):
         ("pendiente", "Pendiente"),
         ("aprobada", "Aprobada"),
         ("rechazada", "Rechazada"),
+        ("eliminada", "Eliminada"),
     )
 
     barbero = models.ForeignKey(

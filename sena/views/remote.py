@@ -952,7 +952,7 @@ def peluquero_configuracion(request):
         "pestanas": PESTANAS_CONFIG_PELUQUERO,
         "peluqueria": peluqueria,
         "servicios": SERVICIOS,
-        "mis_servicios": Servicio.objects.filter(barbero=usuario).order_by("nombre"),
+        "mis_servicios": Servicio.objects.filter(barbero=usuario, activo=True).order_by("nombre"),
         "solicitudes": SolicitudServicio.objects.filter(barbero=usuario)[:20],
         "solicitudes_pendientes": SolicitudServicio.objects.filter(barbero=usuario, estado="pendiente").count(),
         "duraciones": DURACIONES_SERVICIO,
@@ -2827,9 +2827,10 @@ def admin_solicitudes_servicios(request):
                     estado="aprobada",
                 ).order_by("-resuelta", "-id").first()
                 if solicitud:
+                    solicitud.estado = "eliminada"
                     solicitud.nota_admin = nota
                     solicitud.resuelta = timezone.now()
-                    solicitud.save(update_fields=["nota_admin", "resuelta"])
+                    solicitud.save(update_fields=["estado", "nota_admin", "resuelta"])
                 Notificacion.objects.create(
                     usuario_id=servicio.barbero_id,
                     mensaje=(

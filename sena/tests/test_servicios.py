@@ -242,6 +242,12 @@ class ServiciosDeBarberoTests(TestCase):
         self.assertEqual(minutos_servicio("Afeitado Premium", self.barbero.id), 30)
         self.assertTrue(servicio_valido("Afeitado Premium", self.barbero.id))
         self.assertFalse(servicio_valido("Servicio Que No Existe"))
+        servicio_personalizado = next(
+            item for item in catalogo_servicios(incluir_personalizados=True)
+            if item["nombre"] == "Afeitado Premium"
+        )
+        self.assertEqual(servicio_personalizado["barbero_id"], self.barbero.id)
+        self.assertEqual(servicio_personalizado["peluqueria_id"], self.peluqueria.id)
 
         # La reserva del cliente ya lo ofrece y permite preseleccionarlo.
         r = self.client.get(
@@ -369,8 +375,19 @@ class ServiciosDeBarberoTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertFalse(servicio.activo)
         self.assertEqual(solicitud.nota_admin, "No cumple los requisitos")
+        self.assertEqual(solicitud.estado, "eliminada")
         self.assertIn("No cumple los requisitos", aviso.mensaje)
         self.assertFalse(servicio_valido("Afeitado Premium", self.barbero.id))
+        pagina_admin = self.client.get(reverse("sena:admin_solicitudes_servicios"))
+        self.assertContains(pagina_admin, "Eliminada")
+
+        self.sesion(self.barbero)
+        pagina_barbero = self.client.get(
+            reverse("sena:peluquero_configuracion") + "?seccion=servicios"
+        )
+        self.assertContains(pagina_barbero, "Eliminada")
+        self.assertContains(pagina_barbero, "No cumple los requisitos")
+        self.assertNotContains(pagina_barbero, "Tus servicios propios")
 
     # ---------- Paneles ----------
 

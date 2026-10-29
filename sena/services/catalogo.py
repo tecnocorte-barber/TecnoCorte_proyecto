@@ -19,13 +19,19 @@ def catalogo_servicios(barbero_id=None, incluir_personalizados=False):
         lista.append(item)
     if barbero_id is None and not incluir_personalizados:
         return lista
-    servicios = Servicio.objects.filter(activo=True).select_related("barbero")
+    servicios = Servicio.objects.filter(activo=True).select_related(
+        "barbero", "barbero__peluqueria"
+    )
     if barbero_id is not None:
         servicios = servicios.filter(barbero_id=barbero_id)
     for servicio in servicios:
         if servicio.nombre.casefold() in vistos:
             continue
-        lista.append({**servicio.a_dict(), "barbero_id": servicio.barbero_id})
+        lista.append({
+            **servicio.a_dict(),
+            "barbero_id": servicio.barbero_id,
+            "peluqueria_id": servicio.barbero.peluqueria_id,
+        })
     return lista
 
 
