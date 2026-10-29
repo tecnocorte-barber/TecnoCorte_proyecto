@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 const accent = Color(0xFFD5A85B);
@@ -12,7 +13,11 @@ const apiBase = String.fromEnvironment(
   defaultValue: 'http://127.0.0.1:8000/api',
 );
 
-void main() => runApp(const TecnoCorteApp());
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await initializeDateFormatting('es_CO', null);
+  runApp(const TecnoCorteApp());
+}
 
 class Api {
   final prefs = SharedPreferences.getInstance();
